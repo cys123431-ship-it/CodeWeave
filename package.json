@@ -1,0 +1,13 @@
+{
+  "name": "codeweave",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "교과서형 C·Rust·자료구조·알고리즘 통합 학습 PWA",
+  "scripts": {
+    "start": "node dev-server.mjs",
+    "dev": "node dev-server.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "engines": { "node": ">=20" }
+}
