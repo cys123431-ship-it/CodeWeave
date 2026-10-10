@@ -1,0 +1,12 @@
+const box=(x,y,w,h,text,fill='#e2eee9')=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="13" fill="${fill}" stroke="#a3bdb9"/><text x="${x+w/2}" y="${y+h/2+5}" font-size="15" text-anchor="middle" font-weight="700" fill="#28485b">${text}</text>`;
+const arrow=(x1,y1,x2,y2)=>`<path d="M${x1} ${y1} L${x2} ${y2}" stroke="#6b8d98" stroke-width="2.5" marker-end="url(#arr)" fill="none"/>`;
+const wrap=inner=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 670 190" role="img" aria-label="학습 개념 그림"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
+export function figureFor(kind){
+ if(kind==='pipeline')return wrap(box(12,60,175,66,'소스 코드 (.c)')+box(245,60,175,66,'컴파일·링크')+box(478,60,175,66,'실행 프로그램')+arrow(192,93,238,93)+arrow(427,93,471,93));
+ if(kind==='variables')return wrap(box(30,50,185,80,'변수 x = 7')+box(425,50,185,80,'변수 x = 8','#d4f5e6')+arrow(220,90,414,90)+`<text x="316" y="65" fill="#467f73" font-size="13" text-anchor="middle">x = x + 1</text>`);
+ if(kind==='loop')return wrap(box(40,62,145,62,'i = 0')+box(259,62,145,62,'i < 4 ?','#e2efff')+box(478,62,145,62,'본문 수행')+arrow(190,93,250,93)+arrow(410,93,470,93)+`<path d="M550 128v40H330V130" fill="none" stroke="#88a6a4" stroke-width="2" marker-end="url(#arr)"/><text x="437" y="161" text-anchor="middle" font-size="12" fill="#46666c">i++ 반복</text>`);
+ if(kind==='array')return wrap([2,4,6,8,10].map((n,i)=>box(65+i*111,66,99,70,String(n),i===2?'#bdebcf':'#e6eef6')).join('')+`<text x="337" y="45" text-anchor="middle" font-size="13" fill="#52687e">연속된 배열 원소의 인덱스</text>`+[0,1,2,3,4].map((n,i)=>`<text x="${115+i*111}" y="158" font-size="12" text-anchor="middle" fill="#53798f">[${n}]</text>`).join(''));
+ if(kind==='pointer')return wrap(box(38,60,175,67,'p : &x','#e7f1ff')+box(460,60,170,67,'x : 7','#d7f4e6')+arrow(218,93,451,93)+`<text x="335" y="78" text-anchor="middle" font-size="14" fill="#47798d">*p → x</text>`);
+ if(kind==='stack')return wrap(box(257,18,155,42,'7','#d5f6e2')+box(257,63,155,42,'5')+box(257,108,155,42,'2')+`<text x="425" y="45" font-size="14" fill="#608277">← top / 먼저 pop</text>`);
+ return '';
+}
