@@ -24,7 +24,7 @@ const server = spawn(process.execPath, ['dev-server.mjs'], { cwd: root, env: { .
 let output = '';
 server.stdout.on('data', chunk => { output += chunk; });
 server.stderr.on('data', chunk => { output += chunk; });
-let browser;
+let browser, context, page;
 const errors = [];
 const correct = '#include <stdio.h>\nint main(void){int a,b;if(scanf("%d %d",&a,&b)!=2)return 1;printf("%d\\n",a+b);return 0;}';
 const failed = '#include <stdio.h>\nint main(void){puts("0");return 0;}';
@@ -60,9 +60,9 @@ try {
   console.log('PASS: all five C exercises compile and pass their real GCC tests');
 
   browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
+  context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
   context.on('page', p => p.on('pageerror', e => errors.push(e.message)));
-  const page = await context.newPage();
+  page = await context.newPage();
   await page.goto(base);
   await page.evaluate(({ failed }) => {
     localStorage.clear();
@@ -73,6 +73,8 @@ try {
     }] }));
   }, { failed });
   await page.goto(base + '/#lesson:c-types');
+  // Hash navigation keeps the original module state; reload after seeding v1 data.
+  await page.reload();
   await expect(page.locator('#code-input')).toHaveValue(failed);
   await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(1);
   await expect(page.locator('#attempt-history-container .attempt-list img')).toHaveCount(0);
@@ -173,6 +175,12 @@ try {
   await context.setOffline(false);
   assert.deepEqual(errors, []);
   console.log('PASS: 390px mobile layout and offline reload of drafts/history; no browser exceptions');
+} catch (error) {
+  if (page && process.env.CODEWEAVE_QA_DIR) {
+    await mkdir(process.env.CODEWEAVE_QA_DIR, { recursive: true });
+    await page.screenshot({ path: path.join(process.env.CODEWEAVE_QA_DIR, 'browser-failure.png'), fullPage: true }).catch(() => {});
+  }
+  throw error;
 } finally {
   await browser?.close();
   const ended = once(server, 'exit');
