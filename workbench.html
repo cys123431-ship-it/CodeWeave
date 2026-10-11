@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111c2e">
+  <title>CodeWeave — 반복 제출 연습장</title>
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./workbench.css">
+  <script type="module" src="./src/workbench.js"></script>
+</head>
+<body>
+  <main class="wb-shell">
+    <header class="wb-header">
+      <div><p class="eyebrow">CODEWEAVE / EXERCISM-STYLE PRACTICE</p><h1>반복 제출 연습장</h1><p>직접 코드를 작성하고, 테스트 결과를 비교하고, 이전 풀이를 복원해 다시 도전하세요.</p></div>
+      <a href="./index.html" class="wb-link">← 학습 대시보드</a>
+    </header>
+    <div class="wb-grid">
+      <section class="wb-card" aria-labelledby="exercise-title">
+        <label for="lesson-select">C언어 연습문제 선택</label>
+        <select id="lesson-select"></select>
+        <h2 id="exercise-title"></h2>
+        <p id="exercise-description"></p>
+        <div class="wb-samples"><div><strong>예시 입력</strong><pre id="sample-input"></pre></div><div><strong>예상 출력</strong><pre id="sample-output"></pre></div></div>
+        <label for="code-input">C 코드 작성</label>
+        <textarea id="code-input" class="code-editor" spellcheck="false" maxlength="25000" aria-label="C 코드 작성"></textarea>
+        <p class="wb-caption" id="draft-status" role="status">코드는 이 브라우저에 자동 저장됩니다.</p>
+        <div class="wb-actions"><button class="primary" id="grade-code">▶ 로컬 GCC로 채점</button><button class="secondary" id="reset-code">초기 코드로 되돌리기</button></div>
+        <pre id="grade-result" class="wb-output" aria-live="polite">아직 제출하지 않았습니다.</pre>
+        <p class="wb-warning">이 채점 기능은 개인 PC에서 <code>npm start</code>로 실행한 로컬 GCC 서버에서만 작동합니다. 외부에 공개된 실행 서버는 제공하지 않습니다.</p>
+      </section>
+      <aside class="wb-card" aria-labelledby="attempt-heading">
+        <h2 id="attempt-heading">반복 제출 기록</h2>
+        <p class="wb-caption">문제마다 최근 10회까지 저장합니다. 통과·실패한 코드를 다시 열어 수정할 수 있습니다.</p>
+        <ol id="attempt-list" class="wb-attempts"></ol>
+        <h3>기록 백업·복원</h3>
+        <div class="wb-actions"><button class="secondary" id="export-history">기록 다운로드</button><button class="secondary" id="import-history">기록 불러오기</button><input id="import-file" type="file" accept=".json,application/json" hidden></div>
+        <p class="wb-caption">기록은 현재 브라우저에만 저장되며 다른 기기와 동기화되지 않습니다. 가져오기는 기존 연습장 코드와 제출 기록을 교체합니다.</p>
+      </aside>
+    </div>
+  </main>
+</body>
+</html>
