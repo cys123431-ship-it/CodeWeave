@@ -4,20 +4,13 @@ import path from 'node:path';
 import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { openLearningFile, parseRequestPath } from './server/static-files.mjs';
+import { gradingExercises } from './server/grading-exercises.mjs';
 
 // IMPORTANT: trusted local development only. Compiled student programs are not sandboxed.
 // This binds only to loopback and MUST NOT be put directly on a public network.
 const HOST='127.0.0.1';
 const PORT=Number(process.env.PORT || 4173);
 const ROOT=process.cwd();
-const cases={
- 'c-hello': [{input:'',expected:'Hello, CodeWeave!'}],
- 'c-types': [{input:'4 7\n',expected:'11'},{input:'-5 2\n',expected:'-3'},{input:'0 0\n',expected:'0'}],
- 'c-loops': [{input:'5\n',expected:'15'},{input:'0\n',expected:'0'},{input:'10\n',expected:'55'}],
- 'c-array': [{input:'5\n2 9 -3 4 1\n',expected:'9'},{input:'1\n-12\n',expected:'-12'},{input:'4\n-9 -3 -5 -10\n',expected:'-3'}],
- 'c-pointer': [{input:'7\n',expected:'8'},{input:'-4\n',expected:'-3'},{input:'0\n',expected:'1'}],
- 'c-functions': [{input:'5 0 10\n',expected:'5'},{input:'-3 0 10\n',expected:'0'},{input:'15 0 10\n',expected:'10'},{input:'-20 -10 -1\n',expected:'-10'},{input:'-1 -10 -1\n',expected:'-1'}]
-};
 const send=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(data));};
 let busy=false;
 async function grade(req,res){
@@ -26,7 +19,8 @@ async function grade(req,res){
  try{for await(const chunk of req){size+=chunk.length;if(size>40_000)return send(res,413,{ok:false,message:'요청 크기가 너무 큽니다.'});chunks.push(chunk)};
  let value;try{value=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{return send(res,400,{ok:false,message:'잘못된 JSON입니다.'});}
  const {code,exerciseId}=value??{};
- if(typeof code!=='string'||code.length>25_000||!Array.isArray(cases[exerciseId]))return send(res,400,{ok:false,message:'지원하지 않는 문제 또는 코드 길이입니다.'});
+ const exercise=gradingExercises.get(exerciseId);
+ if(typeof code!=='string'||code.length>25_000||!exercise)return send(res,400,{ok:false,message:'지원하지 않는 문제 또는 코드 길이입니다.'});
  if(busy)return send(res,429,{ok:false,message:'다른 코드를 채점하고 있어요. 잠시 후 다시 시도하세요.'});
  busy=true;ownsSlot=true;
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'codeweave-'));
@@ -36,7 +30,7 @@ async function grade(req,res){
  const compile=spawnSync('gcc',['-std=c11','-Wall','-Wextra','-O0',source,'-o',binary],{timeout:4500,maxBuffer:80_000,encoding:'utf8'});
  if(compile.error||compile.status!==0){result={ok:false,message:'컴파일 실패',compileOutput:(compile.stderr||compile.error?.message||'').slice(0,3000),tests:[]};}
  else{
- const tests=[];for(const tc of cases[exerciseId]){
+ const tests=[];for(const tc of exercise.cases){
  const out=spawnSync(binary,[],{input:tc.input,encoding:'utf8',timeout:1300,maxBuffer:30_000,cwd:dir});
  const actual=(out.stdout||'').trim();const expected=tc.expected.trim();
  tests.push({passed:!out.error&&out.status===0&&actual===expected,detail:out.error?.code==='ETIMEDOUT'?'시간 제한 초과':out.error?'실행 오류':out.status!==0?'비정상 종료 ('+out.status+')':actual===expected?'출력 일치':'예상: '+expected+'; 실제: '+(actual.slice(0,100)||'(없음)')});

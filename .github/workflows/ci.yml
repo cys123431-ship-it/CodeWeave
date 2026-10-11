@@ -28,8 +28,10 @@ jobs:
           node --check src/practice.js
           node --check src/backup.js
           node --check src/mastery.js
+          node --check src/exercises.js
           node --check dev-server.mjs
           node --check server/static-files.mjs
+          node --check server/grading-exercises.mjs
           node --check sw.js
       - name: Verify local grading test compiler
         run: gcc --version

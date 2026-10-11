@@ -68,7 +68,9 @@ try {
   await expect(page.locator('.detail-head h1')).toHaveText('함수 설계: 선언·호출·값 전달');
   await expect(page.locator('.figure-box svg')).toContainText('clamp');
   await expect(page.locator('#code-input')).toHaveValue(/int clamp\(int value, int low, int high\)/);
-  console.log('PASS: function lesson, static call figure and starter code render together');
+  await expect(page.locator('.practice-zone')).toContainText('Practice Exercise');
+  await expect(page.locator('.practice-zone')).toContainText('선수 단원:');
+  console.log('PASS: function lesson, exercise metadata, static call figure and starter code render together');
   await page.evaluate(({ failed }) => {
     localStorage.clear();
     localStorage.setItem('codeweave.drafts.v1', JSON.stringify({ 'c-types': failed, 'rust-mut': 'keep rust draft' }));
@@ -172,7 +174,7 @@ try {
   await page.goto(base + '/#lesson:c-types');
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.waitForFunction(() => !!navigator.serviceWorker.controller);
-  for (const asset of ['/src/practice.js', '/src/mastery.js']) {
+  for (const asset of ['/src/practice.js', '/src/mastery.js', '/src/exercises.js']) {
     assert.equal(await page.evaluate(async asset => !!(await caches.match(asset)), asset), true, 'cached ' + asset);
   }
   await page.setViewportSize({ width: 390, height: 844 });

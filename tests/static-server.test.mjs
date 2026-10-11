@@ -13,7 +13,8 @@ const publicFiles = [
   'index.html', 'workbench.html', 'styles.css', 'workbench.css', 'sw.js',
   'manifest.webmanifest', 'assets/icon.svg', 'src/app.js', 'src/catalog.js',
   'src/figures.js', 'src/logic.js', 'src/workbench.js', 'src/practice.js',
-  'src/iterations.js', 'src/attempt-backup.js', 'src/backup.js', 'src/mastery.js'
+  'src/iterations.js', 'src/attempt-backup.js', 'src/backup.js', 'src/mastery.js',
+  'src/exercises.js'
 ];
 
 // Use raw request targets: fetch/URL would normalize traversal before sending it.

@@ -20,9 +20,9 @@ export function lessonLearningStatus(id, progress, iterations, practiceAvailable
   };
 }
 
-export function trackLearningSummary(lessons, progress, iterations) {
+export function trackLearningSummary(lessons, progress, iterations, hasPractice = lesson => lesson.track === 'c') {
   const statuses = lessons.map(lesson => lessonLearningStatus(
-    lesson.id, progress, iterations, lesson.track === 'c'
+    lesson.id, progress, iterations, hasPractice(lesson)
   ));
   return {
     total: lessons.length,

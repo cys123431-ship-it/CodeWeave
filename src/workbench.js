@@ -3,9 +3,10 @@ import { DRAFTS_KEY, PROGRESS_KEY, normalizeProgress, safeRead } from './logic.j
 import { ITERATIONS_KEY, MAX_CODE_LENGTH, normalizeIterations } from './iterations.js';
 import { recordGradedSubmission, readExerciseDrafts, saveExerciseDraft } from './practice.js';
 import { MAX_BACKUP_FILE_SIZE, createFullBackup, parseCodeWeaveBackup, restoreCodeWeaveBackup } from './backup.js';
+import { isGradedExercise } from './exercises.js';
 
 const $ = selector => document.querySelector(selector);
-const cLessons = lessons.filter(lesson => lesson.track === 'c');
+const cLessons = lessons.filter(lesson => isGradedExercise(lesson.challenge.id));
 const knownIds = cLessons.map(lesson => lesson.id);
 const allIds = lessons.map(l => l.id);
 const storedDrafts = readExerciseDrafts(localStorage, allIds);

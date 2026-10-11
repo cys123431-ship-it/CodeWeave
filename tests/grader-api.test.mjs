@@ -5,6 +5,7 @@ import { once } from 'node:events';
 import { recordGradedSubmission } from '../src/practice.js';
 import { ITERATIONS_KEY } from '../src/iterations.js';
 import { lessons } from '../src/catalog.js';
+import { gradingExercises } from '../server/grading-exercises.mjs';
 
 const gccAvailable = spawnSync('gcc', ['--version']).status === 0;
 test('local GCC API compiles all six C exercises and distinguishes failures', { skip: !gccAvailable, timeout: 30000 }, async t => {
@@ -51,6 +52,7 @@ test('local GCC API compiles all six C exercises and distinguishes failures', { 
       const { status, result } = await submit(id, code);
       assert.equal(status, 200);
       assert.equal(result.ok, true, JSON.stringify(result));
+      assert.equal(result.tests.length, gradingExercises.get(id).cases.length);
       assert.ok(result.tests.length > 0 && result.tests.every(test => test.passed));
       recordGradedSubmission(storage, lessons.map(l => l.id), id, code, result);
     });
