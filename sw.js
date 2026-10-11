@@ -1,5 +1,5 @@
-const CACHE='codeweave-shell-v1';
-const ASSETS=['./','./index.html','./styles.css','./src/app.js','./src/catalog.js','./src/logic.js','./src/figures.js','./manifest.webmanifest','./assets/icon.svg'];
+const CACHE='codeweave-shell-v2';
+const ASSETS=['./','./index.html','./styles.css','./src/app.js','./src/catalog.js','./src/logic.js','./src/figures.js','./workbench.html','./workbench.css','./src/workbench.js','./src/iterations.js','./src/attempt-backup.js','./manifest.webmanifest','./assets/icon.svg'];
 self.addEventListener('install', event => {event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate', event => {event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',event=>{
