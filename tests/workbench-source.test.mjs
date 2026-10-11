@@ -16,3 +16,10 @@ test('workbench HTML has the required local-only grading UI',()=>{
   }
   assert.ok(html.includes('src/workbench.js'));
 });
+test('multi-file editors cannot widen the mobile page',()=>{
+  const styles=readFileSync('styles.css','utf8');
+  const workbench=readFileSync('workbench.css','utf8');
+  assert.match(styles,/\.code-editor\{[^}]*min-width:0[^}]*max-width:100%/);
+  assert.match(styles,/\.multi-file-editors\{[^}]*min-width:0/);
+  assert.match(workbench,/\.wb-card\{[^}]*min-width:0/);
+});

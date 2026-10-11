@@ -27,6 +27,7 @@ server.stdout.on('data', chunk => { output += chunk; });
 server.stderr.on('data', chunk => { output += chunk; });
 let browser, context, page;
 const errors = [];
+const qaDir = process.env.CODEWEAVE_QA_DIR;
 const correct = '#include <stdio.h>\nint main(void){int a,b;if(scanf("%d %d",&a,&b)!=2)return 1;printf("%d\\n",a+b);return 0;}';
 const failed = '#include <stdio.h>\nint main(void){puts("0");return 0;}';
 const functionOnly = 'int clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}';
@@ -35,6 +36,9 @@ const multiFileSolution = [
   {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
   {name:'functions.h',content:'#ifndef FUNCTIONS_H\n#define FUNCTIONS_H\nint clamp(int value,int low,int high);\n#endif'}
 ];
+const multiFileWrong = multiFileSolution.map(file => file.name === 'functions.c'
+  ? { ...file, content: '#include "functions.h"\nint clamp(int v,int l,int h){(void)v;(void)l;return h;}' }
+  : file);
 const history = page => page.evaluate(() => JSON.parse(localStorage.getItem('codeweave.iterations.v1')));
 const ready = async page => { await expect(page.locator('#grade-code')).toBeEnabled(); };
 async function submit(page, code) {
@@ -43,6 +47,12 @@ async function submit(page, code) {
   await page.locator('#grade-code').click();
   await response;
   await ready(page);
+}
+async function fillMultiFile(page, files) {
+  for (const file of files) await page.locator('[data-code-file="' + file.name + '"]').fill(file.content);
+}
+async function expectMultiFile(page, files) {
+  for (const file of files) await expect(page.locator('[data-code-file="' + file.name + '"]')).toHaveValue(file.content);
 }
 
 try {
@@ -92,12 +102,71 @@ try {
   await expect(page.locator('.figure-box svg')).toContainText('functions.h');
   await expect(page.locator('[data-code-file]')).toHaveCount(3);
   await expect(page.locator('.practice-zone')).toContainText('다중 파일형');
-  for (const file of multiFileSolution) await page.locator('[data-code-file="' + file.name + '"]').fill(file.content);
+  await fillMultiFile(page, multiFileSolution);
   const multiResponse = page.waitForResponse(r => r.url().endsWith('/api/grade'));
   await page.locator('#grade-code').click(); await multiResponse; await ready(page);
   await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
   assert.match(await page.evaluate(() => JSON.parse(localStorage.getItem('codeweave.drafts.v1'))['c-multi-file']), /^CODEWEAVE_MULTI_FILE_V1/);
-  console.log('PASS: three-file lesson saves and submits through the multi-file GCC contract');
+  await fillMultiFile(page, multiFileWrong);
+  const failedMultiResponse = page.waitForResponse(r => r.url().endsWith('/api/grade'));
+  await page.locator('#grade-code').click(); await failedMultiResponse; await ready(page);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await expect(page.locator('#attempt-history-container .attempt-status.failed')).toHaveCount(1);
+  page.once('dialog', dialog => dialog.accept());
+  await page.locator('#attempt-history-container .attempt-list li').last().locator('button').click();
+  await expectMultiFile(page, multiFileSolution);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('이전 제출 코드를 복원했습니다');
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'multi-file lesson mobile overflow');
+  for (const file of multiFileSolution) {
+    const box = await page.locator('[data-code-file="' + file.name + '"]').boundingBox();
+    assert.ok(box && box.x >= 0 && box.x + box.width <= 390, file.name + ' must fit the mobile viewport');
+  }
+  if (qaDir) {
+    await mkdir(qaDir, { recursive: true });
+    await page.locator('.multi-file-editors').screenshot({ path: path.join(qaDir, 'lesson-multi-file-mobile.png') });
+  }
+
+  const multiBench = await context.newPage();
+  await multiBench.setViewportSize({ width: 390, height: 844 });
+  await multiBench.goto(base + '/workbench.html');
+  await multiBench.locator('#lesson-select').selectOption('c-multi-file');
+  await expectMultiFile(multiBench, multiFileSolution);
+  await expect(multiBench.locator('#attempt-list li')).toHaveCount(2);
+  assert.equal(await multiBench.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'multi-file workbench mobile overflow');
+  for (const file of multiFileSolution) {
+    const box = await multiBench.locator('[data-code-file="' + file.name + '"]').boundingBox();
+    assert.ok(box && box.x >= 0 && box.x + box.width <= 390, 'workbench ' + file.name + ' must fit the mobile viewport');
+  }
+  if (qaDir) await multiBench.locator('#multi-file-editors').screenshot({ path: path.join(qaDir, 'workbench-multi-file-mobile.png') });
+
+  const multiDownloadPromise = multiBench.waitForEvent('download');
+  await multiBench.locator('#export-history').click();
+  const multiDownload = await multiDownloadPromise;
+  const multiChunks = [];
+  for await (const chunk of await multiDownload.createReadStream()) multiChunks.push(chunk);
+  const multiBackup = Buffer.concat(multiChunks);
+  const multiBackupData = JSON.parse(multiBackup);
+  assert.equal(multiBackupData.kind, 'full-backup');
+  assert.equal(multiBackupData.iterations['c-multi-file'].length, 2);
+
+  await fillMultiFile(multiBench, multiFileWrong);
+  await expect.poll(() => multiBench.evaluate(() => JSON.parse(localStorage.getItem('codeweave.drafts.v1'))['c-multi-file']))
+    .not.toBe(multiBackupData.drafts['c-multi-file']);
+  multiBench.on('dialog', dialog => dialog.accept());
+  await multiBench.locator('#import-file').setInputFiles({ name: 'multi-file-backup.json', mimeType: 'application/json', buffer: multiBackup });
+  await expect(multiBench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
+  await expectMultiFile(multiBench, multiFileSolution);
+  await expect(multiBench.locator('#attempt-list li')).toHaveCount(2);
+  await page.reload();
+  await expectMultiFile(page, multiFileSolution);
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await multiBench.close();
+  await page.setViewportSize({ width: 1366, height: 900 });
+  console.log('PASS: multi-file mobile editors, attempt restore and unified backup round trip preserve all three files');
   await page.evaluate(({ failed }) => {
     localStorage.clear();
     localStorage.setItem('codeweave.drafts.v1', JSON.stringify({ 'c-types': failed, 'rust-mut': 'keep rust draft' }));
@@ -208,7 +277,6 @@ try {
   }
   await page.setViewportSize({ width: 390, height: 844 });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'mobile document overflow');
-  const qaDir = process.env.CODEWEAVE_QA_DIR;
   if (qaDir) {
     await mkdir(qaDir, { recursive: true });
     await page.locator('.attempt-history').screenshot({ path: path.join(qaDir, 'lesson-attempts-mobile.png') });

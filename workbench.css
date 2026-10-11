@@ -1,1 +1,30 @@
-body{background:#f5f7fa}.wb-shell{max-width:1200px;margin:0 auto;padding:35px 22px 70px}.wb-header{display:flex;align-items:center;justify-content:space-between;gap:25px;margin-bottom:26px}.wb-header p:not(.eyebrow){color:#64768b;line-height:1.75}.wb-link{color:#087d66;text-decoration:none;font-weight:750;white-space:nowrap}.wb-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,1fr);align-items:start;gap:22px}.wb-card{background:#fff;border:1px solid #e0e6ee;border-radius:18px;padding:25px;box-shadow:0 4px 16px #18375308}.wb-card label{display:block;font-weight:750;margin:15px 0 9px}.wb-card select{width:100%;padding:12px;border-radius:10px;border:1px solid #cbd9e3;background:#f9fcfd}.wb-card h2{margin:23px 0 12px}.wb-card h3{margin:28px 0 12px}.wb-card p{line-height:1.75}.wb-samples{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:22px 0}.wb-samples>div{background:#eff5f8;border-radius:11px;padding:15px;min-width:0}.wb-samples strong{font-size:12px}.wb-samples pre{white-space:pre-wrap;overflow-wrap:anywhere}.wb-card .code-editor{min-height:290px}.wb-caption{color:#6b7f90;font-size:12px}.wb-actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.wb-output{background:#122237;color:#d7f3e8;border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere;padding:18px;min-height:76px;font:13px/1.7 Consolas,monospace}.wb-warning{background:#fff5e8;border:1px solid #f5ddb3;color:#815c30;padding:14px;border-radius:10px;font-size:12px}.wb-attempts{list-style:none;padding:0;display:grid;gap:12px}.wb-attempts li{border:1px solid #e0e7ee;border-radius:12px;padding:14px}.wb-attempts strong{display:block}.wb-attempts time{display:block;font-size:11px;color:#758b9d;margin:5px 0}.wb-attempts p{font-size:12px;color:#53697d;margin:4px 0 12px}.wb-attempts button{padding:9px 12px}.wb-pass{color:#12805d}.wb-fail{color:#aa4b4b}@media(max-width:800px){.wb-grid{grid-template-columns:1fr}.wb-header{align-items:start;flex-direction:column}.wb-samples{grid-template-columns:1fr}.wb-shell{padding:22px 14px}.wb-card{padding:17px}}
+body{background:#f5f7fa}
+.wb-shell{max-width:1200px;margin:0 auto;padding:35px 22px 70px}
+.wb-header{display:flex;align-items:center;justify-content:space-between;gap:25px;margin-bottom:26px}
+.wb-header p:not(.eyebrow){color:#64768b;line-height:1.75}
+.wb-link{color:#087d66;text-decoration:none;font-weight:750;white-space:nowrap}
+.wb-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,1fr);align-items:start;gap:22px}
+.wb-card{min-width:0;background:#fff;border:1px solid #e0e6ee;border-radius:18px;padding:25px;box-shadow:0 4px 16px #18375308}
+.wb-card label{display:block;font-weight:750;margin:15px 0 9px}
+.wb-card select{width:100%;padding:12px;border-radius:10px;border:1px solid #cbd9e3;background:#f9fcfd}
+.wb-card h2{margin:23px 0 12px}
+.wb-card h3{margin:28px 0 12px}
+.wb-card p{line-height:1.75}
+.wb-samples{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:22px 0}
+.wb-samples>div{background:#eff5f8;border-radius:11px;padding:15px;min-width:0}
+.wb-samples strong{font-size:12px}
+.wb-samples pre{white-space:pre-wrap;overflow-wrap:anywhere}
+.wb-card .code-editor{display:block;min-width:0;max-width:100%;min-height:290px;overflow:auto}
+.wb-caption{color:#6b7f90;font-size:12px}
+.wb-actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}
+.wb-output{background:#122237;color:#d7f3e8;border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere;padding:18px;min-height:76px;font:13px/1.7 Consolas,monospace}
+.wb-warning{background:#fff5e8;border:1px solid #f5ddb3;color:#815c30;padding:14px;border-radius:10px;font-size:12px}
+.wb-attempts{list-style:none;padding:0;display:grid;gap:12px}
+.wb-attempts li{border:1px solid #e0e7ee;border-radius:12px;padding:14px;min-width:0}
+.wb-attempts strong{display:block}
+.wb-attempts time{display:block;font-size:11px;color:#758b9d;margin:5px 0;overflow-wrap:anywhere}
+.wb-attempts p{font-size:12px;color:#53697d;margin:4px 0 12px;overflow-wrap:anywhere}
+.wb-attempts button{padding:9px 12px}
+.wb-pass{color:#12805d}
+.wb-fail{color:#aa4b4b}
+@media(max-width:800px){.wb-grid{grid-template-columns:minmax(0,1fr)}.wb-header{align-items:start;flex-direction:column}.wb-samples{grid-template-columns:minmax(0,1fr)}.wb-shell{padding:22px 14px}.wb-card{padding:17px}.multi-file-editor .code-editor{min-height:220px}}

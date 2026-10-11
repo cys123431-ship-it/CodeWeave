@@ -20,3 +20,6 @@
 .learning-actions{display:grid;gap:8px}.learning-actions button{width:100%;min-height:44px}
 .side-panel .status-help{font-size:11px;line-height:1.65;margin:13px 0 0;color:#748698}
 .multi-file-editors{display:grid;gap:18px}.multi-file-editor{min-width:0}.multi-file-editor label{display:block;font-weight:800;color:#263b51;margin:0 0 8px}.multi-file-editor .code-editor{min-height:210px}.multi-file-editor:last-child .code-editor{min-height:170px}
+.code-editor{display:block;min-width:0;max-width:100%;overflow:auto}
+.multi-file-editors{min-width:0}
+@media(max-width:630px){.multi-file-editors{gap:14px}.multi-file-editor .code-editor{min-height:190px;padding:14px;font-size:12px}}
