@@ -27,13 +27,21 @@ async function grade(req,res){
  let result;
  try{
  const source=path.join(dir,'submission.c'),binary=path.join(dir,process.platform==='win32'?'submission.exe':'submission');await fs.writeFile(source,code,'utf8');
- const compile=spawnSync('gcc',['-std=c11','-Wall','-Wextra','-O0',source,'-o',binary],{timeout:4500,maxBuffer:80_000,encoding:'utf8'});
+ const sources=[source];
+ if(exercise.grader==='c-function'){
+   const harness=path.join(dir,'harness.c');
+   await fs.writeFile(harness,exercise.harness,'utf8');
+   sources.push(harness);
+ }
+ const compile=spawnSync('gcc',['-std=c11','-Wall','-Wextra','-O0',...sources,'-o',binary],{timeout:4500,maxBuffer:80_000,encoding:'utf8'});
  if(compile.error||compile.status!==0){result={ok:false,message:'컴파일 실패',compileOutput:(compile.stderr||compile.error?.message||'').slice(0,3000),tests:[]};}
  else{
  const tests=[];for(const tc of exercise.cases){
- const out=spawnSync(binary,[],{input:tc.input,encoding:'utf8',timeout:1300,maxBuffer:30_000,cwd:dir});
+ const out=spawnSync(binary,tc.args,{input:exercise.grader==='stdin-output'?tc.input:'',encoding:'utf8',timeout:1300,maxBuffer:30_000,cwd:dir});
  const actual=(out.stdout||'').trim();const expected=tc.expected.trim();
- tests.push({passed:!out.error&&out.status===0&&actual===expected,detail:out.error?.code==='ETIMEDOUT'?'시간 제한 초과':out.error?'실행 오류':out.status!==0?'비정상 종료 ('+out.status+')':actual===expected?'출력 일치':'예상: '+expected+'; 실제: '+(actual.slice(0,100)||'(없음)')});
+ const fatal=Boolean(out.error)||out.status!==0;
+ tests.push({passed:!fatal&&actual===expected,detail:out.error?.code==='ETIMEDOUT'?'시간 제한 초과':out.error?'실행 오류':out.status!==0?'비정상 종료 ('+out.status+')':actual===expected?'출력 일치':'예상: '+expected+'; 실제: '+(actual.slice(0,100)||'(없음)')});
+ if(fatal)break;
  }
  result={ok:tests.every(x=>x.passed),message:tests.filter(x=>x.passed).length+'/'+tests.length+'개 테스트 통과',tests,compileOutput:compile.stderr?.slice(0,1000)};
  }

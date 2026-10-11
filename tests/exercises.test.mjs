@@ -31,13 +31,13 @@ test('every lesson challenge has one validated public exercise definition', () =
   assert.ok(exercises.some(exercise => exercise.kind === 'practice'));
 });
 
-test('only the six implemented C stdin-output exercises advertise grading', () => {
-  const expected = ['c-array', 'c-functions', 'c-hello', 'c-loops', 'c-pointer', 'c-types'];
+test('only implemented C exercises advertise their explicit grading strategy', () => {
+  const expected = ['c-array', 'c-clamp-function', 'c-functions', 'c-hello', 'c-loops', 'c-pointer', 'c-types'];
   assert.deepEqual(exercises.filter(exercise => isGradedExercise(exercise.id)).map(exercise => exercise.id).sort(), expected);
   assert.deepEqual([...gradingExercises.keys()].sort(), expected);
   for (const id of expected) {
     assert.equal(exerciseById(id).language, 'c');
-    assert.equal(exerciseById(id).grader, 'stdin-output');
+    assert.ok(['stdin-output', 'c-function'].includes(exerciseById(id).grader));
     assert.ok(gradingExercises.get(id).cases.length >= 1, id);
     const sample = exerciseById(id).publicExample;
     assert.ok(gradingExercises.get(id).cases.some(testCase =>
@@ -46,6 +46,9 @@ test('only the six implemented C stdin-output exercises advertise grading', () =
     ), `${id}: 공개 예시가 비공개 채점 사례에도 있어야 합니다.`);
   }
   assert.equal(gradingExercises.get('c-functions').cases.length, 5);
+  assert.equal(exerciseById('c-clamp-function').grader, 'c-function');
+  assert.equal(gradingExercises.get('c-clamp-function').cases.length, 5);
+  assert.match(gradingExercises.get('c-clamp-function').harness, /int clamp\(int value, int low, int high\);/);
   for (const id of ['rust-mut', 'ds-stack', 'algo-binary']) assert.equal(isGradedExercise(id), false);
 });
 
@@ -54,6 +57,7 @@ test('metadata rejects duplicate ids and unsupported enum values', () => {
   assert.throws(() => validateExerciseMetadata([{ ...valid, kind: 'challenge' }]), /kind/);
   assert.throws(() => validateExerciseMetadata([{ ...valid, language: 'python' }]), /language/);
   assert.throws(() => validateExerciseMetadata([{ ...valid, grader: 'browser-eval' }]), /grader/);
+  assert.throws(() => validateExerciseMetadata([{ ...valid, language: 'rust', grader: 'c-function' }]), /C만 지원/);
 });
 
 test('metadata rejects invalid concepts, examples and prerequisite graphs', () => {
@@ -68,4 +72,8 @@ test('private grading definitions reject missing, unknown and malformed cases', 
   assert.throws(() => buildGradingExercises([{ ...valid, grader: null }], { sample: [{ input: '', expected: 'x' }] }), /채점 불가 문제/);
   assert.throws(() => buildGradingExercises([valid], { sample: [] }), /cases/);
   assert.throws(() => buildGradingExercises([valid], { sample: [{ input: 1, expected: 'x' }] }), /input/);
+  const functionExercise = { ...valid, grader: 'c-function' };
+  const functionCases = { sample: [{ input: 'sample(1)', args: ['0'], expected: '1' }] };
+  assert.throws(() => buildGradingExercises([functionExercise], functionCases), /하네스 누락/);
+  assert.throws(() => buildGradingExercises([functionExercise], { sample: [{ input: 'sample(1)', expected: '1' }] }, { sample: 'int main(void){return 0;}' }), /args/);
 });

@@ -28,6 +28,7 @@ let browser, context, page;
 const errors = [];
 const correct = '#include <stdio.h>\nint main(void){int a,b;if(scanf("%d %d",&a,&b)!=2)return 1;printf("%d\\n",a+b);return 0;}';
 const failed = '#include <stdio.h>\nint main(void){puts("0");return 0;}';
+const functionOnly = 'int clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}';
 const history = page => page.evaluate(() => JSON.parse(localStorage.getItem('codeweave.iterations.v1')));
 const ready = async page => { await expect(page.locator('#grade-code')).toBeEnabled(); };
 async function submit(page, code) {
@@ -51,14 +52,15 @@ try {
     'c-loops': '#include <stdio.h>\nint main(void){int n,s=0;scanf("%d",&n);for(int i=1;i<=n;i++)s+=i;printf("%d\\n",s);return 0;}',
     'c-array': '#include <stdio.h>\nint main(void){int n,x,m;scanf("%d%d",&n,&m);for(int i=1;i<n;i++){scanf("%d",&x);if(x>m)m=x;}printf("%d\\n",m);return 0;}',
     'c-pointer': '#include <stdio.h>\nvoid add_one(int *p){++*p;}\nint main(void){int n;scanf("%d",&n);add_one(&n);printf("%d\\n",n);return 0;}',
-    'c-functions': '#include <stdio.h>\nint clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}\nint main(void){int value,low,high;scanf("%d%d%d",&value,&low,&high);printf("%d\\n",clamp(value,low,high));return 0;}'
+    'c-functions': '#include <stdio.h>\nint clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}\nint main(void){int value,low,high;scanf("%d%d%d",&value,&low,&high);printf("%d\\n",clamp(value,low,high));return 0;}',
+    'c-clamp-function': functionOnly
   };
   for (const [exerciseId, code] of Object.entries(solutions)) {
     const response = await fetch(base + '/api/grade', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ exerciseId, code }) });
     const result = await response.json();
     assert.equal(result.ok, true, exerciseId + ': ' + JSON.stringify(result));
   }
-  console.log('PASS: all six C exercises compile and pass their real GCC tests');
+  console.log('PASS: all seven C exercises compile and pass their real GCC tests');
 
   browser = await chromium.launch({ headless: true });
   context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
@@ -71,6 +73,13 @@ try {
   await expect(page.locator('.practice-zone')).toContainText('Practice Exercise');
   await expect(page.locator('.practice-zone')).toContainText('선수 단원:');
   console.log('PASS: function lesson, exercise metadata, static call figure and starter code render together');
+  await page.goto(base + '/#lesson:c-clamp-function');
+  await expect(page.locator('.detail-head h1')).toHaveText('함수 구현 실습: 테스트 하네스와 계약');
+  await expect(page.locator('#code-input')).not.toHaveValue(/main\s*\(/);
+  await expect(page.locator('.practice-zone')).toContainText('함수 직접 호출형');
+  await submit(page, functionOnly);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
+  console.log('PASS: function-only lesson submits through the separate direct-call harness');
   await page.evaluate(({ failed }) => {
     localStorage.clear();
     localStorage.setItem('codeweave.drafts.v1', JSON.stringify({ 'c-types': failed, 'rust-mut': 'keep rust draft' }));
@@ -90,6 +99,7 @@ try {
 
   const bench = await context.newPage();
   await bench.goto(base + '/workbench.html');
+  await expect(bench.locator('#lesson-select option[value="c-clamp-function"]')).toHaveCount(1);
   await bench.locator('#lesson-select').selectOption('c-types');
   await submit(page, failed);
   await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);

@@ -8,7 +8,7 @@ import { lessons } from '../src/catalog.js';
 import { gradingExercises } from '../server/grading-exercises.mjs';
 
 const gccAvailable = spawnSync('gcc', ['--version']).status === 0;
-test('local GCC API compiles all six C exercises and distinguishes failures', { skip: !gccAvailable, timeout: 30000 }, async t => {
+test('local GCC API compiles whole-program and function-only C exercises', { skip: !gccAvailable, timeout: 40000 }, async t => {
   const child = spawn(process.execPath, ['dev-server.mjs'], {
     env: { ...process.env, PORT: '0' }, stdio: ['ignore', 'pipe', 'pipe']
   });
@@ -43,7 +43,8 @@ test('local GCC API compiles all six C exercises and distinguishes failures', { 
     'c-loops': '#include <stdio.h>\nint main(void){int n,s=0;if(scanf("%d",&n)!=1)return 1;for(int i=1;i<=n;i++)s+=i;printf("%d\\n",s);return 0;}',
     'c-array': '#include <stdio.h>\nint main(void){int n,x,m;if(scanf("%d%d",&n,&m)!=2)return 1;for(int i=1;i<n;i++){if(scanf("%d",&x)!=1)return 1;if(x>m)m=x;}printf("%d\\n",m);return 0;}',
     'c-pointer': '#include <stdio.h>\nvoid add_one(int *p){++*p;}\nint main(void){int n;if(scanf("%d",&n)!=1)return 1;add_one(&n);printf("%d\\n",n);return 0;}',
-    'c-functions': '#include <stdio.h>\nint clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}\nint main(void){int value,low,high;if(scanf("%d%d%d",&value,&low,&high)!=3)return 1;printf("%d\\n",clamp(value,low,high));return 0;}'
+    'c-functions': '#include <stdio.h>\nint clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}\nint main(void){int value,low,high;if(scanf("%d%d%d",&value,&low,&high)!=3)return 1;printf("%d\\n",clamp(value,low,high));return 0;}',
+    'c-clamp-function': 'int clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}'
   };
   const values = new Map();
   const storage = { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };
@@ -80,6 +81,28 @@ test('local GCC API compiles all six C exercises and distinguishes failures', { 
   await t.test('non-terminating trusted test program hits the time limit', async () => {
     const { result } = await submit('c-hello', 'int main(void){for(;;){}return 0;}');
     assert.equal(result.ok, false);
+    assert.equal(result.tests[0].detail, '시간 제한 초과');
+  });
+  await t.test('function grader rejects a submitted main through the separate harness link', async () => {
+    const { result } = await submit('c-clamp-function', 'int clamp(int value,int low,int high){return value;}\nint main(void){return 0;}');
+    assert.equal(result.ok, false);
+    assert.equal(result.message, '컴파일 실패');
+    assert.match(result.compileOutput, /main/);
+  });
+  await t.test('function grader detects forbidden standard-output side effects', async () => {
+    const { result } = await submit('c-clamp-function', '#include <stdio.h>\nint clamp(int value,int low,int high){printf("debug\\n");if(value<low)return low;if(value>high)return high;return value;}');
+    assert.equal(result.ok, false);
+    assert.match(result.tests[0].detail, /예상:.*실제:/);
+  });
+  await t.test('function grader reports a wrong return value', async () => {
+    const { result } = await submit('c-clamp-function', 'int clamp(int value,int low,int high){(void)low;(void)high;return value;}');
+    assert.equal(result.ok, false);
+    assert.ok(result.tests.some(test => !test.passed));
+  });
+  await t.test('non-terminating function implementation hits the same time limit', async () => {
+    const { result } = await submit('c-clamp-function', 'int clamp(int value,int low,int high){(void)value;(void)low;(void)high;for(;;){}}');
+    assert.equal(result.ok, false);
+    assert.equal(result.tests.length, 1, 'fatal execution failures stop later cases');
     assert.equal(result.tests[0].detail, '시간 제한 초과');
   });
   await t.test('unknown exercises and oversized code are rejected', async () => {

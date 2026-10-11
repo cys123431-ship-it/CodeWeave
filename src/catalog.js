@@ -80,6 +80,20 @@ export const lessons = [
     challenge:{id:'c-functions',title:'범위 제한 함수 clamp 구현',description:'정수 value, low, high를 입력받아 low <= high일 때 value를 [low, high] 범위로 제한하세요. int clamp(int value, int low, int high)를 구현하고 main에서 호출해야 합니다. 범위 안 값은 그대로, 하한보다 작으면 low, 상한보다 크면 high를 출력합니다.',starter:'#include <stdio.h>\n\nint clamp(int value, int low, int high);\n\nint main(void) {\n    int value, low, high;\n    if (scanf("%d%d%d", &value, &low, &high) != 3) return 1;\n    printf("%d\\n", clamp(value, low, high));\n    return 0;\n}\n\nint clamp(int value, int low, int high) {\n    // TODO: value를 [low, high] 범위로 제한해 반환하세요.\n    return value;\n}',input:'15 0 10',expected:'10'}
   },
   {
+    id:'c-clamp-function',track:'c',level:'중급 실습',title:'함수 구현 실습: 테스트 하네스와 계약',minutes:25,source:'C 함수 계약과 테스트 하네스에 관한 독자 작성 실습',
+    summary:'main 없이 clamp 함수만 구현하고, 별도 테스트 코드가 함수를 직접 호출하는 과정을 익힙니다.',figure:'function-call',
+    sections:[
+      {heading:'연습 목표와 함수 계약',text:'앞 단원의 함수 선언·정의·호출을 실제 인터페이스 문제에 적용합니다. 구현해야 할 계약은 int clamp(int value, int low, int high)이며 low <= high가 전제입니다. 반환값은 value가 범위 안이면 value, 하한 밖이면 low, 상한 밖이면 high입니다.'},
+      {heading:'테스트 하네스가 main 역할을 맡는다',text:'이 문제에서는 학습자가 main을 작성하지 않습니다. 서버의 별도 테스트 하네스가 clamp를 선언하고 여러 인수로 직접 호출합니다. 제출 코드와 하네스를 서로 다른 C 소스 파일로 컴파일·링크하므로 함수 이름, 반환형, 매개변수 자료형이 계약과 정확히 일치해야 합니다.'},
+      {heading:'반환값으로 결과를 전달하고 부작용을 피한다',text:'clamp는 계산한 정수를 반환하는 함수입니다. 함수 안에서 printf나 puts로 출력하면 하네스가 만드는 결과에 불필요한 문자가 섞여 실패합니다. 전역 상태 변경도 필요하지 않습니다. 입력을 읽고 결과를 출력하는 책임과 값을 계산하는 책임을 분리해 보세요.'},
+      {heading:'단계별 예제와 실행 결과',text:'하네스가 clamp(15, 0, 10)을 호출하면 value가 high보다 크므로 10을 반환해야 합니다. 하네스는 반환값 10을 출력해 예상 결과와 비교합니다. clamp(5, 0, 10)은 5, clamp(-3, 0, 10)은 0이 되어야 합니다.',code:'int clamp(int value, int low, int high) {\n    if (value < low) return low;\n    if (value > high) return high;\n    return value;\n}'},
+      {heading:'흔한 오류와 진단 읽기',text:'main을 함께 제출하면 하네스의 main과 중복되어 링크가 실패합니다. 함수 이름이나 매개변수 자료형이 다르면 하네스가 요구한 기호를 찾지 못합니다. 모든 경로에서 반환하지 않거나 디버그 출력을 남기면 컴파일 경고 또는 테스트 실패가 생깁니다.'},
+      {heading:'핵심 요약과 복습 연결',text:'함수 구현형 문제에서는 공개된 함수 계약만 구현하고 입출력과 호출은 하네스에 맡깁니다. 이 구조는 헤더 파일, 분할 컴파일, 자료구조 인터페이스와 유닛 테스트 학습으로 이어집니다. 실패하면 컴파일 진단과 첫 실패 사례를 확인한 뒤 함수 본문만 고쳐 다시 제출하세요.'}
+    ],
+    quiz:{question:'함수 구현형 clamp 문제에서 학습자가 main을 작성하지 않는 이유는?',options:['별도 테스트 하네스가 main을 제공하고 clamp를 직접 호출하기 때문이다','C에서는 main 없이도 실행 파일이 항상 만들어지기 때문이다','clamp가 입력과 출력을 자동으로 처리하기 때문이다','함수 원형이 main을 대신 실행하기 때문이다'],answer:0,explanation:'테스트 하네스가 실행 시작점과 여러 호출 사례를 제공하므로 제출에는 계약에 맞는 함수 구현만 둡니다.'},
+    challenge:{id:'c-clamp-function',title:'clamp 함수 본문만 구현하기',description:'int clamp(int value, int low, int high)의 함수 구현만 제출하세요. main 함수와 입력·출력 코드는 작성하지 마세요. low <= high이며 범위 안 값은 그대로, 하한 밖은 low, 상한 밖은 high를 반환합니다.',starter:'int clamp(int value, int low, int high) {\n    // TODO: 함수 계약에 맞는 값을 반환하세요.\n    return value;\n}',input:'clamp(15, 0, 10)',expected:'10'}
+  },
+  {
     id:'rust-mut',track:'rust',level:'시작하기',title:'변수 바인딩과 가변성',minutes:20,source:'기초 Rust 개념 독자 작성 초안 (Rust 교재 미제공)',
     summary:'C의 변수와 비교하여 Rust에서 let과 mut가 어떻게 다른지 배웁니다.',figure:'variables',
     sections:[

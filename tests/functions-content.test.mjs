@@ -37,3 +37,17 @@ test('function manuscript includes checks, errors, summary and original practice
   }
   assert.doesNotMatch(manuscript, /후속 작업: 이 원고를 학습 UI/);
 });
+
+test('function-only clamp practice keeps the harness out of starter code', () => {
+  const lesson = lessons.find(item => item.id === 'c-clamp-function');
+  assert.ok(lesson, 'function-only practice lesson must be registered separately');
+  assert.equal(lesson.track, 'c');
+  assert.equal(lesson.figure, 'function-call');
+  assert.ok(lesson.sections.length >= 5);
+  assert.match(lesson.sections.map(section => section.heading).join(' '), /계약.*하네스.*부작용.*오류.*복습/);
+  assert.equal(lesson.challenge.id, lesson.id);
+  assert.match(lesson.challenge.starter, /int clamp\(int value, int low, int high\) \{/);
+  assert.doesNotMatch(lesson.challenge.starter, /\bmain\s*\(/);
+  assert.doesNotMatch(lesson.challenge.starter, /printf|puts/);
+  assert.match(lesson.challenge.description, /main.*출력.*작성하지/);
+});

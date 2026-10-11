@@ -1,6 +1,6 @@
 const KINDS = new Set(['concept', 'practice']);
 const LANGUAGES = new Set(['c', 'rust']);
-const GRADERS = new Set(['stdin-output', null]);
+const GRADERS = new Set(['stdin-output', 'c-function', null]);
 const ID_PATTERN = /^[a-z][a-z0-9-]*$/;
 
 function stringList(value, field, id, allowEmpty = false) {
@@ -26,7 +26,7 @@ export function validateExerciseMetadata(definitions) {
     if (!KINDS.has(kind)) throw new Error(`${id}: 지원하지 않는 kind입니다.`);
     if (!LANGUAGES.has(language)) throw new Error(`${id}: 지원하지 않는 language입니다.`);
     if (!GRADERS.has(grader)) throw new Error(`${id}: 지원하지 않는 grader입니다.`);
-    if (grader === 'stdin-output' && language !== 'c') throw new Error(`${id}: 현재 stdin-output grader는 C만 지원합니다.`);
+    if (grader !== null && language !== 'c') throw new Error(`${id}: 현재 자동 채점기는 C만 지원합니다.`);
     if (!publicExample || typeof publicExample.input !== 'string' || typeof publicExample.output !== 'string') {
       throw new Error(`${id}: publicExample의 input과 output은 문자열이어야 합니다.`);
     }
@@ -58,6 +58,7 @@ export const exercises = Object.freeze(validateExerciseMetadata([
   { id:'c-array', kind:'practice', language:'c', grader:'stdin-output', concepts:['arrays','iteration','maximum'], prerequisites:['c-loops'], publicExample:{input:'5\n2 9 -3 4 1',output:'9'} },
   { id:'c-pointer', kind:'concept', language:'c', grader:'stdin-output', concepts:['address','dereference','pointer-parameter'], prerequisites:['c-types'], publicExample:{input:'7',output:'8'} },
   { id:'c-functions', kind:'practice', language:'c', grader:'stdin-output', concepts:['function-prototype','parameters','return-value'], prerequisites:['c-loops','c-pointer'], publicExample:{input:'15 0 10',output:'10'} },
+  { id:'c-clamp-function', kind:'practice', language:'c', grader:'c-function', concepts:['function-contract','separate-compilation','test-harness'], prerequisites:['c-functions'], publicExample:{input:'clamp(15, 0, 10)',output:'10'} },
   { id:'rust-mut', kind:'concept', language:'rust', grader:null, concepts:['binding','mutability'], prerequisites:[], publicExample:{input:'입력 없음',output:'4'} },
   { id:'ds-stack', kind:'practice', language:'c', grader:null, concepts:['stack','lifo','array-implementation'], prerequisites:['c-array','c-functions'], publicExample:{input:'—',output:'—'} },
   { id:'algo-binary', kind:'practice', language:'c', grader:null, concepts:['binary-search','sorted-precondition','logarithmic-complexity'], prerequisites:['c-array','c-loops'], publicExample:{input:'—',output:'—'} }
