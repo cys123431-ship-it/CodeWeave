@@ -1,8 +1,8 @@
 import { lessons } from './catalog.js';
-import { DRAFTS_KEY, safeRead } from './logic.js';
+import { DRAFTS_KEY, PROGRESS_KEY, normalizeProgress, safeRead } from './logic.js';
 import { ITERATIONS_KEY, MAX_CODE_LENGTH, normalizeIterations } from './iterations.js';
 import { recordGradedSubmission, readExerciseDrafts, saveExerciseDraft } from './practice.js';
-import { createAttemptBackup, parseAttemptBackup } from './attempt-backup.js';
+import { MAX_BACKUP_FILE_SIZE, createFullBackup, parseCodeWeaveBackup, restoreCodeWeaveBackup } from './backup.js';
 
 const $ = selector => document.querySelector(selector);
 const cLessons = lessons.filter(lesson => lesson.track === 'c');
@@ -105,29 +105,29 @@ async function grade() {
 }
 function downloadHistory() {
   state.iterations = normalizeIterations(safeRead(localStorage, ITERATIONS_KEY, {}), allIds);
-  const data = createAttemptBackup(state, knownIds);
+  state.drafts = readExerciseDrafts(localStorage, allIds);
+  const data = createFullBackup({
+    progress: normalizeProgress(safeRead(localStorage, PROGRESS_KEY, {})),
+    drafts: state.drafts, iterations: state.iterations
+  }, allIds);
   const url = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
   const a = document.createElement('a');
-  a.href = url; a.download = 'codeweave-attempt-history.json'; a.click();
+  a.href = url; a.download = 'codeweave-full-backup.json'; a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 async function importHistory(file) {
   if (!file) return;
-  if (file.size > 2_000_000) { alert('백업 파일이 너무 큽니다(최대 2MB).'); return; }
+  if (file.size > MAX_BACKUP_FILE_SIZE) { alert('백업 파일이 너무 큽니다(최대 5MB).'); return; }
   try {
-    const data = parseAttemptBackup(JSON.parse(await file.text()), knownIds);
-    if (!confirm('기존 코드와 반복 제출 기록을 백업 내용으로 교체할까요?')) return;
-    state.drafts = readExerciseDrafts(localStorage, allIds);
-    state.iterations = normalizeIterations(safeRead(localStorage, ITERATIONS_KEY, {}), allIds);
-    // Preserve drafts from other learning tracks, which are outside this C-only workbench.
-    for (const id of knownIds) delete state.drafts[id];
-    Object.assign(state.drafts, data.drafts);
-    for (const id of knownIds) delete state.iterations[id];
-    Object.assign(state.iterations, data.iterations);
-    localStorage.setItem(ITERATIONS_KEY, JSON.stringify(state.iterations));
-    localStorage.setItem(DRAFTS_KEY, JSON.stringify(state.drafts));
+    const input = JSON.parse(await file.text());
+    const parsed = parseCodeWeaveBackup(input, { knownIds: allIds, attemptIds: knownIds });
+    const label = parsed.format === 'full' ? '통합 백업' : parsed.format === 'legacy-progress' ? '기존 진도 백업' : '기존 제출 이력 백업';
+    if (!confirm(label + '을 복원하면 해당 범위의 현재 기록을 교체합니다. 계속할까요?')) return;
+    const data = restoreCodeWeaveBackup(localStorage, input, { knownIds: allIds, attemptIds: knownIds });
+    state.drafts = data.drafts;
+    state.iterations = data.iterations;
     displayExercise();
-    $('#draft-status').textContent = '백업을 복원했습니다.';
+    $('#draft-status').textContent = label + '을 복원했습니다.';
   } catch (error) { alert('백업 복원 실패: ' + error.message); }
 }
 function init() {

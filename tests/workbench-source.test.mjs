@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
 test('workbench JavaScript modules pass Node syntax checks',()=>{
-  for(const file of ['src/workbench.js','src/attempt-backup.js']){
+  for(const file of ['src/workbench.js','src/attempt-backup.js','src/backup.js']){
     const r=spawnSync(process.execPath,['--check',file],{encoding:'utf8'});
     assert.equal(r.status,0,file+' '+r.stderr);
   }

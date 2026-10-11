@@ -3,7 +3,7 @@ import { MAX_CODE_LENGTH, normalizeIterations } from './iterations.js';
 export const ATTEMPT_BACKUP_KIND = 'attempt-history';
 export const ATTEMPT_BACKUP_VERSION = 1;
 
-function cleanDrafts(raw, knownIds) {
+export function cleanBackupDrafts(raw, knownIds) {
   const drafts = {};
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return drafts;
   for (const id of knownIds) {
@@ -16,7 +16,7 @@ export function createAttemptBackup({ drafts, iterations }, knownIds, at = new D
   return {
     app: 'CodeWeave', kind: ATTEMPT_BACKUP_KIND, version: ATTEMPT_BACKUP_VERSION,
     exportedAt: at,
-    drafts: cleanDrafts(drafts, knownIds),
+    drafts: cleanBackupDrafts(drafts, knownIds),
     iterations: normalizeIterations(iterations, knownIds)
   };
 }
@@ -31,7 +31,7 @@ export function parseAttemptBackup(input, knownIds) {
     throw new TypeError('유효한 문제 목록이 필요합니다.');
   }
   return {
-    drafts: cleanDrafts(input.drafts, knownIds),
+    drafts: cleanBackupDrafts(input.drafts, knownIds),
     iterations: normalizeIterations(input.iterations, knownIds)
   };
 }

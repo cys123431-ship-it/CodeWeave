@@ -1,5 +1,23 @@
 # CodeWeave 개발 일지
 
+## 2026-10-11 13:02~13:09 KST — 진도·초안·제출 이력 통합 백업
+
+- 실행 시작 커밋: `e92b482fb58c0986a95e5acae0a4fd8b69a7be44` (`main`). 원격 HEAD와 깨끗한 로컬 체크아웃 일치, 열린 PR 없음. 기존 GitHub Actions https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38107138362 의 Node/GCC와 실제 Chromium 작업 모두 성공을 확인. 이전 정적 서버 작업을 중복하지 않음.
+- 목표/성공 조건: 퀴즈 진도·모든 트랙 코드 초안·반복 제출 기록을 파일 하나로 내보내고 다시 복원. 기존 `CodeWeave version:1` 진도 파일과 `kind:attempt-history version:1` 제출 파일을 계속 읽으며, 기존 제출 파일은 C 범위 밖 데이터와 퀴즈 진도를 보존. 잘못된 형식/버전/단원/과대 파일과 저장 실패를 안전하게 처리. 기존 저장 키와 형식은 변경하지 않음.
+- 생성: `src/backup.js` — `full-backup` v1 생성·정규화·두 기존 v1 판별/마이그레이션·세 localStorage 키 복원과 실패 시 원문 rollback. `tests/backup.test.mjs` — 전체 round trip, 기존 진도 호환, 기존 제출의 다른 트랙 보존/C 범위 교체, 통합 범위 교체, 중간 저장 실패 rollback, 잘못된 형식/버전/ID 검사 6개.
+- 수정: `src/app.js`, `src/workbench.js`, `workbench.html` — 두 화면에서 최신 저장값을 읽어 같은 통합 파일을 다운로드하고 통합/기존 두 형식을 복원. 5MB 선검사, 복원 형식/교체 범위 확인, 성공·실패 안내. `src/attempt-backup.js` — 기존 v1 정규화 함수를 통합 모듈에서도 재사용하도록 export하되 기존 형식/API 보존. `sw.js`, `server/static-files.mjs` — 새 모듈을 PWA shell v5와 정확한 정적 허용 목록에 포함.
+- 검사/문서 수정: `tests/browser-practice.mjs`는 실제 다운로드의 `full-backup` 형식과 재복원을 검사. `tests/static-server.test.mjs`, `tests/workbench-source.test.mjs`, `.github/workflows/ci.yml`은 신규 자산/문법 회귀 검사. `README.md`, `docs/ARCHITECTURE.md`는 형식별 교체 범위, 5MB 제한, rollback과 localStorage 비트랜잭션 경계를 기록. 이 일지를 포함하여 총 15개 파일 변경.
+- 발견/해결: 기존 대시보드와 연습장이 각각 다른 JSON을 내려받아 두 파일을 별도로 보관해야 했음. 기존 진도 복원은 제출 이력을 유지하고, 기존 C 제출 복원은 C 초안/이력만 교체하면서 Rust 등 다른 트랙과 퀴즈 진도를 유지하도록 명시적인 범위 마이그레이션을 구현. 새 통합 복원만 세 범위를 모두 교체함. 다중 키 두 번째 쓰기 실패를 재현하여 첫 번째 변경까지 원래 직렬화 값으로 되돌리는 것을 확인.
+- 로컬 검사: 변경 전 기준 44/44 성공. 구현 후 `npm test` 50/50 성공, 실패/skip 0. 실제 GCC로 기존 C 5문제 정상/경계 입력과 컴파일 실패·오답·비정상 종료·시간 초과·즉시 재제출 검사 성공. 변경 JS/MJS `node --check`와 `git diff --check` 성공.
+- 브라우저 검사: `npm run test:browser`에서 실제 GCC 5문제는 통과했으나 로컬 Playwright Chromium 실행 파일 부재(`browserType.launch: Executable doesn't exist`)로 UI 단계는 미실행. 반영 후 GitHub Actions의 Chromium 작업으로 통합 파일 다운로드/재복원, 기존 진도 v1, 390px/오프라인 회귀를 확인한다. HTTP/DOM/단위 검사만으로 브라우저 성공을 주장하지 않음.
+- 자료 접근/저작권: 첨부 `c언어 압축 (1)(1).pdf`(87,753,393 bytes), `C_Programming.pdf`(6,838,054 bytes)의 로컬 파일 접근을 다시 확인. 이번 작업은 교육 콘텐츠가 아니므로 목차/본문은 읽지 않았고 PDF/본문/그림을 저장소에 포함하지 않음.
+- 미해결/경계: localStorage는 트랜잭션 DB가 아니며 동시에 다른 탭이 쓰는 순간까지 직렬화할 수 없음. rollback 자체도 브라우저 저장소 장애로 실패할 수 있어 별도 경고를 제공하며 복원 전 파일 백업을 권장. PWA 설치·실제 Windows/Android/iPad와 공개 배포는 미검증. C 실행기는 계속 비격리 개인용 도구임.
+- GitHub 반영: 이 일지를 포함하는 커밋 제목 `feat: unify progress and attempt backups`. 자신의 SHA와 새 CI 결과는 커밋 후 원격 HEAD/파일/Actions를 재조회하여 실행 보고서에 기록한다. 최신 base tree와 expected SHA를 사용하고 강제 푸시하지 않는다.
+- 다음 우선 작업: **학습 상태 모델 분리**. 이론 읽기, 개념 퀴즈 통과, 코딩 실습 통과, 복습 필요, 전체 숙달을 각각 표현하되 기존 `progress.v1`과 통합 백업을 마이그레이션하는 테스트부터 작성. 이어 `content/c/06-functions.md`를 검토하여 화면/도식/퀴즈/컴파일 검증 실습에 연결.
+- 분야별 상태: C 5개/Rust·자료구조·알고리즘 각 1개 시범 단원, C 5문제. 공유 제출 이력·초안 보존·통합 백업과 두 v1 호환이 구현됨. 숙달 상태 분리, 함수 원고 연결, Rust 채점, 전체 교과서/문제 은행은 후속 작업.
+
+---
+
 ## 2026-10-11 11:56 KST — 로컬 정적 파일 접근 제한
 
 - 실행 시작 커밋: `d1cb7ba7d79906432d47a40fb830732a7ff51cf8` (`main`). 원격 HEAD/트리와 열린 PR(없음)을 확인하고 깨끗한 로컬 체크아웃을 fast-forward로 동기화. 기존 CI https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38105230756 성공, 변경 전 `npm test` 38/38 성공. 이미 반영된 초안 보존/Chromium 검사는 중복 구현하지 않음.

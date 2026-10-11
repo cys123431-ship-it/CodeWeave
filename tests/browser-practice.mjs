@@ -135,13 +135,14 @@ try {
   const chunks = [];
   for await (const chunk of await download.createReadStream()) chunks.push(chunk);
   const backup = Buffer.concat(chunks);
+  assert.equal(JSON.parse(backup).kind, 'full-backup');
   assert.equal(JSON.parse(backup)['iterations']['c-types'].length, 5);
   bench.on('dialog', d => d.accept());
   await bench.locator('#import-file').setInputFiles({ name: 'attempts.json', mimeType: 'application/json', buffer: backup });
-  await expect(bench.locator('#draft-status')).toHaveText('백업을 복원했습니다.');
+  await expect(bench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
   assert.equal(await bench.evaluate(() => JSON.parse(localStorage.getItem('codeweave.drafts.v1'))['rust-mut']), 'keep rust draft');
   await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(5);
-  console.log('PASS: existing workbench backup/restore preserves other-track drafts');
+  console.log('PASS: unified workbench backup/restore preserves all-track data');
 
   await page.locator('[data-route="settings"]').click();
   page.on('dialog', d => d.accept());
