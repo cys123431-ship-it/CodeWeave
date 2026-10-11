@@ -20,11 +20,19 @@ const done=(id)=>state.progress.completed.includes(id);
 const ofTrack=(id)=>lessons.filter(l=>l.track===id);
 const button=(title,route,cls='primary')=>'<button class="'+cls+'" data-route="'+safe(route)+'">'+safe(title)+'</button>';
 const tag=(text)=>'<span class="tag">'+safe(text)+'</span>';
-function save(draftId=null,replaceDrafts=false){
+function save(draftId=null,replaceDrafts=false,quizId=null){
  try{
-  localStorage.setItem(PROGRESS_KEY,JSON.stringify(state.progress));
-  if(replaceDrafts)localStorage.setItem(DRAFTS_KEY,JSON.stringify(state.drafts));
-  else if(draftId)state.drafts=saveExerciseDraft(localStorage,lessons.map(l=>l.id),draftId,state.drafts[draftId]);
+  if(draftId)state.drafts=saveExerciseDraft(localStorage,lessons.map(l=>l.id),draftId,state.drafts[draftId]);
+  else{
+   if(quizId){
+    const latest=normalizeProgress(safeRead(localStorage,PROGRESS_KEY,{}));
+    latest.results[quizId]=state.progress.results[quizId];
+    if(state.progress.completed.includes(quizId)&&!latest.completed.includes(quizId))latest.completed.push(quizId);
+    state.progress=latest;
+   }
+   localStorage.setItem(PROGRESS_KEY,JSON.stringify(state.progress));
+   if(replaceDrafts)localStorage.setItem(DRAFTS_KEY,JSON.stringify(state.drafts));
+  }
   state.storageMessage='';return true;
  }catch{state.storageMessage='브라우저 저장에 실패했습니다. 현재 코드와 기록을 백업하세요.';return false;}
 }
@@ -42,7 +50,7 @@ function nav(){return '<aside class="sidebar"><div class="brand"><span class="br
 function render(){const r=state.route;const page=r==='dashboard'?dashboard():r==='settings'?settings():r.startsWith('track:')?trackPage(r.slice(6)):r.startsWith('lesson:')?lessonPage(r.slice(7)):dashboard();$('#app').innerHTML='<div class="layout">'+nav()+'<main class="main"><header class="topbar">CodeWeave / 개인 학습 플랫폼 <span class="pill">MVP 0.1</span></header><div class="content">'+(state.storageMessage?'<p class="notice" role="status">'+safe(state.storageMessage)+'</p>':'')+page+'<footer class="footer">CodeWeave · 개인 학습용 초기 버전 · 상용 교재 원본 미포함</footer></div></main></div>';bind();}
 function bind(){document.querySelectorAll('[data-route]').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.route)));
 document.querySelectorAll('[data-copy]').forEach(el=>el.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(decodeURIComponent(el.dataset.copy));el.textContent='복사됨';}catch{el.textContent='복사 불가';}}));
-document.querySelectorAll('[data-quiz]').forEach(el=>el.addEventListener('click',()=>{const id=el.dataset.quiz,q=lessonById(id)?.quiz;const selected=Number(el.dataset.choice),grade=scoreChoice(q,selected);state.feedback[id]={...grade,selected};state.progress.results[id]={...grade,selected,at:new Date().toISOString()};if(grade.correct&&!done(id))state.progress.completed.push(id);save();render();}));
+document.querySelectorAll('[data-quiz]').forEach(el=>el.addEventListener('click',()=>{const id=el.dataset.quiz,q=lessonById(id)?.quiz;const selected=Number(el.dataset.choice),grade=scoreChoice(q,selected);state.feedback[id]={...grade,selected};state.progress.results[id]={...grade,selected,at:new Date().toISOString()};if(grade.correct&&!done(id))state.progress.completed.push(id);save(null,false,id);render();}));
 document.querySelectorAll('[data-retry]').forEach(el=>el.addEventListener('click',()=>{delete state.feedback[el.dataset.retry];render();}));
 const editor=$('#code-input');if(editor){const id=state.route.slice(7),l=lessonById(id);
  editor.addEventListener('input',()=>{state.drafts[id]=editor.value;save(id);if(state.storageMessage)showStorageMessage();});
@@ -92,6 +100,7 @@ async function grade(lesson,code){
  finally{clearTimeout(timer);state.grading=false;render();}
 }
 window.addEventListener('storage',event=>{
+ if(event.key===PROGRESS_KEY||event.key===null)state.progress=normalizeProgress(safeRead(localStorage,PROGRESS_KEY,{}));
  if(event.key===DRAFTS_KEY||event.key===null){
   const editor=$('#code-input'),id=state.route.startsWith('lesson:')?state.route.slice(7):null;
   const activeCode=editor?.value;
