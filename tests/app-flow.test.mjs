@@ -87,4 +87,15 @@ test('main lesson loads old workbench attempts, submits, restores, and keeps qui
   windowListeners.storage({ key: ITERATIONS_KEY });
   assert.equal(document.querySelector('#code-input'), active);
   assert.equal(active.value, 'still editing');
+  // Another tab updates drafts after this app has already loaded its snapshot.
+  values.set(DRAFTS_KEY, JSON.stringify({ 'c-types': 'other tab sum', 'rust-mut': 'new rust' }));
+  await active.fire('input');
+  assert.equal(JSON.parse(values.get(DRAFTS_KEY))['c-types'], 'other tab sum');
+  assert.equal(JSON.parse(values.get(DRAFTS_KEY))['rust-mut'], 'new rust');
+  // A quiz action writes progress only, even if this tab has stale draft state.
+  const latest = JSON.parse(values.get(DRAFTS_KEY));
+  latest['rust-mut'] = 'newer rust';
+  values.set(DRAFTS_KEY, JSON.stringify(latest));
+  await document.querySelectorAll('[data-quiz]').find(el => el.dataset.choice === '0').fire('click');
+  assert.equal(JSON.parse(values.get(DRAFTS_KEY))['rust-mut'], 'newer rust');
 });

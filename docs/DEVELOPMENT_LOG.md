@@ -1,5 +1,20 @@
 # CodeWeave 개발 일지
 
+## 2026-10-11 11:16 KST — 원격 갱신 후 초안 저장/브라우저 검증 후속
+
+- 최초 확인 SHA: `033f29a4e8fa67267eab82f52881e729bde4ae2d`. 반영 직전 `main`이 `0fa9875c941a1292f8d421d8ea3ffa7d655c1ccc`로 갱신된 것을 재조회하여 확인.
+- 저장된 원격 구현을 덮어쓰지 않고 새 작업 폴더에서 최신 버전을 기준으로 후속 개발. 동일한 제출 이력 모듈/UI/운영 문서는 중복 추가하지 않음.
+- 이번 목표: 서로 다른 문제/트랙의 초안 저장 충돌 방지, 퀴즈 동작이 초안을 덮어쓰지 않도록 분리, 실제 브라우저 자동 검사 추가.
+- 변경 파일: `src/practice.js`, `src/app.js`, `src/workbench.js`, `sw.js`, `tests/drafts.test.mjs`, `tests/app-flow.test.mjs`, `tests/browser-practice.mjs`, `package.json`, `.github/workflows/ci.yml`, `README.md`, `docs/ARCHITECTURE.md`, `docs/CONTENT_POLICY.md`, 이 일지.
+- 구현: 두 화면에서 저장 직전에 최신 v1 초안을 읽고 한 문제만 갱신. 과거 데이터 정규화/길이 검증/저장 실패 안내. 퀴즈는 진도만 저장. 백업 복원 시 다른 트랙의 최신 초안 보존. Shift+Tab으로 편집기를 벗어날 수 있음. PWA shell v4.
+- 검증: 기존 원격 검사와 새 초안/실제 app fixture 회귀 검사를 실행. 최종 검사 숫자와 브라우저 결과는 PR 검증 후 아래 후속 기록에 확정.
+- 로컬 브라우저 제약: Chromium 실행 파일 부재, 공식 다운로드가 유효한 ZIP을 반환하지 않아 설치 실패. 클라우드 브라우저는 loopback 서버에 ERR_CONNECTION_REFUSED. 이를 UI 성공으로 보고하지 않고 별도 PR의 GitHub Actions에서 실제 Chromium 검사를 수행.
+- GitHub 반영: 최신 `0fa9875`를 기반으로 후속 PR을 만들고 검사 결과를 확인한다. 개발 실행과 반복 예약 성공은 별도 확인.
+- 미완료: 동일 문제 동시 편집은 마지막 저장 적용. 통합 백업/이론·복습·숙달/함수 단원/Rust/전체 교과서/PWA 설치/실기기/공개 배포는 후속 작업.
+- 다음 목표: 먼저 이번 PR의 실제 Chromium 검사 오류 해결 → 정적 서버 허용 자산 정책/회귀 검사 → 두 v1 백업을 읽는 통합 백업 → 숙달 모델 → 함수 원고 연결.
+
+---
+
 ## 2026-10-11 11:06–11:15 KST — Work 최초 개발 실행
 
 - 실행 시작 커밋: `033f29a4e8fa67267eab82f52881e729bde4ae2d` (`main`). 최신 원격 조회와 로컬 clone 결과가 일치했으며 기존 CI는 성공이었다.

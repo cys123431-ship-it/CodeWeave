@@ -51,3 +51,9 @@ supabase         → 계정·진도·풀이 동기화 (선택)
 5. 공용 실행 샌드박스 또는 비용·안전성에 맞는 대안 검증
 6. React·TypeScript 분리, 접근성/오프라인 검증 및 E2E 테스트
 7. 진도 DB/계정 동기화 여부 결정
+
+## 초안 공유 안정화와 검증 (2026-10-11 후속)
+
+`src/practice.js`의 `readExerciseDrafts`/`saveExerciseDraft`는 기존 `codeweave.drafts.v1`을 보존하면서 저장 직전에 최신 데이터를 읽고 해당 문제만 갱신합니다. 단원과 연습장 모두 이 경로를 사용합니다. 퀴즈 진도 저장은 초안을 다시 쓰지 않고, 백업 복원/사용자 초기화에서만 명시적인 전체 교체를 합니다. 다른 탭의 저장 이벤트는 활성 편집기를 다시 만들지 않습니다. localStorage 트랜잭션이나 여러 기기 동기화가 아니므로 같은 문제의 동시 편집은 마지막 저장이 적용됩니다.
+
+PWA shell v4는 갱신된 모듈을 배포합니다. 별도 `npm run test:browser`와 GitHub Actions browser 작업으로 실제 Chromium/GCC, 공유 이력, 복원, 기존 백업, 모바일 너비, 오프라인 재로딩을 검사합니다. PWA 설치·실제 Windows/Android/iPad 기기는 이 검사 범위 밖입니다.
