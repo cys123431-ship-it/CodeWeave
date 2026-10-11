@@ -69,6 +69,8 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     assert.equal(result.ok, false);
     assert.equal(result.message, '컴파일 실패');
     assert.ok(result.compileOutput);
+    assert.equal(result.compilerFeedback.code, 'compile-error');
+    assert.equal(result.compilerFeedback.phase, 'compile');
     recordGradedSubmission(storage, lessons.map(l => l.id), 'c-hello', 'broken', result);
     const history = JSON.parse(storage.getItem(ITERATIONS_KEY));
     assert.equal(history['c-hello'][0].passed, false);
@@ -94,6 +96,8 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     assert.equal(result.ok, false);
     assert.equal(result.message, '컴파일 실패');
     assert.match(result.compileOutput, /main/);
+    assert.equal(result.compilerFeedback.code, 'duplicate-definition');
+    assert.equal(result.compilerFeedback.phase, 'link');
   });
   await t.test('function grader detects forbidden standard-output side effects', async () => {
     const { result } = await submit('c-clamp-function', '#include <stdio.h>\nint clamp(int value,int low,int high){printf("debug\\n");if(value<low)return low;if(value>high)return high;return value;}');
@@ -136,6 +140,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     assert.equal(response.status, 200);
     assert.equal(response.result.message, '컴파일 실패');
     assert.match(response.result.compileOutput, /missing\.h/);
+    assert.equal(response.result.compilerFeedback.code, 'missing-header');
     const missingDefinition = serializeMultiFileSubmission([
       { name: 'main.c', content: '#include "functions.h"\nint main(void){return clamp(1,0,2);}' },
       { name: 'functions.c', content: '#include "functions.h"' },
@@ -144,6 +149,16 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     response = await submit('c-multi-file', missingDefinition);
     assert.equal(response.result.message, '컴파일 실패');
     assert.match(response.result.compileOutput, /clamp/);
+    assert.equal(response.result.compilerFeedback.code, 'undefined-reference');
+    assert.equal(response.result.compilerFeedback.phase, 'link');
+    const mismatch = serializeMultiFileSubmission([
+      { name: 'main.c', content: '#include "functions.h"\nint main(void){return clamp(1,0,2);}' },
+      { name: 'functions.c', content: '#include "functions.h"\nlong clamp(int v,int l,int h){return v<l?l:v>h?h:v;}' },
+      { name: 'functions.h', content: 'int clamp(int,int,int);' }
+    ], { requiredNames: ['main.c','functions.c','functions.h'] });
+    response = await submit('c-multi-file', mismatch);
+    assert.equal(response.result.compilerFeedback.code, 'declaration-mismatch');
+    assert.match(response.result.compileOutput, /conflicting types/);
   });
   await t.test('unknown exercises and oversized code are rejected', async () => {
     assert.equal((await submit('unknown', 'int main(void){return 0;}')).status, 400);

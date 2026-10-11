@@ -6,6 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { openLearningFile, parseRequestPath } from './server/static-files.mjs';
 import { gradingExercises } from './server/grading-exercises.mjs';
 import { parseMultiFileSubmission } from './src/multi-file.js';
+import { classifyCompilerDiagnostic } from './src/compiler-feedback.js';
 
 // IMPORTANT: trusted local development only. Compiled student programs are not sandboxed.
 // This binds only to loopback and MUST NOT be put directly on a public network.
@@ -43,7 +44,7 @@ async function grade(req,res){
    sources.push(harness);
  }
  const compile=spawnSync('gcc',['-std=c11','-Wall','-Wextra','-O0','-I',dir,...sources,'-o',binary],{timeout:4500,maxBuffer:80_000,encoding:'utf8'});
- if(compile.error||compile.status!==0){result={ok:false,message:'컴파일 실패',compileOutput:(compile.stderr||compile.error?.message||'').slice(0,3000),tests:[]};}
+ if(compile.error||compile.status!==0){const compileOutput=(compile.stderr||compile.error?.message||'').slice(0,3000);result={ok:false,message:'컴파일 실패',compileOutput,compilerFeedback:classifyCompilerDiagnostic({output:compileOutput,error:compile.error}),tests:[]};}
  else{
  const tests=[];for(const tc of exercise.cases){
  const out=spawnSync(binary,tc.args,{input:exercise.grader==='c-function'?'':tc.input,encoding:'utf8',timeout:1300,maxBuffer:30_000,cwd:dir});

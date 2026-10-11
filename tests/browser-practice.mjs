@@ -94,9 +94,12 @@ try {
   await expect(page.locator('.detail-head h1')).toHaveText('함수 구현 실습: 테스트 하네스와 계약');
   await expect(page.locator('#code-input')).not.toHaveValue(/main\s*\(/);
   await expect(page.locator('.practice-zone')).toContainText('함수 직접 호출형');
+  await submit(page, functionOnly + '\nint main(void){return 0;}');
+  await expect(page.locator('.terminal[role="status"]')).toContainText('링크 단계 · 같은 이름이 두 번 정의됨');
+  await expect(page.locator('.terminal[role="status"]')).toContainText('multiple definition');
   await submit(page, functionOnly);
   await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
-  console.log('PASS: function-only lesson submits through the separate direct-call harness');
+  console.log('PASS: function-only lesson explains a linker failure and then passes the direct-call harness');
   await page.goto(base + '/#lesson:c-multi-file');
   await expect(page.locator('.detail-head h1')).toHaveText('분할 컴파일: 헤더와 여러 소스 파일');
   await expect(page.locator('.figure-box svg')).toContainText('functions.h');
@@ -272,7 +275,7 @@ try {
   await page.goto(base + '/#lesson:c-types');
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.waitForFunction(() => !!navigator.serviceWorker.controller);
-  for (const asset of ['/src/practice.js', '/src/mastery.js', '/src/exercises.js', '/src/multi-file.js']) {
+  for (const asset of ['/src/practice.js', '/src/mastery.js', '/src/exercises.js', '/src/multi-file.js', '/src/compiler-feedback.js']) {
     assert.equal(await page.evaluate(async asset => !!(await caches.match(asset)), asset), true, 'cached ' + asset);
   }
   await page.setViewportSize({ width: 390, height: 844 });

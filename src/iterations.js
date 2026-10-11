@@ -1,4 +1,6 @@
 // Browser-only exercise attempt history. No cloud synchronization or secure grading claims.
+import { normalizeCompilerFeedback } from './compiler-feedback.js';
+
 export const ITERATIONS_KEY = 'codeweave.iterations.v1';
 export const MAX_ITERATIONS = 10;
 export const MAX_CODE_LENGTH = 25000;
@@ -10,7 +12,7 @@ const sanitizeTest = test => ({
 const sanitizeEntry = entry => {
   if (!entry || typeof entry !== 'object' || typeof entry.code !== 'string') return null;
   if (!/^\d{4}-\d\d-\d\dT/.test(entry.at ?? '') || !Number.isFinite(Date.parse(entry.at))) return null;
-  return {
+  const cleaned = {
     at: entry.at,
     code: entry.code.slice(0, MAX_CODE_LENGTH),
     passed: entry.passed === true,
@@ -18,6 +20,9 @@ const sanitizeEntry = entry => {
     compileOutput: text(entry.compileOutput, 2000),
     tests: Array.isArray(entry.tests) ? entry.tests.slice(0, 20).map(sanitizeTest) : []
   };
+  const compilerFeedback = normalizeCompilerFeedback(entry.compilerFeedback);
+  if (compilerFeedback) cleaned.compilerFeedback = compilerFeedback;
+  return cleaned;
 };
 export function normalizeIterations(raw, knownIds = []) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
@@ -39,6 +44,7 @@ export function recordIteration(history, lessonId, code, gradingResult, at = new
     at, code, passed: gradingResult.ok === true,
     message: gradingResult.message,
     compileOutput: gradingResult.compileOutput,
+    compilerFeedback: gradingResult.compilerFeedback,
     tests: gradingResult.tests
   });
   if (!entry) throw new TypeError('올바른 제출 시각이 아닙니다.');

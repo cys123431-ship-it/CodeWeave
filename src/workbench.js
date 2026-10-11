@@ -1,7 +1,7 @@
 import { lessons } from './catalog.js';
 import { DRAFTS_KEY, PROGRESS_KEY, normalizeProgress, safeRead } from './logic.js';
 import { ITERATIONS_KEY, MAX_CODE_LENGTH, normalizeIterations } from './iterations.js';
-import { recordGradedSubmission, readExerciseDrafts, saveExerciseDraft } from './practice.js';
+import { formatGradingResult, recordGradedSubmission, readExerciseDrafts, saveExerciseDraft } from './practice.js';
 import { MAX_BACKUP_FILE_SIZE, createFullBackup, parseCodeWeaveBackup, restoreCodeWeaveBackup } from './backup.js';
 import { exerciseById, isGradedExercise } from './exercises.js';
 import { MAX_MULTI_FILE_LENGTH, parseMultiFileSubmission, serializeMultiFileSubmission } from './multi-file.js';
@@ -130,11 +130,7 @@ async function grade() {
     const result = await response.json();
     state.iterations = recordGradedSubmission(localStorage, lessons.map(l => l.id), id, code, result);
     persist();
-    $('#grade-result').textContent = [
-      result.ok ? '✓ 모든 테스트 통과' : '× 채점 미통과', result.message || '',
-      ...result.tests.map((test, index) => '테스트 '+(index+1)+': '+(test.passed ? '통과' : '실패')+' — '+(test.detail||'')),
-      result.compileOutput || ''
-    ].filter(Boolean).join('\n');
+    $('#grade-result').textContent = formatGradingResult(result);
     displayAttempts();
   } catch (error) {
     $('#grade-result').textContent = '채점 실패: 개인 PC에서 GCC와 Node.js를 설치하고 npm start로 실행했는지 확인하세요.\n' + error.message;

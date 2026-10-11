@@ -1,13 +1,15 @@
 import { DRAFTS_KEY, escapeHtml, safeRead } from './logic.js';
 import { ITERATIONS_KEY, MAX_CODE_LENGTH, MAX_ITERATIONS, normalizeIterations, recordIteration } from './iterations.js';
 import { formatSubmissionForDisplay } from './multi-file.js';
+import { formatCompilerFeedback, normalizeCompilerFeedback } from './compiler-feedback.js';
 
 // A transport error or malformed response must never become a graded submission.
 export function validateGradingResult(result) {
   if (!result || typeof result !== 'object' || Array.isArray(result) ||
       typeof result.ok !== 'boolean' || !Array.isArray(result.tests) ||
       result.tests.some(test => !test || typeof test.passed !== 'boolean') ||
-      (result.ok && (!result.tests.length || result.tests.some(test => !test.passed)))) {
+      (result.ok && (!result.tests.length || result.tests.some(test => !test.passed))) ||
+      (result.compilerFeedback !== undefined && (result.ok || !normalizeCompilerFeedback(result.compilerFeedback)))) {
     throw new Error('잘못된 채점 결과입니다. 제출 기록은 저장하지 않았습니다.');
   }
   return result;
@@ -36,7 +38,7 @@ export function formatGradingResult(result) {
   return [result.ok ? '✓ 모든 테스트 통과' : '× 채점 미통과', result.message || '',
     ...result.tests.map((test, index) => '테스트 ' + (index + 1) + ': ' +
       (test.passed ? '통과' : '실패') + ' — ' + (test.detail || '')),
-    result.compileOutput || ''].filter(Boolean).join('\n');
+    formatCompilerFeedback(result.compilerFeedback), result.compileOutput || ''].filter(Boolean).join('\n');
 }
 
 export function attemptHistoryHtml(history, id, busy = false) {
@@ -53,7 +55,7 @@ export function attemptHistoryHtml(history, id, busy = false) {
         '<p>' + safe(entry.message || '채점 결과 저장됨') + '</p>' +
         '<details><summary>제출 코드와 테스트 결과 보기</summary><pre class="terminal">' +
         safe(formatGradingResult({ ok: entry.passed, message: entry.message, tests: entry.tests,
-          compileOutput: entry.compileOutput })) + '</pre><pre class="attempt-code"><code>' +
+          compilerFeedback: entry.compilerFeedback, compileOutput: entry.compileOutput })) + '</pre><pre class="attempt-code"><code>' +
         safe(formatSubmissionForDisplay(entry.code)) + '</code></pre></details>' +
         '<button class="secondary" type="button" data-restore-attempt="' + index + '"' +
         (busy ? ' disabled' : '') + '>이 제출 코드 복원</button></li>').join('') + '</ol>') + '</section>';

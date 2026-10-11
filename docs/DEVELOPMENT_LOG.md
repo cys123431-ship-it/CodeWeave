@@ -1,5 +1,21 @@
 # CodeWeave 개발 일지
 
+## 2026-10-12 06:02~06:10 KST — 컴파일·링크 진단 학습 피드백 분류
+
+- 실행 시작 커밋: `221ce58c2988197773ce4eb8c352e2741feb01b0` (`main`). 로컬과 `origin/main` 일치, 깨끗한 작업 트리, 열린 PR 없음, 직전 Actions https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38170613019 의 `test`·`browser` 성공을 확인했다. 필수 운영 문서와 최신 일지에서 컴파일·링크 진단 분류를 이번 작업으로 선택했다.
+- 목표/성공 조건: GCC/ld 원문을 바꾸지 않으면서 누락 헤더, 선언·정의 형식 충돌, 미정의 참조, 중복 정의, 일반 컴파일/링크 오류를 초보자가 구분할 한국어 범주와 점검 항목으로 표시한다. 컴파일러 실행 불가·시간 초과는 소스 오류와 구분한다. 피드백을 메인 단원과 연습장에 같은 형식으로 표시하고 제출 이력·통합 백업 v1 왕복에서 보존하되 기존 필드 없는 기록을 계속 읽는다.
+- 테스트 우선 재현: `tests/compiler-feedback.test.mjs`와 제출 이력 검사를 먼저 추가했다. 구현 전 표적 실행은 새 모듈을 찾지 못했고 `compilerFeedback`이 이력에서 사라져 8개 중 2개가 실패했다. 분류·저장 구현 뒤 실제 정적 서버 합성 체크아웃에 새 PWA 파일이 빠져 404가 발생한 것도 검사로 발견해 허용 자산 fixture를 함께 수정했다.
+- 구현: `src/compiler-feedback.js`에 결정적인 GCC/ld 패턴만 사용하는 순수 분류기, 허용 값 정규화, 공통 출력 포맷을 추가했다. `dev-server.mjs`는 실패 원문 `compileOutput`을 그대로 보존하면서 구조화된 피드백을 추가한다. `src/iterations.js`와 `src/practice.js`는 고정된 허용 값만 검증·저장·출력하고 알 수 없는 선택 필드는 원문을 보존한 채 버린다. `src/workbench.js`는 메인 화면과 같은 formatter를 재사용한다.
+- 호환/PWA: 기존 `codeweave.iterations.v1`·통합 백업 v1 키와 버전을 바꾸지 않고 `compilerFeedback`을 선택 필드로 추가했다. 필드가 없는 과거 기록은 그대로 읽는다. 새 브라우저 모듈을 정적 파일 허용 목록과 shell v12에 포함하고 CI 문법 검사도 갱신했다.
+- 실제 GCC/브라우저 검사: 다중 파일의 `missing.h`, 정의가 없는 `clamp`, 헤더와 다른 반환형, 함수 하네스와 중복된 `main`을 실제 GCC로 컴파일해 각각 누락 헤더·미정의 참조·선언/정의 불일치·중복 정의로 분류되는지 검사했다. Chromium 시나리오는 중복 `main`의 한국어 링크 피드백과 원문을 확인한 뒤 올바른 함수로 재제출하도록 확장했다.
+- 로컬 검사: 변경 전 `npm test` 79/79 성공. 최종 `npm test` 88/88 성공, 실패/skip 0. 분류기, 이력/백업 호환, 실제 GCC 8문제와 오류 분기, 정적 서버/PWA 자산 검사가 모두 통과했다. 변경 JS/MJS `node --check`와 `git diff --check` 성공.
+- 로컬 브라우저 시도: `npm run test:browser`의 C 8문제 실제 GCC API 검증은 성공했으나 Playwright Chromium 실행 파일 부재(`browserType.launch: Executable doesn't exist`)로 UI 단계는 미실행. 새 UI E2E는 반영 후 GitHub Actions의 설치된 Chromium으로 판정한다.
+- 문서/자료: `README.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`에 원문 보존, 고정 분류의 경계, 선택 필드 호환, PWA shell v12를 기록했다. 두 참고 PDF의 로컬 접근과 크기는 재확인했지만 이번 작업은 채점 피드백 코드 범위여서 본문·그림·문제를 읽거나 복제하지 않았다.
+- 미해결/위험: 분류기는 GCC/ld 출력 패턴에 근거한 보조 안내이며 모든 컴파일러·지역화 출력·복합 오류의 근본 원인을 증명하지 않는다. 반드시 함께 표시되는 원문과 첫 오류를 확인해야 한다. 로컬 GCC 실행기는 계속 비격리 개인용이고 실제 Windows/Android/iPad 및 PWA 설치는 미검증이다. Rust/Cargo 진단·채점은 구현 전이다.
+- GitHub 반영: 이 일지를 포함하는 커밋 제목 `feat: classify compiler diagnostics for learners`. 자신의 SHA와 새 CI 결과는 커밋 후 원격 HEAD·변경 파일·Actions를 재조회해 실행 보고서에 기록한다. 최신 base SHA lease를 사용하며 강제 푸시하지 않는다.
+- 다음 우선 작업: **두 번째 함수 구현형 C 문제**. 배열과 함수 선수 개념을 사용하는 작은 계약을 선택해 문제 메타데이터·독자 원고·스타터·서버 하네스·경계값·부작용/시간 초과·반복 제출을 한 묶음으로 추가하고, 특정 `clamp` 문제에 묶이지 않은 `c-function` 스키마 재사용성을 검증한다.
+- 분야별 상태: C 8개/Rust·자료구조·알고리즘 각 1개 시범 단원, 공개 정의 11개. C 채점은 입출력 6·함수 직접 호출 1·다중 파일 1이고 컴파일·링크 실패에 원문과 한국어 학습 피드백을 함께 제공한다. 공유 이력·통합 백업·숙달/PWA 자동 검사는 유지한다. C 20문제, Rust 채점, 전체 교과서, 실기기·공개 샌드박스는 후속 작업이다.
+
 ## 2026-10-12 02:01~05:00 KST — 다중 파일 모바일·제출 복원·통합 백업 E2E 고정
 
 - 실행 시작 커밋: `91d6a2e172706902930c4d23908d55c2db70a7f4` (`main`). 로컬 `main`과 `origin/main` 일치 및 깨끗한 시작 상태를 확인했다. GitHub 연결로 저장소 읽기와 push/admin 권한, 열린 PR 없음, 직전 Actions 실행 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38154632973 의 `test`·`browser` 작업 성공을 재확인했다. 필수 운영 문서와 최신 일지에서 다중 파일의 390px 실제 조작·제출 복원·통합 백업 왕복을 이번 작업으로 선택했다.

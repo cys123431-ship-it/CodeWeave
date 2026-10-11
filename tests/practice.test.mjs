@@ -1,12 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ITERATIONS_KEY, MAX_ITERATIONS, normalizeIterations } from '../src/iterations.js';
-import { recordGradedSubmission, submissionCode, validateGradingResult, attemptHistoryHtml } from '../src/practice.js';
+import { recordGradedSubmission, submissionCode, validateGradingResult, attemptHistoryHtml, formatGradingResult } from '../src/practice.js';
+import { classifyCompilerDiagnostic } from '../src/compiler-feedback.js';
 
 const ids = ['c-hello', 'c-types'];
 const at = '2026-10-11T02:00:00.000Z';
 const pass = { ok: true, message: '1/1 통과', tests: [{ passed: true, detail: '출력 일치' }] };
 const fail = { ok: false, message: '컴파일 실패', tests: [], compileOutput: 'expected ;' };
+const compilerFail = { ...fail, compilerFeedback: classifyCompilerDiagnostic({ output: fail.compileOutput }) };
 function memoryStorage(initial = {}) {
   const values = new Map(Object.entries(initial));
   return { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };
@@ -74,4 +76,17 @@ test('history view escapes code and diagnostics, supports legacy entries, and di
   assert.ok(html.includes('data-restore-attempt="0" disabled'));
   assert.ok(html.includes('✓ 실습 통과'));
   assert.ok(attemptHistoryHtml({}, 'c-types').includes('아직 제출 기록이 없습니다.'));
+});
+
+test('compiler learning feedback is validated, stored and shown before the untouched diagnostic', () => {
+  const storage = memoryStorage();
+  const history = recordGradedSubmission(storage, ids, 'c-hello', 'broken', compilerFail, at);
+  assert.deepEqual(history['c-hello'][0].compilerFeedback, compilerFail.compilerFeedback);
+  const text = formatGradingResult(compilerFail);
+  assert.match(text, /컴파일 단계 · C 문법 또는 선언 오류/);
+  assert.match(text, /먼저 나타난 error/);
+  assert.ok(text.indexOf('C 문법 또는 선언 오류') < text.indexOf('expected ;'));
+  const html = attemptHistoryHtml(history, 'c-hello');
+  assert.match(html, /C 문법 또는 선언 오류/);
+  assert.throws(() => validateGradingResult({ ...fail, compilerFeedback: { code: '<bad>' } }), /잘못된 채점 결과/);
 });
