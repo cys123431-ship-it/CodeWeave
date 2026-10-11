@@ -3,7 +3,8 @@ import { DRAFTS_KEY, PROGRESS_KEY, normalizeProgress, safeRead } from './logic.j
 import { ITERATIONS_KEY, MAX_CODE_LENGTH, normalizeIterations } from './iterations.js';
 import { recordGradedSubmission, readExerciseDrafts, saveExerciseDraft } from './practice.js';
 import { MAX_BACKUP_FILE_SIZE, createFullBackup, parseCodeWeaveBackup, restoreCodeWeaveBackup } from './backup.js';
-import { isGradedExercise } from './exercises.js';
+import { exerciseById, isGradedExercise } from './exercises.js';
+import { MAX_MULTI_FILE_LENGTH, parseMultiFileSubmission, serializeMultiFileSubmission } from './multi-file.js';
 
 const $ = selector => document.querySelector(selector);
 const cLessons = lessons.filter(lesson => isGradedExercise(lesson.challenge.id));
@@ -17,22 +18,62 @@ const state = {
   busy: false
 };
 
-function persist() {
+function currentExercise() { return exerciseById(state.lessonId); }
+function currentSubmission() {
+  const exercise = currentExercise();
+  if (exercise?.grader !== 'c-multi-file') return $('#code-input').value;
+  return serializeMultiFileSubmission(
+    [...document.querySelectorAll('[data-code-file]')].map(editor => ({ name: editor.dataset.codeFile, content: editor.value })),
+    { requiredNames: exercise.requiredFiles }
+  );
+}
+function persist(code = currentSubmission()) {
   try {
-    state.drafts = saveExerciseDraft(localStorage, allIds, state.lessonId, state.drafts[state.lessonId]);
+    state.drafts[state.lessonId] = code;
+    state.drafts = saveExerciseDraft(localStorage, allIds, state.lessonId, code);
     $('#draft-status').textContent = '이 브라우저에 자동 저장되었습니다.';
   } catch {
     $('#draft-status').textContent = '브라우저 저장 공간이 부족합니다. 백업을 내려받으세요.';
   }
 }
 function currentLesson() { return cLessons.find(l => l.id === state.lessonId); }
+function bindCodeEditor(editor) {
+  editor.addEventListener('input', () => persist());
+  editor.addEventListener('keydown', event => {
+    if (event.key === 'Tab' && !event.shiftKey) {
+      event.preventDefault();
+      editor.setRangeText('    ', editor.selectionStart, editor.selectionEnd, 'end');
+      editor.dispatchEvent(new Event('input'));
+    }
+  });
+}
+function displayEditors(lesson) {
+  const exercise = currentExercise(), single = $('#code-input'), host = $('#multi-file-editors');
+  const value = typeof state.drafts[lesson.id] === 'string' ? state.drafts[lesson.id] : lesson.challenge.starter;
+  if (exercise?.grader !== 'c-multi-file') {
+    host.hidden = true; host.replaceChildren(); single.hidden = false; $('#code-label').hidden = false;
+    single.value = value; return;
+  }
+  let files;
+  try { files = parseMultiFileSubmission(value, { requiredNames: exercise.requiredFiles }); }
+  catch { files = parseMultiFileSubmission(lesson.challenge.starter, { requiredNames: exercise.requiredFiles }); }
+  single.hidden = true; $('#code-label').hidden = true; host.hidden = false; host.replaceChildren();
+  for (const file of files) {
+    const wrapper = document.createElement('div'), label = document.createElement('label'), editor = document.createElement('textarea');
+    wrapper.className = 'multi-file-editor'; label.textContent = file.name;
+    editor.className = 'code-editor'; editor.spellcheck = false; editor.maxLength = MAX_MULTI_FILE_LENGTH;
+    editor.id = 'workbench-file-' + file.name.replaceAll('.', '-'); label.htmlFor = editor.id;
+    editor.dataset.codeFile = file.name; editor.setAttribute('aria-label', file.name + ' 코드 편집기'); editor.value = file.content;
+    bindCodeEditor(editor); wrapper.append(label, editor); host.append(wrapper);
+  }
+}
 function displayExercise() {
   const lesson = currentLesson();
   $('#exercise-title').textContent = lesson.challenge.title;
   $('#exercise-description').textContent = lesson.challenge.description;
   $('#sample-input').textContent = lesson.challenge.input;
   $('#sample-output').textContent = lesson.challenge.expected;
-  $('#code-input').value = typeof state.drafts[lesson.id] === 'string' ? state.drafts[lesson.id] : lesson.challenge.starter;
+  displayEditors(lesson);
   $('#grade-result').textContent = '코드를 작성한 뒤 로컬 GCC로 채점하세요.';
   displayAttempts();
 }
@@ -60,11 +101,10 @@ function displayAttempts() {
     button.type = 'button'; button.className = 'secondary';
     button.textContent = '이 제출 코드 복원';
     button.addEventListener('click', () => {
-      if ($('#code-input').value !== entry.code && !confirm('현재 작성 중인 코드를 이전 제출 코드로 교체할까요?')) return;
+      if (currentSubmission() !== entry.code && !confirm('현재 작성 중인 코드를 이전 제출 코드로 교체할까요?')) return;
       state.drafts[state.lessonId] = entry.code;
-      $('#code-input').value = entry.code;
+      persist(entry.code); displayExercise();
       $('#grade-result').textContent = '이전 제출 코드를 복원했습니다. 다시 채점하면 새 제출 기록이 만들어집니다.';
-      persist();
     });
     li.append(status, date, info, button); list.append(li);
   });
@@ -75,8 +115,9 @@ async function grade() {
   $('#grade-code').disabled = true;
   $('#lesson-select').disabled = true;
   const id = state.lessonId;
-  const code = $('#code-input').value;
-  state.drafts[id] = code; persist();
+  let code;
+  try { code = currentSubmission(); state.drafts[id] = code; persist(code); }
+  catch (error) { $('#grade-result').textContent = '제출 형식 오류: ' + error.message; state.busy = false; $('#grade-code').disabled = false; $('#lesson-select').disabled = false; return; }
   $('#grade-result').textContent = '로컬 GCC 서버에서 컴파일하고 테스트하는 중...';
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
@@ -145,7 +186,7 @@ function init() {
   $('#code-input').maxLength = MAX_CODE_LENGTH;
   $('#code-input').addEventListener('input', event => {
     state.drafts[state.lessonId] = event.target.value.slice(0, MAX_CODE_LENGTH);
-    persist();
+    persist(state.drafts[state.lessonId]);
   });
   $('#code-input').addEventListener('keydown', event => {
     if (event.key === 'Tab' && !event.shiftKey) {
@@ -159,7 +200,7 @@ function init() {
   $('#reset-code').addEventListener('click', () => {
     if (!confirm('현재 코드를 처음 상태로 되돌릴까요?')) return;
     state.drafts[state.lessonId] = currentLesson().challenge.starter;
-    localStorage.setItem(DRAFTS_KEY, JSON.stringify(state.drafts));
+    persist(state.drafts[state.lessonId]);
     displayExercise();
   });
   $('#export-history').addEventListener('click', downloadHistory);
@@ -171,7 +212,7 @@ function init() {
 }
 window.addEventListener('storage', event => {
   if (event.key === DRAFTS_KEY || event.key === null) {
-    const activeCode = $('#code-input').value;
+    let activeCode; try { activeCode = currentSubmission(); } catch { activeCode = state.drafts[state.lessonId]; }
     state.drafts = readExerciseDrafts(localStorage, allIds);
     state.drafts[state.lessonId] = activeCode;
   }

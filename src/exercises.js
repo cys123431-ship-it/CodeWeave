@@ -1,7 +1,8 @@
 const KINDS = new Set(['concept', 'practice']);
 const LANGUAGES = new Set(['c', 'rust']);
-const GRADERS = new Set(['stdin-output', 'c-function', null]);
+const GRADERS = new Set(['stdin-output', 'c-function', 'c-multi-file', null]);
 const ID_PATTERN = /^[a-z][a-z0-9-]*$/;
+const FILE_NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 
 function stringList(value, field, id, allowEmpty = false) {
   if (!Array.isArray(value) || (!allowEmpty && value.length === 0)) {
@@ -19,7 +20,7 @@ export function validateExerciseMetadata(definitions) {
   const ids = new Set();
   const normalized = definitions.map((definition, index) => {
     if (!definition || typeof definition !== 'object' || Array.isArray(definition)) throw new Error(`${index}: 문제 정의가 객체가 아닙니다.`);
-    const { id, kind, language, grader, concepts, prerequisites, publicExample } = definition;
+    const { id, kind, language, grader, concepts, prerequisites, publicExample, requiredFiles } = definition;
     if (typeof id !== 'string' || !ID_PATTERN.test(id)) throw new Error(`${index}: 유효하지 않은 문제 ID입니다.`);
     if (ids.has(id)) throw new Error(`${id}: 중복 문제 ID입니다.`);
     ids.add(id);
@@ -30,11 +31,23 @@ export function validateExerciseMetadata(definitions) {
     if (!publicExample || typeof publicExample.input !== 'string' || typeof publicExample.output !== 'string') {
       throw new Error(`${id}: publicExample의 input과 output은 문자열이어야 합니다.`);
     }
+    let normalizedFiles = [];
+    if (grader === 'c-multi-file') {
+      if (!Array.isArray(requiredFiles) || requiredFiles.length === 0 ||
+          requiredFiles.some(name => typeof name !== 'string' || !FILE_NAME_PATTERN.test(name))) {
+        throw new Error(`${id}: requiredFiles는 안전한 파일명의 비어 있지 않은 배열이어야 합니다.`);
+      }
+      if (new Set(requiredFiles).size !== requiredFiles.length) throw new Error(`${id}: requiredFiles에 중복 값이 있습니다.`);
+      normalizedFiles = [...requiredFiles];
+    } else if (requiredFiles !== undefined) {
+      throw new Error(`${id}: 다중 파일 문제가 아닌데 requiredFiles가 있습니다.`);
+    }
     return {
       id, kind, language, grader,
       concepts: stringList(concepts, 'concepts', id),
       prerequisites: stringList(prerequisites, 'prerequisites', id, true),
-      publicExample: { input: publicExample.input, output: publicExample.output }
+      publicExample: { input: publicExample.input, output: publicExample.output },
+      requiredFiles: normalizedFiles
     };
   });
   for (const exercise of normalized) {
@@ -47,7 +60,8 @@ export function validateExerciseMetadata(definitions) {
     ...exercise,
     concepts: Object.freeze(exercise.concepts),
     prerequisites: Object.freeze(exercise.prerequisites),
-    publicExample: Object.freeze(exercise.publicExample)
+    publicExample: Object.freeze(exercise.publicExample),
+    requiredFiles: Object.freeze(exercise.requiredFiles)
   }));
 }
 
@@ -59,6 +73,7 @@ export const exercises = Object.freeze(validateExerciseMetadata([
   { id:'c-pointer', kind:'concept', language:'c', grader:'stdin-output', concepts:['address','dereference','pointer-parameter'], prerequisites:['c-types'], publicExample:{input:'7',output:'8'} },
   { id:'c-functions', kind:'practice', language:'c', grader:'stdin-output', concepts:['function-prototype','parameters','return-value'], prerequisites:['c-loops','c-pointer'], publicExample:{input:'15 0 10',output:'10'} },
   { id:'c-clamp-function', kind:'practice', language:'c', grader:'c-function', concepts:['function-contract','separate-compilation','test-harness'], prerequisites:['c-functions'], publicExample:{input:'clamp(15, 0, 10)',output:'10'} },
+  { id:'c-multi-file', kind:'practice', language:'c', grader:'c-multi-file', concepts:['header-file','separate-compilation','linking'], prerequisites:['c-clamp-function'], requiredFiles:['main.c','functions.c','functions.h'], publicExample:{input:'15 0 10',output:'10'} },
   { id:'rust-mut', kind:'concept', language:'rust', grader:null, concepts:['binding','mutability'], prerequisites:[], publicExample:{input:'입력 없음',output:'4'} },
   { id:'ds-stack', kind:'practice', language:'c', grader:null, concepts:['stack','lifo','array-implementation'], prerequisites:['c-array','c-functions'], publicExample:{input:'—',output:'—'} },
   { id:'algo-binary', kind:'practice', language:'c', grader:null, concepts:['binary-search','sorted-precondition','logarithmic-complexity'], prerequisites:['c-array','c-loops'], publicExample:{input:'—',output:'—'} }

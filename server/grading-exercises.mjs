@@ -13,7 +13,8 @@ const CASES = {
     {input:'clamp(15, 0, 10)',args:['2'],expected:'10'},
     {input:'clamp(-20, -10, -1)',args:['3'],expected:'-10'},
     {input:'clamp(-1, -10, -1)',args:['4'],expected:'-1'}
-  ]
+  ],
+  'c-multi-file': [{input:'5 0 10\n',expected:'5'},{input:'-3 0 10\n',expected:'0'},{input:'15 0 10\n',expected:'10'},{input:'-20 -10 -1\n',expected:'-10'},{input:'-1 -10 -1\n',expected:'-1'}]
 };
 
 const HARNESSES = {
@@ -55,8 +56,8 @@ export function buildGradingExercises(metadata, casesById, harnessesById = {}) {
     if (exercise.grader === 'c-function' && (typeof harness !== 'string' || harness.trim() === '')) {
       throw new Error(`${exercise.id}: 함수 채점 하네스 누락입니다.`);
     }
-    if (exercise.grader === 'stdin-output' && harness !== undefined) {
-      throw new Error(`${exercise.id}: 입출력 문제에는 함수 하네스를 사용할 수 없습니다.`);
+    if (exercise.grader !== 'c-function' && harness !== undefined) {
+      throw new Error(`${exercise.id}: 함수형이 아닌 문제에는 함수 하네스를 사용할 수 없습니다.`);
     }
     const cases = casesById[exercise.id];
     if (cases === undefined) throw new Error(`${exercise.id}: 채점 사례 누락입니다.`);

@@ -7,6 +7,7 @@ import { once } from 'node:events';
 import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { serializeMultiFileSubmission } from '../src/multi-file.js';
 
 const require = createRequire(import.meta.url);
 let playwright, expect;
@@ -29,6 +30,11 @@ const errors = [];
 const correct = '#include <stdio.h>\nint main(void){int a,b;if(scanf("%d %d",&a,&b)!=2)return 1;printf("%d\\n",a+b);return 0;}';
 const failed = '#include <stdio.h>\nint main(void){puts("0");return 0;}';
 const functionOnly = 'int clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}';
+const multiFileSolution = [
+  {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\nint main(void){int v,l,h;if(scanf("%d%d%d",&v,&l,&h)!=3)return 1;printf("%d\\n",clamp(v,l,h));return 0;}'},
+  {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
+  {name:'functions.h',content:'#ifndef FUNCTIONS_H\n#define FUNCTIONS_H\nint clamp(int value,int low,int high);\n#endif'}
+];
 const history = page => page.evaluate(() => JSON.parse(localStorage.getItem('codeweave.iterations.v1')));
 const ready = async page => { await expect(page.locator('#grade-code')).toBeEnabled(); };
 async function submit(page, code) {
@@ -53,14 +59,15 @@ try {
     'c-array': '#include <stdio.h>\nint main(void){int n,x,m;scanf("%d%d",&n,&m);for(int i=1;i<n;i++){scanf("%d",&x);if(x>m)m=x;}printf("%d\\n",m);return 0;}',
     'c-pointer': '#include <stdio.h>\nvoid add_one(int *p){++*p;}\nint main(void){int n;scanf("%d",&n);add_one(&n);printf("%d\\n",n);return 0;}',
     'c-functions': '#include <stdio.h>\nint clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}\nint main(void){int value,low,high;scanf("%d%d%d",&value,&low,&high);printf("%d\\n",clamp(value,low,high));return 0;}',
-    'c-clamp-function': functionOnly
+    'c-clamp-function': functionOnly,
+    'c-multi-file': serializeMultiFileSubmission(multiFileSolution, { requiredNames: ['main.c','functions.c','functions.h'] })
   };
   for (const [exerciseId, code] of Object.entries(solutions)) {
     const response = await fetch(base + '/api/grade', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ exerciseId, code }) });
     const result = await response.json();
     assert.equal(result.ok, true, exerciseId + ': ' + JSON.stringify(result));
   }
-  console.log('PASS: all seven C exercises compile and pass their real GCC tests');
+  console.log('PASS: all eight C exercises compile and pass their real GCC tests');
 
   browser = await chromium.launch({ headless: true });
   context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
@@ -80,6 +87,17 @@ try {
   await submit(page, functionOnly);
   await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
   console.log('PASS: function-only lesson submits through the separate direct-call harness');
+  await page.goto(base + '/#lesson:c-multi-file');
+  await expect(page.locator('.detail-head h1')).toHaveText('분할 컴파일: 헤더와 여러 소스 파일');
+  await expect(page.locator('.figure-box svg')).toContainText('functions.h');
+  await expect(page.locator('[data-code-file]')).toHaveCount(3);
+  await expect(page.locator('.practice-zone')).toContainText('다중 파일형');
+  for (const file of multiFileSolution) await page.locator('[data-code-file="' + file.name + '"]').fill(file.content);
+  const multiResponse = page.waitForResponse(r => r.url().endsWith('/api/grade'));
+  await page.locator('#grade-code').click(); await multiResponse; await ready(page);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
+  assert.match(await page.evaluate(() => JSON.parse(localStorage.getItem('codeweave.drafts.v1'))['c-multi-file']), /^CODEWEAVE_MULTI_FILE_V1/);
+  console.log('PASS: three-file lesson saves and submits through the multi-file GCC contract');
   await page.evaluate(({ failed }) => {
     localStorage.clear();
     localStorage.setItem('codeweave.drafts.v1', JSON.stringify({ 'c-types': failed, 'rust-mut': 'keep rust draft' }));
@@ -100,6 +118,7 @@ try {
   const bench = await context.newPage();
   await bench.goto(base + '/workbench.html');
   await expect(bench.locator('#lesson-select option[value="c-clamp-function"]')).toHaveCount(1);
+  await expect(bench.locator('#lesson-select option[value="c-multi-file"]')).toHaveCount(1);
   await bench.locator('#lesson-select').selectOption('c-types');
   await submit(page, failed);
   await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
@@ -184,7 +203,7 @@ try {
   await page.goto(base + '/#lesson:c-types');
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.waitForFunction(() => !!navigator.serviceWorker.controller);
-  for (const asset of ['/src/practice.js', '/src/mastery.js', '/src/exercises.js']) {
+  for (const asset of ['/src/practice.js', '/src/mastery.js', '/src/exercises.js', '/src/multi-file.js']) {
     assert.equal(await page.evaluate(async asset => !!(await caches.match(asset)), asset), true, 'cached ' + asset);
   }
   await page.setViewportSize({ width: 390, height: 844 });

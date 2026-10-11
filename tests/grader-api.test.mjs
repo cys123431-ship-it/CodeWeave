@@ -6,9 +6,10 @@ import { recordGradedSubmission } from '../src/practice.js';
 import { ITERATIONS_KEY } from '../src/iterations.js';
 import { lessons } from '../src/catalog.js';
 import { gradingExercises } from '../server/grading-exercises.mjs';
+import { MULTI_FILE_DRAFT_PREFIX, serializeMultiFileSubmission } from '../src/multi-file.js';
 
 const gccAvailable = spawnSync('gcc', ['--version']).status === 0;
-test('local GCC API compiles whole-program and function-only C exercises', { skip: !gccAvailable, timeout: 40000 }, async t => {
+test('local GCC API compiles whole-program, function-only and multi-file C exercises', { skip: !gccAvailable, timeout: 45000 }, async t => {
   const child = spawn(process.execPath, ['dev-server.mjs'], {
     env: { ...process.env, PORT: '0' }, stdio: ['ignore', 'pipe', 'pipe']
   });
@@ -44,7 +45,12 @@ test('local GCC API compiles whole-program and function-only C exercises', { ski
     'c-array': '#include <stdio.h>\nint main(void){int n,x,m;if(scanf("%d%d",&n,&m)!=2)return 1;for(int i=1;i<n;i++){if(scanf("%d",&x)!=1)return 1;if(x>m)m=x;}printf("%d\\n",m);return 0;}',
     'c-pointer': '#include <stdio.h>\nvoid add_one(int *p){++*p;}\nint main(void){int n;if(scanf("%d",&n)!=1)return 1;add_one(&n);printf("%d\\n",n);return 0;}',
     'c-functions': '#include <stdio.h>\nint clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}\nint main(void){int value,low,high;if(scanf("%d%d%d",&value,&low,&high)!=3)return 1;printf("%d\\n",clamp(value,low,high));return 0;}',
-    'c-clamp-function': 'int clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}'
+    'c-clamp-function': 'int clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}',
+    'c-multi-file': serializeMultiFileSubmission([
+      {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\nint main(void){int v,l,h;if(scanf("%d%d%d",&v,&l,&h)!=3)return 1;printf("%d\\n",clamp(v,l,h));return 0;}'},
+      {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
+      {name:'functions.h',content:'#ifndef FUNCTIONS_H\n#define FUNCTIONS_H\nint clamp(int value,int low,int high);\n#endif'}
+    ], { requiredNames: ['main.c','functions.c','functions.h'] })
   };
   const values = new Map();
   const storage = { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };
@@ -104,6 +110,40 @@ test('local GCC API compiles whole-program and function-only C exercises', { ski
     assert.equal(result.ok, false);
     assert.equal(result.tests.length, 1, 'fatal execution failures stop later cases');
     assert.equal(result.tests[0].detail, '시간 제한 초과');
+  });
+  await t.test('multi-file submission validates the file manifest before GCC', async () => {
+    const missing = MULTI_FILE_DRAFT_PREFIX + JSON.stringify({ version: 1, files: [
+      { name: 'main.c', content: 'int main(void){return 0;}' },
+      { name: 'functions.c', content: 'int clamp(int v,int l,int h){return v;}' }
+    ] });
+    const response = await submit('c-multi-file', missing);
+    assert.equal(response.status, 400);
+    assert.match(response.result.message, /누락/);
+    const duplicate = MULTI_FILE_DRAFT_PREFIX + JSON.stringify({ version: 1, files: [
+      { name: 'main.c', content: 'int main(void){return 0;}' },
+      { name: 'main.c', content: 'int other(void){return 0;}' },
+      { name: 'functions.c', content: '' }, { name: 'functions.h', content: '' }
+    ] });
+    assert.equal((await submit('c-multi-file', duplicate)).status, 400);
+  });
+  await t.test('multi-file header and linker failures return compiler diagnostics', async () => {
+    const missingHeader = serializeMultiFileSubmission([
+      { name: 'main.c', content: '#include "missing.h"\nint main(void){return 0;}' },
+      { name: 'functions.c', content: '#include "functions.h"\nint clamp(int v,int l,int h){return v<l?l:v>h?h:v;}' },
+      { name: 'functions.h', content: 'int clamp(int,int,int);' }
+    ], { requiredNames: ['main.c','functions.c','functions.h'] });
+    let response = await submit('c-multi-file', missingHeader);
+    assert.equal(response.status, 200);
+    assert.equal(response.result.message, '컴파일 실패');
+    assert.match(response.result.compileOutput, /missing\.h/);
+    const missingDefinition = serializeMultiFileSubmission([
+      { name: 'main.c', content: '#include "functions.h"\nint main(void){return clamp(1,0,2);}' },
+      { name: 'functions.c', content: '#include "functions.h"' },
+      { name: 'functions.h', content: 'int clamp(int,int,int);' }
+    ], { requiredNames: ['main.c','functions.c','functions.h'] });
+    response = await submit('c-multi-file', missingDefinition);
+    assert.equal(response.result.message, '컴파일 실패');
+    assert.match(response.result.compileOutput, /clamp/);
   });
   await t.test('unknown exercises and oversized code are rejected', async () => {
     assert.equal((await submit('unknown', 'int main(void){return 0;}')).status, 400);

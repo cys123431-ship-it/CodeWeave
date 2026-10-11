@@ -22,8 +22,9 @@
         <h2 id="exercise-title"></h2>
         <p id="exercise-description"></p>
         <div class="wb-samples"><div><strong>예시 입력</strong><pre id="sample-input"></pre></div><div><strong>예상 출력</strong><pre id="sample-output"></pre></div></div>
-        <label for="code-input">C 코드 작성</label>
+        <label id="code-label" for="code-input">C 코드 작성</label>
         <textarea id="code-input" class="code-editor" spellcheck="false" maxlength="25000" aria-label="C 코드 작성"></textarea>
+        <div id="multi-file-editors" class="multi-file-editors" hidden></div>
         <p class="wb-caption" id="draft-status" role="status">코드는 이 브라우저에 자동 저장됩니다.</p>
         <div class="wb-actions"><button class="primary" id="grade-code">▶ 로컬 GCC로 채점</button><button class="secondary" id="reset-code">초기 코드로 되돌리기</button></div>
         <pre id="grade-result" class="wb-output" aria-live="polite">아직 제출하지 않았습니다.</pre>

@@ -1,5 +1,6 @@
 import { DRAFTS_KEY, escapeHtml, safeRead } from './logic.js';
 import { ITERATIONS_KEY, MAX_CODE_LENGTH, MAX_ITERATIONS, normalizeIterations, recordIteration } from './iterations.js';
+import { formatSubmissionForDisplay } from './multi-file.js';
 
 // A transport error or malformed response must never become a graded submission.
 export function validateGradingResult(result) {
@@ -53,7 +54,7 @@ export function attemptHistoryHtml(history, id, busy = false) {
         '<details><summary>제출 코드와 테스트 결과 보기</summary><pre class="terminal">' +
         safe(formatGradingResult({ ok: entry.passed, message: entry.message, tests: entry.tests,
           compileOutput: entry.compileOutput })) + '</pre><pre class="attempt-code"><code>' +
-        safe(entry.code) + '</code></pre></details>' +
+        safe(formatSubmissionForDisplay(entry.code)) + '</code></pre></details>' +
         '<button class="secondary" type="button" data-restore-attempt="' + index + '"' +
         (busy ? ' disabled' : '') + '>이 제출 코드 복원</button></li>').join('') + '</ol>') + '</section>';
 }

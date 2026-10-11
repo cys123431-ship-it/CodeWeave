@@ -19,3 +19,4 @@
 .mastery-state{border-radius:10px;background:#f1f5f7;padding:11px 13px;margin:14px 0!important}
 .learning-actions{display:grid;gap:8px}.learning-actions button{width:100%;min-height:44px}
 .side-panel .status-help{font-size:11px;line-height:1.65;margin:13px 0 0;color:#748698}
+.multi-file-editors{display:grid;gap:18px}.multi-file-editor{min-width:0}.multi-file-editor label{display:block;font-weight:800;color:#263b51;margin:0 0 8px}.multi-file-editor .code-editor{min-height:210px}.multi-file-editor:last-child .code-editor{min-height:170px}

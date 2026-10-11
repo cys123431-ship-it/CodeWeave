@@ -5,6 +5,7 @@ import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { openLearningFile, parseRequestPath } from './server/static-files.mjs';
 import { gradingExercises } from './server/grading-exercises.mjs';
+import { parseMultiFileSubmission } from './src/multi-file.js';
 
 // IMPORTANT: trusted local development only. Compiled student programs are not sandboxed.
 // This binds only to loopback and MUST NOT be put directly on a public network.
@@ -21,23 +22,31 @@ async function grade(req,res){
  const {code,exerciseId}=value??{};
  const exercise=gradingExercises.get(exerciseId);
  if(typeof code!=='string'||code.length>25_000||!exercise)return send(res,400,{ok:false,message:'지원하지 않는 문제 또는 코드 길이입니다.'});
+ let submittedFiles=null;
+ if(exercise.grader==='c-multi-file'){
+   try{submittedFiles=parseMultiFileSubmission(code,{requiredNames:exercise.requiredFiles});}
+   catch(error){return send(res,400,{ok:false,message:error.message});}
+ }
  if(busy)return send(res,429,{ok:false,message:'다른 코드를 채점하고 있어요. 잠시 후 다시 시도하세요.'});
  busy=true;ownsSlot=true;
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'codeweave-'));
  let result;
  try{
- const source=path.join(dir,'submission.c'),binary=path.join(dir,process.platform==='win32'?'submission.exe':'submission');await fs.writeFile(source,code,'utf8');
- const sources=[source];
+ const source=path.join(dir,'submission.c'),binary=path.join(dir,process.platform==='win32'?'submission.exe':'submission');
+ const sources=[];
+ if(exercise.grader==='c-multi-file'){
+   for(const file of submittedFiles){const filename=path.join(dir,file.name);await fs.writeFile(filename,file.content,'utf8');if(file.name.endsWith('.c'))sources.push(filename);}
+ }else{await fs.writeFile(source,code,'utf8');sources.push(source);}
  if(exercise.grader==='c-function'){
    const harness=path.join(dir,'harness.c');
    await fs.writeFile(harness,exercise.harness,'utf8');
    sources.push(harness);
  }
- const compile=spawnSync('gcc',['-std=c11','-Wall','-Wextra','-O0',...sources,'-o',binary],{timeout:4500,maxBuffer:80_000,encoding:'utf8'});
+ const compile=spawnSync('gcc',['-std=c11','-Wall','-Wextra','-O0','-I',dir,...sources,'-o',binary],{timeout:4500,maxBuffer:80_000,encoding:'utf8'});
  if(compile.error||compile.status!==0){result={ok:false,message:'컴파일 실패',compileOutput:(compile.stderr||compile.error?.message||'').slice(0,3000),tests:[]};}
  else{
  const tests=[];for(const tc of exercise.cases){
- const out=spawnSync(binary,tc.args,{input:exercise.grader==='stdin-output'?tc.input:'',encoding:'utf8',timeout:1300,maxBuffer:30_000,cwd:dir});
+ const out=spawnSync(binary,tc.args,{input:exercise.grader==='c-function'?'':tc.input,encoding:'utf8',timeout:1300,maxBuffer:30_000,cwd:dir});
  const actual=(out.stdout||'').trim();const expected=tc.expected.trim();
  const fatal=Boolean(out.error)||out.status!==0;
  tests.push({passed:!fatal&&actual===expected,detail:out.error?.code==='ETIMEDOUT'?'시간 제한 초과':out.error?'실행 오류':out.status!==0?'비정상 종료 ('+out.status+')':actual===expected?'출력 일치':'예상: '+expected+'; 실제: '+(actual.slice(0,100)||'(없음)')});

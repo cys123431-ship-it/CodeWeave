@@ -32,12 +32,12 @@ test('every lesson challenge has one validated public exercise definition', () =
 });
 
 test('only implemented C exercises advertise their explicit grading strategy', () => {
-  const expected = ['c-array', 'c-clamp-function', 'c-functions', 'c-hello', 'c-loops', 'c-pointer', 'c-types'];
+  const expected = ['c-array', 'c-clamp-function', 'c-functions', 'c-hello', 'c-loops', 'c-multi-file', 'c-pointer', 'c-types'];
   assert.deepEqual(exercises.filter(exercise => isGradedExercise(exercise.id)).map(exercise => exercise.id).sort(), expected);
   assert.deepEqual([...gradingExercises.keys()].sort(), expected);
   for (const id of expected) {
     assert.equal(exerciseById(id).language, 'c');
-    assert.ok(['stdin-output', 'c-function'].includes(exerciseById(id).grader));
+    assert.ok(['stdin-output', 'c-function', 'c-multi-file'].includes(exerciseById(id).grader));
     assert.ok(gradingExercises.get(id).cases.length >= 1, id);
     const sample = exerciseById(id).publicExample;
     assert.ok(gradingExercises.get(id).cases.some(testCase =>
@@ -49,6 +49,8 @@ test('only implemented C exercises advertise their explicit grading strategy', (
   assert.equal(exerciseById('c-clamp-function').grader, 'c-function');
   assert.equal(gradingExercises.get('c-clamp-function').cases.length, 5);
   assert.match(gradingExercises.get('c-clamp-function').harness, /int clamp\(int value, int low, int high\);/);
+  assert.equal(exerciseById('c-multi-file').grader, 'c-multi-file');
+  assert.deepEqual(exerciseById('c-multi-file').requiredFiles, ['main.c', 'functions.c', 'functions.h']);
   for (const id of ['rust-mut', 'ds-stack', 'algo-binary']) assert.equal(isGradedExercise(id), false);
 });
 
@@ -58,6 +60,7 @@ test('metadata rejects duplicate ids and unsupported enum values', () => {
   assert.throws(() => validateExerciseMetadata([{ ...valid, language: 'python' }]), /language/);
   assert.throws(() => validateExerciseMetadata([{ ...valid, grader: 'browser-eval' }]), /grader/);
   assert.throws(() => validateExerciseMetadata([{ ...valid, language: 'rust', grader: 'c-function' }]), /C만 지원/);
+  assert.throws(() => validateExerciseMetadata([{ ...valid, grader: 'c-multi-file' }]), /requiredFiles/);
 });
 
 test('metadata rejects invalid concepts, examples and prerequisite graphs', () => {

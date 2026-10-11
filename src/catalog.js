@@ -1,3 +1,5 @@
+import { serializeMultiFileSubmission } from './multi-file.js';
+
 // 사용자 업로드 교과서의 학습 범주를 참고하여 신규 작성한 독자적인 교육 콘텐츠 초안.
 // 두 PDF 자체/원문/원본 그림은 저장소에 포함하지 않습니다.
 export const tracks = [
@@ -92,6 +94,24 @@ export const lessons = [
     ],
     quiz:{question:'함수 구현형 clamp 문제에서 학습자가 main을 작성하지 않는 이유는?',options:['별도 테스트 하네스가 main을 제공하고 clamp를 직접 호출하기 때문이다','C에서는 main 없이도 실행 파일이 항상 만들어지기 때문이다','clamp가 입력과 출력을 자동으로 처리하기 때문이다','함수 원형이 main을 대신 실행하기 때문이다'],answer:0,explanation:'테스트 하네스가 실행 시작점과 여러 호출 사례를 제공하므로 제출에는 계약에 맞는 함수 구현만 둡니다.'},
     challenge:{id:'c-clamp-function',title:'clamp 함수 본문만 구현하기',description:'int clamp(int value, int low, int high)의 함수 구현만 제출하세요. main 함수와 입력·출력 코드는 작성하지 마세요. low <= high이며 범위 안 값은 그대로, 하한 밖은 low, 상한 밖은 high를 반환합니다.',starter:'int clamp(int value, int low, int high) {\n    // TODO: 함수 계약에 맞는 값을 반환하세요.\n    return value;\n}',input:'clamp(15, 0, 10)',expected:'10'}
+  },
+  {
+    id:'c-multi-file',track:'c',level:'중급 실습',title:'분할 컴파일: 헤더와 여러 소스 파일',minutes:35,source:'C 헤더·분할 컴파일·링크 과정에 관한 독자 작성 실습',
+    summary:'main.c, functions.c, functions.h의 역할을 나누고 하나의 프로그램으로 컴파일·링크합니다.',figure:'multi-file',
+    sections:[
+      {heading:'선수 지식과 학습 목표',text:'함수의 선언·정의·호출과 테스트 하네스를 이해한 뒤 진행합니다. 학습을 마치면 헤더에 인터페이스를 선언하고, 소스 파일에 구현을 두며, main에서 헤더를 포함해 함수를 호출할 수 있어야 합니다.'},
+      {heading:'헤더는 여러 번 공유할 선언을 모은다',text:'functions.h에는 clamp의 함수 원형을 둡니다. main.c와 functions.c가 같은 선언을 포함하면 호출부와 정의부가 하나의 계약을 공유합니다. include guard는 한 번의 번역 과정에서 같은 헤더가 중복 포함될 때 선언이 반복되는 일을 막습니다.',code:'#ifndef FUNCTIONS_H\n#define FUNCTIONS_H\n\nint clamp(int value, int low, int high);\n\n#endif'},
+      {heading:'각 .c 파일은 별도의 번역 단위다',text:'main.c와 functions.c는 각각 전처리와 컴파일을 거칩니다. 한 파일이 다른 .c 파일을 직접 include하는 방식은 피하고, 필요한 선언을 헤더로 공유합니다. 컴파일된 목적 파일은 링크 단계에서 clamp 정의와 호출을 연결합니다.'},
+      {heading:'완성 프로그램의 흐름과 출력',text:'main.c가 15 0 10을 읽고 clamp를 호출하면 functions.c의 구현이 10을 반환합니다. main.c가 그 값을 출력하므로 결과는 10입니다. 입력 처리, 함수 계약, 구현 책임이 파일마다 분리됩니다.'},
+      {heading:'흔한 오류를 단계별로 찾는다',text:'헤더 파일명이 틀리면 전처리·컴파일 단계에서 파일을 찾지 못합니다. 원형과 정의의 자료형이 다르면 충돌 진단이 생깁니다. functions.c에 정의가 없거나 컴파일 대상에서 빠지면 링크 단계에서 clamp 기호를 찾지 못합니다. 파일명은 대소문자를 포함해 계약과 정확히 일치해야 합니다.'},
+      {heading:'핵심 요약과 다음 연결',text:'헤더는 공개 계약, .c 파일은 구현과 사용 위치를 담습니다. 분할 컴파일은 코드 재사용과 독립 검사를 돕지만 파일 간 계약을 자동으로 대신 설계하지는 않습니다. 이 구조는 전처리기, 빌드 시스템, 자료구조 라이브러리와 다중 파일 프로젝트로 이어집니다.'}
+    ],
+    quiz:{question:'functions.c에 clamp 정의가 없고 main.c에는 호출만 있을 때 가장 가능성 높은 실패 단계는?',options:['링크 단계','키보드 입력 단계','정상 실행 뒤 출력 단계','PWA 설치 단계'],answer:0,explanation:'선언을 보고 main.c는 컴파일될 수 있지만 실제 clamp 정의를 찾지 못하면 링크가 실패합니다.'},
+    challenge:{id:'c-multi-file',title:'세 파일로 clamp 프로그램 완성하기',description:'main.c는 입력과 출력을, functions.h는 함수 원형을, functions.c는 clamp 구현을 담당하게 하세요. 필수 파일명은 바꿀 수 없고 .c 파일을 서로 include하지 않습니다.',starter:serializeMultiFileSubmission([
+      {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\n\nint main(void) {\n    int value, low, high;\n    if (scanf("%d%d%d", &value, &low, &high) != 3) return 1;\n    printf("%d\\n", clamp(value, low, high));\n    return 0;\n}'},
+      {name:'functions.c',content:'#include "functions.h"\n\nint clamp(int value, int low, int high) {\n    // TODO: 범위에 맞는 값을 반환하세요.\n    return value;\n}'},
+      {name:'functions.h',content:'#ifndef FUNCTIONS_H\n#define FUNCTIONS_H\n\nint clamp(int value, int low, int high);\n\n#endif'}
+    ],{requiredNames:['main.c','functions.c','functions.h']}),input:'15 0 10',expected:'10'}
   },
   {
     id:'rust-mut',track:'rust',level:'시작하기',title:'변수 바인딩과 가변성',minutes:20,source:'기초 Rust 개념 독자 작성 초안 (Rust 교재 미제공)',
