@@ -1,16 +1,15 @@
 import http from 'node:http';
 import fs from 'node:fs/promises';
-import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { spawnSync } from 'node:child_process';
+import { openLearningFile, parseRequestPath } from './server/static-files.mjs';
 
 // IMPORTANT: trusted local development only. Compiled student programs are not sandboxed.
 // This binds only to loopback and MUST NOT be put directly on a public network.
 const HOST='127.0.0.1';
 const PORT=Number(process.env.PORT || 4173);
 const ROOT=process.cwd();
-const extensions={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.json':'application/json; charset=utf-8','.webmanifest':'application/manifest+json; charset=utf-8'};
 const cases={
  'c-hello': [{input:'',expected:'Hello, CodeWeave!'}],
  'c-types': [{input:'4 7\n',expected:'11'},{input:'-5 2\n',expected:'-3'},{input:'0 0\n',expected:'0'}],
@@ -50,12 +49,29 @@ async function grade(req,res){
 }
 const server=http.createServer(async(req,res)=>{
  res.setHeader('X-Content-Type-Options','nosniff');
- const url=new URL(req.url,'http://localhost');
- if(url.pathname==='/api/grade')return req.method==='POST'?grade(req,res):send(res,405,{ok:false,message:'POST 요청만 가능합니다.'});
+ const pathname=parseRequestPath(req.url);
+ if(pathname===null)return send(res,400,{ok:false,message:'잘못된 경로입니다.'});
+ if(pathname==='/api/grade')return req.method==='POST'?grade(req,res):send(res,405,{ok:false,message:'POST 요청만 가능합니다.'});
  if(req.method!=='GET'&&req.method!=='HEAD')return send(res,405,{ok:false,message:'허용되지 않은 요청입니다.'});
- let clean;try{clean=decodeURIComponent(url.pathname);}catch{return send(res,400,{ok:false,message:'잘못된 경로입니다.'});}
- const localPath=path.resolve(ROOT,'.'+(clean==='/'?'/index.html':clean));
- if(!localPath.startsWith(ROOT+path.sep)&&localPath!==ROOT)return send(res,403,{ok:false,message:'허용되지 않은 경로입니다.'});
- try{const stat=await fs.stat(localPath);if(!stat.isFile())throw Error('not file');res.writeHead(200,{'Content-Type':extensions[path.extname(localPath)]||'application/octet-stream','Content-Length':stat.size});if(req.method==='HEAD')return res.end();createReadStream(localPath).pipe(res);}catch{res.writeHead(404,{'Content-Type':'text/plain; charset=utf-8'});res.end('File not found');}
+ let file;
+ try{
+   file=await openLearningFile(ROOT,pathname);
+   if(!file)throw Error('not public');
+   if(res.destroyed){await file.handle.close();return;}
+   if(req.method==='HEAD'){
+     await file.handle.close();
+     res.writeHead(200,{'Content-Type':file.contentType,'Content-Length':file.size});
+     return res.end();
+   }
+   const stream=file.handle.createReadStream();
+   stream.on('error',()=>res.destroy());
+   res.on('close',()=>stream.destroy());
+   res.writeHead(200,{'Content-Type':file.contentType,'Content-Length':file.size});
+   stream.pipe(res);
+ }catch{
+   if(file)await file.handle.close().catch(()=>{});
+   if(res.headersSent)return res.destroy();
+   res.writeHead(404,{'Content-Type':'text/plain; charset=utf-8'});res.end('File not found');
+ }
 });
 server.listen(PORT,HOST,()=>console.log('CodeWeave local learning app: http://'+HOST+':'+server.address().port+'\n주의: C 코드 실행은 격리되지 않은 개인 PC용 개발 기능입니다. 공용 서버로 배포하지 마세요.'));
