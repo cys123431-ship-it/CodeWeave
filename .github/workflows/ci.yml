@@ -27,6 +27,7 @@ jobs:
           node --check src/attempt-backup.js
           node --check src/practice.js
           node --check src/backup.js
+          node --check src/mastery.js
           node --check dev-server.mjs
           node --check server/static-files.mjs
           node --check sw.js

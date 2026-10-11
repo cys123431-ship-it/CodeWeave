@@ -91,6 +91,15 @@ try {
   assert.ok(await page.locator('#attempt-history-container .attempt-status.passed').count() > 0);
   assert.deepEqual((await history(page))['c-types'].map(x => x.passed), [true, false, false]);
   assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('codeweave.progress.v1') || '{"completed":[]}').completed.includes('c-types')), false);
+  await page.locator('#mark-theory').click();
+  await page.locator('[data-quiz="c-types"][data-choice="1"]').click();
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('codeweave.progress.v1')).theoryRead), ['c-types']);
+  await page.locator('#toggle-review').click();
+  await expect(page.locator('.mastery-state')).toContainText('숙달 진행 중');
+  await expect(page.locator('.learning-status-list')).toContainText('! 필요');
+  await page.locator('#toggle-review').click();
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
   await expect(bench.locator('#attempt-list li')).toHaveCount(3);
   await page.locator('#attempt-history-container .attempt-list li').first().locator('summary').click();
   await expect(page.locator('#attempt-history-container .attempt-list li').first().locator('pre').last()).toHaveText(correct);
@@ -158,7 +167,7 @@ try {
   await page.goto(base + '/#lesson:c-types');
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.waitForFunction(() => !!navigator.serviceWorker.controller);
-  for (const asset of ['/src/practice.js']) {
+  for (const asset of ['/src/practice.js', '/src/mastery.js']) {
     assert.equal(await page.evaluate(async asset => !!(await caches.match(asset)), asset), true, 'cached ' + asset);
   }
   await page.setViewportSize({ width: 390, height: 844 });

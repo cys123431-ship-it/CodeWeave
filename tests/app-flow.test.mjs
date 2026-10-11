@@ -102,4 +102,14 @@ test('main lesson loads old workbench attempts, submits, restores, and keeps qui
   assert.equal(JSON.parse(values.get(DRAFTS_KEY))['rust-mut'], 'newer rust');
   assert.deepEqual(JSON.parse(values.get(PROGRESS_KEY)).completed, ['c-types','c-hello']);
   assert.equal(JSON.parse(values.get(PROGRESS_KEY)).results['c-types'].correct, true);
+  await document.querySelector('#mark-theory').fire('click');
+  assert.deepEqual(JSON.parse(values.get(PROGRESS_KEY)).theoryRead, ['c-hello']);
+  assert.match(document.root.innerHTML, /✓ 전체 숙달/);
+  await document.querySelector('#toggle-review').fire('click');
+  assert.deepEqual(JSON.parse(values.get(PROGRESS_KEY)).review, ['c-hello']);
+  assert.match(document.root.innerHTML, /! 필요/);
+  assert.match(document.root.innerHTML, /○ 숙달 진행 중/);
+  await document.querySelector('#toggle-review').fire('click');
+  assert.deepEqual(JSON.parse(values.get(PROGRESS_KEY)).review, []);
+  assert.match(document.root.innerHTML, /✓ 전체 숙달/);
 });

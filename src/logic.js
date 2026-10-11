@@ -8,7 +8,12 @@ export function normalizeProgress(value) {
   const valid = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
   const completed = Array.isArray(valid.completed) ? valid.completed.filter(x => typeof x === 'string') : [];
   const results = valid.results && typeof valid.results === 'object' && !Array.isArray(valid.results) ? valid.results : {};
-  return { completed: [...new Set(completed)], results };
+  const theoryRead = Array.isArray(valid.theoryRead) ? valid.theoryRead.filter(x => typeof x === 'string') : [];
+  const review = Array.isArray(valid.review) ? valid.review.filter(x => typeof x === 'string') : [];
+  return {
+    completed: [...new Set(completed)], results,
+    theoryRead: [...new Set(theoryRead)], review: [...new Set(review)]
+  };
 }
 export function percentDone(lessons, completed) {
   if (!lessons.length) return 0;
@@ -26,7 +31,9 @@ export function validateImport(input, knownIds) {
   for (const [id, val] of Object.entries(input.drafts ?? {})) {
     if (knownIds.includes(id) && typeof val === 'string' && val.length <= 20000) drafts[id] = val;
   }
-  return {progress:{completed, results}, drafts};
+  const theoryRead = normalizeProgress(input.progress).theoryRead.filter(id => knownIds.includes(id));
+  const review = normalizeProgress(input.progress).review.filter(id => knownIds.includes(id));
+  return {progress:{completed, results, theoryRead, review}, drafts};
 }
 export function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));

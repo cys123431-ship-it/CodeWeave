@@ -18,6 +18,8 @@ function cleanProgress(raw, knownIds) {
   const normalized = normalizeProgress(raw);
   const allowed = new Set(knownIds);
   const completed = normalized.completed.filter(id => allowed.has(id));
+  const theoryRead = normalized.theoryRead.filter(id => allowed.has(id));
+  const review = normalized.review.filter(id => allowed.has(id));
   const results = {};
   for (const [id, value] of Object.entries(normalized.results)) {
     if (!allowed.has(id) || !value || typeof value !== 'object' || Array.isArray(value) ||
@@ -27,7 +29,7 @@ function cleanProgress(raw, knownIds) {
     if (typeof value.at === 'string' && Number.isFinite(Date.parse(value.at))) entry.at = value.at;
     results[id] = entry;
   }
-  return { completed, results };
+  return { completed, results, theoryRead, review };
 }
 
 export function createFullBackup({ progress, drafts, iterations }, knownIds, at = new Date().toISOString()) {

@@ -31,7 +31,9 @@ test('full backup round trip keeps only bounded known learning data', () => {
       results: {
         'c-types': { correct: true, selected: 1, explanation: 'good', at },
         unknown: { correct: true, selected: 0, explanation: 'drop', at }
-      }
+      },
+      theoryRead: ['c-types', 'rust-mut', 'unknown'],
+      review: ['c-loops', 'unknown']
     },
     drafts: { 'c-types': 'a'.repeat(30000), 'rust-mut': 'let mut x = 1;', unknown: 'drop' },
     iterations: { 'c-types': [attempt('int main(void){}')], unknown: [attempt('drop')] }
@@ -42,6 +44,8 @@ test('full backup round trip keeps only bounded known learning data', () => {
   assert.equal(parsed.format, 'full');
   assert.deepEqual(parsed.progress.completed, ['c-types']);
   assert.deepEqual(Object.keys(parsed.progress.results), ['c-types']);
+  assert.deepEqual(parsed.progress.theoryRead, ['c-types', 'rust-mut']);
+  assert.deepEqual(parsed.progress.review, ['c-loops']);
   assert.equal(parsed.drafts['rust-mut'], 'let mut x = 1;');
   assert.equal(parsed.iterations['c-types'][0].passed, true);
   assert.equal(parsed.drafts.unknown, undefined);
@@ -77,7 +81,7 @@ test('legacy attempt v1 replaces C scope but preserves progress and other tracks
     iterations: { 'c-types': [attempt('new C', false)] }
   }, { knownIds: allIds, attemptIds: cIds });
   assert.equal(restored.format, 'legacy-attempt');
-  assert.deepEqual(restored.progress, originalProgress);
+  assert.deepEqual(restored.progress, { ...originalProgress, theoryRead: [], review: [] });
   assert.equal(restored.drafts['c-types'], 'legacy attempt code');
   assert.equal(restored.drafts['c-loops'], undefined);
   assert.equal(restored.drafts['rust-mut'], 'keep rust');
@@ -93,12 +97,14 @@ test('full backup replaces all three stores with normalized data', () => {
     [ITERATIONS_KEY]: JSON.stringify({ 'c-loops': [attempt('remove me')] })
   });
   const backup = createFullBackup({
-    progress: { completed: ['c-types'], results: {} },
+    progress: { completed: ['c-types'], results: {}, theoryRead: ['c-types'], review: ['c-types'] },
     drafts: { 'c-types': 'only draft' },
     iterations: { 'c-types': [attempt('only attempt')] }
   }, allIds, at);
   const restored = restoreCodeWeaveBackup(storage, backup, { knownIds: allIds, attemptIds: cIds });
   assert.deepEqual(restored.progress.completed, ['c-types']);
+  assert.deepEqual(restored.progress.theoryRead, ['c-types']);
+  assert.deepEqual(restored.progress.review, ['c-types']);
   assert.deepEqual(restored.drafts, { 'c-types': 'only draft' });
   assert.deepEqual(Object.keys(restored.iterations), ['c-types']);
 });

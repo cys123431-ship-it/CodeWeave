@@ -12,3 +12,10 @@
 .attempt-list summary:focus-visible{outline:3px solid #46c8ac;outline-offset:2px}
 .attempt-code{background:#182536;color:#e9f2fa;border-radius:10px;padding:16px;overflow-x:auto;font:13px/1.7 Consolas,monospace;max-width:100%}
 .attempt-list .secondary{margin-top:10px;min-height:44px}
+.learning-status-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.learning-status-list li{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #e7edf1;padding-bottom:9px;font-size:13px;color:#4d6175}
+.learning-status-list strong{white-space:nowrap}
+.status-ok{color:#12664d}.status-pending{color:#566b7e}.status-review{color:#93443c}
+.mastery-state{border-radius:10px;background:#f1f5f7;padding:11px 13px;margin:14px 0!important}
+.learning-actions{display:grid;gap:8px}.learning-actions button{width:100%;min-height:44px}
+.side-panel .status-help{font-size:11px;line-height:1.65;margin:13px 0 0;color:#748698}
