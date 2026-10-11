@@ -14,6 +14,16 @@ const CASES = {
     {input:'clamp(-20, -10, -1)',args:['3'],expected:'-10'},
     {input:'clamp(-1, -10, -1)',args:['4'],expected:'-1'}
   ],
+  'c-array-max-function': [
+    {input:'find_max({4, -2, 9, 1}, 4, &out)',args:['0'],expected:'1 9'},
+    {input:'find_max({-7, -3, -12}, 3, &out)',args:['1'],expected:'1 -3'},
+    {input:'find_max({5, 5, 2, 5}, 4, &out)',args:['2'],expected:'1 5'},
+    {input:'find_max({INT_MIN, 0, INT_MAX}, 3, &out) · out == INT_MAX',args:['3'],expected:'1 1'},
+    {input:'find_max({-42}, 1, &out)',args:['4'],expected:'1 -42'},
+    {input:'find_max(NULL, 3, &out) · NULL 배열',args:['5'],expected:'0 77'},
+    {input:'find_max({5}, 0, &out) · 길이 0',args:['6'],expected:'0 77'},
+    {input:'find_max({5}, 1, NULL)',args:['7'],expected:'0'}
+  ],
   'c-multi-file': [{input:'5 0 10\n',expected:'5'},{input:'-3 0 10\n',expected:'0'},{input:'15 0 10\n',expected:'10'},{input:'-20 -10 -1\n',expected:'-10'},{input:'-1 -10 -1\n',expected:'-1'}]
 };
 
@@ -31,6 +41,30 @@ int main(int argc, char **argv) {
         case 2: printf("%d\\n", clamp(15, 0, 10)); break;
         case 3: printf("%d\\n", clamp(-20, -10, -1)); break;
         case 4: printf("%d\\n", clamp(-1, -10, -1)); break;
+        default: return 71;
+    }
+    return 0;
+}`,
+  'c-array-max-function': `#include <limits.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int find_max(const int values[], size_t length, int *out_max);
+
+int main(int argc, char **argv) {
+    if (argc != 2) return 70;
+    int out = 77;
+    int status;
+    switch (atoi(argv[1])) {
+        case 0: { const int values[] = {4, -2, 9, 1}; status = find_max(values, 4, &out); printf("%d %d\\n", status, out); break; }
+        case 1: { const int values[] = {-7, -3, -12}; status = find_max(values, 3, &out); printf("%d %d\\n", status, out); break; }
+        case 2: { const int values[] = {5, 5, 2, 5}; status = find_max(values, 4, &out); printf("%d %d\\n", status, out); break; }
+        case 3: { const int values[] = {INT_MIN, 0, INT_MAX}; status = find_max(values, 3, &out); printf("%d %d\\n", status, out == INT_MAX); break; }
+        case 4: { const int values[] = {-42}; status = find_max(values, 1, &out); printf("%d %d\\n", status, out); break; }
+        case 5: status = find_max(NULL, 3, &out); printf("%d %d\\n", status, out); break;
+        case 6: { const int values[] = {5}; status = find_max(values, 0, &out); printf("%d %d\\n", status, out); break; }
+        case 7: { const int values[] = {5}; status = find_max(values, 1, NULL); printf("%d\\n", status); break; }
         default: return 71;
     }
     return 0;

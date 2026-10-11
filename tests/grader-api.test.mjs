@@ -46,6 +46,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     'c-pointer': '#include <stdio.h>\nvoid add_one(int *p){++*p;}\nint main(void){int n;if(scanf("%d",&n)!=1)return 1;add_one(&n);printf("%d\\n",n);return 0;}',
     'c-functions': '#include <stdio.h>\nint clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}\nint main(void){int value,low,high;if(scanf("%d%d%d",&value,&low,&high)!=3)return 1;printf("%d\\n",clamp(value,low,high));return 0;}',
     'c-clamp-function': 'int clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}',
+    'c-array-max-function': '#include <stddef.h>\nint find_max(const int values[],size_t length,int *out_max){if(values==NULL||length==0||out_max==NULL)return 0;int maximum=values[0];for(size_t i=1;i<length;i++)if(values[i]>maximum)maximum=values[i];*out_max=maximum;return 1;}',
     'c-multi-file': serializeMultiFileSubmission([
       {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\nint main(void){int v,l,h;if(scanf("%d%d%d",&v,&l,&h)!=3)return 1;printf("%d\\n",clamp(v,l,h));return 0;}'},
       {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
@@ -113,6 +114,27 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     const { result } = await submit('c-clamp-function', 'int clamp(int value,int low,int high){(void)value;(void)low;(void)high;for(;;){}}');
     assert.equal(result.ok, false);
     assert.equal(result.tests.length, 1, 'fatal execution failures stop later cases');
+    assert.equal(result.tests[0].detail, '시간 제한 초과');
+  });
+  await t.test('array function rejects zero initialization for an all-negative array', async () => {
+    const { result } = await submit('c-array-max-function', '#include <stddef.h>\nint find_max(const int values[],size_t length,int *out_max){if(!values||!length||!out_max)return 0;int maximum=0;for(size_t i=0;i<length;i++)if(values[i]>maximum)maximum=values[i];*out_max=maximum;return 1;}');
+    assert.equal(result.ok, false);
+    assert.ok(result.tests.some(test => !test.passed));
+  });
+  await t.test('array function preserves the output object when its contract fails', async () => {
+    const { result } = await submit('c-array-max-function', '#include <stddef.h>\nint find_max(const int values[],size_t length,int *out_max){if(out_max)*out_max=0;if(!values||!length||!out_max)return 0;int maximum=values[0];for(size_t i=1;i<length;i++)if(values[i]>maximum)maximum=values[i];*out_max=maximum;return 1;}');
+    assert.equal(result.ok, false);
+    assert.ok(result.tests.some(test => !test.passed && /예상: 0 77/.test(test.detail)));
+  });
+  await t.test('array function grader detects output side effects', async () => {
+    const { result } = await submit('c-array-max-function', '#include <stddef.h>\n#include <stdio.h>\nint find_max(const int values[],size_t length,int *out_max){puts("debug");if(!values||!length||!out_max)return 0;*out_max=values[0];return 1;}');
+    assert.equal(result.ok, false);
+    assert.match(result.tests[0].detail, /예상:.*실제:/);
+  });
+  await t.test('non-terminating array function stops after the first timed-out case', async () => {
+    const { result } = await submit('c-array-max-function', '#include <stddef.h>\nint find_max(const int values[],size_t length,int *out_max){(void)values;(void)length;(void)out_max;for(;;){}}');
+    assert.equal(result.ok, false);
+    assert.equal(result.tests.length, 1);
     assert.equal(result.tests[0].detail, '시간 제한 초과');
   });
   await t.test('multi-file submission validates the file manifest before GCC', async () => {

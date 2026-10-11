@@ -96,6 +96,24 @@ export const lessons = [
     challenge:{id:'c-clamp-function',title:'clamp 함수 본문만 구현하기',description:'int clamp(int value, int low, int high)의 함수 구현만 제출하세요. main 함수와 입력·출력 코드는 작성하지 마세요. low <= high이며 범위 안 값은 그대로, 하한 밖은 low, 상한 밖은 high를 반환합니다.',starter:'int clamp(int value, int low, int high) {\n    // TODO: 함수 계약에 맞는 값을 반환하세요.\n    return value;\n}',input:'clamp(15, 0, 10)',expected:'10'}
   },
   {
+    id:'c-array-max-function',track:'c',level:'중급 실습',title:'배열 함수 실습: 최댓값과 출력 포인터',minutes:38,source:'C 배열·포인터·함수 계약에 관한 독자 작성 실습',
+    summary:'배열과 길이를 받아 최댓값을 출력 매개변수에 기록하고 성공 여부를 반환하는 함수를 설계합니다.',figure:'array-output-contract',
+    sections:[
+      {heading:'선수 지식과 필요한 이유',text:'배열의 유효 인덱스, 함수의 선언·호출·반환값, 포인터의 역참조, NULL의 의미를 알고 시작합니다. 최댓값 자체가 모든 int 값을 가질 수 있으므로 특정 숫자를 오류 표시로 쓰기보다 성공 여부와 계산 결과를 분리하면 계약이 명확해집니다.'},
+      {heading:'학습 목표',text:'배열 매개변수와 별도 길이가 필요한 이유를 설명하고, 출력 포인터로 결과를 전달하며, 잘못된 입력에서 역참조와 결과 변경을 피하는 함수를 작성합니다. 모든 원소가 음수이거나 INT_MIN·INT_MAX가 포함된 경계 사례도 검증합니다.'},
+      {heading:'함수 계약을 먼저 고정한다',text:'int find_max(const int values[], size_t length, int *out_max)는 성공하면 1을 반환하고 *out_max에 최댓값을 기록합니다. values가 NULL이거나 length가 0이거나 out_max가 NULL이면 0을 반환합니다. 실패할 때 유효한 out_max가 있더라도 그 객체의 기존 값은 변경하지 않습니다.'},
+      {heading:'배열 매개변수와 길이는 한 쌍이다',text:'함수 매개변수의 const int values[]는 const int *values로 조정됩니다. 포인터 값만으로는 원소 개수를 알 수 없으므로 length를 별도로 전달해야 합니다. const는 이 함수가 배열 원소를 바꾸지 않는다는 인터페이스 약속이며, 유효한 원소 범위는 0부터 length - 1까지입니다.',code:'int find_max(const int values[], size_t length, int *out_max);'},
+      {heading:'출력 포인터와 상태 반환을 분리한다',text:'함수의 int 반환값은 성공 여부를, *out_max는 실제 최댓값을 담당합니다. 먼저 세 입력 조건을 모두 검사한 뒤에만 배열과 출력 포인터를 역참조해야 합니다. 이렇게 하면 빈 배열이라는 별도 최댓값을 억지로 만들지 않고 호출자가 실패를 명확히 처리할 수 있습니다.'},
+      {heading:'단계별 예제와 실행 결과',text:'{4, -2, 9, 1}에서는 첫 원소 4를 maximum으로 시작합니다. -2는 유지, 9에서 갱신, 1은 유지하여 마지막에 9를 기록합니다. 호출 결과를 status와 out 순서로 출력하면 1 9입니다.',code:'#include <stddef.h>\n\nint find_max(const int values[], size_t length, int *out_max) {\n    if (values == NULL || length == 0 || out_max == NULL) return 0;\n    int maximum = values[0];\n    for (size_t i = 1; i < length; ++i) {\n        if (values[i] > maximum) maximum = values[i];\n    }\n    *out_max = maximum;\n    return 1;\n}'},
+      {heading:'모든 원소가 음수인 경우를 놓치지 않는다',text:'maximum을 0으로 초기화하면 {-7, -3, -12}에서 배열에 없는 0을 답으로 만들게 됩니다. length > 0을 확인한 뒤 첫 원소로 초기화하면 별도의 범위 가정 없이 모든 int 값에 같은 반복 불변식을 적용할 수 있습니다.'},
+      {heading:'흔한 오류와 정의되지 않은 동작',text:'입력 검증 전에 values[0] 또는 *out_max를 사용하면 NULL이나 빈 배열에서 정의되지 않은 동작이 생길 수 있습니다. 실패 전에 *out_max를 0으로 바꾸면 계약을 위반합니다. length - 1을 반복 조건에 직접 쓰면 length가 0일 때 size_t 언더플로가 생길 수 있으므로 검증 뒤 i < length 형태를 사용합니다.'},
+      {heading:'중간 점검',text:'왜 최댓값의 초기값을 0이 아니라 values[0]으로 잡아야 할까요? out_max가 NULL일 때 무엇을 먼저 해야 할까요? 실패한 호출 뒤 호출자가 보관하던 out 값은 어떻게 되어야 할까요? 각각 음수 배열, 역참조 순서, 부작용 없는 실패 계약과 연결해 답해 보세요.'},
+      {heading:'핵심 요약과 복습 연결',text:'배열 포인터에는 길이가 포함되지 않으며 출력 포인터는 반환값 하나로 부족한 결과를 전달할 수 있습니다. 검증을 역참조보다 먼저 하고, 성공한 경우에만 출력 객체를 변경합니다. 이 계약은 문자열 처리, 검색 함수, 자료구조 API와 Rust의 Option·Result 비교 학습으로 이어집니다.'}
+    ],
+    quiz:{question:'find_max가 실패한 경우 out_max가 가리키는 기존 값은 어떻게 해야 할까?',options:['변경하지 않는다','항상 0으로 바꾼다','INT_MIN으로 바꾼다','배열 첫 원소로 바꾼다'],answer:0,explanation:'계약은 성공한 경우에만 결과를 기록합니다. 실패에서는 유효한 출력 객체의 기존 값을 보존합니다.'},
+    challenge:{id:'c-array-max-function',title:'find_max 함수 본문만 구현하기',description:'int find_max(const int values[], size_t length, int *out_max)를 구현하세요. 성공하면 최댓값을 기록하고 1, values/out_max가 NULL이거나 length가 0이면 0을 반환합니다. 실패하면 out_max가 가리키는 기존 값을 변경하지 마세요. main과 출력 코드는 작성하지 않습니다.',starter:'#include <stddef.h>\n\nint find_max(const int values[], size_t length, int *out_max) {\n    // TODO: 입력 계약을 검사하고 성공한 경우에만 *out_max를 변경하세요.\n    return 0;\n}',input:'find_max({4, -2, 9, 1}, 4, &out)',expected:'1 9'}
+  },
+  {
     id:'c-multi-file',track:'c',level:'중급 실습',title:'분할 컴파일: 헤더와 여러 소스 파일',minutes:35,source:'C 헤더·분할 컴파일·링크 과정에 관한 독자 작성 실습',
     summary:'main.c, functions.c, functions.h의 역할을 나누고 하나의 프로그램으로 컴파일·링크합니다.',figure:'multi-file',
     sections:[

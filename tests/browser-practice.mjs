@@ -31,6 +31,8 @@ const qaDir = process.env.CODEWEAVE_QA_DIR;
 const correct = '#include <stdio.h>\nint main(void){int a,b;if(scanf("%d %d",&a,&b)!=2)return 1;printf("%d\\n",a+b);return 0;}';
 const failed = '#include <stdio.h>\nint main(void){puts("0");return 0;}';
 const functionOnly = 'int clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}';
+const arrayMaxFunction = '#include <stddef.h>\nint find_max(const int values[],size_t length,int *out_max){if(!values||length==0||!out_max)return 0;int maximum=values[0];for(size_t i=1;i<length;i++)if(values[i]>maximum)maximum=values[i];*out_max=maximum;return 1;}';
+const arrayMaxWrong = '#include <stddef.h>\nint find_max(const int values[],size_t length,int *out_max){if(!values||length==0||!out_max)return 0;int maximum=0;for(size_t i=0;i<length;i++)if(values[i]>maximum)maximum=values[i];*out_max=maximum;return 1;}';
 const multiFileSolution = [
   {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\nint main(void){int v,l,h;if(scanf("%d%d%d",&v,&l,&h)!=3)return 1;printf("%d\\n",clamp(v,l,h));return 0;}'},
   {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
@@ -70,6 +72,7 @@ try {
     'c-pointer': '#include <stdio.h>\nvoid add_one(int *p){++*p;}\nint main(void){int n;scanf("%d",&n);add_one(&n);printf("%d\\n",n);return 0;}',
     'c-functions': '#include <stdio.h>\nint clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}\nint main(void){int value,low,high;scanf("%d%d%d",&value,&low,&high);printf("%d\\n",clamp(value,low,high));return 0;}',
     'c-clamp-function': functionOnly,
+    'c-array-max-function': arrayMaxFunction,
     'c-multi-file': serializeMultiFileSubmission(multiFileSolution, { requiredNames: ['main.c','functions.c','functions.h'] })
   };
   for (const [exerciseId, code] of Object.entries(solutions)) {
@@ -77,7 +80,7 @@ try {
     const result = await response.json();
     assert.equal(result.ok, true, exerciseId + ': ' + JSON.stringify(result));
   }
-  console.log('PASS: all eight C exercises compile and pass their real GCC tests');
+  console.log('PASS: all nine C exercises compile and pass their real GCC tests');
 
   browser = await chromium.launch({ headless: true });
   context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
@@ -94,12 +97,26 @@ try {
   await expect(page.locator('.detail-head h1')).toHaveText('함수 구현 실습: 테스트 하네스와 계약');
   await expect(page.locator('#code-input')).not.toHaveValue(/main\s*\(/);
   await expect(page.locator('.practice-zone')).toContainText('함수 직접 호출형');
+  await submit(page, arrayMaxWrong);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await submit(page, arrayMaxFunction);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('#mark-theory').click();
+  await page.locator('[data-quiz="c-array-max-function"][data-choice="0"]').click();
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  console.log('PASS: array function failure, correction, iterations and mastery stay in one lesson flow');
   await submit(page, functionOnly + '\nint main(void){return 0;}');
   await expect(page.locator('.terminal[role="status"]')).toContainText('링크 단계 · 같은 이름이 두 번 정의됨');
   await expect(page.locator('.terminal[role="status"]')).toContainText('multiple definition');
   await submit(page, functionOnly);
   await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
   console.log('PASS: function-only lesson explains a linker failure and then passes the direct-call harness');
+  await page.goto(base + '/#lesson:c-array-max-function');
+  await expect(page.locator('.detail-head h1')).toHaveText('배열 함수 실습: 최댓값과 출력 포인터');
+  await expect(page.locator('.figure-box svg')).toContainText('out_max');
+  await expect(page.locator('#code-input')).not.toHaveValue(/main\s*\(/);
+  await expect(page.locator('.practice-zone')).toContainText('함수 직접 호출형');
   await page.goto(base + '/#lesson:c-multi-file');
   await expect(page.locator('.detail-head h1')).toHaveText('분할 컴파일: 헤더와 여러 소스 파일');
   await expect(page.locator('.figure-box svg')).toContainText('functions.h');
@@ -190,6 +207,7 @@ try {
   const bench = await context.newPage();
   await bench.goto(base + '/workbench.html');
   await expect(bench.locator('#lesson-select option[value="c-clamp-function"]')).toHaveCount(1);
+  await expect(bench.locator('#lesson-select option[value="c-array-max-function"]')).toHaveCount(1);
   await expect(bench.locator('#lesson-select option[value="c-multi-file"]')).toHaveCount(1);
   await bench.locator('#lesson-select').selectOption('c-types');
   await submit(page, failed);
