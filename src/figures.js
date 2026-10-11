@@ -7,6 +7,7 @@ export function figureFor(kind){
  if(kind==='loop')return wrap(box(40,62,145,62,'i = 0')+box(259,62,145,62,'i < 4 ?','#e2efff')+box(478,62,145,62,'본문 수행')+arrow(190,93,250,93)+arrow(410,93,470,93)+`<path d="M550 128v40H330V130" fill="none" stroke="#88a6a4" stroke-width="2" marker-end="url(#arr)"/><text x="437" y="161" text-anchor="middle" font-size="12" fill="#46666c">i++ 반복</text>`);
  if(kind==='array')return wrap([2,4,6,8,10].map((n,i)=>box(65+i*111,66,99,70,String(n),i===2?'#bdebcf':'#e6eef6')).join('')+`<text x="337" y="45" text-anchor="middle" font-size="13" fill="#52687e">연속된 배열 원소의 인덱스</text>`+[0,1,2,3,4].map((n,i)=>`<text x="${115+i*111}" y="158" font-size="12" text-anchor="middle" fill="#53798f">[${n}]</text>`).join(''));
  if(kind==='pointer')return wrap(box(38,60,175,67,'p : &x','#e7f1ff')+box(460,60,170,67,'x : 7','#d7f4e6')+arrow(218,93,451,93)+`<text x="335" y="78" text-anchor="middle" font-size="14" fill="#47798d">*p → x</text>`);
+ if(kind==='function-call')return wrap(box(20,57,170,72,'main : 15, 0, 10','#e7f1ff')+box(250,57,170,72,'clamp : 매개변수','#e2eee9')+box(480,57,170,72,'main : 결과 10','#d7f4e6')+arrow(195,82,242,82)+arrow(425,108,472,108)+`<text x="218" y="66" text-anchor="middle" font-size="12" fill="#47798d">호출</text><text x="448" y="137" text-anchor="middle" font-size="12" fill="#47798d">return</text>`);
  if(kind==='stack')return wrap(box(257,18,155,42,'7','#d5f6e2')+box(257,63,155,42,'5')+box(257,108,155,42,'2')+`<text x="425" y="45" font-size="14" fill="#608277">← top / 먼저 pop</text>`);
  return '';
 }

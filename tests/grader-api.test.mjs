@@ -7,7 +7,7 @@ import { ITERATIONS_KEY } from '../src/iterations.js';
 import { lessons } from '../src/catalog.js';
 
 const gccAvailable = spawnSync('gcc', ['--version']).status === 0;
-test('local GCC API compiles all five C exercises and distinguishes failures', { skip: !gccAvailable, timeout: 30000 }, async t => {
+test('local GCC API compiles all six C exercises and distinguishes failures', { skip: !gccAvailable, timeout: 30000 }, async t => {
   const child = spawn(process.execPath, ['dev-server.mjs'], {
     env: { ...process.env, PORT: '0' }, stdio: ['ignore', 'pipe', 'pipe']
   });
@@ -41,7 +41,8 @@ test('local GCC API compiles all five C exercises and distinguishes failures', {
     'c-types': '#include <stdio.h>\nint main(void){int a,b;if(scanf("%d%d",&a,&b)!=2)return 1;printf("%d\\n",a+b);return 0;}',
     'c-loops': '#include <stdio.h>\nint main(void){int n,s=0;if(scanf("%d",&n)!=1)return 1;for(int i=1;i<=n;i++)s+=i;printf("%d\\n",s);return 0;}',
     'c-array': '#include <stdio.h>\nint main(void){int n,x,m;if(scanf("%d%d",&n,&m)!=2)return 1;for(int i=1;i<n;i++){if(scanf("%d",&x)!=1)return 1;if(x>m)m=x;}printf("%d\\n",m);return 0;}',
-    'c-pointer': '#include <stdio.h>\nvoid add_one(int *p){++*p;}\nint main(void){int n;if(scanf("%d",&n)!=1)return 1;add_one(&n);printf("%d\\n",n);return 0;}'
+    'c-pointer': '#include <stdio.h>\nvoid add_one(int *p){++*p;}\nint main(void){int n;if(scanf("%d",&n)!=1)return 1;add_one(&n);printf("%d\\n",n);return 0;}',
+    'c-functions': '#include <stdio.h>\nint clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}\nint main(void){int value,low,high;if(scanf("%d%d%d",&value,&low,&high)!=3)return 1;printf("%d\\n",clamp(value,low,high));return 0;}'
   };
   const values = new Map();
   const storage = { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };

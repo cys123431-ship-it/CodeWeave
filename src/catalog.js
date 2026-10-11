@@ -63,6 +63,23 @@ export const lessons = [
     challenge:{id:'c-pointer',title:'포인터로 값 증가시키기',description:'정수 n을 입력받아 함수를 통해 포인터로 그 값을 1 증가시킨 뒤 출력하세요.',starter:'#include <stdio.h>\n\nvoid add_one(int *value) {\n    // TODO: 포인터로 가리키는 값을 1 증가시키세요.\n}\n\nint main(void) {\n    int n;\n    if (scanf("%d", &n) != 1) return 1;\n    add_one(&n);\n    printf("%d\\n", n);\n    return 0;\n}',input:'7',expected:'8'}
   },
   {
+    id:'c-functions',track:'c',level:'중급',title:'함수 설계: 선언·호출·값 전달',minutes:45,source:'쉽게 풀어쓴 C언어 Express 함수 단원, The C Programming Language 4.1~4.3 (주제 참조·독자 작성)',
+    summary:'함수의 계약을 읽고 값 전달·지역 변수·배열 매개변수를 안전하게 설계합니다.',figure:'function-call',
+    sections:[
+      {heading:'선수 지식과 함수가 필요한 이유',text:'이 단원은 변수, if 문, return 문, 배열, 포인터 기초를 사용합니다. 프로그램을 입력·계산·출력처럼 이름 붙은 동작으로 나누면 같은 계산을 재사용하고 오류를 검사할 범위를 줄일 수 있습니다.'},
+      {heading:'학습 목표',text:'함수 선언·정의·호출을 구분하고, 인수와 매개변수 사이의 값 전달을 설명하며, 지역 변수의 수명을 지키는 함수를 작성합니다. 배열을 받을 때 원소 개수도 함께 전달하고 컴파일·링크·논리 오류를 구분합니다.'},
+      {heading:'선언, 정의, 호출은 서로 다른 역할이다',text:'함수 원형은 이름, 반환형, 매개변수 자료형을 컴파일러에 알리는 계약입니다. 정의에는 실제 동작이 있고 호출은 인수를 주어 함수를 실행합니다. 선언과 정의의 자료형은 일치해야 합니다.',code:'int clamp(int value, int low, int high); // 선언\n\nint clamp(int value, int low, int high) { // 정의\n    if (value < low) return low;\n    if (value > high) return high;\n    return value;\n}'},
+      {heading:'완성 예제의 실행 결과를 따라가기',text:'입력 15 0 10에서 main은 clamp(15, 0, 10)을 호출합니다. value가 high보다 크므로 함수가 10을 반환하고 printf가 10과 줄바꿈을 출력합니다.',code:'#include <stdio.h>\n\nint clamp(int value, int low, int high);\n\nint main(void) {\n    int value, low, high;\n    if (scanf("%d%d%d", &value, &low, &high) != 3) return 1;\n    printf("%d\\n", clamp(value, low, high));\n    return 0;\n}\n\nint clamp(int value, int low, int high) {\n    if (value < low) return low;\n    if (value > high) return high;\n    return value;\n}'},
+      {heading:'값 전달과 포인터 값을 구분한다',text:'C의 함수 인수는 모두 값으로 전달됩니다. 정수를 넘기면 정수 값이 복사되고 포인터를 넘기면 주소를 나타내는 포인터 값이 복사됩니다. 복사된 포인터로 같은 객체를 역참조할 때 호출자의 객체를 수정할 수 있습니다.'},
+      {heading:'지역 변수의 범위와 수명을 지킨다',text:'매개변수와 블록 안의 자동 지역 변수는 해당 블록에서 이름을 사용할 수 있고, 일반적으로 블록 실행이 끝나면 수명도 끝납니다. 지역 변수의 값을 반환하는 것은 가능하지만 그 주소를 반환해 나중에 역참조하면 정의되지 않은 동작입니다.'},
+      {heading:'배열 매개변수에는 길이가 들어 있지 않다',text:'함수 매개변수에서 배열 표기는 포인터 매개변수로 조정되므로 원소 개수를 별도 인수로 전달해야 합니다. count가 유효하고 values가 그만큼의 원소를 가리킨다는 계약도 필요합니다.',code:'long long sum_array(const int values[], int count) {\n    long long sum = 0;\n    for (int i = 0; i < count; ++i) {\n        sum += values[i];\n    }\n    return sum;\n}'},
+      {heading:'흔한 오류를 컴파일·링크·실행 단계로 나눈다',text:'호출 전에 올바른 원형이 보이지 않거나 선언과 정의가 충돌하면 컴파일 진단을 확인합니다. 선언만 있고 정의가 링크되지 않으면 링크가 실패할 수 있습니다. 반환 경로 누락, 수명이 끝난 객체 접근, 잘못된 배열 경계는 실행 결과나 정의되지 않은 동작으로 이어질 수 있습니다.'},
+      {heading:'핵심 요약과 복습 연결',text:'선언은 함수의 자료형 계약, 정의는 동작, 호출은 실행 요청입니다. 값 전달·수명·배열 길이 계약은 안전한 인터페이스의 핵심입니다. 이 지식은 재귀, 헤더와 분할 컴파일, 자료구조 인터페이스, Rust의 빌림 비교로 이어집니다.'}
+    ],
+    quiz:{question:'함수 원형(prototype)의 가장 중요한 역할은?',options:['호출하기 전에 함수의 이름·매개변수·반환형을 컴파일러에 알린다','함수의 지역 변수를 프로그램이 끝날 때까지 유지한다','함수의 실행 결과를 자동으로 출력한다','모든 입력값이 유효한지 자동으로 검사한다'],answer:0,explanation:'원형은 컴파일러가 호출 식의 인수와 반환형을 검사할 수 있게 하는 자료형 계약입니다.'},
+    challenge:{id:'c-functions',title:'범위 제한 함수 clamp 구현',description:'정수 value, low, high를 입력받아 low <= high일 때 value를 [low, high] 범위로 제한하세요. int clamp(int value, int low, int high)를 구현하고 main에서 호출해야 합니다. 범위 안 값은 그대로, 하한보다 작으면 low, 상한보다 크면 high를 출력합니다.',starter:'#include <stdio.h>\n\nint clamp(int value, int low, int high);\n\nint main(void) {\n    int value, low, high;\n    if (scanf("%d%d%d", &value, &low, &high) != 3) return 1;\n    printf("%d\\n", clamp(value, low, high));\n    return 0;\n}\n\nint clamp(int value, int low, int high) {\n    // TODO: value를 [low, high] 범위로 제한해 반환하세요.\n    return value;\n}',input:'15 0 10',expected:'10'}
+  },
+  {
     id:'rust-mut',track:'rust',level:'시작하기',title:'변수 바인딩과 가변성',minutes:20,source:'기초 Rust 개념 독자 작성 초안 (Rust 교재 미제공)',
     summary:'C의 변수와 비교하여 Rust에서 let과 mut가 어떻게 다른지 배웁니다.',figure:'variables',
     sections:[
