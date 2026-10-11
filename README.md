@@ -35,6 +35,18 @@ npm start
 npm test
 ```
 
+선택적인 실제 브라우저 검사(Playwright/Chromium/GCC 필요):
+
+```bash
+npm install --no-save --package-lock=false playwright@1.62.1
+npx playwright install --with-deps chromium
+npm run test:browser
+```
+
+브라우저 검사에는 테스트용 프로필을 사용합니다. 두 화면의 이력 공유·복원·백업 호환성·키보드 이동·390px 화면·오프라인 재로딩을 확인합니다. GitHub Actions의 `browser` 작업에서 실행합니다. `npm test`의 DOM fixture 성공과 실제 Chromium E2E 성공은 별도로 확인하세요.
+
+코드 초안은 저장 직전에 최신 데이터를 읽고 해당 문제만 갱신합니다. 다른 문제/트랙의 초안은 유지되며, 퀴즈를 풀 때 코드 저장 snapshot을 덮어쓰지 않습니다. 같은 문제를 두 탭에서 동시에 편집하면 마지막 저장이 적용되므로 한 화면에서 편집하세요.
+
 ## 꼭 확인할 제한
 
 **주의:** 이 로컬 서버는 작성한 C 소스 코드를 사용자의 OS에서 실행하며 실행 격리가 되지 않습니다. **신뢰하는 본인의 코드만 제출하고 서버를 공용 네트워크에 절대 공개하지 마세요.** 공개 채점 기능은 별도 샌드박스 시스템 구축 후 제공해야 합니다. Rust 채점과 자료구조/알고리즘 전용 문제 채점도 아직 연결되지 않았습니다.

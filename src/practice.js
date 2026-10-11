@@ -1,4 +1,4 @@
-import { escapeHtml, safeRead } from './logic.js';
+import { DRAFTS_KEY, escapeHtml, safeRead } from './logic.js';
 import { ITERATIONS_KEY, MAX_CODE_LENGTH, MAX_ITERATIONS, normalizeIterations, recordIteration } from './iterations.js';
 
 // A transport error or malformed response must never become a graded submission.
@@ -56,4 +56,25 @@ export function attemptHistoryHtml(history, id, busy = false) {
         safe(entry.code) + '</code></pre></details>' +
         '<button class="secondary" type="button" data-restore-attempt="' + index + '"' +
         (busy ? ' disabled' : '') + '>이 제출 코드 복원</button></li>').join('') + '</ol>') + '</section>';
+}
+
+// Existing v1 drafts remain readable. Merge one exercise into the latest stored
+// snapshot, rather than letting an older lesson/workbench tab replace all drafts.
+export function readExerciseDrafts(storage, knownIds) {
+  const raw = safeRead(storage, DRAFTS_KEY, {}), drafts = {};
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    for (const id of knownIds) {
+      if (typeof raw[id] === 'string') drafts[id] = raw[id].slice(0, MAX_CODE_LENGTH);
+    }
+  }
+  return drafts;
+}
+export function saveExerciseDraft(storage, knownIds, id, code) {
+  if (!knownIds.includes(id) || typeof code !== 'string' || code.length > MAX_CODE_LENGTH) {
+    throw new Error('지원하지 않는 문제 또는 코드 길이입니다(최대 25000자).');
+  }
+  const drafts = readExerciseDrafts(storage, knownIds);
+  drafts[id] = code;
+  storage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+  return drafts;
 }

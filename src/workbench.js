@@ -1,13 +1,14 @@
 import { lessons } from './catalog.js';
 import { DRAFTS_KEY, safeRead } from './logic.js';
 import { ITERATIONS_KEY, MAX_CODE_LENGTH, normalizeIterations } from './iterations.js';
-import { recordGradedSubmission } from './practice.js';
+import { recordGradedSubmission, readExerciseDrafts, saveExerciseDraft } from './practice.js';
 import { createAttemptBackup, parseAttemptBackup } from './attempt-backup.js';
 
 const $ = selector => document.querySelector(selector);
 const cLessons = lessons.filter(lesson => lesson.track === 'c');
 const knownIds = cLessons.map(lesson => lesson.id);
-const storedDrafts = safeRead(localStorage, DRAFTS_KEY, {});
+const allIds = lessons.map(l => l.id);
+const storedDrafts = readExerciseDrafts(localStorage, allIds);
 const state = {
   lessonId: knownIds[0],
   drafts: storedDrafts && typeof storedDrafts === 'object' && !Array.isArray(storedDrafts) ? storedDrafts : {},
@@ -17,7 +18,7 @@ const state = {
 
 function persist() {
   try {
-    localStorage.setItem(DRAFTS_KEY, JSON.stringify(state.drafts));
+    state.drafts = saveExerciseDraft(localStorage, allIds, state.lessonId, state.drafts[state.lessonId]);
     $('#draft-status').textContent = '이 브라우저에 자동 저장되었습니다.';
   } catch {
     $('#draft-status').textContent = '브라우저 저장 공간이 부족합니다. 백업을 내려받으세요.';
@@ -103,6 +104,7 @@ async function grade() {
   }
 }
 function downloadHistory() {
+  state.iterations = normalizeIterations(safeRead(localStorage, ITERATIONS_KEY, {}), allIds);
   const data = createAttemptBackup(state, knownIds);
   const url = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
   const a = document.createElement('a');
@@ -115,13 +117,16 @@ async function importHistory(file) {
   try {
     const data = parseAttemptBackup(JSON.parse(await file.text()), knownIds);
     if (!confirm('기존 코드와 반복 제출 기록을 백업 내용으로 교체할까요?')) return;
+    state.drafts = readExerciseDrafts(localStorage, allIds);
+    state.iterations = normalizeIterations(safeRead(localStorage, ITERATIONS_KEY, {}), allIds);
     // Preserve drafts from other learning tracks, which are outside this C-only workbench.
     for (const id of knownIds) delete state.drafts[id];
     Object.assign(state.drafts, data.drafts);
     for (const id of knownIds) delete state.iterations[id];
     Object.assign(state.iterations, data.iterations);
     localStorage.setItem(ITERATIONS_KEY, JSON.stringify(state.iterations));
-    persist(); displayExercise();
+    localStorage.setItem(DRAFTS_KEY, JSON.stringify(state.drafts));
+    displayExercise();
     $('#draft-status').textContent = '백업을 복원했습니다.';
   } catch (error) { alert('백업 복원 실패: ' + error.message); }
 }
@@ -132,15 +137,17 @@ function init() {
     $('#lesson-select').append(option);
   }
   $('#lesson-select').addEventListener('change', event => {
+    state.drafts = readExerciseDrafts(localStorage, allIds);
     state.lessonId = event.target.value;
     displayExercise();
   });
+  $('#code-input').maxLength = MAX_CODE_LENGTH;
   $('#code-input').addEventListener('input', event => {
     state.drafts[state.lessonId] = event.target.value.slice(0, MAX_CODE_LENGTH);
     persist();
   });
   $('#code-input').addEventListener('keydown', event => {
-    if (event.key === 'Tab') {
+    if (event.key === 'Tab' && !event.shiftKey) {
       event.preventDefault();
       const el = event.target;
       el.setRangeText('    ', el.selectionStart, el.selectionEnd, 'end');
@@ -151,7 +158,8 @@ function init() {
   $('#reset-code').addEventListener('click', () => {
     if (!confirm('현재 코드를 처음 상태로 되돌릴까요?')) return;
     state.drafts[state.lessonId] = currentLesson().challenge.starter;
-    persist(); displayExercise();
+    localStorage.setItem(DRAFTS_KEY, JSON.stringify(state.drafts));
+    displayExercise();
   });
   $('#export-history').addEventListener('click', downloadHistory);
   $('#import-history').addEventListener('click', () => $('#import-file').click());
@@ -161,6 +169,11 @@ function init() {
   displayExercise();
 }
 window.addEventListener('storage', event => {
+  if (event.key === DRAFTS_KEY || event.key === null) {
+    const activeCode = $('#code-input').value;
+    state.drafts = readExerciseDrafts(localStorage, allIds);
+    state.drafts[state.lessonId] = activeCode;
+  }
   if (event.key === ITERATIONS_KEY || event.key === null) {
     state.iterations = normalizeIterations(safeRead(localStorage, ITERATIONS_KEY, {}), lessons.map(l => l.id));
     displayAttempts();

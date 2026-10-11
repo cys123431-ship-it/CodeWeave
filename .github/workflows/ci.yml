@@ -1,5 +1,8 @@
 name: CodeWeave checks
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]
@@ -29,3 +32,28 @@ jobs:
         run: gcc --version
       - name: Unit tests
         run: npm test
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test tooling only
+        run: npm install --no-save --package-lock=false playwright@1.62.1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Real GCC and browser integration tests
+        run: npm run test:browser
+        env:
+          CODEWEAVE_QA_DIR: ${{ runner.temp }}/codeweave-qa
+      - name: Save UI verification image
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeweave-browser-qa
+          path: ${{ runner.temp }}/codeweave-qa
+          if-no-files-found: ignore
+          retention-days: 7
