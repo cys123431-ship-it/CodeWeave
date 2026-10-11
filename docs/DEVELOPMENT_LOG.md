@@ -10,6 +10,7 @@
 - 저장/PWA/브라우저 흐름: 새 ID는 기존 `codeweave.drafts.v1`, `codeweave.iterations.v1`, progress/full-backup v1 객체에 선택적으로 추가되므로 키·버전·과거 기록을 바꾸지 않는다. 메인 단원에서 실패 제출→수정→성공→이론 읽기→퀴즈→전체 숙달, 연습장 선택 항목, 실제 API 정답 제출을 Chromium 시나리오에 추가하고 shell을 v13으로 갱신했다.
 - 로컬 검사: 최종 `npm test` 96/96 성공, 실패/skip 0. 실제 GCC로 C 9문제와 새 8개 정상/경계 사례, 음수 초기화 오류, 출력 보존 위반, 출력 부작용, 시간 초과를 통과했다. 변경 JS/MJS `node --check`와 `git diff --check` 성공.
 - 로컬 브라우저 시도: `npm run test:browser`에서 C 9문제의 실제 GCC API 검증은 모두 성공했으나 Playwright Chromium 실행 파일 부재(`browserType.launch: Executable doesn't exist`)로 UI 단계는 미실행이다. 새 단원 렌더링·iteration·숙달·연습장·오프라인은 반영 후 GitHub Actions의 설치된 Chromium으로 판정하며, 로컬 API 성공을 브라우저 E2E 성공으로 보고하지 않는다.
+- CI 재검토/수정: 첫 원격 Actions 실행의 `test` 작업과 96개 검사는 성공했지만 `browser` 작업이 실패했다. 로그에서 배열 오답/정답 제출 단계가 새 배열 단원으로 이동하기 전에 `c-clamp-function` 화면에 잘못 삽입되어 하네스가 `clamp` 정의를 찾지 못한 테스트 순서 오류를 확인했다. 배열 단원 렌더링 확인 뒤에 해당 제출·숙달 흐름을 배치하도록 수정하고 문법·전체 회귀를 다시 검사했다. 수정 커밋의 새 Actions 결과를 최종 보고서에서 판정한다.
 - 문서/자료: `README.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`를 C 9개·공개 정의 12개·함수 직접 호출형 2개와 새 계약/PWA shell v13에 맞췄다. 두 참고 PDF의 로컬 접근과 크기(87,753,393 bytes/6,838,054 bytes)를 재확인했지만 이번 원고·도식·코드·문제는 독자 작성했고 PDF 본문·캡처·상용 문제를 읽거나 복제하지 않았다.
 - 미해결/위험: 함수 하네스는 출력 비교 기반이며 메모리 오류 탐지기나 보안 격리가 아니다. 로컬 GCC 서버는 계속 신뢰하는 개인 코드 전용이고 실제 Windows/Android/iPad 및 PWA 설치는 미검증이다. 전체 C 교과서·검증된 20문제와 Rust/Cargo 채점도 미완성이다.
 - GitHub 반영: 이 일지를 포함하는 커밋 제목 `feat: add array maximum function exercise`. 자신의 SHA와 새 CI 결과는 커밋 후 원격 HEAD·변경 파일·Actions를 재조회해 실행 보고서에 기록한다. 최신 base SHA lease를 사용하며 강제 푸시하지 않는다.
