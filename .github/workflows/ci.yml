@@ -19,6 +19,13 @@ jobs:
           node --check src/catalog.js
           node --check src/figures.js
           node --check src/logic.js
+          node --check src/workbench.js
+          node --check src/iterations.js
+          node --check src/attempt-backup.js
+          node --check src/practice.js
           node --check dev-server.mjs
+          node --check sw.js
+      - name: Verify local grading test compiler
+        run: gcc --version
       - name: Unit tests
         run: npm test

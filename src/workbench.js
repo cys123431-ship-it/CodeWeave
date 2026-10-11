@@ -1,6 +1,7 @@
 import { lessons } from './catalog.js';
 import { DRAFTS_KEY, safeRead } from './logic.js';
-import { ITERATIONS_KEY, MAX_CODE_LENGTH, normalizeIterations, recordIteration } from './iterations.js';
+import { ITERATIONS_KEY, MAX_CODE_LENGTH, normalizeIterations } from './iterations.js';
+import { recordGradedSubmission } from './practice.js';
 import { createAttemptBackup, parseAttemptBackup } from './attempt-backup.js';
 
 const $ = selector => document.querySelector(selector);
@@ -17,7 +18,6 @@ const state = {
 function persist() {
   try {
     localStorage.setItem(DRAFTS_KEY, JSON.stringify(state.drafts));
-    localStorage.setItem(ITERATIONS_KEY, JSON.stringify(state.iterations));
     $('#draft-status').textContent = '이 브라우저에 자동 저장되었습니다.';
   } catch {
     $('#draft-status').textContent = '브라우저 저장 공간이 부족합니다. 백업을 내려받으세요.';
@@ -85,8 +85,7 @@ async function grade() {
     });
     if (!response.ok) throw new Error('HTTP ' + response.status);
     const result = await response.json();
-    if (typeof result.ok !== 'boolean' || !Array.isArray(result.tests)) throw new Error('잘못된 채점 결과');
-    state.iterations = recordIteration(state.iterations, id, code, result);
+    state.iterations = recordGradedSubmission(localStorage, lessons.map(l => l.id), id, code, result);
     persist();
     $('#grade-result').textContent = [
       result.ok ? '✓ 모든 테스트 통과' : '× 채점 미통과', result.message || '',
@@ -121,6 +120,7 @@ async function importHistory(file) {
     Object.assign(state.drafts, data.drafts);
     for (const id of knownIds) delete state.iterations[id];
     Object.assign(state.iterations, data.iterations);
+    localStorage.setItem(ITERATIONS_KEY, JSON.stringify(state.iterations));
     persist(); displayExercise();
     $('#draft-status').textContent = '백업을 복원했습니다.';
   } catch (error) { alert('백업 복원 실패: ' + error.message); }
@@ -160,4 +160,10 @@ function init() {
   });
   displayExercise();
 }
+window.addEventListener('storage', event => {
+  if (event.key === ITERATIONS_KEY || event.key === null) {
+    state.iterations = normalizeIterations(safeRead(localStorage, ITERATIONS_KEY, {}), lessons.map(l => l.id));
+    displayAttempts();
+  }
+});
 init();
