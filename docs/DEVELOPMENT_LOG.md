@@ -40,7 +40,10 @@
 ### GitHub 및 예약
 
 - 이 기록을 포함하는 커밋 제목: `feat: integrate lesson submission history and verify GCC resubmissions`.
-- 실제 결과 SHA/원격 재조회/CI와 새 Work 반복 예약의 활성화/다음 시각은 첫 실행 보고서에서 확인한다. 이 일지 작성 시점에는 예약을 아직 생성하지 않았다.
+- 개발 커밋: `0fa9875c941a1292f8d421d8ea3ffa7d655c1ccc`, https://github.com/cys123431-ship-it/CodeWeave/commit/0fa9875c941a1292f8d421d8ea3ffa7d655c1ccc (`main`). 원격 HEAD 재조회 일치, 13개 변경 파일의 Git blob hash 대조 일치. 로컬 체크아웃도 해당 커밋으로 동기화했다.
+- 해당 개발 커밋 CI 성공: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38104571849 . 이 후속 기록 커밋의 CI는 별도로 조회한다.
+- 11:16 KST에 이 Work 대화의 새 `CodeWeave 자동 개발` 예약 생성 성공. 재조회 결과 활성화 `true`, 시간대 `Asia/Seoul`, `DTSTART;TZID=Asia/Seoul:20261011T120000`, `RRULE:FREQ=HOURLY;INTERVAL=1`. 저장된 규칙의 첫 예정 시각은 2026-10-11 12:00 KST다.
+- 예약 도구의 `next_run_time`과 `last_run_time`은 재조회 시 `null`이었다. 예약 생성/활성화와 첫 무인 개발 실행 성공을 구분하며 실제 최초 무인 실행은 아직 검증 전이다.
 - 기존 일반 ChatGPT의 `CodeWeave 자동 개발` 예약은 조회 당시 비활성 상태였다. 이를 자동 이전했다고 간주하지 않는다.
 
 ---
