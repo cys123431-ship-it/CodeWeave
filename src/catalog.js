@@ -215,6 +215,26 @@ export const lessons = [
     challenge:{id:'c-struct-student-score',title:'학생 점수 안전하게 갱신하기',description:'struct Student의 id와 score를 사용하고 int update_score(struct Student *student, int delta)를 구현하세요. 현재 score와 요청 결과는 모두 0 이상 100 이하여야 합니다. 성공하면 score만 바꾸고 1을, NULL·잘못된 현재 점수·범위 밖 결과에서는 객체 전체를 보존하고 0을 반환하세요. signed int 넘침이 일어날 수 있는 덧셈을 검사 전에 수행하지 않습니다. main과 출력 코드는 작성하지 않습니다.',starter:'struct Student {\n    int id;\n    int score;\n};\n\nint update_score(struct Student *student, int delta) {\n    // TODO: 검증을 모두 마친 뒤 score만 변경하세요.\n    (void)student;\n    (void)delta;\n    return 0;\n}',input:'update_score({101, 70}, 15)',expected:'1 101 85'}
   },
   {
+    id:'c-struct-array-search',track:'c',level:'중급 실습',title:'구조체 배열에서 학번 찾기',minutes:58,source:'C 구조체 배열·선형 탐색·출력 계약에 관한 독자 작성 실습',
+    summary:'구조체 배열의 유효 범위를 순회하여 첫 일치 학번의 인덱스를 찾고, 실패 시 출력 객체를 보존합니다.',figure:'struct-array-search',
+    sections:[
+      {heading:'단원 개요와 필요한 이유',text:'학생 한 명을 struct Student로 묶었다면 다음 단계는 여러 학생을 배열로 관리하는 것입니다. 이 단원은 학번으로 학생을 찾는 선형 탐색을 통해 구조체 배열, 명시적인 원소 수, 첫 일치 정책과 실패 시 출력 보존을 하나의 함수 계약으로 연결합니다.'},
+      {heading:'선수 지식과 학습 목표',text:'배열과 size_t, 함수의 상태 반환값·출력 포인터, 구조체의 점 연산자를 알고 시작합니다. 학습 후에는 students[i].id로 각 원소의 멤버를 읽고, [0, count) 범위를 안전하게 순회하며, 첫 번째 일치 위치만 출판할 수 있어야 합니다.'},
+      {heading:'구조체 배열의 각 원소는 완전한 객체다',text:'struct Student students[3]은 Student 객체 세 개를 연속된 배열 원소로 둡니다. 각 구조체 내부에는 정렬을 위한 패딩이 있을 수 있지만 배열 원소 사이는 sizeof(struct Student) 단위로 이동하므로 students[i]가 올바른 i번째 객체를 가리킵니다.',code:'struct Student students[] = {\n    {.id = 101, .score = 70},\n    {.id = 205, .score = 88},\n    {.id = 309, .score = 95}\n};'},
+      {heading:'배열 매개변수만으로 길이는 알 수 없다',text:'함수 매개변수의 const struct Student students[]는 const struct Student *students로 조정됩니다. 따라서 함수 안의 sizeof students는 배열 전체 크기가 아니라 포인터 크기입니다. 원소 수 count를 별도 매개변수로 전달해야 하며 호출자는 실제 배열 범위를 넘지 않는 값을 제공할 책임이 있습니다.'},
+      {heading:'const는 검색 함수의 읽기 전용 의도를 나타낸다',text:'검색은 학생 정보를 바꿀 이유가 없으므로 students를 const로 받습니다. 이는 함수 본문에서 일반적인 멤버 대입을 막아 읽기 전용 계약을 드러냅니다. 다만 NULL이 아닌 포인터가 정말 count개 유효 객체를 가리키는지는 C 함수가 스스로 증명할 수 없으므로 호출자 계약이 필요합니다.'},
+      {heading:'유효 범위는 [0, count)다',text:'size_t i = 0에서 시작해 i < count인 동안만 읽습니다. count가 0이면 읽을 원소가 없으므로 students[0]에 접근하지 않습니다. i <= count나 count - 1을 상한으로 쓰면 범위 밖 접근 또는 unsigned 언더플로를 만들 수 있습니다.'},
+      {heading:'점 연산자로 현재 원소의 학번을 비교한다',text:'students[i]는 구조체 객체이므로 학번은 students[i].id로 읽습니다. students->id는 (*students).id, 즉 첫 원소의 학번만 뜻하므로 반복문의 모든 원소를 검사하는 표현이 아닙니다. 목표 학번과 같은지 각 인덱스에서 비교합니다.'},
+      {heading:'중복 학번은 첫 번째 일치를 선택한다',text:'현실의 학번은 고유해야 할 수 있지만 검색 함수의 동작은 잘못된 데이터에서도 결정적이어야 합니다. 이 계약은 중복이 있으면 가장 작은 인덱스, 즉 첫 번째 일치를 반환합니다. 일치를 발견한 즉시 출력하고 반환해야 마지막 중복 원소로 덮어쓰지 않습니다.'},
+      {heading:'실패 시 출력 객체를 보존한다',text:'students가 NULL이거나 count가 0이거나 out_index가 NULL이면 0을 반환합니다. 끝까지 학번을 찾지 못해도 0을 반환합니다. 어느 실패 경로에서도 유효한 out_index가 가리키는 값을 바꾸지 않고, 성공이 확정된 순간에만 *out_index = i를 수행합니다.'},
+      {heading:'완성 함수와 실행 결과',text:'학번 205를 찾으면 인덱스 1이므로 상태와 위치를 합쳐 1 1이 출력됩니다. 같은 배열에서 999를 찾으면 상태 0을 반환하고 호출자가 미리 넣어 둔 77을 그대로 유지하여 0 77이 출력됩니다.',code:'int find_student_index(const struct Student students[], size_t count,\n                       int target_id, size_t *out_index) {\n    if (students == NULL || count == 0 || out_index == NULL) return 0;\n    for (size_t i = 0; i < count; ++i) {\n        if (students[i].id == target_id) {\n            *out_index = i;\n            return 1;\n        }\n    }\n    return 0;\n}'},
+      {heading:'비용과 흔한 오류',text:'최악에는 count개 원소를 모두 보므로 시간 복잡도는 O(n), 추가 공간은 O(1)입니다. sizeof students로 길이를 구하기, students->id만 반복 비교하기, 인덱스 1부터 시작하기, 실패 전에 out_index를 0으로 덮기, 중복을 끝까지 찾아 마지막 위치를 반환하기가 대표적인 오류입니다.'},
+      {heading:'중간 점검·핵심 요약·다음 연결',text:'왜 count가 별도로 필요한지, count가 0일 때 어떤 배열 접근도 하면 안 되는지, 중복 정책과 출력 보존이 테스트 가능한 계약인 이유를 설명해 보세요. 핵심은 [0, count)에서 멤버를 읽고 첫 일치에서만 출력 객체를 기록하는 것입니다. 이후 정렬된 구조체 배열의 이진 탐색, 키 비교 함수, 동적 배열과 인덱스로 확장합니다.'}
+    ],
+    quiz:{question:'함수 매개변수로 받은 students 배열의 원소 수를 별도 count로 전달해야 하는 이유는?',options:['배열 매개변수는 포인터로 조정되어 함수 안의 sizeof로 전체 원소 수를 얻을 수 없기 때문이다','구조체 배열에는 인덱스를 사용할 수 없기 때문이다','size_t는 구조체와 함께 쓸 수 없기 때문이다','const 배열은 첫 원소만 읽을 수 있기 때문이다'],answer:0,explanation:'배열 매개변수 표기는 함수 형식에서 포인터로 조정됩니다. 유효한 읽기 범위를 알려면 호출자가 원소 수를 별도로 전달해야 합니다.'},
+    challenge:{id:'c-struct-array-search',title:'학번으로 첫 학생 위치 찾기',description:'int find_student_index(const struct Student students[], size_t count, int target_id, size_t *out_index)를 구현하세요. 첫 번째로 일치하는 id의 인덱스를 기록하고 1을 반환합니다. 미발견, students == NULL, count == 0, out_index == NULL이면 0을 반환하며 유효한 출력 객체는 그대로 보존합니다. 학생 배열을 변경하거나 main·출력 코드를 작성하지 않습니다.',starter:'#include <stddef.h>\n\nstruct Student {\n    int id;\n    int score;\n};\n\nint find_student_index(const struct Student students[], size_t count, int target_id, size_t *out_index) {\n    // TODO: [0, count)에서 첫 일치만 찾아 성공할 때 기록하세요.\n    (void)students;\n    (void)count;\n    (void)target_id;\n    (void)out_index;\n    return 0;\n}',input:'find_student_index({101, 205, 309}, 3, 205, &out)',expected:'1 1'}
+  },
+  {
     id:'c-multi-file',track:'c',level:'중급 실습',title:'분할 컴파일: 헤더와 여러 소스 파일',minutes:35,source:'C 헤더·분할 컴파일·링크 과정에 관한 독자 작성 실습',
     summary:'main.c, functions.c, functions.h의 역할을 나누고 하나의 프로그램으로 컴파일·링크합니다.',figure:'multi-file',
     sections:[

@@ -43,6 +43,8 @@ const strtolIntegerInput = '#include <ctype.h>\n#include <errno.h>\n#include <st
 const strtolIntegerWrong = '#include <stdio.h>\n#include <stdlib.h>\nint main(void){char line[64];if(!fgets(line,sizeof line,stdin)){puts("NO INPUT");return 0;}printf("%d\\n",atoi(line));return 0;}';
 const structStudentScore = 'struct Student{int id;int score;};\nint update_score(struct Student *student,int delta){if(!student||student->score<0||student->score>100)return 0;if(delta < -student->score || delta > 100-student->score)return 0;student->score+=delta;return 1;}';
 const structStudentWrong = 'struct Student{int id;int score;};\nint update_score(struct Student *student,int delta){if(!student)return 0;student->score+=delta;if(student->score<0||student->score>100)return 0;return 1;}';
+const structArraySearch = '#include <stddef.h>\nstruct Student{int id;int score;};\nint find_student_index(const struct Student students[],size_t count,int target_id,size_t *out_index){if(!students||count==0||!out_index)return 0;for(size_t i=0;i<count;++i)if(students[i].id==target_id){*out_index=i;return 1;}return 0;}';
+const structArraySearchWrong = '#include <stddef.h>\nstruct Student{int id;int score;};\nint find_student_index(const struct Student students[],size_t count,int target_id,size_t *out_index){if(!students||count==0||!out_index)return 0;int found=0;for(size_t i=0;i<count;++i)if(students[i].id==target_id){*out_index=i;found=1;}return found;}';
 const multiFileSolution = [
   {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\nint main(void){int v,l,h;if(scanf("%d%d%d",&v,&l,&h)!=3)return 1;printf("%d\\n",clamp(v,l,h));return 0;}'},
   {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
@@ -88,6 +90,7 @@ try {
     'c-fgets-logical-line': fgetsLogicalLine,
     'c-strtol-integer-input': strtolIntegerInput,
     'c-struct-student-score': structStudentScore,
+    'c-struct-array-search': structArraySearch,
     'c-multi-file': serializeMultiFileSubmission(multiFileSolution, { requiredNames: ['main.c','functions.c','functions.h'] })
   };
   for (const [exerciseId, code] of Object.entries(solutions)) {
@@ -95,7 +98,7 @@ try {
     const result = await response.json();
     assert.equal(result.ok, true, exerciseId + ': ' + JSON.stringify(result));
   }
-  console.log('PASS: all fourteen C exercises compile and pass their real GCC tests');
+  console.log('PASS: all fifteen C exercises compile and pass their real GCC tests');
 
   browser = await chromium.launch({ headless: true });
   context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
@@ -202,6 +205,20 @@ try {
   await page.locator('[data-quiz="c-struct-student-score"][data-choice="0"]').click();
   await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
   console.log('PASS: structure pointer validation, preserved failure, iterations and mastery stay in one lesson flow');
+  await page.goto(base + '/#lesson:c-struct-array-search');
+  await expect(page.locator('.detail-head h1')).toHaveText('구조체 배열에서 학번 찾기');
+  await expect(page.locator('.figure-box svg')).toContainText('첫 일치');
+  await expect(page.locator('#code-input')).toHaveValue(/find_student_index/);
+  await expect(page.locator('.practice-zone')).toContainText('함수 직접 호출형');
+  await submit(page, structArraySearchWrong);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await submit(page, structArraySearch);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('#mark-theory').click();
+  await page.locator('[data-quiz="c-struct-array-search"][data-choice="0"]').click();
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  console.log('PASS: structure array first-match correction, iterations and mastery stay in one lesson flow');
   await page.goto(base + '/#lesson:c-multi-file');
   await expect(page.locator('.detail-head h1')).toHaveText('분할 컴파일: 헤더와 여러 소스 파일');
   await expect(page.locator('.figure-box svg')).toContainText('functions.h');
@@ -298,6 +315,7 @@ try {
   await expect(bench.locator('#lesson-select option[value="c-fgets-logical-line"]')).toHaveCount(1);
   await expect(bench.locator('#lesson-select option[value="c-strtol-integer-input"]')).toHaveCount(1);
   await expect(bench.locator('#lesson-select option[value="c-struct-student-score"]')).toHaveCount(1);
+  await expect(bench.locator('#lesson-select option[value="c-struct-array-search"]')).toHaveCount(1);
   await expect(bench.locator('#lesson-select option[value="c-multi-file"]')).toHaveCount(1);
   await bench.locator('#lesson-select').selectOption('c-types');
   await submit(page, failed);

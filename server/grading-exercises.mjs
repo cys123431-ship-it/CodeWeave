@@ -88,6 +88,19 @@ const CASES = {
     {input:'update_score({109, 50}, INT_MAX) · 양의 넘침 방지',args:['9'],expected:'0 109 50'},
     {input:'update_score({110, 50}, INT_MIN) · 음의 넘침 방지',args:['10'],expected:'0 110 50'}
   ],
+  'c-struct-array-search': [
+    {input:'find_student_index({101, 205, 309}, 3, 205, &out)',args:['0'],expected:'1 1'},
+    {input:'첫 원소의 id 101 검색',args:['1'],expected:'1 0'},
+    {input:'마지막 원소의 id 309 검색',args:['2'],expected:'1 2'},
+    {input:'원소 하나인 배열에서 일치',args:['3'],expected:'1 0'},
+    {input:'원소 하나인 배열에서 미발견',args:['4'],expected:'0 77'},
+    {input:'중복 id 7의 첫 번째 위치',args:['5'],expected:'1 0'},
+    {input:'세 원소 배열에서 미발견',args:['6'],expected:'0 77'},
+    {input:'students == NULL',args:['7'],expected:'0 77'},
+    {input:'count == 0',args:['8'],expected:'0 77'},
+    {input:'out_index == NULL',args:['9'],expected:'0'},
+    {input:'INT_MIN 학번도 정상 값으로 검색',args:['10'],expected:'1 1'}
+  ],
   'c-multi-file': [{input:'5 0 10\n',expected:'5'},{input:'-3 0 10\n',expected:'0'},{input:'15 0 10\n',expected:'10'},{input:'-20 -10 -1\n',expected:'-10'},{input:'-1 -10 -1\n',expected:'-1'}]
 };
 
@@ -207,6 +220,38 @@ int main(int argc, char **argv) {
         case 8: status = update_score(NULL, 1); printf("%d\\n", status); break;
         case 9: { struct Student student = {109, 50}; status = update_score(&student, INT_MAX); printf("%d %d %d\\n", status, student.id, student.score); break; }
         case 10: { struct Student student = {110, 50}; status = update_score(&student, INT_MIN); printf("%d %d %d\\n", status, student.id, student.score); break; }
+        default: return 71;
+    }
+    return 0;
+}`,
+  'c-struct-array-search': `#include <limits.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Student {
+    int id;
+    int score;
+};
+
+int find_student_index(const struct Student students[], size_t count, int target_id, size_t *out_index);
+
+int main(int argc, char **argv) {
+    if (argc != 2) return 70;
+    size_t out = 77;
+    int status;
+    switch (atoi(argv[1])) {
+        case 0: { const struct Student students[] = {{101, 70}, {205, 88}, {309, 95}}; status = find_student_index(students, 3, 205, &out); printf("%d %zu\\n", status, out); break; }
+        case 1: { const struct Student students[] = {{101, 70}, {205, 88}, {309, 95}}; status = find_student_index(students, 3, 101, &out); printf("%d %zu\\n", status, out); break; }
+        case 2: { const struct Student students[] = {{101, 70}, {205, 88}, {309, 95}}; status = find_student_index(students, 3, 309, &out); printf("%d %zu\\n", status, out); break; }
+        case 3: { const struct Student students[] = {{42, 100}}; status = find_student_index(students, 1, 42, &out); printf("%d %zu\\n", status, out); break; }
+        case 4: { const struct Student students[] = {{42, 100}}; status = find_student_index(students, 1, 9, &out); printf("%d %zu\\n", status, out); break; }
+        case 5: { const struct Student students[] = {{7, 10}, {8, 20}, {7, 30}}; status = find_student_index(students, 3, 7, &out); printf("%d %zu\\n", status, out); break; }
+        case 6: { const struct Student students[] = {{1, 10}, {2, 20}, {3, 30}}; status = find_student_index(students, 3, 99, &out); printf("%d %zu\\n", status, out); break; }
+        case 7: status = find_student_index(NULL, 3, 1, &out); printf("%d %zu\\n", status, out); break;
+        case 8: { const struct Student students[] = {{1, 10}}; status = find_student_index(students, 0, 1, &out); printf("%d %zu\\n", status, out); break; }
+        case 9: { const struct Student students[] = {{1, 10}}; status = find_student_index(students, 1, 1, NULL); printf("%d\\n", status); break; }
+        case 10: { const struct Student students[] = {{0, 10}, {INT_MIN, 20}, {INT_MAX, 30}}; status = find_student_index(students, 3, INT_MIN, &out); printf("%d %zu\\n", status, out); break; }
         default: return 71;
     }
     return 0;

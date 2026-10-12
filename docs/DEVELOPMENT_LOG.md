@@ -1,5 +1,23 @@
 # CodeWeave 개발 일지
 
+## 2026-10-12 17:57~18:06 KST — 구조체 배열에서 첫 일치 학번 검색
+
+- 실행 시작 커밋: `1d30630265cb0a0f58c95837faae0a7b5589014f` (`main`). GitHub 원격 HEAD와 깨끗한 별도 worktree를 일치시켰고 열린 PR이 없으며 직전 Actions https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38223484536 의 `test`·실제 Chromium `browser` 작업이 모두 성공한 기준선을 확인했다. 필수 운영·콘텐츠 문서와 최신 일지의 다음 작업을 읽고 변경 전 `npm test` 137/137 성공을 확인했다.
+- 목표/성공 조건: `struct Student` 배열의 `[0, count)` 범위에서 `id`가 같은 첫 원소를 찾아 `size_t` 인덱스를 출력 객체에 기록한다. 중복 학번은 첫 일치를 선택하고, 미발견·`NULL` 배열·0 길이·`NULL` 출력에서는 0을 반환하며 유효한 출력 객체를 보존한다. 배열은 `const`로 읽기 전용임을 드러내고 기존 진도·초안·iteration·통합 백업 v1 형식은 변경하지 않는다.
+- 테스트 우선 재현: 공개 정의·선수 단원·11개 비공개 사례·하네스와 단원·정적 그림·독자 원고 검사를 먼저 추가했다. 구현 전 표적 검사 8건 중 기존 4건은 성공하고 새 문제·단원·도식·원고가 없어 4건이 실패하는 상태를 확인했다. 이후 정답과 마지막 중복을 반환하는 풀이, 실패 전에 출력을 덮는 풀이, 인덱스 0을 건너뛰는 풀이, 표준 출력 부작용, 무한 반복 회귀를 실제 GCC 검사로 고정했다.
+- 교육 콘텐츠/UI: `c-struct-array-search`를 C 열다섯 번째 단원으로 추가했다. 화면 12개 절과 `content/c/13-struct-array-search.md`에서 구조체 배열 원소와 패딩 경계, `students[i].id`와 `students->id` 차이, 배열 매개변수의 포인터 조정, `sizeof students`의 한계, 별도 `count`, `const`, `[0, count)`, 첫 일치 정책, 실패 시 출력 보존, `O(n)` 시간·`O(1)` 공간을 설명했다. 완성 프로그램과 결과, 흔한 오류, 점검·요약, 기초/응용/도전·Mini Project·테스트 개선·복습 연결을 독자 작성했다. 정적 SVG는 세 학생을 순서대로 검사해 학번 205의 첫 일치 인덱스 1을 기록하는 성공과 세 실패 분기를 애니메이션 없이 대비한다.
+- 채점/경계: 서버 전용 하네스의 11개 사례는 중간 공개 예시, 첫·마지막 원소, 단일 원소 성공·미발견, 중복의 첫 위치, 일반 미발견, `students == NULL`, `count == 0`, `out_index == NULL`, `INT_MIN` 학번을 포함한다. 실패 사례에서는 감시값 77을 보존한다. 검색에 관계없는 `score` 유효성 정책을 임의로 추가하지 않으며, 포인터가 실제 `count`개 객체를 가리키는지는 C 함수가 증명할 수 없음을 원고와 설계 문서에 명시했다.
+- 통합/PWA/브라우저: 새 ID를 메인 단원·반복 제출 연습장·공유 iteration·숙달 흐름에 연결했고 저장 키와 백업 버전은 유지했다. 실제 Chromium 시나리오에는 마지막 중복 위치 오답 → 첫 일치 정답 → 두 iteration → 이론 읽기 → 퀴즈 → 전체 숙달과 연습장 선택을 추가했다. PWA shell은 v19로 갱신했다.
+- 로컬 검사: 최종 `npm test` 146/146 성공, 실패/skip 0. 실제 GCC로 C 15문제와 새 11개 정상·경계 사례 및 다섯 오답 회귀를 검사했다. `src/catalog.js`, `src/exercises.js`, `src/figures.js`, `server/grading-exercises.mjs`, `tests/browser-practice.mjs`, `tests/grader-api.test.mjs`, `sw.js`의 `node --check`와 `git diff --check`도 성공했다.
+- 로컬 브라우저 시도: `npm run test:browser`에서 C 15문제의 실제 GCC API 검증은 모두 성공했으나 Playwright Chromium 실행 파일 부재(`browserType.launch: Executable doesn't exist`)로 UI 단계는 미실행이다. 새 단원 렌더링·iteration·숙달·연습장·오프라인 회귀는 반영 후 GitHub Actions의 설치된 Chromium으로 판정하며 API 성공을 브라우저 E2E 성공으로 보고하지 않는다.
+- 문서/자료: `README.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`를 C 15개·공개 정의 18개·입출력형 8개·함수 직접 호출형 6개·다중 파일형 1개·PWA shell v19에 맞췄다. 두 참고 PDF의 로컬 접근과 크기(87,753,393 bytes/6,838,054 bytes)를 다시 확인했지만 이번 원고·도식·코드·문제는 독자 작성했고 PDF 본문·캡처·상용 문제를 복제하지 않았다.
+- 미해결/위험: `const`는 일반적인 소스 대입을 막을 뿐 유효한 포인터·실제 배열 길이·악의적인 형 변환을 증명하지 않는다. 함수 하네스와 시간 제한도 메모리·파일·네트워크를 격리하지 않으므로 로컬 서버는 계속 신뢰하는 개인 코드 전용이다. 로컬 실제 Chromium, Windows/Android/iPad, PWA 설치와 공개 배포는 검증하지 않았다.
+- GitHub 반영: 이 일지를 포함하는 커밋 제목 `feat: add structure array search exercise`. 자신의 SHA와 새 CI 결과는 커밋 후 원격 HEAD·파일·Actions를 재조회하여 실행 보고서에 기록한다. 최신 base tree와 expected SHA를 사용하고 강제 푸시하지 않는다.
+- 다음 우선 작업: **구조체 배열을 학번 기준으로 안정 정렬하는 함수형 실습의 테스트 우선 설계**. 구조체 전체 이동, 오름차순, 같은 학번의 기존 순서 유지, 이미 정렬/역순/한 원소/0 길이/`NULL`/`INT_MIN`·`INT_MAX`를 먼저 실제 GCC 사례로 고정하고 비교식 뺄셈의 signed 넘침과 배열 범위를 설명한다. 현재 검색 단원의 ID·저장 데이터와 백업 v1을 유지한다.
+- 분야별 상태: C 15개/Rust·자료구조·알고리즘 각 1개 시범 단원, 공개 문제 정의 18개. 로컬 GCC 전체 프로그램 입출력형 8개·함수 직접 호출형 6개·다중 파일형 1개가 공유 이력·통합 백업·숙달·PWA 흐름에 연결됨. C 20문제, 동적 메모리·파일 입출력 등 전체 C 교과서, 자료구조/알고리즘 확장, Rust 채점, 실기기/PWA 설치와 공개 샌드박스는 후속 작업이다.
+
+---
+
 ## 2026-10-12 17:00~17:22 KST — 구조체 포인터로 학생 점수 안전하게 갱신
 
 - 실행 시작 커밋: `a3e7a04a8625b6a861234eb2a625b6d984e200b7` (`main`). 로컬과 `origin/main`이 일치하고 작업 트리가 깨끗한 상태에서 시작했다. 열린 PR은 없고 직전 Actions https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38219069463 의 `test`·실제 Chromium `browser` 작업이 모두 성공한 기준선을 이어받았다. 필수 운영 문서와 최신 일지의 구조체 우선 작업을 확인했으며 변경 전 `npm test`는 128/128 성공했다.
