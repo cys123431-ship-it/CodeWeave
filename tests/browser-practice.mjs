@@ -37,6 +37,8 @@ const stringCountFunction = '#include <stddef.h>\nint count_char(const char *tex
 const stringCountWrong = '#include <stddef.h>\nint count_char(const char *text,char target,size_t *out_count){if(!text||!out_count)return 0;size_t count=0;do{if(*text==target)++count;}while(*text++!=\'\\0\');*out_count=count;return 1;}';
 const boundedStringFunction = '#include <stddef.h>\nint bounded_length(const char *buffer,size_t capacity,size_t *out_length){if(!buffer||capacity==0||!out_length)return 0;for(size_t i=0;i<capacity;++i)if(buffer[i]==\'\\0\'){*out_length=i;return 1;}return 0;}';
 const boundedStringWrong = '#include <stddef.h>\nint bounded_length(const char *buffer,size_t capacity,size_t *out_length){if(!buffer||capacity==0||!out_length)return 0;size_t i=0;while(i<capacity&&buffer[i]!=\'\\0\')++i;*out_length=i;return 1;}';
+const fgetsLogicalLine = '#include <stddef.h>\n#include <stdio.h>\nint main(void){char chunk[8];size_t total=0;int saw_input=0;for(;;){if(fgets(chunk,sizeof chunk,stdin)==NULL){if(ferror(stdin))return 1;if(!saw_input){puts("NO INPUT");return 0;}break;}saw_input=1;size_t i=0;while(chunk[i]!=\'\\0\'&&chunk[i]!=\'\\n\')++i;total+=i;if(chunk[i]==\'\\n\')break;}printf("%zu\\n",total);return 0;}';
+const fgetsLogicalLineWrong = '#include <stdio.h>\n#include <string.h>\nint main(void){char chunk[8];if(!fgets(chunk,sizeof chunk,stdin)){puts("NO INPUT");return 0;}printf("%zu\\n",strcspn(chunk,"\\n"));return 0;}';
 const multiFileSolution = [
   {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\nint main(void){int v,l,h;if(scanf("%d%d%d",&v,&l,&h)!=3)return 1;printf("%d\\n",clamp(v,l,h));return 0;}'},
   {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
@@ -79,6 +81,7 @@ try {
     'c-array-max-function': arrayMaxFunction,
     'c-string-count-function': stringCountFunction,
     'c-bounded-string-length': boundedStringFunction,
+    'c-fgets-logical-line': fgetsLogicalLine,
     'c-multi-file': serializeMultiFileSubmission(multiFileSolution, { requiredNames: ['main.c','functions.c','functions.h'] })
   };
   for (const [exerciseId, code] of Object.entries(solutions)) {
@@ -86,7 +89,7 @@ try {
     const result = await response.json();
     assert.equal(result.ok, true, exerciseId + ': ' + JSON.stringify(result));
   }
-  console.log('PASS: all eleven C exercises compile and pass their real GCC tests');
+  console.log('PASS: all twelve C exercises compile and pass their real GCC tests');
 
   browser = await chromium.launch({ headless: true });
   context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
@@ -151,6 +154,20 @@ try {
   await page.locator('[data-quiz="c-bounded-string-length"][data-choice="0"]').click();
   await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
   console.log('PASS: bounded string capacity failure, correction, iterations and mastery stay in one lesson flow');
+  await page.goto(base + '/#lesson:c-fgets-logical-line');
+  await expect(page.locator('.detail-head h1')).toHaveText('fgets로 논리적 한 줄 읽기');
+  await expect(page.locator('.figure-box svg')).toContainText('7 + 4');
+  await expect(page.locator('#code-input')).toHaveValue(/char chunk\[8\]/);
+  await expect(page.locator('.practice-zone')).toContainText('입출력형');
+  await submit(page, fgetsLogicalLineWrong);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await submit(page, fgetsLogicalLine);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('#mark-theory').click();
+  await page.locator('[data-quiz="c-fgets-logical-line"][data-choice="0"]').click();
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  console.log('PASS: fgets chunk failure, correction, iterations and mastery stay in one lesson flow');
   await page.goto(base + '/#lesson:c-multi-file');
   await expect(page.locator('.detail-head h1')).toHaveText('분할 컴파일: 헤더와 여러 소스 파일');
   await expect(page.locator('.figure-box svg')).toContainText('functions.h');
@@ -244,6 +261,7 @@ try {
   await expect(bench.locator('#lesson-select option[value="c-array-max-function"]')).toHaveCount(1);
   await expect(bench.locator('#lesson-select option[value="c-string-count-function"]')).toHaveCount(1);
   await expect(bench.locator('#lesson-select option[value="c-bounded-string-length"]')).toHaveCount(1);
+  await expect(bench.locator('#lesson-select option[value="c-fgets-logical-line"]')).toHaveCount(1);
   await expect(bench.locator('#lesson-select option[value="c-multi-file"]')).toHaveCount(1);
   await bench.locator('#lesson-select').selectOption('c-types');
   await submit(page, failed);

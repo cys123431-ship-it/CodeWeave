@@ -32,7 +32,7 @@ test('every lesson challenge has one validated public exercise definition', () =
 });
 
 test('only implemented C exercises advertise their explicit grading strategy', () => {
-  const expected = ['c-array', 'c-array-max-function', 'c-bounded-string-length', 'c-clamp-function', 'c-functions', 'c-hello', 'c-loops', 'c-multi-file', 'c-pointer', 'c-string-count-function', 'c-types'];
+  const expected = ['c-array', 'c-array-max-function', 'c-bounded-string-length', 'c-clamp-function', 'c-fgets-logical-line', 'c-functions', 'c-hello', 'c-loops', 'c-multi-file', 'c-pointer', 'c-string-count-function', 'c-types'];
   assert.deepEqual(exercises.filter(exercise => isGradedExercise(exercise.id)).map(exercise => exercise.id).sort(), expected);
   assert.deepEqual([...gradingExercises.keys()].sort(), expected);
   for (const id of expected) {
@@ -58,6 +58,9 @@ test('only implemented C exercises advertise their explicit grading strategy', (
   assert.equal(exerciseById('c-bounded-string-length').grader, 'c-function');
   assert.equal(gradingExercises.get('c-bounded-string-length').cases.length, 9);
   assert.match(gradingExercises.get('c-bounded-string-length').harness, /int bounded_length\(const char \*buffer, size_t capacity, size_t \*out_length\);/);
+  assert.equal(exerciseById('c-fgets-logical-line').grader, 'stdin-output');
+  assert.equal(gradingExercises.get('c-fgets-logical-line').cases.length, 9);
+  assert.equal(gradingExercises.get('c-fgets-logical-line').harness, undefined);
   assert.equal(exerciseById('c-multi-file').grader, 'c-multi-file');
   assert.deepEqual(exerciseById('c-multi-file').requiredFiles, ['main.c', 'functions.c', 'functions.h']);
   for (const id of ['rust-mut', 'ds-stack', 'algo-binary']) assert.equal(isGradedExercise(id), false);

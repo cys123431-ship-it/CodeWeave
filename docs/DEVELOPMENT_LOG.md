@@ -1,5 +1,21 @@
 # CodeWeave 개발 일지
 
+## 2026-10-12 11:57~12:06 KST — `fgets` 여러 조각으로 첫 논리 줄 완성
+
+- 실행 시작 커밋: `e208d504aac4dc488d613c8fcba8b48b1355fcd2` (`main`). 로컬과 `origin/main` 일치 및 깨끗한 작업 트리를 확인했다. GitHub 연결로 최신 원격 커밋과 열린 PR 없음도 재조회했고, 직전 Actions https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38195152125 의 `test`·실제 Chromium `browser` 작업이 모두 성공한 기준선을 이어받았다. 최신 일지의 다음 작업인 긴 줄 `fgets` 실습을 선택했다.
+- 목표/성공 조건: `char chunk[8]`을 반복 사용해 첫 개행 전까지의 바이트 수를 누적한다. 짧은 줄, 빈 줄, 정확히 7바이트 뒤 개행, 8바이트 이상, 여러 조각, 개행 없는 마지막 줄, 즉시 EOF, 두 번째 줄 무시를 구분한다. `fgets`의 `NULL` 반환 뒤 입력 오류와 깨끗한 EOF 정책을 문서화하고, 기존 진도·초안·iteration·통합 백업 v1 키와 형식을 바꾸지 않는다.
+- 테스트 우선 재현: 공개 메타데이터·9개 서버 사례·단원 원고·정적 그림 검사를 먼저 추가했다. 구현 전 표적 검사 8개 중 4개가 문제·단원·그림·원고 미등록으로 실패했다. 구현 뒤 원고 검사가 요구한 즉시 EOF 계약 문장이 의미는 있었지만 명시적 표현과 일치하지 않는 1개 실패를 발견해, `EOF 전에 읽은 바이트가 하나도 없으면 NO INPUT`이라는 계약을 본문에 직접 적고 재검사했다.
+- 교육 콘텐츠/UI: `c-fgets-logical-line`을 C 열두 번째 단원으로 추가했다. 화면 12개 절과 `content/c/10-fgets-logical-line.md`에서 한 버퍼 조각과 논리적 한 줄, `sizeof chunk - 1`, 개행 보존, 정확한 버퍼 경계, 빈 줄/즉시 EOF/데이터 뒤 EOF, `ferror`, 바이트와 UTF-8 글자 수 차이, `size_t` 누적 한계를 설명했다. 완성 프로그램과 실행 결과, 흔한 오류, 점검·요약, 기초/응용/도전·Mini Project·테스트 개선·복습 연결을 독자 집필했다. 정적 SVG는 7바이트 첫 조각과 `HIJK\n` 두 번째 조각을 7 + 4로 누적하는 흐름을 애니메이션 없이 표시한다.
+- 채점/경계: 전체 프로그램 입출력형 사례 9개를 등록했다. 정상 풀이를 실제 GCC로 통과시키고, 첫 `fgets` 조각만 세는 풀이, 저장된 개행을 포함하는 풀이, 두 번째 줄까지 세는 풀이, 즉시 EOF를 빈 줄처럼 0으로 출력하는 풀이를 각각 거부했다. 표준 입력 파이프로 실제 읽기 오류를 결정적으로 주입하지 못하므로 `ferror` 분기의 실행 성공은 주장하지 않고 코드·원고 계약과 향후 전용 하네스 범위로 남겼다.
+- 호환/PWA/브라우저: 새 ID는 기존 v1 객체에 선택적으로 추가되며 저장 키·버전·과거 데이터를 바꾸지 않는다. 브라우저 시나리오에 오답→정답→두 iteration→이론 읽기→퀴즈→전체 숙달과 연습장 선택 항목을 추가하고 PWA shell을 v16으로 갱신했다.
+- 로컬 검사: 최종 `npm test` 120/120 성공, 실패/skip 0. 실제 GCC로 C 12문제와 새 9개 정상·경계 사례 및 네 오답 분기를 검사했다. `src/app.js`, `src/catalog.js`, `src/exercises.js`, `src/figures.js`, `src/workbench.js`, `server/grading-exercises.mjs`, `tests/browser-practice.mjs`, `dev-server.mjs`의 `node --check`와 `git diff --check`도 성공했다.
+- 로컬 브라우저 시도: `npm run test:browser`에서 C 12문제의 실제 GCC API 검증은 모두 성공했으나 Playwright Chromium 실행 파일 부재(`browserType.launch: Executable doesn't exist`)로 UI 단계는 미실행이다. 새 단원 렌더링·iteration·숙달·연습장·오프라인 회귀는 반영 후 GitHub Actions의 설치된 Chromium으로 판정하며 API 성공을 브라우저 E2E 성공으로 보고하지 않는다.
+- 문서/자료: `README.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`를 C 12개·공개 정의 15개·입출력형 7개·함수 직접 호출형 4개·다중 파일형 1개·PWA shell v16에 맞췄다. 두 참고 PDF의 로컬 접근과 크기(87,753,393 bytes/6,838,054 bytes)를 확인했지만 이번 원고·도식·코드·문제는 독자 작성했고 PDF 본문·캡처·상용 문제를 읽거나 복제하지 않았다.
+- 미해결/위험: 실제 입력 오류 주입, 로컬 Chromium, Windows/Android/iPad 실기기, PWA 설치는 미검증이다. 로컬 GCC 서버는 계속 신뢰하는 개인 코드 전용 비격리 도구이며 공개 실행 서버가 아니다. 줄 전체를 저장하는 동적 버퍼, C 20문제, Rust/Cargo 채점과 전체 교과서는 미완성이다.
+- GitHub 반영: 이 일지를 포함하는 커밋 제목 `feat: add fgets logical line exercise`. 자신의 SHA와 CI 결과는 커밋 후 원격 HEAD·변경 파일·Actions를 재조회해 실행 보고서에 기록한다. 최신 base SHA lease를 사용하며 강제 푸시하지 않는다.
+- 다음 우선 작업: **`fgets`와 `strtol`을 결합한 검증 가능한 정수 입력 실습**. 빈 입력·공백·숫자 없음·뒤따르는 쓰레기 문자·범위 초과·정상 음수를 구분하는 계약을 먼저 작성하고, `endptr`·`errno`·`LONG_MIN/LONG_MAX`를 구현 보장 범위 안에서 설명한다. 문제 성격에 맞는 전체 프로그램 사례와 오답 회귀를 만든 뒤 메인 학습 흐름에 연결한다.
+- 분야별 상태: C 12개/Rust·자료구조·알고리즘 각 1개 시범 단원, 공개 정의 15개. C 채점은 입출력 7·함수 직접 호출 4·다중 파일 1이고 공유 iteration·통합 백업·숙달·컴파일 피드백·PWA 회귀 구조를 유지한다. C 20문제, Rust 채점, 전체 교과서, 실기기·공개 샌드박스는 후속 작업이다.
+
 ## 2026-10-12 11:03~11:14 KST — 읽기 용량을 지키는 C 문자열 길이 함수
 
 - 실행 시작 커밋: `9568f6a734105b614d2690ae9d542084a0cf4cc2` (`main`). 로컬과 `origin/main` 일치 및 깨끗한 시작 상태를 확인했다. 직전 커밋의 Actions https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38190721452 에서 `test`·실제 Chromium `browser`가 모두 성공한 기준선을 이어받았다. 필수 운영 문서와 최신 일지의 다음 우선 작업을 확인했다.

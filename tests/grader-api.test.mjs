@@ -49,6 +49,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     'c-array-max-function': '#include <stddef.h>\nint find_max(const int values[],size_t length,int *out_max){if(values==NULL||length==0||out_max==NULL)return 0;int maximum=values[0];for(size_t i=1;i<length;i++)if(values[i]>maximum)maximum=values[i];*out_max=maximum;return 1;}',
     'c-string-count-function': '#include <stddef.h>\nint count_char(const char *text,char target,size_t *out_count){if(text==NULL||out_count==NULL)return 0;size_t count=0;for(size_t i=0;text[i]!=\'\\0\';++i)if(text[i]==target)++count;*out_count=count;return 1;}',
     'c-bounded-string-length': '#include <stddef.h>\nint bounded_length(const char *buffer,size_t capacity,size_t *out_length){if(buffer==NULL||capacity==0||out_length==NULL)return 0;for(size_t i=0;i<capacity;++i){if(buffer[i]==\'\\0\'){*out_length=i;return 1;}}return 0;}',
+    'c-fgets-logical-line': '#include <stddef.h>\n#include <stdio.h>\nint main(void){char chunk[8];size_t total=0;int saw_input=0;for(;;){if(fgets(chunk,sizeof chunk,stdin)==NULL){if(ferror(stdin))return 1;if(!saw_input){puts("NO INPUT");return 0;}break;}saw_input=1;size_t i=0;while(chunk[i]!=\'\\0\'&&chunk[i]!=\'\\n\')++i;total+=i;if(chunk[i]==\'\\n\')break;}printf("%zu\\n",total);return 0;}',
     'c-multi-file': serializeMultiFileSubmission([
       {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\nint main(void){int v,l,h;if(scanf("%d%d%d",&v,&l,&h)!=3)return 1;printf("%d\\n",clamp(v,l,h));return 0;}'},
       {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
@@ -179,6 +180,28 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     const { result } = await submit('c-bounded-string-length', '#include <stddef.h>\n#include <stdio.h>\nint bounded_length(const char *buffer,size_t capacity,size_t *out_length){puts("debug");if(!buffer||!capacity||!out_length)return 0;for(size_t i=0;i<capacity;++i)if(buffer[i]==\'\\0\'){*out_length=i;return 1;}return 0;}');
     assert.equal(result.ok, false);
     assert.match(result.tests[0].detail, /예상:.*실제:/);
+  });
+  await t.test('fgets exercise rejects reading only the first buffer chunk', async () => {
+    const { result } = await submit('c-fgets-logical-line', '#include <stdio.h>\n#include <string.h>\nint main(void){char chunk[8];if(!fgets(chunk,sizeof chunk,stdin)){puts("NO INPUT");return 0;}size_t n=strcspn(chunk,"\\n");printf("%zu\\n",n);return 0;}');
+    assert.equal(result.ok, false);
+    assert.ok(result.tests.some(test => !test.passed && /예상: 8|예상: 26|예상: 20/.test(test.detail)));
+  });
+  await t.test('fgets exercise excludes the stored newline from the logical length', async () => {
+    const { result } = await submit('c-fgets-logical-line', '#include <stdio.h>\n#include <string.h>\nint main(void){char chunk[64];if(!fgets(chunk,sizeof chunk,stdin)){puts("NO INPUT");return 0;}printf("%zu\\n",strlen(chunk));return 0;}');
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[0].passed, false);
+    assert.equal(result.tests[1].passed, false);
+  });
+  await t.test('fgets exercise stops at the first logical line', async () => {
+    const { result } = await submit('c-fgets-logical-line', '#include <stdio.h>\nint main(void){size_t n=0;int ch;while((ch=getchar())!=EOF)if(ch!=\'\\n\')++n;printf("%zu\\n",n);return 0;}');
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[7].passed, false);
+  });
+  await t.test('fgets exercise distinguishes immediate EOF from an empty line', async () => {
+    const { result } = await submit('c-fgets-logical-line', '#include <stdio.h>\nint main(void){char chunk[8];size_t n=0;while(fgets(chunk,sizeof chunk,stdin)){size_t i=0;while(chunk[i]&&chunk[i]!=\'\\n\')++i;n+=i;if(chunk[i]==\'\\n\')break;}printf("%zu\\n",n);return 0;}');
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[6].passed, false);
+    assert.equal(result.tests[1].passed, true);
   });
   await t.test('multi-file submission validates the file manifest before GCC', async () => {
     const missing = MULTI_FILE_DRAFT_PREFIX + JSON.stringify({ version: 1, files: [

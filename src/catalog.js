@@ -154,6 +154,26 @@ export const lessons = [
     challenge:{id:'c-bounded-string-length',title:'bounded_length 함수 본문만 구현하기',description:'int bounded_length(const char *buffer, size_t capacity, size_t *out_length)를 구현하세요. [0, capacity)에서 첫 널 문자를 찾으면 길이를 기록하고 1을 반환합니다. 포인터가 NULL이거나 capacity가 0이거나 종료 문자가 범위 안에 없으면 0을 반환하고 유효한 출력 객체의 기존 값을 보존하세요. main과 출력 코드는 작성하지 않습니다.',starter:'#include <stddef.h>\n\nint bounded_length(const char *buffer, size_t capacity, size_t *out_length) {\n    // TODO: [0, capacity) 안에서만 종료 문자를 찾으세요.\n    return 0;\n}',input:'bounded_length({\'C\', \'A\', \'T\', \'\\0\'}, 4, &out)',expected:'1 3'}
   },
   {
+    id:'c-fgets-logical-line',track:'c',level:'중급 실습',title:'fgets로 논리적 한 줄 읽기',minutes:52,source:'C 표준 스트림·fgets·EOF와 입력 오류에 관한 독자 작성 실습',
+    summary:'고정 크기 버퍼로 긴 입력을 여러 번 읽어 첫 논리적 한 줄의 바이트 길이를 정확히 계산합니다.',figure:'fgets-chunks',
+    sections:[
+      {heading:'단원 개요와 필요한 이유',text:'한 번의 fgets 호출은 한 줄 전체가 아니라 버퍼에 들어가는 한 조각만 돌려줄 수 있습니다. 사용자 입력, 설정 파일, 로그처럼 길이를 미리 모르는 줄을 처리하려면 여러 조각을 하나의 논리적 한 줄로 합쳐 해석해야 합니다.'},
+      {heading:'선수 지식과 학습 목표',text:'문자 배열, 널 종료, size_t, 반복문, 표준 입력과 bounded 순회를 알고 시작합니다. 학습 후에는 fgets의 저장 한도, 개행 보존, 정확한 버퍼 경계, 깨끗한 EOF와 입력 오류를 구분하고 첫 논리적 한 줄의 바이트 수를 계산할 수 있어야 합니다.'},
+      {heading:'fgets가 성공할 때 저장하는 것',text:'fgets(chunk, sizeof chunk, stdin)는 최대 sizeof chunk - 1바이트를 저장하고 끝에 널 문자를 덧붙입니다. 그 전에 개행을 만나면 개행 문자까지 저장하고 호출을 마칩니다. char chunk[8]에서는 한 번에 입력 내용 7바이트까지만 들어갑니다.',code:'char chunk[8];\nif (fgets(chunk, sizeof chunk, stdin) != NULL) {\n    /* chunk는 널 종료되지만 한 줄 전체인지는 아직 모른다. */\n}'},
+      {heading:'버퍼 조각과 논리적 한 줄을 구분한다',text:'이 단원의 논리적 한 줄은 개행 직전까지의 입력이며 개행 자체는 길이에서 제외합니다. 첫 조각에 개행이 없다면 다음 fgets 호출로 계속 읽습니다. 각 조각에서 널 문자나 개행 전까지의 바이트만 누적하고, 개행을 발견한 순간 첫 줄 처리를 끝냅니다.'},
+      {heading:'정확한 경계에서는 한 번 더 읽어야 한다',text:'char chunk[8]에 정확히 7바이트를 입력한 뒤 개행했다면 첫 호출은 7바이트와 널 문자로 가득 차고 개행은 스트림에 남습니다. 개행이 없다는 사실만으로 입력이 잘렸다고 단정하면 안 됩니다. 두 번째 호출이 남은 개행을 소비해야 첫 논리적 한 줄이 끝났음을 알 수 있습니다.'},
+      {heading:'빈 줄과 입력 없는 EOF는 다르다',text:'빈 줄은 첫 호출이 "\\n"을 성공적으로 읽은 경우이므로 길이 0을 출력합니다. 반대로 아무 바이트도 읽기 전에 fgets가 NULL을 반환하고 feof(stdin)가 참이면 이 실습은 NO INPUT을 출력합니다. 둘은 결과 길이가 우연히 0이라는 이유로 같은 상태가 아닙니다.'},
+      {heading:'EOF 뒤에도 이미 읽은 데이터는 유효하다',text:'마지막 줄에 개행이 없어도 파일은 정상적으로 끝날 수 있습니다. 한 바이트 이상 누적한 뒤 다음 fgets가 깨끗한 EOF를 만나면 지금까지의 누적 길이를 출력합니다. 예를 들어 tail-without-newline은 개행 없이 끝나도 20을 출력합니다.'},
+      {heading:'EOF와 입력 오류를 분리한다',text:'fgets가 NULL을 반환한 뒤 ferror(stdin)가 참이면 읽기 오류이며, 이 프로그램은 정상 결과를 출력하지 않고 1을 반환합니다. feof와 ferror는 읽기 시도 결과를 해석하는 상태이므로 반환값을 먼저 확인합니다. 일반 파일 끝과 장치·스트림 오류를 같은 성공으로 처리해서는 안 됩니다.'},
+      {heading:'단계별 완성 프로그램과 실행 결과',text:'다음은 이 단원의 완성 프로그램입니다. 각 성공 조각을 순회해 개행 전 바이트를 더하고, 개행이나 깨끗한 EOF에서 종료합니다. abcdefghijklmnopqrstuvwxyz와 개행을 넣으면 여러 조각을 거쳐 26을 출력합니다.',code:'#include <stddef.h>\n#include <stdio.h>\n\nint main(void) {\n    char chunk[8];\n    size_t total = 0;\n    int saw_input = 0;\n    for (;;) {\n        if (fgets(chunk, sizeof chunk, stdin) == NULL) {\n            if (ferror(stdin)) return 1;\n            if (!saw_input) { puts("NO INPUT"); return 0; }\n            break;\n        }\n        saw_input = 1;\n        size_t i = 0;\n        while (chunk[i] != \'\\0\' && chunk[i] != \'\\n\') ++i;\n        total += i;\n        if (chunk[i] == \'\\n\') break;\n    }\n    printf("%zu\\n", total);\n    return 0;\n}'},
+      {heading:'길이는 문자 수가 아니라 바이트 수다',text:'char 배열의 인덱스와 이 실습의 total은 바이트 단위입니다. UTF-8 한국어 한 글자는 여러 바이트일 수 있으므로 화면에 보이는 글자 수와 결과가 다를 수 있습니다. 매우 큰 입력을 일반 제품에서 다룬다면 size_t 덧셈의 넘침 정책도 별도로 설계해야 합니다.'},
+      {heading:'흔한 오류와 입력 정책',text:'strlen 한 번으로 첫 조각만 세거나, 조각마다 개행을 길이에 포함하거나, EOF 전에 읽은 데이터를 버리는 실수가 흔합니다. 첫 줄 뒤의 입력은 이 문제에서 의도적으로 무시합니다. Windows 텍스트 스트림의 줄 끝 변환 같은 구현 환경 차이가 있으므로 원시 파일 바이트 수를 세는 문제와도 구분해야 합니다.'},
+      {heading:'중간 점검·핵심 요약·다음 연결',text:'정확히 7바이트 뒤 개행이 왜 두 번의 호출을 요구하는지, 빈 줄과 즉시 EOF가 왜 다른지 설명해 보세요. 핵심은 성공한 조각을 누적하고 개행에서 멈추며, NULL 반환 뒤 ferror와 EOF를 구분하는 것입니다. 이 흐름은 줄 단위 파서, 동적 버퍼, 파일 분석과 스트림 상태 처리로 이어집니다.'}
+    ],
+    quiz:{question:'char chunk[8]로 정확히 7바이트 뒤의 개행까지 읽을 때 올바른 설명은?',options:['첫 호출 뒤 다음 호출로 남은 개행을 확인해야 한다','첫 호출에 반드시 개행까지 들어간다','개행이 없으면 즉시 입력 오류다','널 종료가 없으므로 문자열로 다룰 수 없다'],answer:0,explanation:'첫 호출은 내용 7바이트와 널 문자로 가득 찰 수 있으므로, 다음 호출이 남은 개행을 읽어야 줄의 끝을 확인할 수 있습니다.'},
+    challenge:{id:'c-fgets-logical-line',title:'첫 논리 줄의 바이트 길이',description:'char chunk[8]과 fgets를 반복 사용하여 첫 논리적 한 줄의 바이트 길이를 개행 없이 출력하세요. 빈 줄은 0, 개행 없이 끝난 마지막 줄은 누적 길이, 아무 바이트도 없는 즉시 EOF는 NO INPUT을 출력합니다. 입력 오류는 성공 결과로 처리하지 마세요.',starter:'#include <stddef.h>\n#include <stdio.h>\n\nint main(void) {\n    char chunk[8];\n    size_t total = 0;\n    int saw_input = 0;\n\n    // TODO: 여러 fgets 조각을 첫 개행 또는 EOF까지 소비하세요.\n\n    (void)chunk;\n    (void)total;\n    (void)saw_input;\n    return 0;\n}',input:'CAT',expected:'3'}
+  },
+  {
     id:'c-multi-file',track:'c',level:'중급 실습',title:'분할 컴파일: 헤더와 여러 소스 파일',minutes:35,source:'C 헤더·분할 컴파일·링크 과정에 관한 독자 작성 실습',
     summary:'main.c, functions.c, functions.h의 역할을 나누고 하나의 프로그램으로 컴파일·링크합니다.',figure:'multi-file',
     sections:[

@@ -46,6 +46,17 @@ const CASES = {
     {input:'bounded_length(NULL, 4, &out)',args:['7'],expected:'0 77'},
     {input:'bounded_length(buffer, 4, NULL)',args:['8'],expected:'0'}
   ],
+  'c-fgets-logical-line': [
+    {input:'CAT\n',expected:'3'},
+    {input:'\n',expected:'0'},
+    {input:'1234567\n',expected:'7'},
+    {input:'12345678\n',expected:'8'},
+    {input:'abcdefghijklmnopqrstuvwxyz\n',expected:'26'},
+    {input:'tail-without-newline',expected:'20'},
+    {input:'',expected:'NO INPUT'},
+    {input:'first\nsecond\n',expected:'5'},
+    {input:'12345678901234\n',expected:'14'}
+  ],
   'c-multi-file': [{input:'5 0 10\n',expected:'5'},{input:'-3 0 10\n',expected:'0'},{input:'15 0 10\n',expected:'10'},{input:'-20 -10 -1\n',expected:'-10'},{input:'-1 -10 -1\n',expected:'-1'}]
 };
 
