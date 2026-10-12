@@ -1,5 +1,23 @@
 # CodeWeave 개발 일지
 
+## 2026-10-12 18:55~22:42 KST — 구조체 배열을 학번순으로 안정 정렬
+
+- 실행 시작 커밋: `4433714fef31f0a8c8b9038de280f159d6dcc07d` (`main`, tree `08267ae39de685d84f7b3746a1ba025505c29dbb`). GitHub 원격 HEAD와 별도 작업 트리의 파일 트리가 일치하고 열린 PR이 없으며 직전 Actions https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38227843960 의 `test`·실제 Chromium `browser` 작업이 모두 성공한 기준선을 확인했다. 필수 운영·아키텍처·콘텐츠 문서와 최신 일지를 읽고 변경 전 `npm test` 146/146 성공을 확인했다.
+- 목표/성공 조건: `int stable_sort_students_by_id(struct Student students[], size_t count)`가 `id` 오름차순으로 구조체 전체를 안정 정렬한다. 같은 학번의 기존 순서와 `score` 결합을 보존하고, `count == 0`은 `students == NULL`이어도 성공하며 양수 길이의 `NULL`은 실패한다. `INT_MIN`/`INT_MAX`도 뺄셈 없이 비교하고 표준 출력 부작용이 없어야 하며 기존 진도·초안·iteration·통합 백업 v1 형식은 변경하지 않는다.
+- 테스트 우선 재현: 공개 메타데이터·선수 단원·11개 서버 사례·하네스와 단원·정적 그림·독자 원고 검사를 먼저 추가했다. 구현 전 표적 검사 8건 중 기존 4건은 성공하고 새 문제·단원·도식·원고가 없어 4건이 의도대로 실패했다. 이후 불안정 선택 정렬, `id`만 이동하는 풀이, `NULL, 0`을 거부하는 풀이, 표준 출력 부작용, 무한 반복을 실제 GCC 회귀로 고정했다.
+- 교육 콘텐츠/UI: `c-struct-array-sort`를 C 열여섯 번째 단원으로 추가했다. 화면 12개 절과 `content/c/14-struct-array-sort.md`에서 정렬 키와 레코드 전체 이동, 안정성, 삽입 정렬의 `[0, i)` 불변식, 엄격한 `>`, `size_t`의 0 경계, 비교 뺄셈의 signed overflow, 빈 범위 계약, 시간·공간 복잡도를 설명했다. 완성 프로그램과 실제 출력, 흔한 오류, 점검·요약, 기초/응용/도전·Mini Project·테스트 개선·복습 연결을 독자 작성했다. 정적 SVG는 같은 학번 `205:A`, `205:B`의 상대 순서가 유지되는 이유를 애니메이션 없이 보여 준다.
+- 채점/경계: 서버 전용 하네스의 11개 사례는 공개 혼합 입력, 이미 정렬, 역순, 한 원소, 중복 안정성, 모두 같은 키, `INT_MIN`/0/`INT_MAX`, 음수·양수 혼합, `NULL, 0`, 비NULL 0 길이와 객체 보존, 양수 길이 `NULL`을 포함한다. 정답은 구조체 대입으로 레코드 전체를 이동하고 `students[j - 1].id > key.id`로 직접 비교한다. 삽입 정렬은 최악·평균 `O(n²)`, 이미 정렬된 입력 `O(n)`, 추가 공간 `O(1)`임을 계약과 문서에 일치시켰다.
+- 통합/PWA/브라우저: 새 ID를 메인 단원·반복 제출 연습장·공유 iteration·숙달 흐름에 연결했고 저장 키와 백업 버전은 유지했다. Chromium 시나리오에는 불안정 오답 → 안정 정답 → 두 iteration → 이론 읽기 → 퀴즈 → 전체 숙달과 연습장 선택을 추가했다. PWA shell은 v20으로 갱신했다.
+- 로컬 검사: 구현 후 관련 공개·원고·GCC 표적 검사 72/72 성공. 최종 `npm test` 155/155 성공, 실패/skip 0이며 실제 GCC로 C 16문제, 신규 정상·경계 11개와 다섯 대표 오답을 검사했다. `src/catalog.js`, `src/exercises.js`, `src/figures.js`, `server/grading-exercises.mjs`, `tests/browser-practice.mjs`, `tests/exercises.test.mjs`, `tests/grader-api.test.mjs`, `tests/struct-array-sort-content.test.mjs`, `sw.js`의 `node --check`와 `git diff --check`도 성공했다.
+- 로컬 브라우저 시도: `npm run test:browser`에서 C 16문제의 실제 GCC API 검증은 모두 성공했으나 Playwright Chromium 실행 파일 부재(`browserType.launch: Executable doesn't exist`)로 UI 단계는 미실행이다. Chromium 설치 시도는 환경의 자동 승인 검토 사용 한도로 명령 자체가 실행되지 않았고 우회하지 않았다. 새 단원 렌더링·iteration·숙달·연습장·오프라인 회귀는 반영 후 GitHub Actions의 설치된 Chromium으로 판정하며 API 성공을 브라우저 E2E 성공으로 보고하지 않는다.
+- 문서/자료: `README.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`를 C 16개·공개 정의 19개·입출력형 8개·함수 직접 호출형 7개·다중 파일형 1개·PWA shell v20에 맞췄다. 두 참고 PDF의 로컬 접근과 크기(87,753,393 bytes/6,838,054 bytes)를 다시 확인했지만 이번 원고·도식·코드·문제는 독자 작성했고 PDF 본문·캡처·상용 문제를 복제하지 않았다.
+- 미해결/위험: 함수는 포인터가 실제로 `count`개 객체를 가리키는지 증명하지 않으며 하네스와 시간 제한은 메모리·파일·네트워크를 격리하지 않는다. 로컬 GCC 서버는 계속 신뢰하는 개인 코드 전용이다. 로컬 실제 Chromium, Windows/Android/iPad, PWA 설치와 공개 배포는 검증하지 않았다. C 20문제, 전체 교과서, Rust/Cargo 채점과 공개 샌드박스는 미완성이다.
+- GitHub 반영: 이 일지를 포함하는 커밋 제목 `feat: add stable structure array sort exercise`. 자신의 SHA와 새 CI 결과는 커밋 후 원격 HEAD·신규 원고·Actions를 재조회하여 실행 보고서에 기록한다. 최신 base tree와 expected SHA를 사용하고 강제 푸시하지 않는다.
+- 다음 우선 작업: **정렬된 구조체 배열에서 첫 학번을 이진 탐색하는 함수형 실습의 테스트 우선 설계**. 빈 배열·첫/마지막·중복의 첫 위치·미발견·`NULL`·출력 보존을 검사하고, `left + (right - left) / 2` 경계와 정렬 전제, 선형 검색과의 복잡도 차이를 설명한다. 기존 검색·안정 정렬 단원의 ID와 저장 데이터를 유지한다.
+- 분야별 상태: C 16개/Rust·자료구조·알고리즘 각 1개 시범 단원, 공개 문제 정의 19개. 로컬 GCC 전체 프로그램 입출력형 8개·함수 직접 호출형 7개·다중 파일형 1개가 공유 이력·통합 백업·숙달·PWA 흐름에 연결됨. C 20문제, 동적 메모리·파일 입출력 등 전체 C 교과서, 자료구조/알고리즘 확장, Rust 채점, 실기기/PWA 설치와 공개 샌드박스는 후속 작업이다.
+
+---
+
 ## 2026-10-12 17:57~18:06 KST — 구조체 배열에서 첫 일치 학번 검색
 
 - 실행 시작 커밋: `1d30630265cb0a0f58c95837faae0a7b5589014f` (`main`). GitHub 원격 HEAD와 깨끗한 별도 worktree를 일치시켰고 열린 PR이 없으며 직전 Actions https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38223484536 의 `test`·실제 Chromium `browser` 작업이 모두 성공한 기준선을 확인했다. 필수 운영·콘텐츠 문서와 최신 일지의 다음 작업을 읽고 변경 전 `npm test` 137/137 성공을 확인했다.

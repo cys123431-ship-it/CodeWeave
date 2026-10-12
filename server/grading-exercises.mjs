@@ -101,6 +101,19 @@ const CASES = {
     {input:'out_index == NULL',args:['9'],expected:'0'},
     {input:'INT_MIN 학번도 정상 값으로 검색',args:['10'],expected:'1 1'}
   ],
+  'c-struct-array-sort': [
+    {input:'stable_sort_students_by_id({309:95, 101:70, 205:88}, 3)',args:['0'],expected:'1 101:70 205:88 309:95'},
+    {input:'이미 정렬된 세 레코드',args:['1'],expected:'1 1:10 2:20 3:30'},
+    {input:'역순 네 레코드',args:['2'],expected:'1 1:10 2:20 3:30 4:40'},
+    {input:'한 레코드',args:['3'],expected:'1 42:100'},
+    {input:'중복 id의 원래 순서',args:['4'],expected:'1 101:22 101:44 205:11 205:33'},
+    {input:'모든 id가 같은 배열',args:['5'],expected:'1 7:10 7:20 7:30'},
+    {input:'INT_MIN과 INT_MAX 관계 비교',args:['6'],expected:'1 1 1 1 11 22 33'},
+    {input:'음수와 양수 학번 혼합',args:['7'],expected:'1 -5:50 -1:10 0:20 8:80'},
+    {input:'NULL인 빈 범위',args:['8'],expected:'1'},
+    {input:'비NULL인 빈 범위도 원본 보존',args:['9'],expected:'1 7:70'},
+    {input:'양수 길이의 NULL 배열',args:['10'],expected:'0'}
+  ],
   'c-multi-file': [{input:'5 0 10\n',expected:'5'},{input:'-3 0 10\n',expected:'0'},{input:'15 0 10\n',expected:'10'},{input:'-20 -10 -1\n',expected:'-10'},{input:'-1 -10 -1\n',expected:'-1'}]
 };
 
@@ -252,6 +265,43 @@ int main(int argc, char **argv) {
         case 8: { const struct Student students[] = {{1, 10}}; status = find_student_index(students, 0, 1, &out); printf("%d %zu\\n", status, out); break; }
         case 9: { const struct Student students[] = {{1, 10}}; status = find_student_index(students, 1, 1, NULL); printf("%d\\n", status); break; }
         case 10: { const struct Student students[] = {{0, 10}, {INT_MIN, 20}, {INT_MAX, 30}}; status = find_student_index(students, 3, INT_MIN, &out); printf("%d %zu\\n", status, out); break; }
+        default: return 71;
+    }
+    return 0;
+}`,
+  'c-struct-array-sort': `#include <limits.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Student {
+    int id;
+    int score;
+};
+
+int stable_sort_students_by_id(struct Student students[], size_t count);
+
+static void print_students(int status, const struct Student students[], size_t count) {
+    printf("%d", status);
+    for (size_t i = 0; i < count; ++i) printf(" %d:%d", students[i].id, students[i].score);
+    putchar('\\n');
+}
+
+int main(int argc, char **argv) {
+    if (argc != 2) return 70;
+    int status;
+    switch (atoi(argv[1])) {
+        case 0: { struct Student a[] = {{309, 95}, {101, 70}, {205, 88}}; status = stable_sort_students_by_id(a, 3); print_students(status, a, 3); break; }
+        case 1: { struct Student a[] = {{1, 10}, {2, 20}, {3, 30}}; status = stable_sort_students_by_id(a, 3); print_students(status, a, 3); break; }
+        case 2: { struct Student a[] = {{4, 40}, {3, 30}, {2, 20}, {1, 10}}; status = stable_sort_students_by_id(a, 4); print_students(status, a, 4); break; }
+        case 3: { struct Student a[] = {{42, 100}}; status = stable_sort_students_by_id(a, 1); print_students(status, a, 1); break; }
+        case 4: { struct Student a[] = {{205, 11}, {101, 22}, {205, 33}, {101, 44}}; status = stable_sort_students_by_id(a, 4); print_students(status, a, 4); break; }
+        case 5: { struct Student a[] = {{7, 10}, {7, 20}, {7, 30}}; status = stable_sort_students_by_id(a, 3); print_students(status, a, 3); break; }
+        case 6: { struct Student a[] = {{INT_MAX, 33}, {INT_MIN, 11}, {0, 22}}; status = stable_sort_students_by_id(a, 3); printf("%d %d %d %d %d %d %d\\n", status, a[0].id == INT_MIN, a[1].id == 0, a[2].id == INT_MAX, a[0].score, a[1].score, a[2].score); break; }
+        case 7: { struct Student a[] = {{-1, 10}, {8, 80}, {-5, 50}, {0, 20}}; status = stable_sort_students_by_id(a, 4); print_students(status, a, 4); break; }
+        case 8: status = stable_sort_students_by_id(NULL, 0); printf("%d\\n", status); break;
+        case 9: { struct Student a[] = {{7, 70}}; status = stable_sort_students_by_id(a, 0); print_students(status, a, 1); break; }
+        case 10: status = stable_sort_students_by_id(NULL, 3); printf("%d\\n", status); break;
         default: return 71;
     }
     return 0;

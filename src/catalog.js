@@ -235,6 +235,26 @@ export const lessons = [
     challenge:{id:'c-struct-array-search',title:'학번으로 첫 학생 위치 찾기',description:'int find_student_index(const struct Student students[], size_t count, int target_id, size_t *out_index)를 구현하세요. 첫 번째로 일치하는 id의 인덱스를 기록하고 1을 반환합니다. 미발견, students == NULL, count == 0, out_index == NULL이면 0을 반환하며 유효한 출력 객체는 그대로 보존합니다. 학생 배열을 변경하거나 main·출력 코드를 작성하지 않습니다.',starter:'#include <stddef.h>\n\nstruct Student {\n    int id;\n    int score;\n};\n\nint find_student_index(const struct Student students[], size_t count, int target_id, size_t *out_index) {\n    // TODO: [0, count)에서 첫 일치만 찾아 성공할 때 기록하세요.\n    (void)students;\n    (void)count;\n    (void)target_id;\n    (void)out_index;\n    return 0;\n}',input:'find_student_index({101, 205, 309}, 3, 205, &out)',expected:'1 1'}
   },
   {
+    id:'c-struct-array-sort',track:'c',level:'중급 실습',title:'구조체 배열을 학번순으로 안정 정렬하기',minutes:62,source:'C 구조체 배열·안정 삽입 정렬·비교 계약에 관한 독자 작성 실습',
+    summary:'학생 레코드 전체를 이동하는 안정 삽입 정렬을 구현하고 빈 범위와 정수 극값까지 검증합니다.',figure:'struct-array-sort',
+    sections:[
+      {heading:'단원 개요와 필요한 이유',text:'검색 전에 레코드를 키 순서로 정리하면 출력·그룹화·후속 탐색이 쉬워집니다. 이 단원은 struct Student 배열을 id 오름차순으로 정렬하면서 같은 학번의 원래 순서를 유지하는 안정 정렬과 함수 계약을 연결합니다.'},
+      {heading:'선수 지식과 학습 목표',text:'구조체 배열, [0, count) 범위, size_t와 첫 일치 검색을 알고 시작합니다. 학습 후에는 구조체 전체를 한 레코드로 이동하고, 삽입 정렬의 빈 구간 불변식을 설명하며, 동등 키 안정성·빈 범위·잘못된 포인터를 구분할 수 있어야 합니다.'},
+      {heading:'정렬 키와 레코드는 분리하지 않는다',text:'id가 비교 기준이어도 score는 같은 학생에 속한 데이터입니다. id만 맞바꾸면 학번과 점수가 서로 다른 학생의 값으로 섞입니다. C의 구조체 대입은 모든 멤버 값을 복사하므로 struct Student 임시 객체로 레코드 전체를 이동합니다.',code:'struct Student key = students[i];\nstudents[j] = students[j - 1];\nstudents[j] = key;'},
+      {heading:'안정 정렬은 같은 키의 상대 순서를 보존한다',text:'입력에 205:A, 101:C, 205:B가 있다면 정렬 뒤에도 205:A가 205:B보다 앞서야 합니다. 점수는 실제 정렬 키가 아니지만 A와 B를 구별해 안정성을 관찰하게 해 줍니다. 같은 학번의 순서를 뒤집는 정렬은 오름차순처럼 보여도 이 계약에는 맞지 않습니다.'},
+      {heading:'삽입 정렬은 정렬된 앞 구간을 확장한다',text:'반복 시작 시 [0, i)는 이미 정렬되어 있다고 봅니다. students[i]를 key에 복사하고 앞쪽의 더 큰 레코드를 한 칸씩 오른쪽으로 옮긴 뒤 빈 자리에 key를 넣습니다. i가 1부터 시작하므로 한 원소 배열에는 이동이 없습니다.'},
+      {heading:'엄격한 비교가 안정성을 만든다',text:'이전 학번이 key보다 클 때만 이동해야 하므로 조건은 students[j - 1].id > key.id입니다. >=를 사용하면 같은 학번도 이동해 새 레코드가 기존 동등 키 앞에 들어가므로 안정성이 깨집니다.'},
+      {heading:'비교를 뺄셈으로 바꾸지 않는다',text:'a.id - b.id의 부호로 순서를 판정하면 INT_MIN과 INT_MAX 조합에서 signed int 오버플로가 발생할 수 있습니다. 이는 정의되지 않은 동작입니다. 학번끼리 > 또는 < 관계 연산자로 직접 비교하여 표현 범위 끝값도 안전하게 처리합니다.'},
+      {heading:'빈 범위와 NULL 계약의 순서',text:'count == 0이면 읽거나 쓸 원소가 없는 유효한 빈 범위이므로 students가 NULL이어도 1을 반환합니다. count > 0인데 students == NULL이면 접근할 배열이 없으므로 0입니다. 이 계약을 지키려면 count 검사를 NULL 검사보다 먼저 둡니다.'},
+      {heading:'완성 함수와 실행 결과',text:'309:95, 101:70, 205:88을 정렬하면 상태 1과 함께 101:70 205:88 309:95가 됩니다. 205:11, 101:22, 205:33, 101:44에서는 같은 id 안의 점수 순서 22→44와 11→33이 보존됩니다.',code:'int stable_sort_students_by_id(struct Student students[], size_t count) {\n    if (count == 0) return 1;\n    if (students == NULL) return 0;\n    for (size_t i = 1; i < count; ++i) {\n        struct Student key = students[i];\n        size_t j = i;\n        while (j > 0 && students[j - 1].id > key.id) {\n            students[j] = students[j - 1];\n            --j;\n        }\n        students[j] = key;\n    }\n    return 1;\n}'},
+      {heading:'시간·공간 비용과 선택 이유',text:'역순 배열의 삽입 정렬은 비교와 이동이 O(n²)이고 추가 공간은 구조체 하나뿐이라 O(1)입니다. 이미 정렬된 배열은 각 원소에서 한 번의 비교만 하므로 O(n)입니다. 큰 데이터의 범용 최적 알고리즘이라는 뜻은 아니며, 안정성과 불변식을 직접 연습하는 작은 배열용 선택입니다.'},
+      {heading:'흔한 오류와 C 표현 경계',text:'id만 교환하기, 같은 키에 >= 사용하기, j가 0인데 j - 1을 읽기, a.id - b.id로 비교하기, 양수 길이의 NULL을 성공시키기가 흔한 오류입니다. 구조체 대입은 멤버 값을 복사하지만 패딩 바이트를 이식 가능한 파일 형식으로 저장한다는 뜻은 아닙니다.'},
+      {heading:'중간 점검·핵심 요약·다음 연결',text:'같은 학번의 점수 순서로 안정성을 어떻게 관찰하는지, 구조체 전체를 이동해야 하는 이유, count == 0 검사를 먼저 하는 이유를 설명해 보세요. 핵심은 정렬된 앞 구간을 유지하며 더 큰 레코드만 오른쪽으로 옮기는 것입니다. 다음에는 이 결과를 전제로 이진 탐색과 정렬 알고리즘 비교로 확장합니다.'}
+    ],
+    quiz:{question:'삽입 정렬에서 같은 id의 원래 상대 순서를 유지하는 이동 조건은?',options:['이전 id가 key.id보다 클 때만 이동한다','이전 id가 key.id보다 크거나 같으면 이동한다','score가 다르면 항상 이동한다','두 id를 빼서 결과가 0 이상이면 이동한다'],answer:0,explanation:'엄격한 > 비교는 동등한 키를 건너뛰지 않으므로 먼저 있던 레코드가 계속 앞에 남습니다.'},
+    challenge:{id:'c-struct-array-sort',title:'학생 배열 안정 정렬하기',description:'int stable_sort_students_by_id(struct Student students[], size_t count)를 구현하세요. id 오름차순으로 정렬하되 같은 id의 원래 상대 순서를 유지하고 레코드 전체를 이동합니다. count == 0은 students가 NULL이어도 성공 1, count > 0인 NULL은 실패 0입니다. 비교 뺄셈·main·출력 코드는 작성하지 않습니다.',starter:'#include <stddef.h>\n\nstruct Student {\n    int id;\n    int score;\n};\n\nint stable_sort_students_by_id(struct Student students[], size_t count) {\n    // TODO: 구조체 전체를 이동하는 안정 삽입 정렬을 구현하세요.\n    (void)students;\n    (void)count;\n    return 0;\n}',input:'stable_sort_students_by_id({309:95, 101:70, 205:88}, 3)',expected:'1 101:70 205:88 309:95'}
+  },
+  {
     id:'c-multi-file',track:'c',level:'중급 실습',title:'분할 컴파일: 헤더와 여러 소스 파일',minutes:35,source:'C 헤더·분할 컴파일·링크 과정에 관한 독자 작성 실습',
     summary:'main.c, functions.c, functions.h의 역할을 나누고 하나의 프로그램으로 컴파일·링크합니다.',figure:'multi-file',
     sections:[

@@ -32,7 +32,7 @@ test('every lesson challenge has one validated public exercise definition', () =
 });
 
 test('only implemented C exercises advertise their explicit grading strategy', () => {
-  const expected = ['c-array', 'c-array-max-function', 'c-bounded-string-length', 'c-clamp-function', 'c-fgets-logical-line', 'c-functions', 'c-hello', 'c-loops', 'c-multi-file', 'c-pointer', 'c-string-count-function', 'c-strtol-integer-input', 'c-struct-array-search', 'c-struct-student-score', 'c-types'];
+  const expected = ['c-array', 'c-array-max-function', 'c-bounded-string-length', 'c-clamp-function', 'c-fgets-logical-line', 'c-functions', 'c-hello', 'c-loops', 'c-multi-file', 'c-pointer', 'c-string-count-function', 'c-strtol-integer-input', 'c-struct-array-search', 'c-struct-array-sort', 'c-struct-student-score', 'c-types'];
   assert.deepEqual(exercises.filter(exercise => isGradedExercise(exercise.id)).map(exercise => exercise.id).sort(), expected);
   assert.deepEqual([...gradingExercises.keys()].sort(), expected);
   for (const id of expected) {
@@ -73,6 +73,10 @@ test('only implemented C exercises advertise their explicit grading strategy', (
   assert.equal(gradingExercises.get('c-struct-array-search').cases.length, 11);
   assert.deepEqual(exerciseById('c-struct-array-search').prerequisites, ['c-array-max-function', 'c-struct-student-score']);
   assert.match(gradingExercises.get('c-struct-array-search').harness, /int find_student_index\(const struct Student students\[\], size_t count, int target_id, size_t \*out_index\);/);
+  assert.equal(exerciseById('c-struct-array-sort').grader, 'c-function');
+  assert.equal(gradingExercises.get('c-struct-array-sort').cases.length, 11);
+  assert.deepEqual(exerciseById('c-struct-array-sort').prerequisites, ['c-struct-array-search']);
+  assert.match(gradingExercises.get('c-struct-array-sort').harness, /int stable_sort_students_by_id\(struct Student students\[\], size_t count\);/);
   assert.equal(exerciseById('c-multi-file').grader, 'c-multi-file');
   assert.deepEqual(exerciseById('c-multi-file').requiredFiles, ['main.c', 'functions.c', 'functions.h']);
   for (const id of ['rust-mut', 'ds-stack', 'algo-binary']) assert.equal(isGradedExercise(id), false);
