@@ -57,6 +57,24 @@ const CASES = {
     {input:'first\nsecond\n',expected:'5'},
     {input:'12345678901234\n',expected:'14'}
   ],
+  'c-strtol-integer-input': [
+    {input:'42\n',expected:'42'},
+    {input:'  -42\n',expected:'-42'},
+    {input:'  +23  \n',expected:'23'},
+    {input:'0',expected:'0'},
+    {input:'\n',expected:'INVALID'},
+    {input:'   \t\n',expected:'INVALID'},
+    {input:'abc\n',expected:'INVALID'},
+    {input:'+\n',expected:'INVALID'},
+    {input:'12xyz\n',expected:'INVALID'},
+    {input:'12  xyz\n',expected:'INVALID'},
+    {input:'9999999999999999999999999999999999999999\n',expected:'RANGE'},
+    {input:'-9999999999999999999999999999999999999999\n',expected:'RANGE'},
+    {input:'7\n99\n',expected:'7'},
+    {input:'',expected:'NO INPUT'},
+    {input:'9'.repeat(63)+'\n',expected:'RANGE'},
+    {input:'9'.repeat(64)+'\n',expected:'TOO LONG'}
+  ],
   'c-multi-file': [{input:'5 0 10\n',expected:'5'},{input:'-3 0 10\n',expected:'0'},{input:'15 0 10\n',expected:'10'},{input:'-20 -10 -1\n',expected:'-10'},{input:'-1 -10 -1\n',expected:'-1'}]
 };
 

@@ -50,6 +50,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     'c-string-count-function': '#include <stddef.h>\nint count_char(const char *text,char target,size_t *out_count){if(text==NULL||out_count==NULL)return 0;size_t count=0;for(size_t i=0;text[i]!=\'\\0\';++i)if(text[i]==target)++count;*out_count=count;return 1;}',
     'c-bounded-string-length': '#include <stddef.h>\nint bounded_length(const char *buffer,size_t capacity,size_t *out_length){if(buffer==NULL||capacity==0||out_length==NULL)return 0;for(size_t i=0;i<capacity;++i){if(buffer[i]==\'\\0\'){*out_length=i;return 1;}}return 0;}',
     'c-fgets-logical-line': '#include <stddef.h>\n#include <stdio.h>\nint main(void){char chunk[8];size_t total=0;int saw_input=0;for(;;){if(fgets(chunk,sizeof chunk,stdin)==NULL){if(ferror(stdin))return 1;if(!saw_input){puts("NO INPUT");return 0;}break;}saw_input=1;size_t i=0;while(chunk[i]!=\'\\0\'&&chunk[i]!=\'\\n\')++i;total+=i;if(chunk[i]==\'\\n\')break;}printf("%zu\\n",total);return 0;}',
+    'c-strtol-integer-input': '#include <ctype.h>\n#include <errno.h>\n#include <stdio.h>\n#include <stdlib.h>\nint main(void){char line[64];if(fgets(line,sizeof line,stdin)==NULL){if(ferror(stdin))return 1;puts("NO INPUT");return 0;}size_t i=0;while(line[i]!=\'\\0\'&&line[i]!=\'\\n\')++i;if(line[i]==\'\\0\'){int ch=getchar();if(ch!=EOF&&ch!=\'\\n\'){do{ch=getchar();}while(ch!=EOF&&ch!=\'\\n\');if(ch==EOF&&ferror(stdin))return 1;puts("TOO LONG");return 0;}if(ch==EOF&&ferror(stdin))return 1;}errno=0;char *end;long value=strtol(line,&end,10);if(end==line){puts("INVALID");return 0;}if(errno==ERANGE){puts("RANGE");return 0;}while(*end!=\'\\0\'&&isspace((unsigned char)*end))++end;if(*end!=\'\\0\'){puts("INVALID");return 0;}printf("%ld\\n",value);return 0;}',
     'c-multi-file': serializeMultiFileSubmission([
       {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\nint main(void){int v,l,h;if(scanf("%d%d%d",&v,&l,&h)!=3)return 1;printf("%d\\n",clamp(v,l,h));return 0;}'},
       {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
@@ -202,6 +203,29 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     assert.equal(result.ok, false);
     assert.equal(result.tests[6].passed, false);
     assert.equal(result.tests[1].passed, true);
+  });
+  await t.test('strtol exercise rejects atoi because invalid input is not the integer zero', async () => {
+    const { result } = await submit('c-strtol-integer-input', '#include <stdio.h>\n#include <stdlib.h>\nint main(void){char line[64];if(!fgets(line,sizeof line,stdin)){puts("NO INPUT");return 0;}printf("%d\\n",atoi(line));return 0;}');
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[4].passed, false);
+    assert.equal(result.tests[6].passed, false);
+  });
+  await t.test('strtol exercise rejects trailing non-whitespace after the number', async () => {
+    const { result } = await submit('c-strtol-integer-input', '#include <stdio.h>\n#include <stdlib.h>\nint main(void){char line[64],*end;if(!fgets(line,sizeof line,stdin)){puts("NO INPUT");return 0;}long value=strtol(line,&end,10);(void)end;printf("%ld\\n",value);return 0;}');
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[8].passed, false);
+    assert.equal(result.tests[9].passed, false);
+  });
+  await t.test('strtol exercise checks ERANGE instead of printing a clamped value', async () => {
+    const { result } = await submit('c-strtol-integer-input', '#include <ctype.h>\n#include <stdio.h>\n#include <stdlib.h>\nint main(void){char line[64],*end;if(!fgets(line,sizeof line,stdin)){puts("NO INPUT");return 0;}long value=strtol(line,&end,10);if(end==line){puts("INVALID");return 0;}while(*end&&isspace((unsigned char)*end))++end;if(*end){puts("INVALID");return 0;}printf("%ld\\n",value);return 0;}');
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[10].passed, false);
+    assert.equal(result.tests[11].passed, false);
+  });
+  await t.test('strtol exercise rejects a first line longer than its declared buffer policy', async () => {
+    const { result } = await submit('c-strtol-integer-input', '#include <errno.h>\n#include <stdio.h>\n#include <stdlib.h>\nint main(void){char line[64],*end;if(!fgets(line,sizeof line,stdin)){puts("NO INPUT");return 0;}errno=0;long value=strtol(line,&end,10);if(errno==ERANGE){puts("RANGE");return 0;}printf("%ld\\n",value);return 0;}');
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[15].passed, false);
   });
   await t.test('multi-file submission validates the file manifest before GCC', async () => {
     const missing = MULTI_FILE_DRAFT_PREFIX + JSON.stringify({ version: 1, files: [

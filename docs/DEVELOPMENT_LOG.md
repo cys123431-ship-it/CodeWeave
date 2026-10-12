@@ -1,5 +1,21 @@
 # CodeWeave 개발 일지
 
+## 2026-10-12 13:02~16:37 KST — `fgets`와 `strtol`로 검증 가능한 정수 입력
+
+- 실행 시작 커밋: `44b925192c6d2b5ff10feb25cc080f2077a2f17d` (`main`). 로컬과 `origin/main`이 일치하고 직전 Actions https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38198556488 의 `test`·실제 Chromium `browser` 작업이 모두 성공한 기준선을 이어받았다. 필수 운영 문서와 최신 일지의 다음 우선 작업을 확인했다.
+- 목표/성공 조건: `fgets`로 첫 논리 줄을 안전하게 받고 `strtol(..., 10)`의 `endptr`와 `errno`로 정수 전체를 검증한다. 정상 양수·음수·앞뒤 공백·빈 줄·숫자 없음·뒤따르는 쓰레기 문자·표현 범위 초과·즉시 EOF·입력 길이 경계를 구분한다. C가 `long`의 비트 수를 고정하지 않는다는 사실을 지키고 기존 진도·초안·iteration·통합 백업 v1 형식을 바꾸지 않는다.
+- 테스트 우선 재현: 공개 메타데이터, 단원·그림·원고, 16개 서버 사례와 네 대표 오답 검사를 먼저 추가했다. 구현 전 표적 검사에서 미등록 단원·도식·원고·채점 정의로 10개가 실패했다. 구현 뒤에는 공개 예시 입력과 채점 fixture가 어긋난 1개 실패를 확인해 동일한 앞 공백 음수 입력으로 맞추고 다시 검사했다.
+- 교육 콘텐츠/UI: `c-strtol-integer-input`을 C 열세 번째 단원으로 추가했다. `content/c/11-strtol-integer-input.md`와 화면 절에서 `atoi`가 오류 원인을 구분하지 못하는 이유, `endptr == line`, 후행 공백 검사, `errno = 0` 선행 설정, `ERANGE`, `LONG_MIN/LONG_MAX`, `isspace((unsigned char)...)`, 밑 10 계약을 설명했다. 완성 프로그램·실행 결과·흔한 오류·중간 점검·요약·기초/응용/도전·Mini Project·테스트 개선·복습 연결을 독자 작성했다. 정적 SVG는 `-42` 변환값, `endptr`, 후행 공백, 범위 초과 분기를 애니메이션 없이 보여 준다.
+- 입력 경계/채점: 64바이트 배열에서 첫 줄이 최대 63바이트일 때는 개행 없는 EOF도 유효하게 처리하고, 저장된 조각에 개행이 없으면 한 문자를 더 확인해 실제 64바이트 이상인 줄만 `TOO LONG`으로 분류한다. 깨끗한 즉시 EOF는 `NO INPUT`, 문법 오류는 `INVALID`, `ERANGE`는 `RANGE`, 정상 값은 `%ld`로 정규화한다. 실제 GCC 사례 16개로 정상·경계·오류를 검사하고 `atoi`, 후행 문자 미검사, 범위 미검사, 길이 미검사 오답을 거부했다.
+- 호환/PWA/브라우저: 새 문제 ID를 메인 단원·연습장·공유 iteration·숙달 흐름에 연결했다. 저장 키와 백업 버전은 유지했으며 PWA shell을 v17로 갱신했다. 브라우저 시나리오에는 오답→정답→두 iteration→이론 읽기→퀴즈→전체 숙달과 연습장 선택을 추가했다.
+- 로컬 검사: 최종 `npm test` 128/128 성공, 실패/skip 0. 실제 GCC로 C 13문제, 새 16개 정상·경계 사례와 네 오답 회귀를 검사했다. 변경 JS/MJS의 `node --check`와 `git diff --check`도 성공했다.
+- 로컬 브라우저 시도: `npm run test:browser`에서 C 13문제의 실제 GCC API 검증은 모두 성공했으나 Playwright Chromium 실행 파일 부재(`browserType.launch: Executable doesn't exist`)로 UI 단계는 미실행이다. 새 단원 렌더링·iteration·숙달·연습장·오프라인 회귀는 반영 후 GitHub Actions의 설치된 Chromium으로 판정하며 API 성공을 브라우저 E2E 성공으로 보고하지 않는다.
+- 문서/자료: `README.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`를 C 13개·공개 정의 16개·입출력형 8개·함수 직접 호출형 4개·다중 파일형 1개·PWA shell v17에 맞췄다. 두 참고 PDF의 로컬 접근과 크기(87,753,393 bytes/6,838,054 bytes)를 확인했지만 이번 원고·도식·코드·문제는 독자 작성했고 PDF 본문·캡처·상용 문제를 복제하지 않았다.
+- 미해결/위험: 실제 스트림 읽기 오류 주입, 로컬 Chromium, Windows/Android/iPad 실기기와 PWA 설치는 미검증이다. 로컬 GCC 서버는 신뢰하는 개인 코드 전용 비격리 도구이며 공개 실행 서버가 아니다. `strtol`은 문자열이 실제 읽기 가능한 널 종료 객체라는 호출 전제를 없애지 않는다. C 20문제, Rust/Cargo 채점과 전체 교과서는 미완성이다.
+- GitHub 반영: 이 일지를 포함하는 커밋 제목 `feat: add strtol integer input exercise`. 자신의 SHA와 CI 결과는 커밋 후 원격 HEAD·변경 파일·Actions를 재조회해 실행 보고서에 기록한다. 최신 base SHA lease를 사용하며 강제 푸시하지 않는다.
+- 다음 우선 작업: **구조체 기초와 포인터로 레코드 갱신하기**. `struct Student`의 필드, 값 복사와 객체 주소 전달, 유효 범위 검증, 실패 시 원본 보존을 먼저 독자 원고·정적 메모리 도식·함수형 스타터·서버 전용 GCC 하네스로 설계한다. 정상/경계/`NULL`/부작용/시간 초과 사례를 갖춘 뒤 기존 함수형 채점기·iteration·숙달 흐름에 연결한다.
+- 분야별 상태: C 13개/Rust·자료구조·알고리즘 각 1개 시범 단원, 공개 정의 16개. C 채점은 입출력 8·함수 직접 호출 4·다중 파일 1이고 공유 iteration·통합 백업·숙달·컴파일 피드백·PWA 회귀 구조를 유지한다. C 20문제, Rust 채점, 전체 교과서, 실기기·공개 샌드박스는 후속 작업이다.
+
 ## 2026-10-12 11:57~12:06 KST — `fgets` 여러 조각으로 첫 논리 줄 완성
 
 - 실행 시작 커밋: `e208d504aac4dc488d613c8fcba8b48b1355fcd2` (`main`). 로컬과 `origin/main` 일치 및 깨끗한 작업 트리를 확인했다. GitHub 연결로 최신 원격 커밋과 열린 PR 없음도 재조회했고, 직전 Actions https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38195152125 의 `test`·실제 Chromium `browser` 작업이 모두 성공한 기준선을 이어받았다. 최신 일지의 다음 작업인 긴 줄 `fgets` 실습을 선택했다.
