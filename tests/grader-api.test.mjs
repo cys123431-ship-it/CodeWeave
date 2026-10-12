@@ -48,6 +48,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     'c-clamp-function': 'int clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}',
     'c-array-max-function': '#include <stddef.h>\nint find_max(const int values[],size_t length,int *out_max){if(values==NULL||length==0||out_max==NULL)return 0;int maximum=values[0];for(size_t i=1;i<length;i++)if(values[i]>maximum)maximum=values[i];*out_max=maximum;return 1;}',
     'c-string-count-function': '#include <stddef.h>\nint count_char(const char *text,char target,size_t *out_count){if(text==NULL||out_count==NULL)return 0;size_t count=0;for(size_t i=0;text[i]!=\'\\0\';++i)if(text[i]==target)++count;*out_count=count;return 1;}',
+    'c-bounded-string-length': '#include <stddef.h>\nint bounded_length(const char *buffer,size_t capacity,size_t *out_length){if(buffer==NULL||capacity==0||out_length==NULL)return 0;for(size_t i=0;i<capacity;++i){if(buffer[i]==\'\\0\'){*out_length=i;return 1;}}return 0;}',
     'c-multi-file': serializeMultiFileSubmission([
       {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\nint main(void){int v,l,h;if(scanf("%d%d%d",&v,&l,&h)!=3)return 1;printf("%d\\n",clamp(v,l,h));return 0;}'},
       {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
@@ -158,6 +159,26 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     assert.equal(result.ok, false);
     assert.equal(result.tests.length, 1);
     assert.equal(result.tests[0].detail, '시간 제한 초과');
+  });
+  await t.test('bounded string function rejects a missing terminator without publishing capacity as a length', async () => {
+    const { result } = await submit('c-bounded-string-length', '#include <stddef.h>\nint bounded_length(const char *buffer,size_t capacity,size_t *out_length){if(!buffer||!capacity||!out_length)return 0;size_t i=0;while(i<capacity&&buffer[i]!=\'\\0\')++i;*out_length=i;return 1;}');
+    assert.equal(result.ok, false);
+    assert.ok(result.tests.some(test => !test.passed && /예상: 0 77/.test(test.detail)));
+  });
+  await t.test('bounded string function accepts a terminator in the last readable slot', async () => {
+    const { result } = await submit('c-bounded-string-length', '#include <stddef.h>\nint bounded_length(const char *buffer,size_t capacity,size_t *out_length){if(!buffer||!capacity||!out_length)return 0;for(size_t i=0;i+1<capacity;++i){if(buffer[i]==\'\\0\'){*out_length=i;return 1;}}return 0;}');
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[3].passed, false);
+  });
+  await t.test('bounded string function preserves the output object on every contract failure', async () => {
+    const { result } = await submit('c-bounded-string-length', '#include <stddef.h>\nint bounded_length(const char *buffer,size_t capacity,size_t *out_length){if(out_length)*out_length=0;if(!buffer||!capacity||!out_length)return 0;for(size_t i=0;i<capacity;++i)if(buffer[i]==\'\\0\'){*out_length=i;return 1;}return 0;}');
+    assert.equal(result.ok, false);
+    assert.ok(result.tests.some(test => !test.passed && /예상: 0 77/.test(test.detail)));
+  });
+  await t.test('bounded string function grader detects output side effects', async () => {
+    const { result } = await submit('c-bounded-string-length', '#include <stddef.h>\n#include <stdio.h>\nint bounded_length(const char *buffer,size_t capacity,size_t *out_length){puts("debug");if(!buffer||!capacity||!out_length)return 0;for(size_t i=0;i<capacity;++i)if(buffer[i]==\'\\0\'){*out_length=i;return 1;}return 0;}');
+    assert.equal(result.ok, false);
+    assert.match(result.tests[0].detail, /예상:.*실제:/);
   });
   await t.test('multi-file submission validates the file manifest before GCC', async () => {
     const missing = MULTI_FILE_DRAFT_PREFIX + JSON.stringify({ version: 1, files: [

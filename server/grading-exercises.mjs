@@ -35,6 +35,17 @@ const CASES = {
     {input:'count_char(NULL, \'a\', &out) · NULL 문자열',args:['7'],expected:'0 77'},
     {input:'count_char("abc", \'a\', NULL)',args:['8'],expected:'0'}
   ],
+  'c-bounded-string-length': [
+    {input:'bounded_length({\'C\', \'A\', \'T\', \'\\0\'}, 4, &out)',args:['0'],expected:'1 3'},
+    {input:'bounded_length({\'\\0\'}, 1, &out) · 빈 문자열',args:['1'],expected:'1 0'},
+    {input:'bounded_length({\'A\', \'B\', \'\\0\', \'X\'}, 4, &out) · 첫 종료 문자',args:['2'],expected:'1 2'},
+    {input:'bounded_length({\'A\', \'B\', \'C\', \'\\0\'}, 4, &out) · 마지막 허용 칸',args:['3'],expected:'1 3'},
+    {input:'bounded_length({\'A\', \'B\', \'C\'}, 3, &out) · 종료 문자 없음',args:['4'],expected:'0 77'},
+    {input:'bounded_length({\'A\', \'B\', \'C\', \'\\0\'}, 3, &out) · 종료 문자가 범위 밖',args:['5'],expected:'0 77'},
+    {input:'bounded_length(buffer, 0, &out) · 용량 0',args:['6'],expected:'0 77'},
+    {input:'bounded_length(NULL, 4, &out)',args:['7'],expected:'0 77'},
+    {input:'bounded_length(buffer, 4, NULL)',args:['8'],expected:'0'}
+  ],
   'c-multi-file': [{input:'5 0 10\n',expected:'5'},{input:'-3 0 10\n',expected:'0'},{input:'15 0 10\n',expected:'10'},{input:'-20 -10 -1\n',expected:'-10'},{input:'-1 -10 -1\n',expected:'-1'}]
 };
 
@@ -100,6 +111,30 @@ int main(int argc, char **argv) {
         case 6: status = count_char("abc", '\\0', &out); printf("%d %zu\\n", status, out); break;
         case 7: status = count_char(NULL, 'a', &out); printf("%d %zu\\n", status, out); break;
         case 8: status = count_char("abc", 'a', NULL); printf("%d\\n", status); break;
+        default: return 71;
+    }
+    return 0;
+}`,
+  'c-bounded-string-length': `#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int bounded_length(const char *buffer, size_t capacity, size_t *out_length);
+
+int main(int argc, char **argv) {
+    if (argc != 2) return 70;
+    size_t out = 77;
+    int status;
+    switch (atoi(argv[1])) {
+        case 0: { const char buffer[] = {'C', 'A', 'T', '\\0'}; status = bounded_length(buffer, 4, &out); printf("%d %zu\\n", status, out); break; }
+        case 1: { const char buffer[] = {'\\0'}; status = bounded_length(buffer, 1, &out); printf("%d %zu\\n", status, out); break; }
+        case 2: { const char buffer[] = {'A', 'B', '\\0', 'X'}; status = bounded_length(buffer, 4, &out); printf("%d %zu\\n", status, out); break; }
+        case 3: { const char buffer[] = {'A', 'B', 'C', '\\0'}; status = bounded_length(buffer, 4, &out); printf("%d %zu\\n", status, out); break; }
+        case 4: { const char buffer[] = {'A', 'B', 'C'}; status = bounded_length(buffer, 3, &out); printf("%d %zu\\n", status, out); break; }
+        case 5: { const char buffer[] = {'A', 'B', 'C', '\\0'}; status = bounded_length(buffer, 3, &out); printf("%d %zu\\n", status, out); break; }
+        case 6: { const char buffer[] = {'\\0'}; status = bounded_length(buffer, 0, &out); printf("%d %zu\\n", status, out); break; }
+        case 7: status = bounded_length(NULL, 4, &out); printf("%d %zu\\n", status, out); break;
+        case 8: { const char buffer[] = {'A', '\\0'}; status = bounded_length(buffer, 2, NULL); printf("%d\\n", status); break; }
         default: return 71;
     }
     return 0;

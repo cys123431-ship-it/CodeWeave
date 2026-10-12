@@ -134,6 +134,26 @@ export const lessons = [
     challenge:{id:'c-string-count-function',title:'count_char 함수 본문만 구현하기',description:'int count_char(const char *text, char target, size_t *out_count)를 구현하세요. text와 out_count가 유효하면 첫 널 문자 전까지 target의 개수를 기록하고 1을 반환합니다. 둘 중 하나가 NULL이면 0을 반환하고 유효한 출력 객체의 기존 값을 보존하세요. 종료 문자 자체는 세지 않으며 main과 출력 코드는 작성하지 않습니다.',starter:'#include <stddef.h>\n\nint count_char(const char *text, char target, size_t *out_count) {\n    // TODO: 포인터를 검증하고 첫 널 문자 전까지만 target을 세세요.\n    return 0;\n}',input:'count_char("banana", \'a\', &out)',expected:'1 3'}
   },
   {
+    id:'c-bounded-string-length',track:'c',level:'중급 실습',title:'경계 있는 문자열: 용량과 종료 문자',minutes:48,source:'C 문자 버퍼·경계 제한 순회·표준 입력 계약에 관한 독자 작성 실습',
+    summary:'문자 버퍼의 읽기 가능 용량 안에서만 종료 문자를 찾아 문자열 길이를 안전한 계약으로 반환합니다.',figure:'bounded-string-contract',
+    sections:[
+      {heading:'단원 개요와 필요한 이유',text:'널 종료 문자열 함수는 종료 문자가 나타날 때까지 읽습니다. 외부 입력이나 고정 버퍼를 다룰 때는 종료가 보장되지 않을 수 있으므로, 최대 읽기 범위를 함께 전달하고 그 안에서 종료 문자를 찾지 못하면 실패하는 계약이 필요합니다.'},
+      {heading:'선수 지식과 학습 목표',text:'문자 배열, 널 종료, size_t, NULL, 출력 포인터를 알고 시작합니다. 학습 후에는 문자열과 단순 문자 버퍼를 구별하고, 반열린 구간 [0, capacity)만 검사하며, 성공한 경우에만 길이를 기록하는 bounded 함수를 구현할 수 있습니다.'},
+      {heading:'capacity가 보장하는 것과 보장하지 않는 것',text:'capacity는 함수가 읽어도 되는 char 객체의 최대 개수입니다. 호출자는 buffer부터 capacity개의 char 객체가 읽기 가능함을 보장해야 합니다. 숫자만 전달한다고 잘못된 포인터가 안전해지지는 않으며, 함수는 포인터가 실제로 그만큼의 저장 공간을 가리키는지 스스로 확인할 수 없습니다.'},
+      {heading:'반열린 범위로 경계를 표현한다',text:'검사 인덱스는 [0, capacity), 즉 0 이상 capacity 미만입니다. i < capacity 조건은 마지막 허용 인덱스 capacity - 1을 포함하면서 바로 다음 칸은 읽지 않습니다. capacity가 0이면 유효한 검사 인덱스가 없으므로 실패합니다.',code:'for (size_t i = 0; i < capacity; ++i) {\n    if (buffer[i] == \'\\0\') { /* 길이는 i */ }\n}'},
+      {heading:'함수 계약과 출력 보존',text:'int bounded_length(const char *buffer, size_t capacity, size_t *out_length)는 범위 안에서 첫 종료 문자를 찾으면 길이를 기록하고 1을 반환합니다. buffer 또는 out_length가 NULL이거나 capacity가 0이거나 종료 문자가 범위 안에 없으면 0을 반환하며, 유효한 out_length의 기존 값은 보존합니다.'},
+      {heading:'정확한 경계 사례',text:'{\'A\', \'B\', \'C\', \'\\0\'}에 capacity 4를 주면 인덱스 3은 범위 안이므로 성공하고 길이 3입니다. 같은 배열에 capacity 3을 주면 인덱스 3은 읽어서는 안 되므로 종료 문자를 발견하지 못한 실패입니다. 배열에 종료 문자가 실제로 있느냐와 허용 범위 안에 있느냐는 다른 질문입니다.'},
+      {heading:'단계별 완성 예제와 실행 결과',text:'포인터와 용량을 먼저 검증하고, 범위 안의 각 문자를 차례로 검사합니다. 종료 문자를 발견한 시점의 인덱스가 문자열 길이입니다. 전체 범위를 검사해도 발견하지 못하면 출력 객체를 건드리지 않고 실패합니다. CAT 예제의 출력은 1 3입니다.',code:'#include <stddef.h>\n\nint bounded_length(const char *buffer, size_t capacity, size_t *out_length) {\n    if (buffer == NULL || capacity == 0 || out_length == NULL) return 0;\n    for (size_t i = 0; i < capacity; ++i) {\n        if (buffer[i] == \'\\0\') {\n            *out_length = i;\n            return 1;\n        }\n    }\n    return 0;\n}'},
+      {heading:'fgets와 입력 버퍼의 연결',text:'다음은 앞 절의 bounded_length 구현과 함께 컴파일하는 호출 코드 조각입니다. fgets(buffer, sizeof buffer, stdin)는 성공하면 최대 sizeof buffer - 1개의 문자를 저장하고 끝에 널 문자를 씁니다. 줄의 개행 문자가 공간 안에 들어오면 그 개행도 배열에 남습니다. 빈 줄은 ""가 아니라 "\\n"으로 읽힐 수 있고, EOF나 오류로 NULL을 반환하면 버퍼에 새 문자열이 생겼다고 가정해서는 안 됩니다.',code:'#include <stdio.h>\n\nint main(void) {\n    char line[8];\n    if (fgets(line, sizeof line, stdin) == NULL) return 1;\n    size_t length;\n    if (!bounded_length(line, sizeof line, &length)) return 2;\n    printf("저장된 문자 수: %zu\\n", length);\n    return 0;\n}'},
+      {heading:'개행과 잘린 입력을 해석한다',text:'입력이 짧으면 fgets가 개행까지 저장하므로 길이에는 개행이 포함됩니다. 버퍼가 먼저 가득 차면 그 호출에는 개행이 없을 수 있지만 널 종료는 성공 시 보장됩니다. 개행이 없다는 사실만으로 줄이 끝났다고 단정할 수 없으며, 남은 입력 처리 정책은 호출자가 별도로 정해야 합니다.'},
+      {heading:'흔한 오류와 정의되지 않은 동작',text:'i <= capacity는 한 칸을 더 읽습니다. 종료 문자가 없을 때 capacity를 정상 길이로 발표하면 비종료 버퍼를 문자열로 오인합니다. 실패 전에 *out_length를 0으로 바꾸면 출력 보존 계약을 깨뜨립니다. capacity가 실제 배열 크기보다 크면 이 함수도 범위 밖을 읽을 수 있으므로 호출자 전제를 문서화해야 합니다.'},
+      {heading:'중간 점검과 핵심 요약',text:'capacity 4일 때 인덱스 4를 읽어도 되는지, 마지막 허용 칸의 종료 문자는 성공인지, fgets가 반환한 문자열에 개행이 남을 수 있는지 답해 보세요. 핵심은 읽기 가능한 범위, 첫 종료 문자, 실패 시 출력 보존을 하나의 계약으로 묶는 것입니다.'},
+      {heading:'연습과 복습 연결',text:'기초로 빈 문자열과 마지막 칸 종료를 시험하고, 응용으로 개행을 제외한 논리적 줄 길이를 계산하세요. 도전으로 여러 번 fgets를 호출해 긴 줄을 조각별로 소비하는 도구를 설계하세요. 이 경계 계약은 토큰화, 파일 입력, 네트워크 버퍼, 길이 기반 C API와 Rust 슬라이스 비교로 이어집니다.'}
+    ],
+    quiz:{question:'capacity가 3일 때 buffer[3]에 종료 문자가 있다는 사실을 함수가 사용해도 될까?',options:['안 된다. 검사 범위는 인덱스 0, 1, 2뿐이다','된다. 종료 문자는 언제나 한 칸 더 읽어도 된다','out_length가 유효하면 된다','buffer가 NULL이 아니면 된다'],answer:0,explanation:'[0, capacity)는 capacity 자체를 포함하지 않습니다. buffer[3]을 읽으려면 capacity가 적어도 4여야 합니다.'},
+    challenge:{id:'c-bounded-string-length',title:'bounded_length 함수 본문만 구현하기',description:'int bounded_length(const char *buffer, size_t capacity, size_t *out_length)를 구현하세요. [0, capacity)에서 첫 널 문자를 찾으면 길이를 기록하고 1을 반환합니다. 포인터가 NULL이거나 capacity가 0이거나 종료 문자가 범위 안에 없으면 0을 반환하고 유효한 출력 객체의 기존 값을 보존하세요. main과 출력 코드는 작성하지 않습니다.',starter:'#include <stddef.h>\n\nint bounded_length(const char *buffer, size_t capacity, size_t *out_length) {\n    // TODO: [0, capacity) 안에서만 종료 문자를 찾으세요.\n    return 0;\n}',input:'bounded_length({\'C\', \'A\', \'T\', \'\\0\'}, 4, &out)',expected:'1 3'}
+  },
+  {
     id:'c-multi-file',track:'c',level:'중급 실습',title:'분할 컴파일: 헤더와 여러 소스 파일',minutes:35,source:'C 헤더·분할 컴파일·링크 과정에 관한 독자 작성 실습',
     summary:'main.c, functions.c, functions.h의 역할을 나누고 하나의 프로그램으로 컴파일·링크합니다.',figure:'multi-file',
     sections:[

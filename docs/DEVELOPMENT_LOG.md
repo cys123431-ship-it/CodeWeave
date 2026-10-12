@@ -1,5 +1,21 @@
 # CodeWeave 개발 일지
 
+## 2026-10-12 11:03~11:14 KST — 읽기 용량을 지키는 C 문자열 길이 함수
+
+- 실행 시작 커밋: `9568f6a734105b614d2690ae9d542084a0cf4cc2` (`main`). 로컬과 `origin/main` 일치 및 깨끗한 시작 상태를 확인했다. 직전 커밋의 Actions https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38190721452 에서 `test`·실제 Chromium `browser`가 모두 성공한 기준선을 이어받았다. 필수 운영 문서와 최신 일지의 다음 우선 작업을 확인했다.
+- 목표/성공 조건: `int bounded_length(const char *buffer, size_t capacity, size_t *out_length)`가 `[0, capacity)`에서만 첫 널 문자를 찾는다. 정상·빈 문자열·첫 종료 문자·마지막 허용 칸·종료 누락·범위 바로 밖 종료·용량 0·두 `NULL` 계약을 실제 GCC로 검사한다. 모든 실패는 유효한 출력 객체의 기존 값을 보존하고, 기존 v1 진도·초안·iteration·통합 백업 키와 형식은 바꾸지 않는다.
+- 테스트 우선 재현: 새 단원·정적 그림·원고·공개 메타데이터·비공개 하네스 검사를 먼저 작성했다. 구현 전 표적 검사 8개 중 4개가 미등록 단원·그림·원고·문제로 실패했다. 구현 후 콘텐츠 검사가 표현의 조사와 Markdown 코드 표기를 지나치게 정확히 가정한 두 실패를 확인해 의미 있는 핵심 문구와 계약을 검사하도록 고쳤다.
+- 교육 콘텐츠: `c-bounded-string-length`를 C 열한 번째 단원으로 추가했다. 화면 12개 절과 `content/c/09-bounded-string-length.md`에서 포인터에 크기가 없다는 사실, 호출자의 읽기 가능 객체 전제, 반열린 범위, 정확한 마지막 칸, 실패 시 출력 보존을 설명했다. `fgets`가 성공하면 널 종료하지만 개행을 보존할 수 있고, 버퍼가 먼저 차면 개행이 남으며, `NULL` 반환 뒤 새 문자열을 가정하면 안 된다는 입력 계약도 연결했다. 정적 SVG는 capacity 4의 성공과 capacity 3의 실패를 같은 배열에서 대비하며 애니메이션을 사용하지 않는다.
+- 채점/경계: 서버 전용 직접 호출 하네스에 9개 사례를 등록했다. 정상 풀이와 함께 종료 누락을 길이로 잘못 발표하는 풀이, 마지막 허용 칸을 검사하지 않는 풀이, 실패 전에 출력값을 덮어쓰는 풀이, 표준 출력 부작용을 실제 GCC API로 거부했다. 하네스의 비종료 배열은 실제 배열 크기와 같은 capacity만 전달해 검사 자체에서 의도적인 범위 밖 읽기를 만들지 않았다.
+- UI/PWA/호환: 새 문제는 기존 카탈로그·메인 실습·연습장·iteration·숙달 계산에 같은 ID로 연결했다. 브라우저 시나리오에 오답→정답→두 제출 이력→이론 읽기→퀴즈→전체 숙달과 연습장 선택 항목을 추가했다. 저장 키와 버전은 그대로이며 PWA shell을 v15로 갱신했다.
+- 로컬 검사: 최종 `npm test` 112/112 성공, 실패/skip 0. 실제 GCC C 11문제와 새 9개 정상·경계 사례, 네 오답 분기가 통과했다. `src/app.js`, `src/catalog.js`, `src/exercises.js`, `src/figures.js`, `src/workbench.js`, `server/grading-exercises.mjs`, `dev-server.mjs`의 `node --check`와 `git diff --check`도 성공했다.
+- 로컬 브라우저 시도: `npm run test:browser`에서 C 11문제의 실제 GCC API 검증은 모두 성공했으나 Playwright Chromium 실행 파일 부재(`browserType.launch: Executable doesn't exist`)로 UI 단계는 미실행이다. 새 단원 렌더링·iteration·숙달·연습장·오프라인 회귀는 반영 후 GitHub Actions의 설치된 Chromium으로 판정하며 API 성공을 브라우저 E2E 성공으로 보고하지 않는다.
+- 문서/자료: `README.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`를 C 11개·공개 정의 14개·함수 직접 호출형 4개·PWA shell v15에 맞췄다. 두 참고 PDF의 로컬 접근과 크기(87,753,393 bytes/6,838,054 bytes)를 확인했지만 이번 원고·도식·코드·문제는 독자 작성했고 PDF 본문·캡처·상용 문제를 읽거나 복제하지 않았다.
+- 미해결/위험: capacity는 실제 포인터와 객체 크기를 검증하지 않으며 이 하네스는 메모리 오류 탐지기나 보안 격리가 아니다. 로컬 GCC 서버는 계속 신뢰하는 개인 코드 전용이다. 로컬 Chromium과 실제 Windows/Android/iPad, PWA 설치는 미검증이다. 긴 줄의 나머지 소비 정책, C 20문제, Rust/Cargo 채점과 전체 교과서는 미완성이다.
+- GitHub 반영: 이 일지를 포함하는 커밋 제목 `feat: add bounded C string exercise`. 자신의 SHA와 CI 결과는 커밋 후 원격 HEAD·변경 파일·Actions를 재조회해 실행 보고서에 기록한다. 최신 base SHA lease를 사용하며 강제 푸시하지 않는다.
+- 다음 우선 작업: **`fgets`로 긴 줄을 처리하는 전체 프로그램형 입력 실습**. 빈 줄, 개행 포함, 버퍼에 정확히 맞는 입력, 여러 조각이 필요한 긴 줄, EOF와 입력 오류를 구분하는 정책을 먼저 문서화한다. 개행이 없다는 사실만으로 잘림을 단정하지 말고 다음 조각을 소비해 한 논리 줄을 완성하는 스타터·정상/경계 테스트를 설계한다.
+- 분야별 상태: C 11개/Rust·자료구조·알고리즘 각 1개 시범 단원, 공개 정의 14개. C 채점은 입출력 6·함수 직접 호출 4·다중 파일 1이고 공유 iteration·통합 백업·숙달·컴파일 피드백·PWA 회귀 구조를 유지한다. C 20문제, Rust 채점, 전체 교과서, 실기기·공개 샌드박스는 후속 작업이다.
+
 ## 2026-10-12 07:56~10:05 KST — 널 종료 문자열과 문자 세기 함수 실습
 
 - 실행 시작 커밋: `a776b5d7f8df51a3d34e7e72fe6f1b0a7cbeb32b` (`main`). 로컬과 `origin/main` 일치 및 깨끗한 시작 상태를 확인했다. 열린 PR은 없고 직전 Actions https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38179296778 의 `test`·실제 Chromium `browser` 작업이 모두 성공했다. 변경 직전 `npm test` 96/96과 실제 GCC C 9문제를 통과했다.
