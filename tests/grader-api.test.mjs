@@ -51,6 +51,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     'c-bounded-string-length': '#include <stddef.h>\nint bounded_length(const char *buffer,size_t capacity,size_t *out_length){if(buffer==NULL||capacity==0||out_length==NULL)return 0;for(size_t i=0;i<capacity;++i){if(buffer[i]==\'\\0\'){*out_length=i;return 1;}}return 0;}',
     'c-fgets-logical-line': '#include <stddef.h>\n#include <stdio.h>\nint main(void){char chunk[8];size_t total=0;int saw_input=0;for(;;){if(fgets(chunk,sizeof chunk,stdin)==NULL){if(ferror(stdin))return 1;if(!saw_input){puts("NO INPUT");return 0;}break;}saw_input=1;size_t i=0;while(chunk[i]!=\'\\0\'&&chunk[i]!=\'\\n\')++i;total+=i;if(chunk[i]==\'\\n\')break;}printf("%zu\\n",total);return 0;}',
     'c-strtol-integer-input': '#include <ctype.h>\n#include <errno.h>\n#include <stdio.h>\n#include <stdlib.h>\nint main(void){char line[64];if(fgets(line,sizeof line,stdin)==NULL){if(ferror(stdin))return 1;puts("NO INPUT");return 0;}size_t i=0;while(line[i]!=\'\\0\'&&line[i]!=\'\\n\')++i;if(line[i]==\'\\0\'){int ch=getchar();if(ch!=EOF&&ch!=\'\\n\'){do{ch=getchar();}while(ch!=EOF&&ch!=\'\\n\');if(ch==EOF&&ferror(stdin))return 1;puts("TOO LONG");return 0;}if(ch==EOF&&ferror(stdin))return 1;}errno=0;char *end;long value=strtol(line,&end,10);if(end==line){puts("INVALID");return 0;}if(errno==ERANGE){puts("RANGE");return 0;}while(*end!=\'\\0\'&&isspace((unsigned char)*end))++end;if(*end!=\'\\0\'){puts("INVALID");return 0;}printf("%ld\\n",value);return 0;}',
+    'c-struct-student-score': 'struct Student{int id;int score;};\nint update_score(struct Student *student,int delta){if(student==0||student->score<0||student->score>100)return 0;if(delta < -student->score || delta > 100-student->score)return 0;student->score+=delta;return 1;}',
     'c-multi-file': serializeMultiFileSubmission([
       {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\nint main(void){int v,l,h;if(scanf("%d%d%d",&v,&l,&h)!=3)return 1;printf("%d\\n",clamp(v,l,h));return 0;}'},
       {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
@@ -226,6 +227,33 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     const { result } = await submit('c-strtol-integer-input', '#include <errno.h>\n#include <stdio.h>\n#include <stdlib.h>\nint main(void){char line[64],*end;if(!fgets(line,sizeof line,stdin)){puts("NO INPUT");return 0;}errno=0;long value=strtol(line,&end,10);if(errno==ERANGE){puts("RANGE");return 0;}printf("%ld\\n",value);return 0;}');
     assert.equal(result.ok, false);
     assert.equal(result.tests[15].passed, false);
+  });
+  await t.test('student update preserves the whole object when the requested score is invalid', async () => {
+    const { result } = await submit('c-struct-student-score', 'struct Student{int id;int score;};\nint update_score(struct Student *student,int delta){if(!student)return 0;student->score+=delta;if(student->score<0||student->score>100)return 0;return 1;}');
+    assert.equal(result.ok, false);
+    assert.ok(result.tests.some(test => !test.passed && /예상: 0 105 90/.test(test.detail)));
+  });
+  await t.test('student update rejects an invalid initial score instead of repairing it', async () => {
+    const { result } = await submit('c-struct-student-score', 'struct Student{int id;int score;};\nint update_score(struct Student *student,int delta){if(!student)return 0;if(delta < -student->score || delta > 100-student->score)return 0;student->score+=delta;return 1;}');
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[6].passed, false);
+    assert.equal(result.tests[7].passed, false);
+  });
+  await t.test('student update changes only the score member', async () => {
+    const { result } = await submit('c-struct-student-score', 'struct Student{int id;int score;};\nint update_score(struct Student *student,int delta){if(!student||student->score<0||student->score>100)return 0;if(delta < -student->score || delta > 100-student->score)return 0;student->id+=delta;student->score+=delta;return 1;}');
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[0].passed, false);
+  });
+  await t.test('student update grader detects output side effects', async () => {
+    const { result } = await submit('c-struct-student-score', '#include <stdio.h>\nstruct Student{int id;int score;};\nint update_score(struct Student *student,int delta){puts("debug");if(!student||student->score<0||student->score>100)return 0;if(delta < -student->score || delta > 100-student->score)return 0;student->score+=delta;return 1;}');
+    assert.equal(result.ok, false);
+    assert.match(result.tests[0].detail, /예상:.*실제:/);
+  });
+  await t.test('non-terminating student update stops after the first timed-out case', async () => {
+    const { result } = await submit('c-struct-student-score', 'struct Student{int id;int score;};\nint update_score(struct Student *student,int delta){(void)student;(void)delta;for(;;){}}');
+    assert.equal(result.ok, false);
+    assert.equal(result.tests.length, 1);
+    assert.equal(result.tests[0].detail, '시간 제한 초과');
   });
   await t.test('multi-file submission validates the file manifest before GCC', async () => {
     const missing = MULTI_FILE_DRAFT_PREFIX + JSON.stringify({ version: 1, files: [

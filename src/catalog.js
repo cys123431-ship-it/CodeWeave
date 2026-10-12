@@ -195,6 +195,26 @@ export const lessons = [
     challenge:{id:'c-strtol-integer-input',title:'한 줄의 10진수 long 검증하기',description:'char line[64]로 첫 줄을 읽어 10진수 long 하나만 허용하세요. 정상 값은 정규화해 출력하고, 입력 없음은 NO INPUT, 64바이트 이상인 첫 줄은 TOO LONG, 숫자 없음이나 뒤따르는 비공백 문자는 INVALID, long 범위 초과는 RANGE를 출력합니다. 앞뒤 공백과 정상 음수는 허용하며 입력 오류는 성공 결과로 처리하지 마세요.',starter:'#include <ctype.h>\n#include <errno.h>\n#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n    char line[64];\n\n    // TODO: 첫 줄의 길이를 확정하고 strtol의 세 결과를 검증하세요.\n\n    (void)line;\n    return 0;\n}',input:'  -42',expected:'-42'}
   },
   {
+    id:'c-struct-student-score',track:'c',level:'중급 실습',title:'구조체와 포인터로 학생 점수 갱신하기',minutes:55,source:'C 구조체·포인터·상태 보존 계약에 관한 독자 작성 실습',
+    summary:'학생의 학번과 점수를 한 객체로 묶고, 모든 검증을 통과한 경우에만 포인터로 점수를 갱신합니다.',figure:'struct-update-contract',
+    sections:[
+      {heading:'단원 개요와 필요한 이유',text:'struct Student는 서로 관련된 id와 score를 하나의 객체로 묶습니다. 이 단원에서는 호출자가 가진 학생 객체의 주소를 함수에 전달하고, 성공했을 때만 점수를 바꾸는 안전한 갱신 계약을 설계합니다.'},
+      {heading:'선수 지식과 학습 목표',text:'함수의 반환값과 매개변수, 변수의 주소, 포인터 역참조를 알고 시작합니다. 학습 후에는 struct Student를 정의하고, 값 복사와 주소 전달을 구분하며, student->score로 멤버를 읽고 쓸 수 있어야 합니다.'},
+      {heading:'구조체 정의와 객체는 다르다',text:'struct Student 정의는 id와 score라는 멤버 배치를 설명하는 자료형이고, 실제 값을 저장하는 객체는 별도로 선언합니다. 지정 초기화는 각 값이 어느 멤버에 들어가는지 코드에 드러냅니다.',code:'struct Student {\n    int id;\n    int score;\n};\n\nstruct Student student = {.id = 101, .score = 70};'},
+      {heading:'점 연산자와 화살표 연산자',text:'구조체 객체 자체가 있으면 student.score처럼 점 연산자를 사용합니다. 구조체를 가리키는 포인터가 있으면 student->score를 사용하며, 이는 (*student).score와 같은 뜻입니다. 괄호 없이 *student.score라고 쓰면 연산자 결합 순서가 달라집니다.'},
+      {heading:'값 복사는 호출자의 객체를 바꾸지 않는다',text:'구조체를 값으로 매개변수에 전달하면 함수는 멤버 값의 복사본을 받습니다. 복사본의 score를 바꾸어도 호출자의 원본에는 반영되지 않습니다. 원본 상태를 갱신하려면 객체의 주소와 포인터 매개변수가 필요합니다.'},
+      {heading:'주소 전달은 변경 권한도 전달한다',text:'update_score(&student, delta)를 호출하면 함수가 호출자의 객체에 접근할 수 있습니다. 따라서 포인터가 NULL인지 먼저 검사하고, 함수 계약이 허용한 멤버만 변경해야 합니다. 이 실습에서는 id는 항상 유지합니다.'},
+      {heading:'현재 상태부터 검증한다',text:'유효한 점수는 0 이상 100 이하입니다. student가 NULL이거나 현재 student->score가 이 범위를 벗어나면 0을 반환합니다. 이미 잘못된 객체를 delta로 우연히 정상 범위에 넣어 성공시키지 않습니다.'},
+      {heading:'덧셈 전에 결과 범위를 판정한다',text:'signed int 덧셈이 표현 범위를 벗어나면 정의되지 않은 동작이므로 result = student->score + delta를 먼저 계산하면 안 됩니다. 현재 점수를 검증한 뒤 delta < -student->score 또는 delta > 100 - student->score인지 검사하면 위험한 덧셈 없이 결과 범위를 알 수 있습니다.'},
+      {heading:'검증 뒤 한 번만 변경한다',text:'실패 시 원본 전체를 보존하려면 NULL, 현재 상태, delta 범위를 모두 검사한 뒤 마지막에 student->score += delta를 한 번만 수행합니다. 성공하면 1, 실패하면 0을 반환하며 id는 성공과 실패 모두에서 유지됩니다.'},
+      {heading:'완성 함수와 실행 결과',text:'점수 70인 학생에 15를 더하면 1 101 85가 출력됩니다. 그 다음 20을 더하려는 요청은 100을 넘으므로 0 101 85를 출력하며 실패 전 상태가 그대로 남습니다.',code:'int update_score(struct Student *student, int delta) {\n    if (student == NULL) return 0;\n    if (student->score < 0 || student->score > 100) return 0;\n    if (delta < -student->score || delta > 100 - student->score) return 0;\n    student->score += delta;\n    return 1;\n}'},
+      {heading:'흔한 오류와 구조체 표현',text:'검증 전에 score를 바꾸었다가 실패하는 코드, NULL 검사보다 먼저 멤버를 읽는 코드, id까지 덮어쓰는 코드가 흔합니다. 구조체에는 정렬을 위한 패딩이 있을 수 있으므로 sizeof(struct Student)를 멤버 크기의 단순 합으로 단정하거나 원시 바이트를 이식 가능한 파일 형식처럼 저장해서도 안 됩니다.'},
+      {heading:'중간 점검·핵심 요약·연습 연결',text:'값 복사와 주소 전달의 차이, student->score의 의미, 실패 시 원본을 보존하는 검사 순서를 설명해 보세요. 핵심은 유효한 현재 상태를 확인하고 안전한 비교로 결과 범위를 판정한 뒤 허용된 멤버만 변경하는 것입니다. 이 계약은 구조체 배열, 연결 리스트 노드, 파일 레코드 갱신으로 이어집니다.'}
+    ],
+    quiz:{question:'갱신 실패 시 Student 원본 전체를 가장 확실히 보존하는 구현 순서는?',options:['모든 조건을 검사한 뒤 마지막에 score만 변경한다','먼저 score를 더하고 실패하면 대략 되돌린다','id와 score를 모두 0으로 만든 뒤 검사한다','NULL이어도 멤버를 읽어 현재 점수를 확인한다'],answer:0,explanation:'상태를 바꾸기 전에 모든 실패 조건을 확정하면 되돌리기 코드 없이 원본 보존 계약을 지킬 수 있습니다.'},
+    challenge:{id:'c-struct-student-score',title:'학생 점수 안전하게 갱신하기',description:'struct Student의 id와 score를 사용하고 int update_score(struct Student *student, int delta)를 구현하세요. 현재 score와 요청 결과는 모두 0 이상 100 이하여야 합니다. 성공하면 score만 바꾸고 1을, NULL·잘못된 현재 점수·범위 밖 결과에서는 객체 전체를 보존하고 0을 반환하세요. signed int 넘침이 일어날 수 있는 덧셈을 검사 전에 수행하지 않습니다. main과 출력 코드는 작성하지 않습니다.',starter:'struct Student {\n    int id;\n    int score;\n};\n\nint update_score(struct Student *student, int delta) {\n    // TODO: 검증을 모두 마친 뒤 score만 변경하세요.\n    (void)student;\n    (void)delta;\n    return 0;\n}',input:'update_score({101, 70}, 15)',expected:'1 101 85'}
+  },
+  {
     id:'c-multi-file',track:'c',level:'중급 실습',title:'분할 컴파일: 헤더와 여러 소스 파일',minutes:35,source:'C 헤더·분할 컴파일·링크 과정에 관한 독자 작성 실습',
     summary:'main.c, functions.c, functions.h의 역할을 나누고 하나의 프로그램으로 컴파일·링크합니다.',figure:'multi-file',
     sections:[

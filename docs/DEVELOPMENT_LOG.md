@@ -1,5 +1,21 @@
 # CodeWeave 개발 일지
 
+## 2026-10-12 17:00~17:22 KST — 구조체 포인터로 학생 점수 안전하게 갱신
+
+- 실행 시작 커밋: `a3e7a04a8625b6a861234eb2a625b6d984e200b7` (`main`). 로컬과 `origin/main`이 일치하고 작업 트리가 깨끗한 상태에서 시작했다. 열린 PR은 없고 직전 Actions https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38219069463 의 `test`·실제 Chromium `browser` 작업이 모두 성공한 기준선을 이어받았다. 필수 운영 문서와 최신 일지의 구조체 우선 작업을 확인했으며 변경 전 `npm test`는 128/128 성공했다.
+- 목표/성공 조건: `struct Student { int id; int score; }`의 객체와 자료형을 구분하고 값 복사와 주소 전달, 점/화살표 멤버 접근을 설명한다. `int update_score(struct Student *student, int delta)`는 유효한 현재 점수와 결과 범위를 모두 0~100으로 제한하고, 성공 시 `score`만 바꾸며 실패 시 객체 전체를 보존해야 한다. `NULL`, 잘못된 현재 상태, `INT_MIN`/`INT_MAX` 변화량, 출력 부작용과 시간 초과를 실제 GCC로 검사하고 기존 진도·초안·iteration·통합 백업 v1 형식을 유지한다.
+- 테스트 우선 재현: 공개 문제·선수 단원·11개 비공개 사례·하네스, 단원·정적 그림·독자 원고 및 다섯 대표 오답 회귀를 먼저 작성했다. 구현 전 표적 검사 60건 중 기존 49건은 성공하고 미등록 문제·단원·도식·원고 때문에 11건이 실패했다. 구현 후 59/60 성공 상태에서 정렬된 기대 ID 목록의 `strtol`/`struct` 순서가 뒤바뀐 fixture 1건을 발견해 고치고 전체 검사를 다시 실행했다.
+- 교육 콘텐츠/UI: `c-struct-student-score`를 C 열네 번째 단원으로 추가했다. 화면 12개 절과 `content/c/12-struct-student-score.md`에서 구조체 정의와 객체, 지정 초기화, `.`와 `->`, 값 복사와 객체 주소 전달, `NULL` 검사 순서, 유효한 현재 상태, 검증 후 변경, 구조체 대입과 얕은 복사, 패딩·정렬·직렬화 이식성 경계를 설명했다. 완성 프로그램과 실행 결과, 흔한 오류, 중간 점검·요약, 기초/응용/도전·Mini Project·테스트 개선·복습 연결을 독자 작성했다. 정적 SVG는 성공 시 `score`만 변경하고 `id`를 유지하는 경로와 실패 시 원본 보존 경로를 애니메이션 없이 대비한다.
+- 넘침 없는 계약/채점: 현재 `score`가 0~100임을 먼저 확인한 다음 `delta < -student->score || delta > 100 - student->score`를 검사한다. 이 범위에서는 비교식의 피연산 자체가 안전하므로 signed 덧셈을 하기 전에 범위 밖 요청을 거부할 수 있다. 서버 전용 하네스의 11개 사례는 정상, 하한 0, 상한 100, 변화량 0, 양쪽 범위 초과, 양쪽 잘못된 현재 점수, `NULL`, `INT_MAX`와 `INT_MIN`을 포함한다. 실패 전에 변경하는 풀이, 잘못된 현재 상태를 정상으로 수리하는 풀이, `id`까지 변경하는 풀이, 표준 출력 부작용과 무한 반복을 실제로 거부했다.
+- 호환/PWA/브라우저: 새 ID를 메인 단원·반복 제출 연습장·공유 iteration·숙달 흐름에 연결했고 저장 키와 백업 버전은 변경하지 않았다. 브라우저 시나리오에는 실패 전 원본을 바꾸는 오답 → 정답 → 두 iteration → 이론 읽기 → 퀴즈 → 전체 숙달과 연습장 선택을 추가했다. PWA shell은 v18로 갱신했다.
+- 로컬 검사: 최종 `npm test` 137/137 성공, 실패/skip 0. 실제 GCC로 C 14문제, 새 11개 정상·경계 사례와 다섯 오답 회귀를 검사했다. `src/catalog.js`, `src/exercises.js`, `src/figures.js`, `server/grading-exercises.mjs`, `tests/browser-practice.mjs`, `sw.js`의 `node --check`와 `git diff --check`도 성공했다.
+- 로컬 브라우저 시도: `npm run test:browser`에서 C 14문제의 실제 GCC API 검증은 모두 성공했으나 Playwright Chromium 실행 파일 부재(`browserType.launch: Executable doesn't exist`)로 UI 단계는 미실행이다. 새 단원 렌더링·iteration·숙달·연습장·오프라인 회귀는 반영 후 GitHub Actions의 설치된 Chromium으로 판정하며 API 성공을 브라우저 E2E 성공으로 보고하지 않는다.
+- 문서/자료: `README.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`를 C 14개·공개 정의 17개·입출력형 8개·함수 직접 호출형 5개·다중 파일형 1개·PWA shell v18에 맞췄다. 두 참고 PDF의 로컬 접근과 크기(87,753,393 bytes/6,838,054 bytes)를 확인했지만 이번 원고·도식·코드·문제는 독자 작성했고 PDF 본문·캡처·상용 문제를 복제하지 않았다.
+- 미해결/위험: 함수 하네스는 임의 포인터의 유효성을 증명하거나 메모리 오류를 격리하지 않는다. 로컬 Chromium, Windows/Android/iPad 실기기와 PWA 설치는 미검증이다. 로컬 GCC 서버는 신뢰하는 개인 코드 전용 비격리 도구이며 공개 실행 서버가 아니다. C 20문제, Rust/Cargo 채점과 전체 교과서는 미완성이다.
+- GitHub 반영: 이 일지를 포함하는 커밋 제목 `feat: add structure pointer update exercise`. 자신의 SHA와 CI 결과는 커밋 후 원격 HEAD·변경 파일·Actions를 재조회해 실행 보고서에 기록한다. 최신 base SHA lease를 사용하며 강제 푸시하지 않는다.
+- 다음 우선 작업: **구조체 배열에서 학번으로 학생 찾기**. `const struct Student students[]`, `size_t count`, 찾은 위치를 기록할 출력 포인터를 사용해 값/주소·배열 길이·첫 일치·실패 시 출력 보존을 연결한다. 빈 배열·중복 학번·`NULL`·경계 위치·출력 부작용을 먼저 테스트로 설계하고 기존 함수형 채점 경로와 숙달 흐름을 재사용한다.
+- 분야별 상태: C 14개/Rust·자료구조·알고리즘 각 1개 시범 단원, 공개 정의 17개. C 채점은 입출력 8·함수 직접 호출 5·다중 파일 1이고 공유 iteration·통합 백업·숙달·컴파일 피드백·PWA 회귀 구조를 유지한다. C 20문제, Rust 채점, 전체 교과서, 실기기·공개 샌드박스는 후속 작업이다.
+
 ## 2026-10-12 13:02~16:37 KST — `fgets`와 `strtol`로 검증 가능한 정수 입력
 
 - 실행 시작 커밋: `44b925192c6d2b5ff10feb25cc080f2077a2f17d` (`main`). 로컬과 `origin/main`이 일치하고 직전 Actions https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38198556488 의 `test`·실제 Chromium `browser` 작업이 모두 성공한 기준선을 이어받았다. 필수 운영 문서와 최신 일지의 다음 우선 작업을 확인했다.

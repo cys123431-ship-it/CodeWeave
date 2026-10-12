@@ -41,6 +41,8 @@ const fgetsLogicalLine = '#include <stddef.h>\n#include <stdio.h>\nint main(void
 const fgetsLogicalLineWrong = '#include <stdio.h>\n#include <string.h>\nint main(void){char chunk[8];if(!fgets(chunk,sizeof chunk,stdin)){puts("NO INPUT");return 0;}printf("%zu\\n",strcspn(chunk,"\\n"));return 0;}';
 const strtolIntegerInput = '#include <ctype.h>\n#include <errno.h>\n#include <stdio.h>\n#include <stdlib.h>\nint main(void){char line[64];if(fgets(line,sizeof line,stdin)==NULL){if(ferror(stdin))return 1;puts("NO INPUT");return 0;}size_t i=0;while(line[i]!=\'\\0\'&&line[i]!=\'\\n\')++i;if(line[i]==\'\\0\'){int ch=getchar();if(ch!=EOF&&ch!=\'\\n\'){do{ch=getchar();}while(ch!=EOF&&ch!=\'\\n\');if(ch==EOF&&ferror(stdin))return 1;puts("TOO LONG");return 0;}if(ch==EOF&&ferror(stdin))return 1;}errno=0;char *end;long value=strtol(line,&end,10);if(end==line){puts("INVALID");return 0;}if(errno==ERANGE){puts("RANGE");return 0;}while(*end!=\'\\0\'&&isspace((unsigned char)*end))++end;if(*end!=\'\\0\'){puts("INVALID");return 0;}printf("%ld\\n",value);return 0;}';
 const strtolIntegerWrong = '#include <stdio.h>\n#include <stdlib.h>\nint main(void){char line[64];if(!fgets(line,sizeof line,stdin)){puts("NO INPUT");return 0;}printf("%d\\n",atoi(line));return 0;}';
+const structStudentScore = 'struct Student{int id;int score;};\nint update_score(struct Student *student,int delta){if(!student||student->score<0||student->score>100)return 0;if(delta < -student->score || delta > 100-student->score)return 0;student->score+=delta;return 1;}';
+const structStudentWrong = 'struct Student{int id;int score;};\nint update_score(struct Student *student,int delta){if(!student)return 0;student->score+=delta;if(student->score<0||student->score>100)return 0;return 1;}';
 const multiFileSolution = [
   {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\nint main(void){int v,l,h;if(scanf("%d%d%d",&v,&l,&h)!=3)return 1;printf("%d\\n",clamp(v,l,h));return 0;}'},
   {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
@@ -85,6 +87,7 @@ try {
     'c-bounded-string-length': boundedStringFunction,
     'c-fgets-logical-line': fgetsLogicalLine,
     'c-strtol-integer-input': strtolIntegerInput,
+    'c-struct-student-score': structStudentScore,
     'c-multi-file': serializeMultiFileSubmission(multiFileSolution, { requiredNames: ['main.c','functions.c','functions.h'] })
   };
   for (const [exerciseId, code] of Object.entries(solutions)) {
@@ -92,7 +95,7 @@ try {
     const result = await response.json();
     assert.equal(result.ok, true, exerciseId + ': ' + JSON.stringify(result));
   }
-  console.log('PASS: all thirteen C exercises compile and pass their real GCC tests');
+  console.log('PASS: all fourteen C exercises compile and pass their real GCC tests');
 
   browser = await chromium.launch({ headless: true });
   context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
@@ -185,6 +188,20 @@ try {
   await page.locator('[data-quiz="c-strtol-integer-input"][data-choice="0"]').click();
   await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
   console.log('PASS: strtol syntax, range and trailing-input validation stay in one lesson flow');
+  await page.goto(base + '/#lesson:c-struct-student-score');
+  await expect(page.locator('.detail-head h1')).toHaveText('구조체와 포인터로 학생 점수 갱신하기');
+  await expect(page.locator('.figure-box svg')).toContainText('id 유지');
+  await expect(page.locator('#code-input')).toHaveValue(/struct Student/);
+  await expect(page.locator('.practice-zone')).toContainText('함수 직접 호출형');
+  await submit(page, structStudentWrong);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await submit(page, structStudentScore);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('#mark-theory').click();
+  await page.locator('[data-quiz="c-struct-student-score"][data-choice="0"]').click();
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  console.log('PASS: structure pointer validation, preserved failure, iterations and mastery stay in one lesson flow');
   await page.goto(base + '/#lesson:c-multi-file');
   await expect(page.locator('.detail-head h1')).toHaveText('분할 컴파일: 헤더와 여러 소스 파일');
   await expect(page.locator('.figure-box svg')).toContainText('functions.h');
@@ -280,6 +297,7 @@ try {
   await expect(bench.locator('#lesson-select option[value="c-bounded-string-length"]')).toHaveCount(1);
   await expect(bench.locator('#lesson-select option[value="c-fgets-logical-line"]')).toHaveCount(1);
   await expect(bench.locator('#lesson-select option[value="c-strtol-integer-input"]')).toHaveCount(1);
+  await expect(bench.locator('#lesson-select option[value="c-struct-student-score"]')).toHaveCount(1);
   await expect(bench.locator('#lesson-select option[value="c-multi-file"]')).toHaveCount(1);
   await bench.locator('#lesson-select').selectOption('c-types');
   await submit(page, failed);

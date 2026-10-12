@@ -75,6 +75,19 @@ const CASES = {
     {input:'9'.repeat(63)+'\n',expected:'RANGE'},
     {input:'9'.repeat(64)+'\n',expected:'TOO LONG'}
   ],
+  'c-struct-student-score': [
+    {input:'update_score({101, 70}, 15)',args:['0'],expected:'1 101 85'},
+    {input:'update_score({102, 10}, -10) · 하한 경계',args:['1'],expected:'1 102 0'},
+    {input:'update_score({103, 95}, 5) · 상한 경계',args:['2'],expected:'1 103 100'},
+    {input:'update_score({104, 42}, 0)',args:['3'],expected:'1 104 42'},
+    {input:'update_score({105, 90}, 11) · 상한 초과',args:['4'],expected:'0 105 90'},
+    {input:'update_score({106, 10}, -11) · 하한 미만',args:['5'],expected:'0 106 10'},
+    {input:'update_score({107, 101}, -1) · 잘못된 현재 상태',args:['6'],expected:'0 107 101'},
+    {input:'update_score({108, -1}, 1) · 잘못된 현재 상태',args:['7'],expected:'0 108 -1'},
+    {input:'update_score(NULL, 1)',args:['8'],expected:'0'},
+    {input:'update_score({109, 50}, INT_MAX) · 양의 넘침 방지',args:['9'],expected:'0 109 50'},
+    {input:'update_score({110, 50}, INT_MIN) · 음의 넘침 방지',args:['10'],expected:'0 110 50'}
+  ],
   'c-multi-file': [{input:'5 0 10\n',expected:'5'},{input:'-3 0 10\n',expected:'0'},{input:'15 0 10\n',expected:'10'},{input:'-20 -10 -1\n',expected:'-10'},{input:'-1 -10 -1\n',expected:'-1'}]
 };
 
@@ -164,6 +177,36 @@ int main(int argc, char **argv) {
         case 6: { const char buffer[] = {'\\0'}; status = bounded_length(buffer, 0, &out); printf("%d %zu\\n", status, out); break; }
         case 7: status = bounded_length(NULL, 4, &out); printf("%d %zu\\n", status, out); break;
         case 8: { const char buffer[] = {'A', '\\0'}; status = bounded_length(buffer, 2, NULL); printf("%d\\n", status); break; }
+        default: return 71;
+    }
+    return 0;
+}`,
+  'c-struct-student-score': `#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Student {
+    int id;
+    int score;
+};
+
+int update_score(struct Student *student, int delta);
+
+int main(int argc, char **argv) {
+    if (argc != 2) return 70;
+    int status;
+    switch (atoi(argv[1])) {
+        case 0: { struct Student student = {101, 70}; status = update_score(&student, 15); printf("%d %d %d\\n", status, student.id, student.score); break; }
+        case 1: { struct Student student = {102, 10}; status = update_score(&student, -10); printf("%d %d %d\\n", status, student.id, student.score); break; }
+        case 2: { struct Student student = {103, 95}; status = update_score(&student, 5); printf("%d %d %d\\n", status, student.id, student.score); break; }
+        case 3: { struct Student student = {104, 42}; status = update_score(&student, 0); printf("%d %d %d\\n", status, student.id, student.score); break; }
+        case 4: { struct Student student = {105, 90}; status = update_score(&student, 11); printf("%d %d %d\\n", status, student.id, student.score); break; }
+        case 5: { struct Student student = {106, 10}; status = update_score(&student, -11); printf("%d %d %d\\n", status, student.id, student.score); break; }
+        case 6: { struct Student student = {107, 101}; status = update_score(&student, -1); printf("%d %d %d\\n", status, student.id, student.score); break; }
+        case 7: { struct Student student = {108, -1}; status = update_score(&student, 1); printf("%d %d %d\\n", status, student.id, student.score); break; }
+        case 8: status = update_score(NULL, 1); printf("%d\\n", status); break;
+        case 9: { struct Student student = {109, 50}; status = update_score(&student, INT_MAX); printf("%d %d %d\\n", status, student.id, student.score); break; }
+        case 10: { struct Student student = {110, 50}; status = update_score(&student, INT_MIN); printf("%d %d %d\\n", status, student.id, student.score); break; }
         default: return 71;
     }
     return 0;
