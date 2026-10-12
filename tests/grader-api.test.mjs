@@ -47,6 +47,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     'c-functions': '#include <stdio.h>\nint clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}\nint main(void){int value,low,high;if(scanf("%d%d%d",&value,&low,&high)!=3)return 1;printf("%d\\n",clamp(value,low,high));return 0;}',
     'c-clamp-function': 'int clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}',
     'c-array-max-function': '#include <stddef.h>\nint find_max(const int values[],size_t length,int *out_max){if(values==NULL||length==0||out_max==NULL)return 0;int maximum=values[0];for(size_t i=1;i<length;i++)if(values[i]>maximum)maximum=values[i];*out_max=maximum;return 1;}',
+    'c-string-count-function': '#include <stddef.h>\nint count_char(const char *text,char target,size_t *out_count){if(text==NULL||out_count==NULL)return 0;size_t count=0;for(size_t i=0;text[i]!=\'\\0\';++i)if(text[i]==target)++count;*out_count=count;return 1;}',
     'c-multi-file': serializeMultiFileSubmission([
       {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\nint main(void){int v,l,h;if(scanf("%d%d%d",&v,&l,&h)!=3)return 1;printf("%d\\n",clamp(v,l,h));return 0;}'},
       {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
@@ -133,6 +134,27 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
   });
   await t.test('non-terminating array function stops after the first timed-out case', async () => {
     const { result } = await submit('c-array-max-function', '#include <stddef.h>\nint find_max(const int values[],size_t length,int *out_max){(void)values;(void)length;(void)out_max;for(;;){}}');
+    assert.equal(result.ok, false);
+    assert.equal(result.tests.length, 1);
+    assert.equal(result.tests[0].detail, '시간 제한 초과');
+  });
+  await t.test('string function stops at the terminator and excludes it from the count', async () => {
+    const { result } = await submit('c-string-count-function', '#include <stddef.h>\nint count_char(const char *text,char target,size_t *out_count){if(!text||!out_count)return 0;size_t count=0;do{if(*text==target)++count;}while(*text++!=\'\\0\');*out_count=count;return 1;}');
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[6].passed, false, 'target이 널 문자여도 종료 표시는 내용으로 세지 않아야 합니다.');
+  });
+  await t.test('string function preserves the output object when text is NULL', async () => {
+    const { result } = await submit('c-string-count-function', '#include <stddef.h>\nint count_char(const char *text,char target,size_t *out_count){(void)target;if(out_count)*out_count=0;if(!text||!out_count)return 0;return 1;}');
+    assert.equal(result.ok, false);
+    assert.ok(result.tests.some(test => !test.passed && /예상: 0 77/.test(test.detail)));
+  });
+  await t.test('string function grader detects output side effects', async () => {
+    const { result } = await submit('c-string-count-function', '#include <stddef.h>\n#include <stdio.h>\nint count_char(const char *text,char target,size_t *out_count){puts("debug");if(!text||!out_count)return 0;*out_count=0;return 1;}');
+    assert.equal(result.ok, false);
+    assert.match(result.tests[0].detail, /예상:.*실제:/);
+  });
+  await t.test('non-terminating string function stops after the first timed-out case', async () => {
+    const { result } = await submit('c-string-count-function', '#include <stddef.h>\nint count_char(const char *text,char target,size_t *out_count){(void)text;(void)target;(void)out_count;for(;;){}}');
     assert.equal(result.ok, false);
     assert.equal(result.tests.length, 1);
     assert.equal(result.tests[0].detail, '시간 제한 초과');

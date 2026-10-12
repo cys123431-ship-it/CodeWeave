@@ -32,7 +32,7 @@ test('every lesson challenge has one validated public exercise definition', () =
 });
 
 test('only implemented C exercises advertise their explicit grading strategy', () => {
-  const expected = ['c-array', 'c-array-max-function', 'c-clamp-function', 'c-functions', 'c-hello', 'c-loops', 'c-multi-file', 'c-pointer', 'c-types'];
+  const expected = ['c-array', 'c-array-max-function', 'c-clamp-function', 'c-functions', 'c-hello', 'c-loops', 'c-multi-file', 'c-pointer', 'c-string-count-function', 'c-types'];
   assert.deepEqual(exercises.filter(exercise => isGradedExercise(exercise.id)).map(exercise => exercise.id).sort(), expected);
   assert.deepEqual([...gradingExercises.keys()].sort(), expected);
   for (const id of expected) {
@@ -52,6 +52,9 @@ test('only implemented C exercises advertise their explicit grading strategy', (
   assert.equal(exerciseById('c-array-max-function').grader, 'c-function');
   assert.equal(gradingExercises.get('c-array-max-function').cases.length, 8);
   assert.match(gradingExercises.get('c-array-max-function').harness, /int find_max\(const int values\[\], size_t length, int \*out_max\);/);
+  assert.equal(exerciseById('c-string-count-function').grader, 'c-function');
+  assert.equal(gradingExercises.get('c-string-count-function').cases.length, 9);
+  assert.match(gradingExercises.get('c-string-count-function').harness, /int count_char\(const char \*text, char target, size_t \*out_count\);/);
   assert.equal(exerciseById('c-multi-file').grader, 'c-multi-file');
   assert.deepEqual(exerciseById('c-multi-file').requiredFiles, ['main.c', 'functions.c', 'functions.h']);
   for (const id of ['rust-mut', 'ds-stack', 'algo-binary']) assert.equal(isGradedExercise(id), false);

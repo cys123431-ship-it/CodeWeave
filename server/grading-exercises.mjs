@@ -24,6 +24,17 @@ const CASES = {
     {input:'find_max({5}, 0, &out) · 길이 0',args:['6'],expected:'0 77'},
     {input:'find_max({5}, 1, NULL)',args:['7'],expected:'0'}
   ],
+  'c-string-count-function': [
+    {input:'count_char("banana", \'a\', &out)',args:['0'],expected:'1 3'},
+    {input:'count_char("", \'a\', &out) · 빈 문자열',args:['1'],expected:'1 0'},
+    {input:'count_char("mississippi", \'s\', &out)',args:['2'],expected:'1 4'},
+    {input:'count_char("CodeWeave", \'e\', &out)',args:['3'],expected:'1 3'},
+    {input:'count_char("AaA", \'a\', &out) · 대소문자 구분',args:['4'],expected:'1 1'},
+    {input:'count_char("abc", \'z\', &out) · 대상 없음',args:['5'],expected:'1 0'},
+    {input:'count_char("abc", \'\\0\', &out) · 종료 문자는 내용에서 제외',args:['6'],expected:'1 0'},
+    {input:'count_char(NULL, \'a\', &out) · NULL 문자열',args:['7'],expected:'0 77'},
+    {input:'count_char("abc", \'a\', NULL)',args:['8'],expected:'0'}
+  ],
   'c-multi-file': [{input:'5 0 10\n',expected:'5'},{input:'-3 0 10\n',expected:'0'},{input:'15 0 10\n',expected:'10'},{input:'-20 -10 -1\n',expected:'-10'},{input:'-1 -10 -1\n',expected:'-1'}]
 };
 
@@ -65,6 +76,30 @@ int main(int argc, char **argv) {
         case 5: status = find_max(NULL, 3, &out); printf("%d %d\\n", status, out); break;
         case 6: { const int values[] = {5}; status = find_max(values, 0, &out); printf("%d %d\\n", status, out); break; }
         case 7: { const int values[] = {5}; status = find_max(values, 1, NULL); printf("%d\\n", status); break; }
+        default: return 71;
+    }
+    return 0;
+}`,
+  'c-string-count-function': `#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int count_char(const char *text, char target, size_t *out_count);
+
+int main(int argc, char **argv) {
+    if (argc != 2) return 70;
+    size_t out = 77;
+    int status;
+    switch (atoi(argv[1])) {
+        case 0: status = count_char("banana", 'a', &out); printf("%d %zu\\n", status, out); break;
+        case 1: status = count_char("", 'a', &out); printf("%d %zu\\n", status, out); break;
+        case 2: status = count_char("mississippi", 's', &out); printf("%d %zu\\n", status, out); break;
+        case 3: status = count_char("CodeWeave", 'e', &out); printf("%d %zu\\n", status, out); break;
+        case 4: status = count_char("AaA", 'a', &out); printf("%d %zu\\n", status, out); break;
+        case 5: status = count_char("abc", 'z', &out); printf("%d %zu\\n", status, out); break;
+        case 6: status = count_char("abc", '\\0', &out); printf("%d %zu\\n", status, out); break;
+        case 7: status = count_char(NULL, 'a', &out); printf("%d %zu\\n", status, out); break;
+        case 8: status = count_char("abc", 'a', NULL); printf("%d\\n", status); break;
         default: return 71;
     }
     return 0;

@@ -114,6 +114,26 @@ export const lessons = [
     challenge:{id:'c-array-max-function',title:'find_max 함수 본문만 구현하기',description:'int find_max(const int values[], size_t length, int *out_max)를 구현하세요. 성공하면 최댓값을 기록하고 1, values/out_max가 NULL이거나 length가 0이면 0을 반환합니다. 실패하면 out_max가 가리키는 기존 값을 변경하지 마세요. main과 출력 코드는 작성하지 않습니다.',starter:'#include <stddef.h>\n\nint find_max(const int values[], size_t length, int *out_max) {\n    // TODO: 입력 계약을 검사하고 성공한 경우에만 *out_max를 변경하세요.\n    return 0;\n}',input:'find_max({4, -2, 9, 1}, 4, &out)',expected:'1 9'}
   },
   {
+    id:'c-string-count-function',track:'c',level:'중급 실습',title:'문자열 함수 실습: 널 종료와 문자 세기',minutes:42,source:'C 문자 배열·널 종료 문자열·함수 계약에 관한 독자 작성 실습',
+    summary:'문자 배열이 문자열이 되는 조건을 이해하고 종료 문자 전까지 특정 문자를 세는 함수를 구현합니다.',figure:'string-terminator-contract',
+    sections:[
+      {heading:'단원 개요와 필요한 이유',text:'C 문자열은 별도의 내장 문자열 객체가 아니라 널 문자로 끝나는 문자 배열입니다. 라이브러리와 직접 작성한 함수는 이 종료 약속을 믿고 다음 문자를 읽으므로, 문자열의 경계와 함수 계약을 함께 이해해야 메모리 범위를 벗어난 읽기를 피할 수 있습니다.'},
+      {heading:'선수 지식과 학습 목표',text:'배열 인덱스, 포인터 역참조, 함수의 상태 반환과 출력 포인터, NULL 검사를 알고 시작합니다. 학습 후에는 문자 배열과 C 문자열의 차이, 종료 문자 \'\\0\'의 역할, const char * 매개변수의 의미를 설명하고 문자 수 세기 함수를 계약에 맞게 구현할 수 있어야 합니다.'},
+      {heading:'문자 배열과 문자열은 같은 말이 아니다',text:'char data[3] = {\'C\', \'A\', \'T\'};는 문자 배열이지만 널 종료가 없어 C 문자열은 아닙니다. char text[] = "CAT";에는 C, A, T 다음에 컴파일러가 \'\\0\'을 추가하므로 네 칸이 필요합니다. 문자열 함수에 첫 배열을 넘기면 종료 문자를 찾기 위해 배열 밖을 읽을 수 있습니다.',code:'char data[3] = {\'C\', \'A\', \'T\'}; // 문자열 아님\nchar text[] = "CAT";              // {\'C\', \'A\', \'T\', \'\\0\'}'},
+      {heading:'널 문자는 숫자 문자 0과 다르다',text:'\'\\0\'은 값이 0인 널 문자이고 문자열의 끝을 표시합니다. \'0\'은 화면에 보이는 숫자 문자이며 값이 다릅니다. 종료 문자는 저장 공간에는 존재하지만 문자열 내용의 문자 수나 검색 대상 범위에는 포함하지 않습니다. 따라서 이 단원의 계약에서 target이 \'\\0\'이면 결과는 0입니다.'},
+      {heading:'포인터만으로 읽을 수 있는 길이는 알 수 없다',text:'const char *text는 첫 문자의 주소를 전달하지만 사용 가능한 배열 크기는 담지 않습니다. count_char는 호출자가 text부터 첫 \'\\0\'까지 읽을 수 있는 객체를 제공한다고 전제합니다. 포인터가 NULL인지 검사할 수는 있어도, 유효한 종료 문자가 있는지를 포인터 하나만으로 사전에 증명할 수는 없습니다.'},
+      {heading:'const와 출력 포인터의 계약',text:'const char *는 이 함수가 text가 가리키는 문자를 변경하지 않는다는 약속입니다. size_t *out_count는 성공 결과를 기록할 객체를 가리킵니다. text 또는 out_count가 NULL이면 0을 반환하고, 유효한 out_count가 있더라도 기존 값은 바꾸지 않습니다. 두 포인터를 검증한 뒤에만 읽고 씁니다.',code:'int count_char(const char *text, char target, size_t *out_count);'},
+      {heading:'단계별 알고리즘과 반복 불변식',text:'count를 0으로 시작하고 text[i]가 \'\\0\'이 아닌 동안만 읽습니다. 매 반복 시작 시 count는 인덱스 0부터 i-1까지 발견한 target의 개수입니다. 현재 문자가 target이면 증가시키고 다음 인덱스로 이동합니다. 종료 문자를 만나면 그 문자는 세지 않고 결과를 기록합니다.'},
+      {heading:'완성 예제와 실행 결과',text:'"banana"에서 인덱스 1, 3, 5의 문자가 a이므로 count는 3입니다. 함수는 성공 상태 1과 out_count의 결과 3을 분리해 전달합니다. 하네스가 두 값을 출력하면 1 3이 됩니다.',code:'#include <stddef.h>\n\nint count_char(const char *text, char target, size_t *out_count) {\n    if (text == NULL || out_count == NULL) return 0;\n    size_t count = 0;\n    for (size_t i = 0; text[i] != \'\\0\'; ++i) {\n        if (text[i] == target) ++count;\n    }\n    *out_count = count;\n    return 1;\n}'},
+      {heading:'문자열 리터럴과 수정 가능성을 구분한다',text:'문자열 리터럴은 수정하려 해서는 안 됩니다. const char *label = "CAT";처럼 읽기 전용으로 다루세요. char label[] = "CAT";는 별도 배열을 만들어 그 배열의 원소를 바꿀 수 있습니다. count_char는 const 매개변수이므로 어느 경우에도 원본 문자를 변경할 이유가 없습니다.'},
+      {heading:'흔한 오류와 정의되지 않은 동작',text:'종료 문자를 찾기 전에 읽을 수 있는 객체가 끝나면 정의되지 않은 동작입니다. text[i]를 검사하기 전에 포인터를 증가시키거나 do-while로 종료 문자까지 target과 비교하면 \'\\0\'을 내용으로 잘못 셀 수 있습니다. sizeof(text)는 함수 안에서 문자열 길이가 아니라 포인터 크기이며, 실패 전에 *out_count를 0으로 쓰면 출력 보존 계약을 위반합니다.'},
+      {heading:'중간 점검과 핵심 요약',text:'왜 "CAT"에 네 칸이 필요한지, 왜 \'0\'과 \'\\0\'이 다른지, 빈 문자열의 첫 문자가 무엇인지 설명해 보세요. C 문자열은 첫 널 문자 전까지이고, 포인터에는 길이가 없으며, 검증 뒤 읽고 성공한 경우에만 출력 객체를 변경한다는 세 원칙을 기억합니다.'},
+      {heading:'연습과 다음 연결',text:'기초로 빈 문자열과 문자가 없는 문자열을 시험하고, 응용으로 대소문자를 구분해 여러 문자의 빈도를 세어 보세요. 도전 문제에서는 최대 읽기 길이를 별도 인수로 받아 종료 문자가 없을 때 실패하는 bounded 함수를 설계할 수 있습니다. 이 계약은 strlen류 순회, 토큰 처리, 파일 입력 버퍼, 동적 문자열과 Rust의 &str 비교로 이어집니다.'}
+    ],
+    quiz:{question:'count_char가 문자열의 종료 문자 \'\\0\'을 검색 대상으로 받으면 이 단원 계약에서 결과는?',options:['0이다. 종료 문자는 문자열 내용에서 제외한다','1이다. 모든 문자열에는 종료 문자가 하나 있다','문자열 길이와 같다','항상 정의되지 않은 동작이다'],answer:0,explanation:'반복은 첫 널 문자 전에 끝나며 종료 표시는 문자열 내용으로 세지 않습니다.'},
+    challenge:{id:'c-string-count-function',title:'count_char 함수 본문만 구현하기',description:'int count_char(const char *text, char target, size_t *out_count)를 구현하세요. text와 out_count가 유효하면 첫 널 문자 전까지 target의 개수를 기록하고 1을 반환합니다. 둘 중 하나가 NULL이면 0을 반환하고 유효한 출력 객체의 기존 값을 보존하세요. 종료 문자 자체는 세지 않으며 main과 출력 코드는 작성하지 않습니다.',starter:'#include <stddef.h>\n\nint count_char(const char *text, char target, size_t *out_count) {\n    // TODO: 포인터를 검증하고 첫 널 문자 전까지만 target을 세세요.\n    return 0;\n}',input:'count_char("banana", \'a\', &out)',expected:'1 3'}
+  },
+  {
     id:'c-multi-file',track:'c',level:'중급 실습',title:'분할 컴파일: 헤더와 여러 소스 파일',minutes:35,source:'C 헤더·분할 컴파일·링크 과정에 관한 독자 작성 실습',
     summary:'main.c, functions.c, functions.h의 역할을 나누고 하나의 프로그램으로 컴파일·링크합니다.',figure:'multi-file',
     sections:[
