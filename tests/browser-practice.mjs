@@ -47,6 +47,8 @@ const structArraySearch = '#include <stddef.h>\nstruct Student{int id;int score;
 const structArraySearchWrong = '#include <stddef.h>\nstruct Student{int id;int score;};\nint find_student_index(const struct Student students[],size_t count,int target_id,size_t *out_index){if(!students||count==0||!out_index)return 0;int found=0;for(size_t i=0;i<count;++i)if(students[i].id==target_id){*out_index=i;found=1;}return found;}';
 const structArraySort = '#include <stddef.h>\nstruct Student{int id;int score;};\nint stable_sort_students_by_id(struct Student students[],size_t count){if(count==0)return 1;if(!students)return 0;for(size_t i=1;i<count;++i){struct Student key=students[i];size_t j=i;while(j>0&&students[j-1].id>key.id){students[j]=students[j-1];--j;}students[j]=key;}return 1;}';
 const structArraySortWrong = '#include <stddef.h>\nstruct Student{int id;int score;};\nint stable_sort_students_by_id(struct Student students[],size_t count){if(count==0)return 1;if(!students)return 0;for(size_t i=0;i<count;i++)for(size_t j=i+1;j<count;j++)if(students[j].id<students[i].id){struct Student t=students[i];students[i]=students[j];students[j]=t;}return 1;}';
+const structArrayBinarySearch = '#include <stddef.h>\nstruct Student{int id;int score;};\nint find_first_student_by_id(const struct Student a[],size_t n,int id,size_t *out){if(n==0||!a||!out)return 0;size_t l=0,r=n;while(l<r){size_t m=l+(r-l)/2;if(a[m].id<id)l=m+1;else r=m;}if(l<n&&a[l].id==id){*out=l;return 1;}return 0;}';
+const structArrayBinarySearchWrong = '#include <stddef.h>\nstruct Student{int id;int score;};\nint find_first_student_by_id(const struct Student a[],size_t n,int id,size_t *out){if(!a||!out||n==0)return 0;size_t l=0,r=n-1;while(l<=r){size_t m=l+(r-l)/2;if(a[m].id==id){*out=m;return 1;}if(a[m].id<id)l=m+1;else{if(m==0)break;r=m-1;}}return 0;}';
 const multiFileSolution = [
   {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\nint main(void){int v,l,h;if(scanf("%d%d%d",&v,&l,&h)!=3)return 1;printf("%d\\n",clamp(v,l,h));return 0;}'},
   {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
@@ -94,6 +96,7 @@ try {
     'c-struct-student-score': structStudentScore,
     'c-struct-array-search': structArraySearch,
     'c-struct-array-sort': structArraySort,
+    'c-struct-array-binary-search': structArrayBinarySearch,
     'c-multi-file': serializeMultiFileSubmission(multiFileSolution, { requiredNames: ['main.c','functions.c','functions.h'] })
   };
   for (const [exerciseId, code] of Object.entries(solutions)) {
@@ -101,7 +104,7 @@ try {
     const result = await response.json();
     assert.equal(result.ok, true, exerciseId + ': ' + JSON.stringify(result));
   }
-  console.log('PASS: all sixteen C exercises compile and pass their real GCC tests');
+  console.log('PASS: all seventeen C exercises compile and pass their real GCC tests');
 
   browser = await chromium.launch({ headless: true });
   context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
@@ -236,6 +239,20 @@ try {
   await page.locator('[data-quiz="c-struct-array-sort"][data-choice="0"]').click();
   await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
   console.log('PASS: stable structure sort correction, iterations and mastery stay in one lesson flow');
+  await page.goto(base + '/#lesson:c-struct-array-binary-search');
+  await expect(page.locator('.detail-head h1')).toHaveText('정렬된 구조체 배열에서 첫 학번 이진 탐색');
+  await expect(page.locator('.figure-box svg')).toContainText('첫 위치 1');
+  await expect(page.locator('#code-input')).toHaveValue(/find_first_student_by_id/);
+  await expect(page.locator('.practice-zone')).toContainText('함수 직접 호출형');
+  await submit(page, structArrayBinarySearchWrong);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await submit(page, structArrayBinarySearch);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('#mark-theory').click();
+  await page.locator('[data-quiz="c-struct-array-binary-search"][data-choice="0"]').click();
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  console.log('PASS: first-position binary search correction, iterations and mastery stay in one lesson flow');
   await page.goto(base + '/#lesson:c-multi-file');
   await expect(page.locator('.detail-head h1')).toHaveText('분할 컴파일: 헤더와 여러 소스 파일');
   await expect(page.locator('.figure-box svg')).toContainText('functions.h');
@@ -334,6 +351,7 @@ try {
   await expect(bench.locator('#lesson-select option[value="c-struct-student-score"]')).toHaveCount(1);
   await expect(bench.locator('#lesson-select option[value="c-struct-array-search"]')).toHaveCount(1);
   await expect(bench.locator('#lesson-select option[value="c-struct-array-sort"]')).toHaveCount(1);
+  await expect(bench.locator('#lesson-select option[value="c-struct-array-binary-search"]')).toHaveCount(1);
   await expect(bench.locator('#lesson-select option[value="c-multi-file"]')).toHaveCount(1);
   await bench.locator('#lesson-select').selectOption('c-types');
   await submit(page, failed);

@@ -54,6 +54,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     'c-struct-student-score': 'struct Student{int id;int score;};\nint update_score(struct Student *student,int delta){if(student==0||student->score<0||student->score>100)return 0;if(delta < -student->score || delta > 100-student->score)return 0;student->score+=delta;return 1;}',
     'c-struct-array-search': '#include <stddef.h>\nstruct Student{int id;int score;};\nint find_student_index(const struct Student students[],size_t count,int target_id,size_t *out_index){if(!students||count==0||!out_index)return 0;for(size_t i=0;i<count;++i)if(students[i].id==target_id){*out_index=i;return 1;}return 0;}',
     'c-struct-array-sort': '#include <stddef.h>\nstruct Student{int id;int score;};\nint stable_sort_students_by_id(struct Student students[],size_t count){if(count==0)return 1;if(!students)return 0;for(size_t i=1;i<count;++i){struct Student key=students[i];size_t j=i;while(j>0&&students[j-1].id>key.id){students[j]=students[j-1];--j;}students[j]=key;}return 1;}',
+    'c-struct-array-binary-search': '#include <stddef.h>\nstruct Student{int id;int score;};\nint find_first_student_by_id(const struct Student students[],size_t count,int target_id,size_t *out_index){if(count==0||!students||!out_index)return 0;size_t left=0,right=count;while(left<right){size_t mid=left+(right-left)/2;if(students[mid].id<target_id)left=mid+1;else right=mid;}if(left<count&&students[left].id==target_id){*out_index=left;return 1;}return 0;}',
     'c-multi-file': serializeMultiFileSubmission([
       {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\nint main(void){int v,l,h;if(scanf("%d%d%d",&v,&l,&h)!=3)return 1;printf("%d\\n",clamp(v,l,h));return 0;}'},
       {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
@@ -305,6 +306,27 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
   });
   await t.test('non-terminating structure array sort stops after the first timed-out case', async () => {
     const { result } = await submit('c-struct-array-sort', '#include <stddef.h>\nstruct Student{int id;int score;};\nint stable_sort_students_by_id(struct Student students[],size_t count){(void)students;(void)count;for(;;){}}');
+    assert.equal(result.ok, false);
+    assert.equal(result.tests.length, 1);
+    assert.equal(result.tests[0].detail, '시간 제한 초과');
+  });
+  await t.test('structure binary search returns the first duplicate match', async () => {
+    const { result } = await submit('c-struct-array-binary-search', '#include <stddef.h>\nstruct Student{int id;int score;};\nint find_first_student_by_id(const struct Student a[],size_t n,int id,size_t *out){if(!a||!out||n==0)return 0;size_t l=0,r=n-1;while(l<=r){size_t m=l+(r-l)/2;if(a[m].id==id){*out=m;return 1;}if(a[m].id<id)l=m+1;else{if(m==0)break;r=m-1;}}return 0;}');
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[5].passed, false);
+  });
+  await t.test('structure binary search preserves output on misses', async () => {
+    const { result } = await submit('c-struct-array-binary-search', '#include <stddef.h>\nstruct Student{int id;int score;};\nint find_first_student_by_id(const struct Student a[],size_t n,int id,size_t *out){if(!out)return 0;*out=0;if(!a||n==0)return 0;for(size_t i=0;i<n;i++)if(a[i].id==id){*out=i;return 1;}return 0;}');
+    assert.equal(result.ok, false);
+    assert.ok([4,6,7,8,9].some(index => !result.tests[index].passed));
+  });
+  await t.test('structure binary search grader detects output side effects', async () => {
+    const { result } = await submit('c-struct-array-binary-search', '#include <stddef.h>\n#include <stdio.h>\nstruct Student{int id;int score;};\nint find_first_student_by_id(const struct Student a[],size_t n,int id,size_t *out){puts("debug");(void)a;(void)n;(void)id;(void)out;return 0;}');
+    assert.equal(result.ok, false);
+    assert.match(result.tests[0].detail, /예상:.*실제:/);
+  });
+  await t.test('non-terminating structure binary search stops after the first timed-out case', async () => {
+    const { result } = await submit('c-struct-array-binary-search', '#include <stddef.h>\nstruct Student{int id;int score;};\nint find_first_student_by_id(const struct Student a[],size_t n,int id,size_t *out){(void)a;(void)n;(void)id;(void)out;for(;;){}}');
     assert.equal(result.ok, false);
     assert.equal(result.tests.length, 1);
     assert.equal(result.tests[0].detail, '시간 제한 초과');

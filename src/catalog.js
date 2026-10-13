@@ -255,6 +255,26 @@ export const lessons = [
     challenge:{id:'c-struct-array-sort',title:'학생 배열 안정 정렬하기',description:'int stable_sort_students_by_id(struct Student students[], size_t count)를 구현하세요. id 오름차순으로 정렬하되 같은 id의 원래 상대 순서를 유지하고 레코드 전체를 이동합니다. count == 0은 students가 NULL이어도 성공 1, count > 0인 NULL은 실패 0입니다. 비교 뺄셈·main·출력 코드는 작성하지 않습니다.',starter:'#include <stddef.h>\n\nstruct Student {\n    int id;\n    int score;\n};\n\nint stable_sort_students_by_id(struct Student students[], size_t count) {\n    // TODO: 구조체 전체를 이동하는 안정 삽입 정렬을 구현하세요.\n    (void)students;\n    (void)count;\n    return 0;\n}',input:'stable_sort_students_by_id({309:95, 101:70, 205:88}, 3)',expected:'1 101:70 205:88 309:95'}
   },
   {
+    id:'c-struct-array-binary-search',track:'c',level:'중급 실습',title:'정렬된 구조체 배열에서 첫 학번 이진 탐색',minutes:64,source:'C 반열린 구간·하한 이진 탐색·출력 계약에 관한 독자 작성 실습',
+    summary:'정렬된 학생 배열의 반열린 후보 구간을 줄여 중복 학번의 첫 위치를 O(log n)에 찾습니다.',figure:'struct-array-binary-search',
+    sections:[
+      {heading:'단원 개요와 필요한 이유',text:'선형 탐색은 정렬 여부와 관계없이 사용할 수 있지만 원소가 많으면 모두 확인할 수 있습니다. 이 단원은 앞에서 안정 정렬한 struct Student 배열을 전제로 후보 구간을 절반씩 줄이는 이진 탐색과 첫 중복 위치 계약을 연결합니다.'},
+      {heading:'선수 지식과 학습 목표',text:'구조체 배열, 첫 일치 선형 탐색, id 안정 정렬과 size_t를 알고 시작합니다. 학습 후에는 정렬 전제, [left, right) 반열린 구간, 안전한 중간점, 하한 탐색과 출력값 보존을 설명하고 구현할 수 있어야 합니다.'},
+      {heading:'정렬 전제는 선택이 아니라 정확성 조건이다',text:'이 함수는 students[0].id부터 오름차순으로 정렬되어 있다고 가정합니다. 정렬되지 않은 배열에서는 어느 절반을 버려도 되는지 근거가 없어 결과를 보장할 수 없습니다. 함수가 매 호출마다 정렬 여부를 선형 검사하면 전체 비용이 O(n)이 되므로 호출자가 전제를 지켜야 합니다.'},
+      {heading:'후보 구간은 [left, right)다',text:'left는 포함하고 right는 포함하지 않는 후보 구간을 유지합니다. 처음에는 [0, count)입니다. 빈 배열이면 left와 right가 모두 0이어서 반복을 시작하지 않습니다. 이 표현은 right에 count를 둘 수 있고 count - 1의 unsigned 언더플로를 피하게 합니다.'},
+      {heading:'중간점은 차이를 먼저 계산한다',text:'중간점은 left + (right - left) / 2로 계산합니다. 불변식 때문에 left <= right이므로 뺄셈이 안전하고, left + right를 먼저 더하는 방식의 표현 범위 초과 위험을 피합니다.',code:'size_t mid = left + (right - left) / 2;'},
+      {heading:'작으면 왼쪽 구간을 버린다',text:'students[mid].id < target_id이면 mid와 그 왼쪽은 첫 일치 후보가 될 수 없습니다. 따라서 left = mid + 1로 갱신합니다. mid를 그대로 남기면 구간이 줄지 않아 무한 반복할 수 있습니다.'},
+      {heading:'같거나 크면 오른쪽 경계를 당긴다',text:'students[mid].id >= target_id이면 mid가 첫 위치일 수도 있고 더 왼쪽에 같은 값이 있을 수도 있습니다. 따라서 성공으로 즉시 반환하지 않고 right = mid로 좁힙니다. 이 규칙이 중복 중 첫 위치인 lower bound를 찾습니다.'},
+      {heading:'수렴 뒤 실제 일치를 검증한다',text:'반복이 끝나면 left == right이고 target_id 이상인 첫 후보 위치입니다. 그러나 target이 아예 없으면 다른 큰 값 또는 count를 가리킬 수 있습니다. left < count와 students[left].id == target_id를 모두 확인한 뒤에만 성공합니다.'},
+      {heading:'실패 시 출력값을 보존한다',text:'count == 0, students == NULL, out_index == NULL, 미발견에서는 0을 반환합니다. 유효한 out_index는 성공이 확정될 때만 기록하므로 출력값을 보존합니다. 빈 범위에서는 students가 NULL이어도 어떤 역참조도 하지 않습니다.'},
+      {heading:'완성 함수와 실행 결과',text:'101, 205, 205, 309에서 205의 하한은 인덱스 1입니다. 상태와 위치는 1 1입니다. 250을 찾으면 상태 0이고 감시값 77은 그대로 남아 0 77이 됩니다.',code:'int find_first_student_by_id(const struct Student students[], size_t count,\n                             int target_id, size_t *out_index) {\n    if (count == 0 || students == NULL || out_index == NULL) return 0;\n    size_t left = 0;\n    size_t right = count;\n    while (left < right) {\n        size_t mid = left + (right - left) / 2;\n        if (students[mid].id < target_id) left = mid + 1;\n        else right = mid;\n    }\n    if (left < count && students[left].id == target_id) {\n        *out_index = left;\n        return 1;\n    }\n    return 0;\n}'},
+      {heading:'복잡도와 검증 경계',text:'후보 수가 반복마다 절반가량 줄어 시간 복잡도는 O(log n), 추가 공간은 O(1)입니다. 자동 채점은 결과·경계·부작용을 검증하지만 임의의 모든 입력에서 복잡도를 수학적으로 증명하지는 않습니다. 풀이에서 구간이 매번 엄격히 줄어드는지 직접 검토해야 합니다.'},
+      {heading:'흔한 오류와 다음 연결',text:'일치 즉시 반환해 중복의 중간 위치를 내기, right = count - 1로 바꾸며 빈 배열 언더플로 만들기, mid를 경계에 그대로 남겨 무한 반복하기, 수렴 뒤 동등성 검사를 생략하기, 실패 전에 out_index를 덮기가 흔한 오류입니다. 다음에는 탐색과 정렬의 비용 비교 및 구조체 배열 관리 프로젝트로 확장합니다.'}
+    ],
+    quiz:{question:'중복된 target_id의 첫 위치를 찾기 위해 students[mid].id == target_id일 때 해야 할 일은?',options:['right = mid로 두어 왼쪽의 같은 값 가능성을 계속 검사한다','즉시 mid를 반환한다','left = mid + 1로 오른쪽만 검사한다','배열을 역순으로 다시 정렬한다'],answer:0,explanation:'같은 값을 찾았어도 더 왼쪽에 중복이 있을 수 있습니다. right를 mid로 당겨 하한 위치로 수렴해야 합니다.'},
+    challenge:{id:'c-struct-array-binary-search',title:'첫 학번 위치를 이진 탐색하기',description:'정렬된 배열을 전제로 int find_first_student_by_id(const struct Student students[], size_t count, int target_id, size_t *out_index)를 구현하세요. 중복이면 첫 위치만 기록합니다. 빈 범위·NULL·미발견은 0을 반환하고 유효한 출력값을 보존합니다. 배열 변경·main·출력 코드는 작성하지 않습니다.',starter:'#include <stddef.h>\n\nstruct Student {\n    int id;\n    int score;\n};\n\nint find_first_student_by_id(const struct Student students[], size_t count, int target_id, size_t *out_index) {\n    // TODO: [left, right) 하한 탐색을 구현하세요.\n    (void)students;\n    (void)count;\n    (void)target_id;\n    (void)out_index;\n    return 0;\n}',input:'find_first_student_by_id({101, 205, 205, 309}, 4, 205, &out)',expected:'1 1'}
+  },
+  {
     id:'c-multi-file',track:'c',level:'중급 실습',title:'분할 컴파일: 헤더와 여러 소스 파일',minutes:35,source:'C 헤더·분할 컴파일·링크 과정에 관한 독자 작성 실습',
     summary:'main.c, functions.c, functions.h의 역할을 나누고 하나의 프로그램으로 컴파일·링크합니다.',figure:'multi-file',
     sections:[

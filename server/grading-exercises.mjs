@@ -114,6 +114,20 @@ const CASES = {
     {input:'비NULL인 빈 범위도 원본 보존',args:['9'],expected:'1 7:70'},
     {input:'양수 길이의 NULL 배열',args:['10'],expected:'0'}
   ],
+  'c-struct-array-binary-search': [
+    {input:'find_first_student_by_id({101, 205, 205, 309}, 4, 205, &out)',args:['0'],expected:'1 1'},
+    {input:'첫 원소 찾기',args:['1'],expected:'1 0'},
+    {input:'마지막 원소 찾기',args:['2'],expected:'1 3'},
+    {input:'한 원소 배열에서 일치',args:['3'],expected:'1 0'},
+    {input:'한 원소 배열에서 미발견',args:['4'],expected:'0 77'},
+    {input:'세 중복 중 첫 위치',args:['5'],expected:'1 1'},
+    {input:'정렬된 값 사이에서 미발견',args:['6'],expected:'0 77'},
+    {input:'NULL인 빈 범위',args:['7'],expected:'0 77'},
+    {input:'비NULL인 빈 범위',args:['8'],expected:'0 77'},
+    {input:'양수 길이의 NULL 배열',args:['9'],expected:'0 77'},
+    {input:'out_index == NULL',args:['10'],expected:'0'},
+    {input:'INT_MIN과 INT_MAX 경계',args:['11'],expected:'1 2'}
+  ],
   'c-multi-file': [{input:'5 0 10\n',expected:'5'},{input:'-3 0 10\n',expected:'0'},{input:'15 0 10\n',expected:'10'},{input:'-20 -10 -1\n',expected:'-10'},{input:'-1 -10 -1\n',expected:'-1'}]
 };
 
@@ -302,6 +316,36 @@ int main(int argc, char **argv) {
         case 8: status = stable_sort_students_by_id(NULL, 0); printf("%d\\n", status); break;
         case 9: { struct Student a[] = {{7, 70}}; status = stable_sort_students_by_id(a, 0); print_students(status, a, 1); break; }
         case 10: status = stable_sort_students_by_id(NULL, 3); printf("%d\\n", status); break;
+        default: return 71;
+    }
+    return 0;
+}`,
+  'c-struct-array-binary-search': `#include <limits.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Student { int id; int score; };
+
+int find_first_student_by_id(const struct Student students[], size_t count, int target_id, size_t *out_index);
+
+int main(int argc, char **argv) {
+    if (argc != 2) return 70;
+    size_t out = 77;
+    int status;
+    switch (atoi(argv[1])) {
+        case 0: { const struct Student a[] = {{101,10},{205,20},{205,30},{309,40}}; status=find_first_student_by_id(a,4,205,&out); printf("%d %zu\\n",status,out); break; }
+        case 1: { const struct Student a[] = {{1,10},{2,20},{3,30},{4,40}}; status=find_first_student_by_id(a,4,1,&out); printf("%d %zu\\n",status,out); break; }
+        case 2: { const struct Student a[] = {{1,10},{2,20},{3,30},{4,40}}; status=find_first_student_by_id(a,4,4,&out); printf("%d %zu\\n",status,out); break; }
+        case 3: { const struct Student a[] = {{42,100}}; status=find_first_student_by_id(a,1,42,&out); printf("%d %zu\\n",status,out); break; }
+        case 4: { const struct Student a[] = {{42,100}}; status=find_first_student_by_id(a,1,9,&out); printf("%d %zu\\n",status,out); break; }
+        case 5: { const struct Student a[] = {{-3,1},{7,10},{7,20},{7,30},{9,2}}; status=find_first_student_by_id(a,5,7,&out); printf("%d %zu\\n",status,out); break; }
+        case 6: { const struct Student a[] = {{1,10},{3,30},{5,50},{7,70}}; status=find_first_student_by_id(a,4,4,&out); printf("%d %zu\\n",status,out); break; }
+        case 7: status=find_first_student_by_id(NULL,0,1,&out); printf("%d %zu\\n",status,out); break;
+        case 8: { const struct Student a[]={{1,10}}; status=find_first_student_by_id(a,0,1,&out); printf("%d %zu\\n",status,out); break; }
+        case 9: status=find_first_student_by_id(NULL,3,1,&out); printf("%d %zu\\n",status,out); break;
+        case 10: { const struct Student a[]={{1,10}}; status=find_first_student_by_id(a,1,1,NULL); printf("%d\\n",status); break; }
+        case 11: { const struct Student a[]={{INT_MIN,10},{0,20},{INT_MAX,30}}; status=find_first_student_by_id(a,3,INT_MAX,&out); printf("%d %zu\\n",status,out); break; }
         default: return 71;
     }
     return 0;
