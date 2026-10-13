@@ -293,6 +293,31 @@ export const lessons = [
     ],{requiredNames:['main.c','functions.c','functions.h']}),input:'15 0 10',expected:'10'}
   },
   {
+    id:'c-struct-student-registry',track:'c',level:'중급 Mini Project',title:'학생 명부: 안정 정렬과 첫 학번 탐색',minutes:90,source:'C 구조체 배열·안정 정렬·하한 이진 탐색·분할 컴파일을 결합한 독자 작성 프로젝트',
+    summary:'student.h, student.c, main.c를 나누어 학생 명부를 안정 정렬하고 중복 학번의 첫 레코드를 이진 탐색합니다.',figure:'student-registry-project',
+    sections:[
+      {heading:'단원 개요와 필요한 이유',text:'지금까지 함수 하나씩 연습한 안정 정렬과 첫 위치 이진 탐색을 실제 프로그램 경계에서 결합합니다. 입력·출력은 main.c, 자료형과 함수 계약은 student.h, 알고리즘 정의는 student.c가 담당합니다. 세 파일이 따로 컴파일된 뒤 링크되어야 명부 프로그램이 완성됩니다.'},
+      {heading:'선수 지식과 학습 목표',text:'구조체 배열, stable_sort_students_by_id, find_first_student_by_id, [left, right) 하한 탐색, 헤더와 링크 단원을 마친 뒤 진행합니다. 학습 후에는 선언·정의·호출을 파일별로 배치하고 정렬 전/후 계약, 중복 안정성, 첫 위치, 빈 입력과 링크 실패를 한 흐름에서 설명할 수 있어야 합니다.'},
+      {heading:'입력과 출력 계약을 먼저 고정한다',text:'첫 줄은 count target_id이고 이어 count개의 id score 쌍을 읽습니다. count는 0 이상 16 이하입니다. 정상 입력은 정렬된 모든 레코드를 id:score 형식으로 출력하고, 다음 줄에 FOUND index score 또는 NOT FOUND를 출력합니다. 빈 입력 배열은 첫 줄 EMPTY, 둘째 줄 NOT FOUND입니다.'},
+      {heading:'student.h는 공유 인터페이스다',text:'student.h에는 struct Student 정의와 두 함수 원형을 둡니다. size_t를 선언하는 <stddef.h>도 헤더가 직접 포함해야 이 헤더만 포함한 번역 단위에서도 계약이 완전합니다. include guard는 한 번의 번역 단위에서 중복 포함을 안전하게 만듭니다.',code:'#ifndef STUDENT_H\n#define STUDENT_H\n#include <stddef.h>\nstruct Student { int id; int score; };\nint stable_sort_students_by_id(struct Student students[], size_t count);\nint find_first_student_by_id(const struct Student students[], size_t count, int target_id, size_t *out_index);\n#endif'},
+      {heading:'student.c는 알고리즘 정의를 소유한다',text:'student.c는 student.h를 먼저 포함하고 두 함수를 정의합니다. 정렬은 이전 id가 key.id보다 클 때만 구조체 전체를 이동하여 안정성을 지킵니다. id의 차를 계산하면 signed int 오버플로가 생길 수 있으므로 관계 연산자로 직접 비교합니다.'},
+      {heading:'정렬 후에만 이진 탐색한다',text:'main.c가 입력 순서의 배열에 곧바로 이진 탐색을 적용하면 어느 절반을 버릴지 보장할 수 없습니다. stable_sort_students_by_id가 성공한 뒤에만 find_first_student_by_id를 호출합니다. 이 순서가 알고리즘의 정렬 전제를 프로그램 흐름으로 보장합니다.'},
+      {heading:'중복은 안정성과 첫 위치를 함께 드러낸다',text:'205:88과 205:91이 이 순서로 입력되었다면 안정 정렬 뒤에도 88점 레코드가 먼저입니다. 하한 이진 탐색은 중복 중 첫 위치를 반환하므로 FOUND 줄의 점수도 88이어야 합니다. 정렬 결과와 탐색 결과를 함께 출력하면 두 계약을 동시에 관찰할 수 있습니다.'},
+      {heading:'반열린 구간은 빈 배열도 표현한다',text:'이진 탐색 후보는 [left, right)이고 처음 right는 count입니다. count가 0이면 [0, 0)이라 반복하지 않습니다. mid는 left + (right - left) / 2로 계산하고 같은 id를 만나도 right = mid로 좁혀 첫 위치를 찾습니다.'},
+      {heading:'main.c는 입출력과 순서를 조정한다',text:'main.c는 최대 16개 배열을 소유하고 입력 개수와 각 레코드 읽기를 검사합니다. 범위를 벗어나거나 필요한 정수를 읽지 못하면 INVALID를 출력합니다. 정상 입력에서는 정렬, 배열 출력, 검색 결과 출력 순서를 명확히 유지합니다.'},
+      {heading:'완성 프로그램의 실행 결과',text:'4 205와 309:95, 205:88, 101:70, 205:91을 입력하면 첫 줄은 101:70 205:88 205:91 309:95입니다. 둘째 줄은 FOUND 1 88입니다. 같은 id의 상대 순서가 보존되고 첫 205의 인덱스와 점수가 선택된 결과입니다.'},
+      {heading:'컴파일과 링크 경계를 읽는다',text:'각 .c 파일은 student.h를 통해 동일한 선언을 봅니다. student.c의 정의가 빠지면 main.c는 컴파일될 수 있어도 링크에서 undefined reference가 발생합니다. 헤더 선언과 정의 형식이 다르면 컴파일 진단이 생깁니다. .c 파일을 서로 include하지 않습니다.'},
+      {heading:'흔한 오류와 C 경계',text:'id만 이동해 score와 학생을 분리하기, >=로 동등 키를 뒤집기, 정렬 전에 검색하기, 일치 즉시 반환해 중복의 중간 위치를 고르기, count가 0인데 원소를 읽기, id 뺄셈으로 비교하기가 흔한 오류입니다. int의 정확한 비트 수는 C가 고정하지 않으므로 특정 플랫폼의 극값과 언어 최소 보장을 구별합니다.'},
+      {heading:'중간 점검·핵심 요약·다음 연결',text:'왜 student.h가 <stddef.h>를 직접 포함해야 하는지, 정렬 출력의 점수 순서가 안정성을 어떻게 증명하는지, FOUND의 index가 첫 위치 정책을 어떻게 드러내는지 설명해 보세요. 핵심은 파일 계약과 알고리즘 전제를 실행 순서로 연결하는 것입니다. 다음에는 데이터 저장, 동적 배열, 비교 함수와 빌드 자동화로 확장합니다.'}
+    ],
+    quiz:{question:'입력에 같은 id의 학생이 여러 명 있을 때 FOUND가 가리켜야 하는 레코드는?',options:['안정 정렬 뒤 같은 id 중 첫 레코드','같은 id 중 점수가 가장 높은 레코드','이진 탐색이 우연히 처음 만난 레코드','입력 배열의 마지막 레코드'],answer:0,explanation:'안정 정렬은 동등 id의 입력 순서를 보존하고 하한 이진 탐색은 그 그룹의 첫 위치를 선택합니다.'},
+    challenge:{id:'c-struct-student-registry',title:'세 파일 학생 명부 완성하기',description:'student.h에 구조체와 두 함수 계약, student.c에 안정 삽입 정렬과 첫 위치 이진 탐색, main.c에 입력·출력 흐름을 완성하세요. 필수 파일명과 출력 형식을 지키고 .c 파일을 서로 include하지 마세요.',starter:serializeMultiFileSubmission([
+      {name:'main.c',content:'#include <stdio.h>\n#include "student.h"\n\nenum { MAX_STUDENTS = 16 };\n\nint main(void) {\n    struct Student students[MAX_STUDENTS];\n    int count_input, target_id;\n    if (scanf("%d%d", &count_input, &target_id) != 2 || count_input < 0 || count_input > MAX_STUDENTS) {\n        puts("INVALID");\n        return 0;\n    }\n    size_t count = (size_t)count_input;\n    for (size_t i = 0; i < count; ++i) {\n        if (scanf("%d%d", &students[i].id, &students[i].score) != 2) {\n            puts("INVALID");\n            return 0;\n        }\n    }\n    if (!stable_sort_students_by_id(students, count)) return 1;\n    if (count == 0) puts("EMPTY");\n    else {\n        for (size_t i = 0; i < count; ++i) {\n            if (i > 0) putchar(\' \');\n            printf("%d:%d", students[i].id, students[i].score);\n        }\n        putchar(\'\\n\');\n    }\n    size_t index;\n    if (find_first_student_by_id(students, count, target_id, &index))\n        printf("FOUND %zu %d\\n", index, students[index].score);\n    else puts("NOT FOUND");\n    return 0;\n}'},
+      {name:'student.c',content:'#include "student.h"\n\nint stable_sort_students_by_id(struct Student students[], size_t count) {\n    // TODO: 같은 id의 상대 순서를 보존하는 삽입 정렬을 구현하세요.\n    (void)students;\n    (void)count;\n    return 0;\n}\n\nint find_first_student_by_id(const struct Student students[], size_t count,\n                             int target_id, size_t *out_index) {\n    // TODO: [left, right) 하한 탐색으로 첫 위치를 찾으세요.\n    (void)students;\n    (void)count;\n    (void)target_id;\n    (void)out_index;\n    return 0;\n}'},
+      {name:'student.h',content:'#ifndef STUDENT_H\n#define STUDENT_H\n\n#include <stddef.h>\n\nstruct Student {\n    int id;\n    int score;\n};\n\nint stable_sort_students_by_id(struct Student students[], size_t count);\nint find_first_student_by_id(const struct Student students[], size_t count,\n                             int target_id, size_t *out_index);\n\n#endif'}
+    ],{requiredNames:['main.c','student.c','student.h']}),input:'4 205\n309 95\n205 88\n101 70\n205 91',expected:'101:70 205:88 205:91 309:95\nFOUND 1 88'}
+  },
+  {
     id:'rust-mut',track:'rust',level:'시작하기',title:'변수 바인딩과 가변성',minutes:20,source:'기초 Rust 개념 독자 작성 초안 (Rust 교재 미제공)',
     summary:'C의 변수와 비교하여 Rust에서 let과 mut가 어떻게 다른지 배웁니다.',figure:'variables',
     sections:[

@@ -38,6 +38,14 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     });
     return { status: response.status, result: await response.json() };
   };
+  const studentRegistryMain = '#include <stdio.h>\n#include "student.h"\nenum{MAX_STUDENTS=16};\nint main(void){struct Student a[MAX_STUDENTS];int n_input,target;if(scanf("%d%d",&n_input,&target)!=2||n_input<0||n_input>MAX_STUDENTS){puts("INVALID");return 0;}size_t n=(size_t)n_input;for(size_t i=0;i<n;i++)if(scanf("%d%d",&a[i].id,&a[i].score)!=2){puts("INVALID");return 0;}if(!stable_sort_students_by_id(a,n))return 1;if(n==0)puts("EMPTY");else{for(size_t i=0;i<n;i++){if(i)putchar(\' \');printf("%d:%d",a[i].id,a[i].score);}putchar(\'\\n\');}size_t index;if(find_first_student_by_id(a,n,target,&index))printf("FOUND %zu %d\\n",index,a[index].score);else puts("NOT FOUND");return 0;}';
+  const studentRegistryHeader = '#ifndef STUDENT_H\n#define STUDENT_H\n#include <stddef.h>\nstruct Student{int id;int score;};\nint stable_sort_students_by_id(struct Student students[],size_t count);\nint find_first_student_by_id(const struct Student students[],size_t count,int target_id,size_t *out_index);\n#endif';
+  const studentRegistrySubmission = studentSource => serializeMultiFileSubmission([
+    { name: 'main.c', content: studentRegistryMain },
+    { name: 'student.c', content: studentSource },
+    { name: 'student.h', content: studentRegistryHeader }
+  ], { requiredNames: ['main.c','student.c','student.h'] });
+  const studentRegistryAlgorithms = '#include "student.h"\nint stable_sort_students_by_id(struct Student a[],size_t n){if(n==0)return 1;if(!a)return 0;for(size_t i=1;i<n;i++){struct Student key=a[i];size_t j=i;while(j>0&&a[j-1].id>key.id){a[j]=a[j-1];--j;}a[j]=key;}return 1;}\nint find_first_student_by_id(const struct Student a[],size_t n,int id,size_t *out){if(n==0||!a||!out)return 0;size_t l=0,r=n;while(l<r){size_t m=l+(r-l)/2;if(a[m].id<id)l=m+1;else r=m;}if(l<n&&a[l].id==id){*out=l;return 1;}return 0;}';
   const solutions = {
     'c-hello': '#include <stdio.h>\nint main(void){puts("Hello, CodeWeave!");return 0;}',
     'c-types': '#include <stdio.h>\nint main(void){int a,b;if(scanf("%d%d",&a,&b)!=2)return 1;printf("%d\\n",a+b);return 0;}',
@@ -59,7 +67,8 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
       {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\nint main(void){int v,l,h;if(scanf("%d%d%d",&v,&l,&h)!=3)return 1;printf("%d\\n",clamp(v,l,h));return 0;}'},
       {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
       {name:'functions.h',content:'#ifndef FUNCTIONS_H\n#define FUNCTIONS_H\nint clamp(int value,int low,int high);\n#endif'}
-    ], { requiredNames: ['main.c','functions.c','functions.h'] })
+    ], { requiredNames: ['main.c','functions.c','functions.h'] }),
+    'c-struct-student-registry': studentRegistrySubmission(studentRegistryAlgorithms)
   };
   const values = new Map();
   const storage = { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };
@@ -375,6 +384,25 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     response = await submit('c-multi-file', mismatch);
     assert.equal(response.result.compilerFeedback.code, 'declaration-mismatch');
     assert.match(response.result.compileOutput, /conflicting types/);
+  });
+  await t.test('student registry grader detects unstable sorting and a non-first binary-search match', async () => {
+    const unstable = '#include "student.h"\nint stable_sort_students_by_id(struct Student a[],size_t n){if(n==0)return 1;if(!a)return 0;for(size_t i=1;i<n;i++){struct Student key=a[i];size_t j=i;while(j>0&&a[j-1].id>=key.id){a[j]=a[j-1];--j;}a[j]=key;}return 1;}\nint find_first_student_by_id(const struct Student a[],size_t n,int id,size_t *out){if(!a||!out||n==0)return 0;for(size_t i=0;i<n;i++)if(a[i].id==id){*out=i;return 1;}return 0;}';
+    let response = await submit('c-struct-student-registry', studentRegistrySubmission(unstable));
+    assert.equal(response.result.ok, false);
+    assert.equal(response.result.tests[0].passed, false);
+
+    const nonFirst = '#include "student.h"\nint stable_sort_students_by_id(struct Student a[],size_t n){if(n==0)return 1;if(!a)return 0;for(size_t i=1;i<n;i++){struct Student key=a[i];size_t j=i;while(j>0&&a[j-1].id>key.id){a[j]=a[j-1];--j;}a[j]=key;}return 1;}\nint find_first_student_by_id(const struct Student a[],size_t n,int id,size_t *out){if(!a||!out||n==0)return 0;size_t l=0,r=n-1;while(l<=r){size_t m=l+(r-l)/2;if(a[m].id==id){*out=m;return 1;}if(a[m].id<id)l=m+1;else{if(m==0)break;r=m-1;}}return 0;}';
+    response = await submit('c-struct-student-registry', studentRegistrySubmission(nonFirst));
+    assert.equal(response.result.ok, false);
+    assert.equal(response.result.tests[3].passed, false);
+  });
+  await t.test('student registry missing definition is reported as a link failure', async () => {
+    const response = await submit('c-struct-student-registry', studentRegistrySubmission('#include "student.h"\nint stable_sort_students_by_id(struct Student a[],size_t n){(void)a;(void)n;return 1;}'));
+    assert.equal(response.status, 200);
+    assert.equal(response.result.message, '컴파일 실패');
+    assert.equal(response.result.compilerFeedback.code, 'undefined-reference');
+    assert.equal(response.result.compilerFeedback.phase, 'link');
+    assert.match(response.result.compileOutput, /find_first_student_by_id/);
   });
   await t.test('unknown exercises and oversized code are rejected', async () => {
     assert.equal((await submit('unknown', 'int main(void){return 0;}')).status, 400);

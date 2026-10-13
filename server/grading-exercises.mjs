@@ -128,7 +128,19 @@ const CASES = {
     {input:'out_index == NULL',args:['10'],expected:'0'},
     {input:'INT_MIN과 INT_MAX 경계',args:['11'],expected:'1 2'}
   ],
-  'c-multi-file': [{input:'5 0 10\n',expected:'5'},{input:'-3 0 10\n',expected:'0'},{input:'15 0 10\n',expected:'10'},{input:'-20 -10 -1\n',expected:'-10'},{input:'-1 -10 -1\n',expected:'-1'}]
+  'c-multi-file': [{input:'5 0 10\n',expected:'5'},{input:'-3 0 10\n',expected:'0'},{input:'15 0 10\n',expected:'10'},{input:'-20 -10 -1\n',expected:'-10'},{input:'-1 -10 -1\n',expected:'-1'}],
+  'c-struct-student-registry': [
+    {input:'4 205\n309 95\n205 88\n101 70\n205 91\n',expected:'101:70 205:88 205:91 309:95\nFOUND 1 88'},
+    {input:'3 -5\n-5 10\n0 20\n7 30\n',expected:'-5:10 0:20 7:30\nFOUND 0 10'},
+    {input:'4 4\n4 40\n3 30\n2 20\n1 10\n',expected:'1:10 2:20 3:30 4:40\nFOUND 3 40'},
+    {input:'4 7\n7 10\n7 20\n7 30\n7 40\n',expected:'7:10 7:20 7:30 7:40\nFOUND 0 10'},
+    {input:'4 4\n1 10\n3 30\n5 50\n7 70\n',expected:'1:10 3:30 5:50 7:70\nNOT FOUND'},
+    {input:'1 42\n42 100\n',expected:'42:100\nFOUND 0 100'},
+    {input:'0 42\n',expected:'EMPTY\nNOT FOUND'},
+    {input:'3 2147483647\n2147483647 33\n-2147483648 11\n0 22\n',expected:'-2147483648:11 0:22 2147483647:33\nFOUND 2 33'},
+    {input:'17 1\n',expected:'INVALID'},
+    {input:'2 1\n1 10\n',expected:'INVALID'}
+  ]
 };
 
 const HARNESSES = {

@@ -57,6 +57,11 @@ const multiFileSolution = [
 const multiFileWrong = multiFileSolution.map(file => file.name === 'functions.c'
   ? { ...file, content: '#include "functions.h"\nint clamp(int v,int l,int h){(void)v;(void)l;return h;}' }
   : file);
+const studentRegistrySolution = [
+  {name:'main.c',content:'#include <stdio.h>\n#include "student.h"\nenum{MAX_STUDENTS=16};\nint main(void){struct Student a[MAX_STUDENTS];int n_input,target;if(scanf("%d%d",&n_input,&target)!=2||n_input<0||n_input>MAX_STUDENTS){puts("INVALID");return 0;}size_t n=(size_t)n_input;for(size_t i=0;i<n;i++)if(scanf("%d%d",&a[i].id,&a[i].score)!=2){puts("INVALID");return 0;}if(!stable_sort_students_by_id(a,n))return 1;if(n==0)puts("EMPTY");else{for(size_t i=0;i<n;i++){if(i)putchar(\' \');printf("%d:%d",a[i].id,a[i].score);}putchar(\'\\n\');}size_t index;if(find_first_student_by_id(a,n,target,&index))printf("FOUND %zu %d\\n",index,a[index].score);else puts("NOT FOUND");return 0;}'},
+  {name:'student.c',content:'#include "student.h"\nint stable_sort_students_by_id(struct Student a[],size_t n){if(n==0)return 1;if(!a)return 0;for(size_t i=1;i<n;i++){struct Student key=a[i];size_t j=i;while(j>0&&a[j-1].id>key.id){a[j]=a[j-1];--j;}a[j]=key;}return 1;}\nint find_first_student_by_id(const struct Student a[],size_t n,int id,size_t *out){if(n==0||!a||!out)return 0;size_t l=0,r=n;while(l<r){size_t m=l+(r-l)/2;if(a[m].id<id)l=m+1;else r=m;}if(l<n&&a[l].id==id){*out=l;return 1;}return 0;}'},
+  {name:'student.h',content:'#ifndef STUDENT_H\n#define STUDENT_H\n#include <stddef.h>\nstruct Student{int id;int score;};\nint stable_sort_students_by_id(struct Student students[],size_t count);\nint find_first_student_by_id(const struct Student students[],size_t count,int target_id,size_t *out_index);\n#endif'}
+];
 const history = page => page.evaluate(() => JSON.parse(localStorage.getItem('codeweave.iterations.v1')));
 const ready = async page => { await expect(page.locator('#grade-code')).toBeEnabled(); };
 async function submit(page, code) {
@@ -97,14 +102,15 @@ try {
     'c-struct-array-search': structArraySearch,
     'c-struct-array-sort': structArraySort,
     'c-struct-array-binary-search': structArrayBinarySearch,
-    'c-multi-file': serializeMultiFileSubmission(multiFileSolution, { requiredNames: ['main.c','functions.c','functions.h'] })
+    'c-multi-file': serializeMultiFileSubmission(multiFileSolution, { requiredNames: ['main.c','functions.c','functions.h'] }),
+    'c-struct-student-registry': serializeMultiFileSubmission(studentRegistrySolution, { requiredNames: ['main.c','student.c','student.h'] })
   };
   for (const [exerciseId, code] of Object.entries(solutions)) {
     const response = await fetch(base + '/api/grade', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ exerciseId, code }) });
     const result = await response.json();
     assert.equal(result.ok, true, exerciseId + ': ' + JSON.stringify(result));
   }
-  console.log('PASS: all seventeen C exercises compile and pass their real GCC tests');
+  console.log('PASS: all eighteen C exercises compile and pass their real GCC tests');
 
   browser = await chromium.launch({ headless: true });
   context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
@@ -323,6 +329,19 @@ try {
   await multiBench.close();
   await page.setViewportSize({ width: 1366, height: 900 });
   console.log('PASS: multi-file mobile editors, attempt restore and unified backup round trip preserve all three files');
+  await page.goto(base + '/#lesson:c-struct-student-registry');
+  await expect(page.locator('.detail-head h1')).toHaveText('학생 명부: 안정 정렬과 첫 학번 탐색');
+  await expect(page.locator('.figure-box svg')).toContainText('안정 정렬');
+  await expect(page.locator('[data-code-file]')).toHaveCount(3);
+  await fillMultiFile(page, studentRegistrySolution);
+  const registryResponse = page.waitForResponse(r => r.url().endsWith('/api/grade'));
+  await page.locator('#grade-code').click(); await registryResponse; await ready(page);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
+  await expect(page.locator('[data-code-file="student.h"]')).toHaveValue(/struct Student/);
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'student registry mobile overflow');
+  await page.setViewportSize({ width: 1366, height: 900 });
+  console.log('PASS: student registry lesson renders and submits its independent three-file contract');
   await page.evaluate(({ failed }) => {
     localStorage.clear();
     localStorage.setItem('codeweave.drafts.v1', JSON.stringify({ 'c-types': failed, 'rust-mut': 'keep rust draft' }));
@@ -353,6 +372,7 @@ try {
   await expect(bench.locator('#lesson-select option[value="c-struct-array-sort"]')).toHaveCount(1);
   await expect(bench.locator('#lesson-select option[value="c-struct-array-binary-search"]')).toHaveCount(1);
   await expect(bench.locator('#lesson-select option[value="c-multi-file"]')).toHaveCount(1);
+  await expect(bench.locator('#lesson-select option[value="c-struct-student-registry"]')).toHaveCount(1);
   await bench.locator('#lesson-select').selectOption('c-types');
   await submit(page, failed);
   await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
