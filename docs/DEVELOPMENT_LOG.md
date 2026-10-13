@@ -1,6 +1,6 @@
 # CodeWeave 개발 일지
 
-## 2026-10-14 04:05~04:12 KST — 기초 정수 문제의 이식 가능한 입력·오버플로 계약
+## 2026-10-14 04:05~04:20 KST — 기초 정수 문제의 이식 가능한 입력·오버플로 계약
 
 - 실행 시작 커밋: `1da860625a7d4888b008671780148a2d163b9d68` (`main`, tree `366a934a1d3b00b9bc96b81aed0fcbfd61e4f7ab`). 새 작업 디렉터리에 최신 원격 `main`을 복제했고 로컬 HEAD·`origin/main`·`git ls-remote`가 일치하며 작업 트리가 깨끗함을 확인했다. GitHub 저장소·커밋 읽기에 성공했고 열린 PR은 0개였다. 시작 SHA의 Actions 실행 `38444380655`는 `test`와 실제 Chromium `browser` 작업을 포함해 성공 상태였다. 필수 `README.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`, `docs/CONTENT_POLICY.md`, `docs/AUTONOMOUS_DEVELOPMENT.md`, 최신 개발 일지와 관련 구현·검사를 읽었다. 변경 전 `npm test`는 185/185 성공, 실패/skip 0이었다.
 - 목표/성공 조건: 최신 일지의 첫 우선 작업인 `c-types` 두 정수 덧셈과 `c-pointer` 1 증가에 C 구현 폭에 의존하지 않는 입력 범위를 선언한다. 계산 결과가 C가 보장하는 최소 `int` 범위 안에 머무는 이유, 유효 입력의 정확한 개수, 범위 밖·변환 실패·추가 토큰·조기 EOF 정책을 학습 화면에서 구분한다. 양수·음수 양쪽 경계를 실제 GCC 사례로 검사하고 문제 메타데이터·감사 표·로드맵이 실행 정의와 일치해야 한다. 기존 문제 ID, 공개 예시, 진도·초안·iteration·숙달·통합 백업 v1 형식은 바꾸지 않는다.
@@ -11,6 +11,7 @@
 - 재검토/호환성: `int`의 정확한 크기가 아니라 표준이 보장하는 최소 표현 범위를 기준으로 문제 범위를 잡아 16비트 이상 구현에서도 유효 입력 계산이 넘치지 않는다. 유효 입력만 제공한다는 계약과 `scanf`가 실제로 확인하는 변환 개수를 구분했고, 강건한 텍스트 파싱 단원과 기능을 중복하지 않았다. 문제 ID와 공개 예시는 그대로라 기존 진도·초안·제출 이력·숙달·백업 데이터를 유지한다.
 - 미해결/위험: 첫 다섯 기초 단원은 여전히 3~4절짜리 시범 콘텐츠로 전체 교과서 필수 구성을 충족하지 않는다. 이 두 문제의 범위 밖·잘못된 입력을 거부하는 강건한 프로그램을 구현한 것은 아니며 명시적으로 채점 계약 밖이다. 시간 제한과 GCC 하네스는 메모리·프로세스·파일·네트워크를 격리하지 않으므로 `dev-server.mjs`는 신뢰하는 개인 코드 전용이다. 로컬 실제 Chromium, Windows/Android/iPad 실기기와 설치형 PWA는 미검증이다.
 - GitHub 반영: 이 일지를 포함하는 커밋 제목은 `test: define portable integer exercise contracts`다. 자신의 SHA와 새 CI 결과는 커밋 후 원격 HEAD·tree·관련 문서·Actions를 다시 조회해 실행 보고서에 기록한다. 시작 SHA를 기준으로 새 원격 변경 여부를 재확인하고 강제 푸시하지 않는다.
+- 원격 반영 중 발견/해결: 일반 HTTPS `git push origin main`은 이 실행 환경에 Git 자격 증명이 없어 `fatal: could not read Username for 'https://github.com': No such device or address`로 실패했다. GitHub 연결의 base tree·commit·expected SHA ref 갱신으로 구현 커밋 `73ead92cfb0ae74977973a1684823bb4e29f5231`을 fast-forward 반영했다. 직후 파일별 blob SHA를 재검증해 출력 한도 때문에 `docs/DEVELOPMENT_LOG.md`만 154,439 bytes가 아니라 150,060 bytes로 잘려 전송된 것을 발견했다. 코드·테스트·다른 문서 일곱 파일은 기대 blob과 일치했다. 일지를 고정 크기 full-block으로 다시 읽어 기대 blob `f2b060563b4e2e2a1715e052159f44bbfad52c37`과 일치시킨 뒤 교정 커밋 `201d45b7dd1989722479075232e3e2d3611058ac`으로 복구했으며, 원격 tree가 검증한 로컬 tree `4c433df4b087a83a3466a3d51bede23c00454b56`와 같음을 확인했다. 이 사후 기록은 별도 소규모 문서 커밋 제목과 최종 SHA를 실행 보고서에 남긴다.
 - 다음 우선 작업: `reserve_students`를 재사용하는 `push_student`와 기하급수적 성장 정책을 별도 문제로 테스트 우선 개발한다. `length == capacity`일 때 0→초기 용량과 이후 배수 성장, `SIZE_MAX` 근처의 덧셈·곱셈 오버플로, `realloc` 실패 시 포인터·길이·용량·기존 원소 보존, 성공 뒤에만 새 레코드와 길이를 공개하는 계약을 먼저 고정한다.
 - 분야별 상태: 채점 가능한 C 20개(입출력형 8, 함수형 10, 다중 파일형 2), 실제 GCC 사례 168개, 전체 공개 문제 정의 23개다. 두 기초 정수 문제의 입력·오버플로 계약은 고정됐지만 기초 단원의 교과서형 확장, Rust/Cargo 채점, 자료구조·알고리즘 확장, 실제 기기/PWA 설치와 안전한 공개 실행 격리는 후속 작업이다.
 
