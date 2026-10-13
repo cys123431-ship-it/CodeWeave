@@ -50,6 +50,7 @@ const structArraySortWrong = '#include <stddef.h>\nstruct Student{int id;int sco
 const structArrayBinarySearch = '#include <stddef.h>\nstruct Student{int id;int score;};\nint find_first_student_by_id(const struct Student a[],size_t n,int id,size_t *out){if(n==0||!a||!out)return 0;size_t l=0,r=n;while(l<r){size_t m=l+(r-l)/2;if(a[m].id<id)l=m+1;else r=m;}if(l<n&&a[l].id==id){*out=l;return 1;}return 0;}';
 const structArrayBinarySearchWrong = '#include <stddef.h>\nstruct Student{int id;int score;};\nint find_first_student_by_id(const struct Student a[],size_t n,int id,size_t *out){if(!a||!out||n==0)return 0;size_t l=0,r=n-1;while(l<=r){size_t m=l+(r-l)/2;if(a[m].id==id){*out=m;return 1;}if(a[m].id<id)l=m+1;else{if(m==0)break;r=m-1;}}return 0;}';
 const dynamicStudentArray = '#include <stddef.h>\n#include <stdint.h>\n#include <stdlib.h>\nstruct Student{int id;int score;};\nint create_students(size_t count,int initial_score,struct Student **out_students){if(!out_students||initial_score<0||initial_score>100)return 0;if(count==0){*out_students=NULL;return 1;}struct Student *students=NULL;if(count>SIZE_MAX/sizeof *students)return 0;students=malloc(count*sizeof *students);if(!students)return 0;for(size_t i=0;i<count;++i){students[i].id=0;students[i].score=initial_score;}*out_students=students;return 1;}\nvoid destroy_students(struct Student **students){if(!students)return;free(*students);*students=NULL;}';
+const reallocStudentCapacity = '#include <stddef.h>\n#include <stdint.h>\n#include <stdlib.h>\nstruct Student{int id;int score;};\nint reserve_students(struct Student **students,size_t length,size_t *capacity,size_t new_capacity){if(!students||!capacity||length>*capacity)return 0;if((*capacity==0)!=(*students==NULL))return 0;if(new_capacity<*capacity||new_capacity<length)return 0;if(new_capacity==*capacity)return 1;if(new_capacity>SIZE_MAX/sizeof **students)return 0;size_t old=*capacity;struct Student *grown=realloc(*students,new_capacity*sizeof *grown);if(!grown)return 0;for(size_t i=old;i<new_capacity;++i)grown[i]=(struct Student){0,0};*students=grown;*capacity=new_capacity;return 1;}';
 const multiFileSolution = [
   {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\nint main(void){int v,l,h;if(scanf("%d%d%d",&v,&l,&h)!=3)return 1;printf("%d\\n",clamp(v,l,h));return 0;}'},
   {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
@@ -105,14 +106,15 @@ try {
     'c-struct-array-binary-search': structArrayBinarySearch,
     'c-multi-file': serializeMultiFileSubmission(multiFileSolution, { requiredNames: ['main.c','functions.c','functions.h'] }),
     'c-struct-student-registry': serializeMultiFileSubmission(studentRegistrySolution, { requiredNames: ['main.c','student.c','student.h'] }),
-    'c-dynamic-student-array': dynamicStudentArray
+    'c-dynamic-student-array': dynamicStudentArray,
+    'c-realloc-student-capacity': reallocStudentCapacity
   };
   for (const [exerciseId, code] of Object.entries(solutions)) {
     const response = await fetch(base + '/api/grade', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ exerciseId, code }) });
     const result = await response.json();
     assert.equal(result.ok, true, exerciseId + ': ' + JSON.stringify(result));
   }
-  console.log('PASS: all nineteen C exercises compile and pass their real GCC tests');
+  console.log('PASS: all twenty C exercises compile and pass their real GCC tests');
 
   browser = await chromium.launch({ headless: true });
   context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
@@ -356,6 +358,18 @@ try {
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'dynamic student array mobile overflow');
   await page.setViewportSize({ width: 1366, height: 900 });
   console.log('PASS: dynamic student array lesson renders its ownership figure and passes the allocation wrapper harness');
+  await page.goto(base + '/#lesson:c-realloc-student-capacity');
+  await expect(page.locator('.detail-head h1')).toHaveText('realloc로 학생 배열 용량 늘리기');
+  await expect(page.locator('.figure-box svg')).toContainText('realloc');
+  await expect(page.locator('.figure-box svg')).toContainText('원본 보존');
+  await expect(page.locator('#code-input')).toHaveValue(/reserve_students/);
+  await expect(page.locator('#code-input')).not.toHaveValue(/main\s*\(/);
+  await submit(page, reallocStudentCapacity);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'realloc student capacity mobile overflow');
+  await page.setViewportSize({ width: 1366, height: 900 });
+  console.log('PASS: realloc lesson renders its preserved-failure figure and passes deterministic failure injection');
   await page.evaluate(({ failed }) => {
     localStorage.clear();
     localStorage.setItem('codeweave.drafts.v1', JSON.stringify({ 'c-types': failed, 'rust-mut': 'keep rust draft' }));
@@ -388,6 +402,7 @@ try {
   await expect(bench.locator('#lesson-select option[value="c-multi-file"]')).toHaveCount(1);
   await expect(bench.locator('#lesson-select option[value="c-struct-student-registry"]')).toHaveCount(1);
   await expect(bench.locator('#lesson-select option[value="c-dynamic-student-array"]')).toHaveCount(1);
+  await expect(bench.locator('#lesson-select option[value="c-realloc-student-capacity"]')).toHaveCount(1);
   await bench.locator('#lesson-select').selectOption('c-types');
   await submit(page, failed);
   await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);

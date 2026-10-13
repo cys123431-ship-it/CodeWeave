@@ -64,6 +64,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     'c-struct-array-sort': '#include <stddef.h>\nstruct Student{int id;int score;};\nint stable_sort_students_by_id(struct Student students[],size_t count){if(count==0)return 1;if(!students)return 0;for(size_t i=1;i<count;++i){struct Student key=students[i];size_t j=i;while(j>0&&students[j-1].id>key.id){students[j]=students[j-1];--j;}students[j]=key;}return 1;}',
     'c-struct-array-binary-search': '#include <stddef.h>\nstruct Student{int id;int score;};\nint find_first_student_by_id(const struct Student students[],size_t count,int target_id,size_t *out_index){if(count==0||!students||!out_index)return 0;size_t left=0,right=count;while(left<right){size_t mid=left+(right-left)/2;if(students[mid].id<target_id)left=mid+1;else right=mid;}if(left<count&&students[left].id==target_id){*out_index=left;return 1;}return 0;}',
     'c-dynamic-student-array': '#include <stddef.h>\n#include <stdint.h>\n#include <stdlib.h>\nstruct Student{int id;int score;};\nint create_students(size_t count,int initial_score,struct Student **out_students){if(!out_students||initial_score<0||initial_score>100)return 0;if(count==0){*out_students=NULL;return 1;}struct Student *students=NULL;if(count>SIZE_MAX/sizeof *students)return 0;students=malloc(count*sizeof *students);if(!students)return 0;for(size_t i=0;i<count;++i){students[i].id=0;students[i].score=initial_score;}*out_students=students;return 1;}\nvoid destroy_students(struct Student **students){if(!students)return;free(*students);*students=NULL;}',
+    'c-realloc-student-capacity': '#include <stddef.h>\n#include <stdint.h>\n#include <stdlib.h>\nstruct Student{int id;int score;};\nint reserve_students(struct Student **students,size_t length,size_t *capacity,size_t new_capacity){if(!students||!capacity||length>*capacity)return 0;if((*capacity==0)!=(*students==NULL))return 0;if(new_capacity<*capacity||new_capacity<length)return 0;if(new_capacity==*capacity)return 1;if(new_capacity>SIZE_MAX/sizeof **students)return 0;size_t old=*capacity;struct Student *grown=realloc(*students,new_capacity*sizeof *grown);if(!grown)return 0;for(size_t i=old;i<new_capacity;++i)grown[i]=(struct Student){0,0};*students=grown;*capacity=new_capacity;return 1;}',
     'c-multi-file': serializeMultiFileSubmission([
       {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\nint main(void){int v,l,h;if(scanf("%d%d%d",&v,&l,&h)!=3)return 1;printf("%d\\n",clamp(v,l,h));return 0;}'},
       {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
@@ -358,6 +359,24 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     const { result } = await submit('c-dynamic-student-array', code);
     assert.equal(result.ok, false);
     assert.equal(result.tests[0].passed, false);
+  });
+  await t.test('realloc capacity rejects multiplication overflow before realloc', async () => {
+    const code = '#include <stddef.h>\n#include <stdlib.h>\nstruct Student{int id;int score;};\nint reserve_students(struct Student **p,size_t n,size_t *c,size_t next){if(!p||!c||n>*c||((*c==0)!=(*p==NULL))||next<*c||next<n)return 0;if(next==*c)return 1;size_t old=*c;struct Student *q=realloc(*p,next*sizeof *q);if(!q)return 0;for(size_t i=old;i<next;i++)q[i]=(struct Student){0,0};*p=q;*c=next;return 1;}';
+    const { result } = await submit('c-realloc-student-capacity', code);
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[11].passed, false);
+  });
+  await t.test('realloc capacity preserves the owner pointer on injected failure', async () => {
+    const code = '#include <stddef.h>\n#include <stdint.h>\n#include <stdlib.h>\nstruct Student{int id;int score;};\nint reserve_students(struct Student **p,size_t n,size_t *c,size_t next){if(!p||!c||n>*c||((*c==0)!=(*p==NULL))||next<*c||next<n)return 0;if(next==*c)return 1;if(next>SIZE_MAX/sizeof **p)return 0;size_t old=*c;*p=realloc(*p,next*sizeof **p);if(!*p)return 0;for(size_t i=old;i<next;i++)(*p)[i]=(struct Student){0,0};*c=next;return 1;}';
+    const { result } = await submit('c-realloc-student-capacity', code);
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[12].passed, false);
+  });
+  await t.test('realloc capacity publishes capacity only after successful allocation', async () => {
+    const code = '#include <stddef.h>\n#include <stdint.h>\n#include <stdlib.h>\nstruct Student{int id;int score;};\nint reserve_students(struct Student **p,size_t n,size_t *c,size_t next){if(!p||!c||n>*c||((*c==0)!=(*p==NULL))||next<*c||next<n)return 0;if(next==*c)return 1;if(next>SIZE_MAX/sizeof **p)return 0;size_t old=*c;*c=next;struct Student *q=realloc(*p,next*sizeof *q);if(!q)return 0;for(size_t i=old;i<next;i++)q[i]=(struct Student){0,0};*p=q;return 1;}';
+    const { result } = await submit('c-realloc-student-capacity', code);
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[12].passed, false);
   });
   await t.test('multi-file submission validates the file manifest before GCC', async () => {
     const missing = MULTI_FILE_DRAFT_PREFIX + JSON.stringify({ version: 1, files: [

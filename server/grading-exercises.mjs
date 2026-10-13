@@ -154,6 +154,21 @@ const CASES = {
     {input:'destroy_students(NULL)',args:['9'],expected:'0'},
     {input:'destroy_students가 가리키는 포인터가 NULL',args:['10'],expected:'0 1'},
     {input:'성공한 배열을 두 번 해제해도 실제 free는 한 번',args:['11'],expected:'1 1'}
+  ],
+  'c-realloc-student-capacity': [
+    {input:'reserve_students(&students, 2, &capacity, 4)',args:['0'],expected:'1 · 용량 4 · 기존 2개 보존 · 새 2개 0 초기화'},
+    {input:'빈 배열을 용량 3으로 확장',args:['1'],expected:'1 3 1 1 1'},
+    {input:'같은 용량 요청은 realloc 없이 성공',args:['2'],expected:'1 1 4 0'},
+    {input:'정규 빈 상태에서 용량 0 요청',args:['3'],expected:'1 1 0'},
+    {input:'새 용량이 length보다 작음',args:['4'],expected:'0 1 2 0'},
+    {input:'축소 요청은 정책상 거부',args:['5'],expected:'0 1 4 0'},
+    {input:'length가 현재 capacity보다 큰 잘못된 상태',args:['6'],expected:'0 1 4 0'},
+    {input:'students == NULL',args:['7'],expected:'0 0'},
+    {input:'capacity == NULL',args:['8'],expected:'0 0'},
+    {input:'양수 capacity인데 배열 포인터가 NULL',args:['9'],expected:'0 1 2 0'},
+    {input:'0 capacity인데 배열 포인터가 NULL이 아님',args:['10'],expected:'0 1 0 0'},
+    {input:'new_capacity * sizeof 오버플로 · realloc 전 거부',args:['11'],expected:'0 1 0 0 1'},
+    {input:'주입된 realloc 실패 · 포인터·길이·용량·원소 보존',args:['12'],expected:'0 1 2 1 1'}
   ]
 };
 
@@ -492,11 +507,182 @@ int main(int argc, char **argv) {
         default: return 71;
     }
     return 0;
+}`,
+  'c-realloc-student-capacity': `#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Student { int id; int score; };
+
+int reserve_students(struct Student **students, size_t length,
+                     size_t *capacity, size_t new_capacity);
+
+void *__real_realloc(void *pointer, size_t size);
+
+static size_t reallocation_calls;
+static size_t requested_size;
+static void *observed_pointer;
+static int fail_next_reallocation;
+
+void *__wrap_realloc(void *pointer, size_t size) {
+    ++reallocation_calls;
+    requested_size = size;
+    observed_pointer = pointer;
+    if (fail_next_reallocation) {
+        fail_next_reallocation = 0;
+        return NULL;
+    }
+    return __real_realloc(pointer, size);
+}
+
+static struct Student *make_students(size_t count) {
+    return malloc(count * sizeof(struct Student));
+}
+
+int main(int argc, char **argv) {
+    if (argc != 2) return 70;
+    struct Student *students;
+    struct Student *before;
+    size_t capacity;
+    int status;
+    switch (atoi(argv[1])) {
+        case 0:
+            students = make_students(2);
+            if (students == NULL) return 72;
+            students[0] = (struct Student){101, 70};
+            students[1] = (struct Student){205, 88};
+            capacity = 2;
+            status = reserve_students(&students, 2, &capacity, 4);
+            status = status == 1 && students != NULL && capacity == 4
+                     && students[0].id == 101 && students[0].score == 70
+                     && students[1].id == 205 && students[1].score == 88
+                     && students[2].id == 0 && students[2].score == 0
+                     && students[3].id == 0 && students[3].score == 0
+                     && reallocation_calls == 1
+                     && requested_size == 4 * sizeof *students;
+            printf("%d · 용량 4 · 기존 2개 보존 · 새 2개 0 초기화\\n", status);
+            free(students);
+            break;
+        case 1:
+            students = NULL;
+            capacity = 0;
+            status = reserve_students(&students, 0, &capacity, 3);
+            printf("%d %zu %d %d %d\\n", status, capacity,
+                   students != NULL && students[0].id == 0 && students[0].score == 0,
+                   students != NULL && students[2].id == 0 && students[2].score == 0,
+                   reallocation_calls == 1 && observed_pointer == NULL
+                       && requested_size == 3 * sizeof *students);
+            free(students);
+            break;
+        case 2:
+            students = make_students(4);
+            if (students == NULL) return 72;
+            before = students;
+            capacity = 4;
+            status = reserve_students(&students, 2, &capacity, 4);
+            printf("%d %d %zu %zu\\n", status, students == before, capacity,
+                   reallocation_calls);
+            free(students);
+            break;
+        case 3:
+            students = NULL;
+            capacity = 0;
+            status = reserve_students(&students, 0, &capacity, 0);
+            printf("%d %d %zu\\n", status, students == NULL, reallocation_calls);
+            break;
+        case 4:
+            students = make_students(2);
+            if (students == NULL) return 72;
+            before = students;
+            capacity = 2;
+            status = reserve_students(&students, 2, &capacity, 1);
+            printf("%d %d %zu %zu\\n", status, students == before, capacity,
+                   reallocation_calls);
+            free(students);
+            break;
+        case 5:
+            students = make_students(4);
+            if (students == NULL) return 72;
+            before = students;
+            capacity = 4;
+            status = reserve_students(&students, 2, &capacity, 3);
+            printf("%d %d %zu %zu\\n", status, students == before, capacity,
+                   reallocation_calls);
+            free(students);
+            break;
+        case 6:
+            students = make_students(4);
+            if (students == NULL) return 72;
+            before = students;
+            capacity = 4;
+            status = reserve_students(&students, 5, &capacity, 8);
+            printf("%d %d %zu %zu\\n", status, students == before, capacity,
+                   reallocation_calls);
+            free(students);
+            break;
+        case 7:
+            capacity = 0;
+            status = reserve_students(NULL, 0, &capacity, 3);
+            printf("%d %zu\\n", status, reallocation_calls);
+            break;
+        case 8:
+            students = NULL;
+            status = reserve_students(&students, 0, NULL, 3);
+            printf("%d %zu\\n", status, reallocation_calls);
+            break;
+        case 9:
+            students = NULL;
+            capacity = 2;
+            status = reserve_students(&students, 0, &capacity, 4);
+            printf("%d %d %zu %zu\\n", status, students == NULL, capacity,
+                   reallocation_calls);
+            break;
+        case 10:
+            students = make_students(1);
+            if (students == NULL) return 72;
+            before = students;
+            capacity = 0;
+            status = reserve_students(&students, 0, &capacity, 2);
+            printf("%d %d %zu %zu\\n", status, students == before, capacity,
+                   reallocation_calls);
+            free(students);
+            break;
+        case 11: {
+            size_t too_large = SIZE_MAX / sizeof(struct Student) + 1;
+            students = NULL;
+            capacity = 0;
+            fail_next_reallocation = 1;
+            status = reserve_students(&students, 0, &capacity, too_large);
+            printf("%d %d %zu %zu %d\\n", status, students == NULL, capacity,
+                   reallocation_calls, fail_next_reallocation);
+            break;
+        }
+        case 12:
+            students = make_students(2);
+            if (students == NULL) return 72;
+            students[0] = (struct Student){101, 70};
+            students[1] = (struct Student){205, 88};
+            before = students;
+            capacity = 2;
+            fail_next_reallocation = 1;
+            status = reserve_students(&students, 2, &capacity, 4);
+            printf("%d %d %zu %d %d\\n", status, students == before, capacity,
+                   before[0].id == 101 && before[0].score == 70
+                       && before[1].id == 205 && before[1].score == 88,
+                   reallocation_calls == 1
+                       && requested_size == 4 * sizeof *students);
+            free(before);
+            break;
+        default: return 71;
+    }
+    return 0;
 }`
 };
 
 const LINK_ARGS = {
-  'c-dynamic-student-array': ['-Wl,--wrap=malloc', '-Wl,--wrap=free']
+  'c-dynamic-student-array': ['-Wl,--wrap=malloc', '-Wl,--wrap=free'],
+  'c-realloc-student-capacity': ['-Wl,--wrap=realloc']
 };
 
 export function buildGradingExercises(metadata, casesById, harnessesById = {}, linkArgsById = {}) {
@@ -514,7 +700,7 @@ export function buildGradingExercises(metadata, casesById, harnessesById = {}, l
   }
   for (const [id, linkArgs] of Object.entries(linkArgsById)) {
     if (byId.get(id)?.grader !== 'c-function' || !Array.isArray(linkArgs) || linkArgs.length === 0
-        || linkArgs.some(arg => typeof arg !== 'string' || !/^-Wl,--wrap=(malloc|free)$/.test(arg))
+        || linkArgs.some(arg => typeof arg !== 'string' || !/^-Wl,--wrap=(malloc|realloc|free)$/.test(arg))
         || new Set(linkArgs).size !== linkArgs.length) {
       throw new Error(`${id}: linkArgs는 허용된 함수형 링커 래퍼 배열이어야 합니다.`);
     }
