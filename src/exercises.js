@@ -56,6 +56,23 @@ export function validateExerciseMetadata(definitions) {
       if (!ids.has(prerequisite)) throw new Error(`${exercise.id}: 알 수 없는 선수 문제 ${prerequisite}입니다.`);
     }
   }
+  const prerequisitesById = new Map(normalized.map(exercise => [exercise.id, exercise.prerequisites]));
+  const visitState = new Map();
+  function visitPrerequisites(id, trail) {
+    if (visitState.get(id) === 2) return;
+    if (visitState.get(id) === 1) {
+      const cycleStart = trail.indexOf(id);
+      const cycle = [...trail.slice(cycleStart), id];
+      throw new Error(`순환 선수 관계가 있습니다: ${cycle.join(' -> ')}`);
+    }
+    visitState.set(id, 1);
+    const nextTrail = [...trail, id];
+    for (const prerequisite of prerequisitesById.get(id)) {
+      visitPrerequisites(prerequisite, nextTrail);
+    }
+    visitState.set(id, 2);
+  }
+  for (const exercise of normalized) visitPrerequisites(exercise.id, []);
   return normalized.map(exercise => Object.freeze({
     ...exercise,
     concepts: Object.freeze(exercise.concepts),

@@ -45,9 +45,21 @@ test('only implemented C exercises advertise their explicit grading strategy', (
       && testCase.expected.trim() === sample.output.trim()
     ), `${id}: 공개 예시가 비공개 채점 사례에도 있어야 합니다.`);
   }
-  assert.equal(gradingExercises.get('c-functions').cases.length, 5);
+  assert.ok(gradingExercises.get('c-loops').cases.some(testCase =>
+    testCase.input === '1000\n' && testCase.expected === '500500'
+  ), 'c-loops: 선언한 n 상한 1000을 검사해야 합니다.');
+  assert.ok(gradingExercises.get('c-array').cases.some(testCase =>
+    testCase.input.startsWith('20\n') && testCase.expected === '-1'
+  ), 'c-array: 선언한 원소 개수 상한 20을 검사해야 합니다.');
+  assert.equal(gradingExercises.get('c-functions').cases.length, 6);
+  assert.ok(gradingExercises.get('c-functions').cases.some(testCase =>
+    testCase.input === '5 5 5\n' && testCase.expected === '5'
+  ), 'c-functions: low와 high가 같은 유효 경계를 검사해야 합니다.');
   assert.equal(exerciseById('c-clamp-function').grader, 'c-function');
-  assert.equal(gradingExercises.get('c-clamp-function').cases.length, 5);
+  assert.equal(gradingExercises.get('c-clamp-function').cases.length, 6);
+  assert.ok(gradingExercises.get('c-clamp-function').cases.some(testCase =>
+    testCase.input === 'clamp(5, 5, 5)' && testCase.expected === '5'
+  ), 'c-clamp-function: low와 high가 같은 유효 경계를 검사해야 합니다.');
   assert.match(gradingExercises.get('c-clamp-function').harness, /int clamp\(int value, int low, int high\);/);
   assert.equal(exerciseById('c-array-max-function').grader, 'c-function');
   assert.equal(gradingExercises.get('c-array-max-function').cases.length, 8);
@@ -83,6 +95,9 @@ test('only implemented C exercises advertise their explicit grading strategy', (
   assert.match(gradingExercises.get('c-struct-array-binary-search').harness, /int find_first_student_by_id\(const struct Student students\[\], size_t count, int target_id, size_t \*out_index\);/);
   assert.equal(exerciseById('c-multi-file').grader, 'c-multi-file');
   assert.deepEqual(exerciseById('c-multi-file').requiredFiles, ['main.c', 'functions.c', 'functions.h']);
+  assert.ok(gradingExercises.get('c-multi-file').cases.some(testCase =>
+    testCase.input === '5 5 5\n' && testCase.expected === '5'
+  ), 'c-multi-file: 분할 컴파일 경로에서도 low와 high가 같은 경계를 검사해야 합니다.');
   assert.equal(exerciseById('c-struct-student-registry').grader, 'c-multi-file');
   assert.equal(gradingExercises.get('c-struct-student-registry').cases.length, 10);
   assert.deepEqual(exerciseById('c-struct-student-registry').requiredFiles, ['main.c', 'student.c', 'student.h']);
@@ -114,6 +129,11 @@ test('metadata rejects invalid concepts, examples and prerequisite graphs', () =
   assert.throws(() => validateExerciseMetadata([{ ...valid, publicExample: { input: 1, output: 'x' } }]), /publicExample/);
   assert.throws(() => validateExerciseMetadata([{ ...valid, prerequisites: ['sample'] }]), /자기 자신/);
   assert.throws(() => validateExerciseMetadata([{ ...valid, prerequisites: ['missing'] }]), /알 수 없는 선수/);
+  assert.throws(() => validateExerciseMetadata([
+    { ...valid, id: 'cycle-a', prerequisites: ['cycle-b'] },
+    { ...valid, id: 'cycle-b', prerequisites: ['cycle-c'] },
+    { ...valid, id: 'cycle-c', prerequisites: ['cycle-a'] }
+  ]), /순환 선수 관계.*cycle-a.*cycle-b.*cycle-c.*cycle-a/);
 });
 
 test('private grading definitions reject missing, unknown and malformed cases', () => {

@@ -1,5 +1,22 @@
 # CodeWeave 개발 일지
 
+## 2026-10-13 22:56~2026-10-14 03:04 KST — C 20문제 교차 품질 감사와 경계 보강
+
+- 실행 시작 커밋: `e8f3c927512219b5aa848c26d6682c3e5a3e3575` (`main`, tree `5cef5f916f6bb9348c15f2e6bf67dd6e85b83743`). 새 작업 디렉터리에 원격 `main`을 복제해 로컬 HEAD·`origin/main`·`git ls-remote`를 일치시켰고 작업 트리가 깨끗함을 확인했다. GitHub 저장소 읽기와 권한 조회에 성공했고 열린 PR은 없었다. 시작 SHA의 Actions 실행 목록·combined status 조회는 비어 있었지만, 직전 일지의 실행 ID `38404620743`을 다시 조회해 `test`와 실제 Chromium `browser` 작업이 모두 성공했음을 확인했다. 필수 `README.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`, `docs/CONTENT_POLICY.md`, `docs/AUTONOMOUS_DEVELOPMENT.md`, 최신 개발 일지와 관련 구현·검사를 읽었다. 변경 전 `npm test`는 183/183 성공, 실패/skip 0이었다.
+- 목표/성공 조건: 채점 가능한 C 20문제 전부를 한 표에서 공개 예시↔비공개 사례, 선수 그래프, 채점 방식, 정상·경계·부작용, C 계약, 콘텐츠 성숙도로 교차 점검한다. 감사 표가 실행 정의와 자동 동기화되고, 발견한 실제 결함은 먼저 실패하는 회귀 검사로 재현한 뒤 수정한다. 20문제 정답이 실제 GCC에서 모두 통과하며 기존 진도·초안·iteration·숙달·통합 백업 v1과 PWA shell은 변경하지 않는다.
+- 감사 결과/새 파일: `docs/C_EXERCISE_AUDIT.md`에 20문제의 채점 방식, 사례 수, 주요 경계, 콘텐츠 판정을 고정했다. 공개 예시 20개가 모두 실제 사례와 일치하고 문제 안의 사례 설명·함수 인수 조합에 중복이 없음을 확인했다. `tests/exercise-audit.test.mjs`는 감사 표의 ID 순서·채점기·사례 수를 실행 중인 `src/exercises.js`·`server/grading-exercises.mjs`와 비교하고 공개 예시·중복 부재를 자동 검사한다. 전체 실제 GCC 사례는 164개다.
+- 테스트 우선 발견/수정: `validateExerciseMetadata`가 직접 자기 참조와 없는 선수 ID는 거부하지만 `A -> B -> C -> A` 간접 순환은 허용함을 먼저 실패하는 검사로 재현했다. `src/exercises.js`에 DFS 방문 상태와 현재 경로 추적을 추가해 모든 간접 순환을 모듈 초기화 전에 거부하고 실제 순환 경로를 오류에 표시한다. 이어 선언한 입력 상한과 경계 계약을 검사로 먼저 고정한 뒤 `server/grading-exercises.mjs`에 `c-loops`의 `n=1000`, `c-array`의 20개 전체 음수, `c-functions`·`c-clamp-function`·`c-multi-file`의 `low == high == value` 사례와 함수 하네스 분기를 추가했다.
+- 문서: `README.md`에 선수 그래프 순환 검증과 감사 문서 링크를 추가했다. `docs/ROADMAP.md`에는 감사 범위·164개 사례·기초 콘텐츠 부채를, `docs/ARCHITECTURE.md`에는 간접 순환 진단·사례 중복 검사 책임을 기록했다. 코드 채점 계약과 저장 형식만 다뤘으므로 브라우저 자산과 PWA shell v24는 변경하지 않았다.
+- 실행 검사: 테스트 작성 직후 3노드 순환이 거부되지 않아 표적 검사가 의도대로 실패했고, 경계 검사 추가 직후에는 `c-loops` 상한 사례 부재로 다시 의도대로 실패했다. 수정 뒤 관련 검사 7/7, 문제·GCC API 표적 검사 85/85가 성공했다. 최종 `npm test`는 185/185 성공, 실패/skip 0이며 실제 GCC가 C 20문제와 보강한 경계를 모두 컴파일·실행했다. 변경 JS/MJS 네 파일의 `node --check`와 `git diff --check`도 성공했다. `npm run test:browser`는 API 선행 단계에서 C 20문제 전체가 통과했지만 로컬 Playwright Chromium 실행 파일 부재(`browserType.launch: Executable doesn't exist`)로 UI 단계는 미실행이다. 따라서 실제 브라우저·390px 화면·오프라인·설치형 PWA 성공을 주장하지 않는다.
+- 참고 PDF 접근: `/workspace/scratch/d205f960d8c8/upload/C_Programming.pdf`는 6,838,054 bytes, 288쪽이며 `pdfinfo`와 첫 페이지 렌더링·육안 확인에 성공했다. `/workspace/scratch/d205f960d8c8/upload/c언어 압축 (1)(1).pdf`는 15,179,776 bytes로 존재하지만 Poppler가 `Invalid XRef entry`, `Missing endstream`, trailer/xref 누락을 보고하여 파싱·렌더링하지 못했다. 따라서 C Express를 읽었다고 기록하지 않았다. 어느 PDF도 저장소에 추가하거나 본문·캡처·상용 문제를 복제하지 않았다.
+- 재검토/호환성: 간접 순환 검사는 알려진 ID 검사 뒤에 실행되므로 없는 선수 문제 진단을 가리지 않고, 완료된 노드는 재방문하지 않아 비순환 공유 선수 그래프를 허용한다. `low == high`는 기존 세 채점 경로 모두에서 동일하게 검증한다. 감사와 경계 추가는 문제 ID, 공개 예시, 저장 키, 백업 버전, 제출 이력 구조를 바꾸지 않는다.
+- 미해결/위험: 첫 다섯 기초 단원은 3절짜리 시범 콘텐츠로 전체 교과서 품질에 미달한다. `c-types`의 `int` 덧셈과 `c-pointer`의 1 증가는 signed overflow를 피하는 입력 범위를 더 명시적으로 고정해야 한다. 초기 stdin 문제의 잘못된 입력·초과 토큰·조기 EOF 정책도 아직 정의되지 않았다. 시간 제한과 GCC 하네스는 메모리·프로세스·파일·네트워크를 격리하지 않으므로 `dev-server.mjs`는 신뢰하는 개인 코드 전용이다. 로컬 실제 Chromium, Windows/Android/iPad 실기기와 설치형 PWA는 미검증이다.
+- GitHub 반영: 이 일지를 포함하는 커밋 제목은 `test: audit C exercise coverage and prerequisites`다. 자신의 SHA와 새 CI 결과는 커밋 후 원격 HEAD·tree·감사 문서·일지를 재조회하여 실행 보고서에 기록한다. 시작 SHA를 expected SHA로 사용하고 강제 푸시하지 않는다.
+- 다음 우선 작업: 먼저 `c-types`·`c-pointer`의 안전한 숫자 입력 범위와 초기 stdin 문제의 잘못된 입력/EOF 계약을 작은 테스트 우선 단위로 정리한다. 그 다음 `reserve_students`를 재사용하는 `push_student`와 기하급수적 성장 정책을 별도 문제로 개발한다.
+- 분야별 상태: 채점 가능한 C 20개(입출력형 8, 함수형 10, 다중 파일형 2), 실제 GCC 사례 164개, 전체 공개 문제 정의 23개다. C 20문제의 교차 감사와 자동 동기화 검사는 마련됐지만 첫 기초 콘텐츠 확장, Rust/Cargo 채점, 자료구조·알고리즘 확장, 실제 기기/PWA 설치와 안전한 공개 실행 격리는 후속 작업이다.
+
+---
+
 ## 2026-10-13 21:56~22:20 KST — realloc 학생 배열 용량 확장 계약
 
 - 실행 시작 커밋: `b2cf12d649e2c89f45d2e02e122535a277e96513` (`main`, tree `0b63bdc52f7d362766c1efdc6848965c44b0c224`). 로컬 HEAD·`origin/main`·`git ls-remote`·GitHub 커밋 읽기가 일치하고 열린 PR이 없음을 확인했다. 이 SHA의 workflow run과 combined status는 비어 있어 CI 성공으로 간주하지 않았고, 직전 알려진 성공 CI는 이전 SHA `4ced4534ca24fa40438d813d5897893334061f13`의 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38355474951 이다. 필수 운영·로드맵·아키텍처·콘텐츠 정책·최신 일지를 읽고 직전 우선 작업인 20번째 C `realloc` 문제를 선택했다. 변경 전 `npm test`는 176/176 성공, 실패/skip 0이었다.

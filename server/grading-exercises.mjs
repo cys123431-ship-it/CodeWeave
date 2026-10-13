@@ -3,16 +3,22 @@ import { exercises } from '../src/exercises.js';
 const CASES = {
   'c-hello': [{input:'',expected:'Hello, CodeWeave!'}],
   'c-types': [{input:'4 7\n',expected:'11'},{input:'-5 2\n',expected:'-3'},{input:'0 0\n',expected:'0'}],
-  'c-loops': [{input:'5\n',expected:'15'},{input:'0\n',expected:'0'},{input:'10\n',expected:'55'}],
-  'c-array': [{input:'5\n2 9 -3 4 1\n',expected:'9'},{input:'1\n-12\n',expected:'-12'},{input:'4\n-9 -3 -5 -10\n',expected:'-3'}],
+  'c-loops': [{input:'5\n',expected:'15'},{input:'0\n',expected:'0'},{input:'10\n',expected:'55'},{input:'1000\n',expected:'500500'}],
+  'c-array': [
+    {input:'5\n2 9 -3 4 1\n',expected:'9'},
+    {input:'1\n-12\n',expected:'-12'},
+    {input:'4\n-9 -3 -5 -10\n',expected:'-3'},
+    {input:'20\n-20 -19 -18 -17 -16 -15 -14 -13 -12 -11 -10 -9 -8 -7 -6 -5 -4 -3 -2 -1\n',expected:'-1'}
+  ],
   'c-pointer': [{input:'7\n',expected:'8'},{input:'-4\n',expected:'-3'},{input:'0\n',expected:'1'}],
-  'c-functions': [{input:'5 0 10\n',expected:'5'},{input:'-3 0 10\n',expected:'0'},{input:'15 0 10\n',expected:'10'},{input:'-20 -10 -1\n',expected:'-10'},{input:'-1 -10 -1\n',expected:'-1'}],
+  'c-functions': [{input:'5 0 10\n',expected:'5'},{input:'-3 0 10\n',expected:'0'},{input:'15 0 10\n',expected:'10'},{input:'-20 -10 -1\n',expected:'-10'},{input:'-1 -10 -1\n',expected:'-1'},{input:'5 5 5\n',expected:'5'}],
   'c-clamp-function': [
     {input:'clamp(5, 0, 10)',args:['0'],expected:'5'},
     {input:'clamp(-3, 0, 10)',args:['1'],expected:'0'},
     {input:'clamp(15, 0, 10)',args:['2'],expected:'10'},
     {input:'clamp(-20, -10, -1)',args:['3'],expected:'-10'},
-    {input:'clamp(-1, -10, -1)',args:['4'],expected:'-1'}
+    {input:'clamp(-1, -10, -1)',args:['4'],expected:'-1'},
+    {input:'clamp(5, 5, 5)',args:['5'],expected:'5'}
   ],
   'c-array-max-function': [
     {input:'find_max({4, -2, 9, 1}, 4, &out)',args:['0'],expected:'1 9'},
@@ -128,7 +134,7 @@ const CASES = {
     {input:'out_index == NULL',args:['10'],expected:'0'},
     {input:'INT_MIN과 INT_MAX 경계',args:['11'],expected:'1 2'}
   ],
-  'c-multi-file': [{input:'5 0 10\n',expected:'5'},{input:'-3 0 10\n',expected:'0'},{input:'15 0 10\n',expected:'10'},{input:'-20 -10 -1\n',expected:'-10'},{input:'-1 -10 -1\n',expected:'-1'}],
+  'c-multi-file': [{input:'5 0 10\n',expected:'5'},{input:'-3 0 10\n',expected:'0'},{input:'15 0 10\n',expected:'10'},{input:'-20 -10 -1\n',expected:'-10'},{input:'-1 -10 -1\n',expected:'-1'},{input:'5 5 5\n',expected:'5'}],
   'c-struct-student-registry': [
     {input:'4 205\n309 95\n205 88\n101 70\n205 91\n',expected:'101:70 205:88 205:91 309:95\nFOUND 1 88'},
     {input:'3 -5\n-5 10\n0 20\n7 30\n',expected:'-5:10 0:20 7:30\nFOUND 0 10'},
@@ -186,6 +192,7 @@ int main(int argc, char **argv) {
         case 2: printf("%d\\n", clamp(15, 0, 10)); break;
         case 3: printf("%d\\n", clamp(-20, -10, -1)); break;
         case 4: printf("%d\\n", clamp(-1, -10, -1)); break;
+        case 5: printf("%d\\n", clamp(5, 5, 5)); break;
         default: return 71;
     }
     return 0;
