@@ -43,7 +43,7 @@ async function grade(req,res){
    await fs.writeFile(harness,exercise.harness,'utf8');
    sources.push(harness);
  }
- const compile=spawnSync('gcc',['-std=c11','-Wall','-Wextra','-O0','-I',dir,...sources,'-o',binary],{timeout:4500,maxBuffer:80_000,encoding:'utf8'});
+ const compile=spawnSync('gcc',['-std=c11','-Wall','-Wextra','-O0','-I',dir,...sources,...exercise.linkArgs,'-o',binary],{timeout:4500,maxBuffer:80_000,encoding:'utf8'});
  if(compile.error||compile.status!==0){const compileOutput=(compile.stderr||compile.error?.message||'').slice(0,3000);result={ok:false,message:'컴파일 실패',compileOutput,compilerFeedback:classifyCompilerDiagnostic({output:compileOutput,error:compile.error}),tests:[]};}
  else{
  const tests=[];for(const tc of exercise.cases){

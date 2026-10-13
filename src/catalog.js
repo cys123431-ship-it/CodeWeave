@@ -318,6 +318,27 @@ export const lessons = [
     ],{requiredNames:['main.c','student.c','student.h']}),input:'4 205\n309 95\n205 88\n101 70\n205 91',expected:'101:70 205:88 205:91 309:95\nFOUND 1 88'}
   },
   {
+    id:'c-dynamic-student-array',track:'c',level:'중급 실습',title:'동적 메모리: 학생 배열의 생성과 해제',minutes:72,source:'C 동적 메모리·크기 계산·소유권·실패 처리에 관한 독자 작성 실습',
+    summary:'배열 크기 오버플로와 할당 실패를 구분하고 malloc으로 만든 학생 배열의 소유권을 free까지 관리합니다.',figure:'dynamic-student-array',
+    sections:[
+      {heading:'단원 개요와 필요한 이유',text:'컴파일할 때 원소 수를 모르는 학생 명부는 실행 중에 필요한 크기를 결정해야 합니다. 이 단원은 malloc으로 struct Student 배열을 만들고 free로 반납하는 전체 수명과, 성공하지 못했을 때 기존 출력값을 보존하는 함수 계약을 연결합니다.'},
+      {heading:'선수 지식과 학습 목표',text:'구조체 배열, size_t, 출력 포인터, 실패 시 출력 보존과 학생 명부 프로젝트를 알고 시작합니다. 학습 후에는 바이트 수를 안전하게 계산하고, 할당 실패·0개 정책·소유권 이동·이중 해제 예방을 설명하며 생성·해제 함수를 구현할 수 있어야 합니다.'},
+      {heading:'malloc은 바이트 수를 받고 void 포인터를 돌려준다',text:'count개 Student에 필요한 크기는 count * sizeof *students입니다. C에서는 malloc의 void *가 객체 포인터로 변환되므로 반환값에 불필요한 형 변환을 붙이지 않습니다. 성공한 메모리는 아직 초기화되지 않았으므로 각 원소의 id와 score를 명시적으로 기록합니다.',code:'struct Student *students = malloc(count * sizeof *students);'},
+      {heading:'곱셈은 계산하기 전에 오버플로를 검사한다',text:'count * sizeof *students를 먼저 계산한 뒤 결과를 검사하면 이미 size_t에서 나머지 연산처럼 순환한 뒤입니다. sizeof *students가 0이 아니므로 count > SIZE_MAX / sizeof *students를 먼저 검사해야 합니다. 이 경계는 할당 함수 호출 전 적용합니다.',code:'if (count > SIZE_MAX / sizeof *students) return 0;'},
+      {heading:'0개 배열 정책을 명시한다',text:'이 계약에서 0개 생성은 성공이며 *out_students를 NULL로 설정하고 malloc을 호출하지 않습니다. malloc(0)은 구현이 선택할 수 있는 결과에 의존하지 않도록 피합니다. 따라서 호출자는 0개와 할당 실패를 반환 상태로 구분할 수 있습니다.'},
+      {heading:'출력 이중 포인터가 소유권을 전달한다',text:'생성 함수의 지역 포인터는 반환과 함께 사라지므로 struct Student **out_students를 통해 호출자 포인터를 갱신합니다. 성공 전에는 *out_students를 바꾸지 않습니다. 정상 생성이 끝난 순간 새 블록의 소유권이 호출자에게 넘어갑니다.'},
+      {heading:'할당 실패는 정상적인 실패 경로다',text:'count가 양수여도 malloc은 NULL을 반환할 수 있습니다. 이때 배열 원소를 쓰지 않고 0을 반환하며 유효한 출력 포인터의 기존 값을 보존합니다. 자동 채점은 실제 시스템 메모리 고갈을 기다리지 않고 링커 래퍼로 할당 실패를 결정적으로 주입합니다.'},
+      {heading:'초기화가 끝난 뒤에만 결과를 공개한다',text:'임시 포인터에 할당하고 모든 원소를 id 0과 initial_score로 초기화한 뒤 *out_students에 대입합니다. 점수가 0부터 100 범위인지도 할당 전에 검사합니다. 검증과 초기화를 마치기 전에는 호출자가 새 블록을 소유한다고 표시하지 않습니다.'},
+      {heading:'free 뒤 포인터를 NULL로 바꾼다',text:'free는 블록의 수명을 끝내며 그 주소를 다시 역참조하면 정의되지 않은 동작입니다. destroy_students는 포인터 객체의 주소를 받아 free(*students) 후 *students = NULL로 만듭니다. free(NULL)은 안전하지만 students 자체가 NULL인 경우 역참조하지 않습니다.',code:'if (students != NULL) {\n    free(*students);\n    *students = NULL;\n}'},
+      {heading:'해제 함수가 이중 해제 위험을 줄인다',text:'같은 유효 포인터를 두 번 free하면 정의되지 않은 동작입니다. 첫 해제 후 호출자 포인터를 NULL로 바꾸면 destroy_students를 다시 호출해도 free(NULL)이 되어 실제 블록은 한 번만 반납됩니다. 복사해 둔 별칭 포인터까지 자동으로 NULL이 되는 것은 아니므로 소유자를 하나로 정해야 합니다.'},
+      {heading:'완성 함수와 실행 결과',text:'3개, 초기 점수 70으로 생성하면 상태 1과 원소 세 개가 만들어집니다. 각 id는 0, score는 70입니다. destroy_students 호출 뒤 포인터는 NULL입니다. 0개 생성은 할당 없이 상태 1과 NULL을 내고, 잘못된 점수·크기 오버플로·할당 실패는 상태 0과 기존 출력을 보존합니다.',code:'int create_students(size_t count, int initial_score, struct Student **out_students) {\n    if (out_students == NULL || initial_score < 0 || initial_score > 100) return 0;\n    if (count == 0) { *out_students = NULL; return 1; }\n    if (count > SIZE_MAX / sizeof(struct Student)) return 0;\n    struct Student *students = malloc(count * sizeof *students);\n    if (students == NULL) return 0;\n    for (size_t i = 0; i < count; ++i) {\n        students[i].id = 0;\n        students[i].score = initial_score;\n    }\n    *out_students = students;\n    return 1;\n}'},
+      {heading:'흔한 오류와 검증 경계',text:'오버플로 검사 전에 곱하기, count바이트만 할당하기, malloc 실패 뒤 원소 쓰기, 실패 전에 출력 포인터 덮기, 0개에서 malloc(0) 결과에 의존하기, free 뒤 댕글링 포인터를 남기기, 같은 블록을 두 번 해제하기가 흔한 오류입니다. 링커 래퍼는 로컬 GCC 채점용 실패 주입 장치이며 공개 실행 격리는 아닙니다.'},
+      {heading:'중간 점검·핵심 요약·다음 연결',text:'왜 SIZE_MAX 나눗셈을 곱셈보다 먼저 해야 하는지, 임시 포인터가 필요한 이유, 소유권이 어느 시점에 호출자로 이동하는지, 0개와 실패가 어떻게 다른지 설명해 보세요. 핵심은 크기 검증 → 할당 → 초기화 → 소유권 전달 → 정확히 한 번 해제입니다. 다음에는 realloc을 이용한 용량 증가와 부분 실패 정리로 확장합니다.'}
+    ],
+    quiz:{question:'count개 구조체의 바이트 수를 계산하기 전에 검사해야 하는 조건은?',options:['count > SIZE_MAX / sizeof(struct Student)','count * sizeof(struct Student) > SIZE_MAX를 계산한 뒤 검사','malloc(0)이 항상 NULL인지 검사','free를 먼저 호출했는지 검사'],answer:0,explanation:'size_t 곱셈 자체가 오버플로되기 전에 나눗셈으로 count의 안전한 상한을 확인해야 합니다.'},
+    challenge:{id:'c-dynamic-student-array',title:'학생 동적 배열 생성·해제 함수 구현',description:'create_students는 점수 0~100과 바이트 크기를 검사하고 count개 Student를 malloc으로 할당해 id 0, score initial_score로 초기화합니다. 0개는 malloc 없이 성공하고 NULL을 기록합니다. 실패 시 출력값을 보존하세요. destroy_students는 NULL에 안전하며 free 뒤 호출자 포인터를 NULL로 만듭니다. main과 출력 코드는 작성하지 않습니다.',starter:'#include <stddef.h>\n#include <stdint.h>\n#include <stdlib.h>\n\nstruct Student {\n    int id;\n    int score;\n};\n\nint create_students(size_t count, int initial_score, struct Student **out_students) {\n    // TODO: 검증 → 크기 오버플로 검사 → 할당 → 초기화 → 소유권 전달\n    (void)count;\n    (void)initial_score;\n    (void)out_students;\n    return 0;\n}\n\nvoid destroy_students(struct Student **students) {\n    // TODO: NULL에 안전하게 해제하고 호출자 포인터를 NULL로 만드세요.\n    (void)students;\n}',input:'create_students(3, 70, &students)',expected:'1 · 3개 원소 초기화'}
+  },
+  {
     id:'rust-mut',track:'rust',level:'시작하기',title:'변수 바인딩과 가변성',minutes:20,source:'기초 Rust 개념 독자 작성 초안 (Rust 교재 미제공)',
     summary:'C의 변수와 비교하여 Rust에서 let과 mut가 어떻게 다른지 배웁니다.',figure:'variables',
     sections:[

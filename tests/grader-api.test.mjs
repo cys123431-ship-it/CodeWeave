@@ -63,6 +63,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     'c-struct-array-search': '#include <stddef.h>\nstruct Student{int id;int score;};\nint find_student_index(const struct Student students[],size_t count,int target_id,size_t *out_index){if(!students||count==0||!out_index)return 0;for(size_t i=0;i<count;++i)if(students[i].id==target_id){*out_index=i;return 1;}return 0;}',
     'c-struct-array-sort': '#include <stddef.h>\nstruct Student{int id;int score;};\nint stable_sort_students_by_id(struct Student students[],size_t count){if(count==0)return 1;if(!students)return 0;for(size_t i=1;i<count;++i){struct Student key=students[i];size_t j=i;while(j>0&&students[j-1].id>key.id){students[j]=students[j-1];--j;}students[j]=key;}return 1;}',
     'c-struct-array-binary-search': '#include <stddef.h>\nstruct Student{int id;int score;};\nint find_first_student_by_id(const struct Student students[],size_t count,int target_id,size_t *out_index){if(count==0||!students||!out_index)return 0;size_t left=0,right=count;while(left<right){size_t mid=left+(right-left)/2;if(students[mid].id<target_id)left=mid+1;else right=mid;}if(left<count&&students[left].id==target_id){*out_index=left;return 1;}return 0;}',
+    'c-dynamic-student-array': '#include <stddef.h>\n#include <stdint.h>\n#include <stdlib.h>\nstruct Student{int id;int score;};\nint create_students(size_t count,int initial_score,struct Student **out_students){if(!out_students||initial_score<0||initial_score>100)return 0;if(count==0){*out_students=NULL;return 1;}struct Student *students=NULL;if(count>SIZE_MAX/sizeof *students)return 0;students=malloc(count*sizeof *students);if(!students)return 0;for(size_t i=0;i<count;++i){students[i].id=0;students[i].score=initial_score;}*out_students=students;return 1;}\nvoid destroy_students(struct Student **students){if(!students)return;free(*students);*students=NULL;}',
     'c-multi-file': serializeMultiFileSubmission([
       {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\nint main(void){int v,l,h;if(scanf("%d%d%d",&v,&l,&h)!=3)return 1;printf("%d\\n",clamp(v,l,h));return 0;}'},
       {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
@@ -339,6 +340,24 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     assert.equal(result.ok, false);
     assert.equal(result.tests.length, 1);
     assert.equal(result.tests[0].detail, '시간 제한 초과');
+  });
+  await t.test('dynamic array rejects allocation-size overflow before calling malloc', async () => {
+    const code = '#include <stddef.h>\n#include <stdlib.h>\nstruct Student{int id;int score;};\nint create_students(size_t n,int score,struct Student **out){if(!out||score<0||score>100)return 0;if(n==0){*out=NULL;return 1;}struct Student *p=malloc(n*sizeof *p);if(!p)return 0;for(size_t i=0;i<n;i++){p[i].id=0;p[i].score=score;}*out=p;return 1;}\nvoid destroy_students(struct Student **p){if(p){free(*p);*p=NULL;}}';
+    const { result } = await submit('c-dynamic-student-array', code);
+    assert.equal(result.ok, false);
+    assert.ok(result.tests.some(test => !test.passed));
+  });
+  await t.test('dynamic array preserves output when injected malloc failure occurs', async () => {
+    const code = '#include <stddef.h>\n#include <stdint.h>\n#include <stdlib.h>\nstruct Student{int id;int score;};\nint create_students(size_t n,int score,struct Student **out){if(!out||score<0||score>100)return 0;*out=NULL;if(n==0)return 1;if(n>SIZE_MAX/sizeof **out)return 0;*out=malloc(n*sizeof **out);if(!*out)return 0;for(size_t i=0;i<n;i++){(*out)[i].id=0;(*out)[i].score=score;}return 1;}\nvoid destroy_students(struct Student **p){if(p){free(*p);*p=NULL;}}';
+    const { result } = await submit('c-dynamic-student-array', code);
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[8].passed, false);
+  });
+  await t.test('dynamic array destroy function clears ownership and prevents a second free', async () => {
+    const code = '#include <stddef.h>\n#include <stdint.h>\n#include <stdlib.h>\nstruct Student{int id;int score;};\nint create_students(size_t n,int score,struct Student **out){if(!out||score<0||score>100)return 0;if(n==0){*out=NULL;return 1;}if(n>SIZE_MAX/sizeof **out)return 0;struct Student *p=malloc(n*sizeof *p);if(!p)return 0;for(size_t i=0;i<n;i++){p[i].id=0;p[i].score=score;}*out=p;return 1;}\nvoid destroy_students(struct Student **p){if(p)free(*p);}';
+    const { result } = await submit('c-dynamic-student-array', code);
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[0].passed, false);
   });
   await t.test('multi-file submission validates the file manifest before GCC', async () => {
     const missing = MULTI_FILE_DRAFT_PREFIX + JSON.stringify({ version: 1, files: [

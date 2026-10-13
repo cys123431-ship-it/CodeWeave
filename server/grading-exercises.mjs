@@ -140,6 +140,20 @@ const CASES = {
     {input:'3 2147483647\n2147483647 33\n-2147483648 11\n0 22\n',expected:'-2147483648:11 0:22 2147483647:33\nFOUND 2 33'},
     {input:'17 1\n',expected:'INVALID'},
     {input:'2 1\n1 10\n',expected:'INVALID'}
+  ],
+  'c-dynamic-student-array': [
+    {input:'create_students(3, 70, &students)',args:['0'],expected:'1 · 3개 원소 초기화'},
+    {input:'한 원소 · 점수 하한 0',args:['1'],expected:'1 0 0 1 1'},
+    {input:'두 원소 · 점수 상한 100',args:['2'],expected:'1 1 1 1 1'},
+    {input:'0개 정책 · malloc을 호출하지 않고 NULL 결과',args:['3'],expected:'1 1 0 0'},
+    {input:'초기 점수 -1 · 출력 보존',args:['4'],expected:'0 1 0'},
+    {input:'초기 점수 101 · 출력 보존',args:['5'],expected:'0 1 0'},
+    {input:'out_students == NULL',args:['6'],expected:'0 0'},
+    {input:'count * sizeof 오버플로 · 할당 전 거부',args:['7'],expected:'0 1 0'},
+    {input:'주입된 malloc 실패 · 출력 보존',args:['8'],expected:'0 1 1 0'},
+    {input:'destroy_students(NULL)',args:['9'],expected:'0'},
+    {input:'destroy_students가 가리키는 포인터가 NULL',args:['10'],expected:'0 1'},
+    {input:'성공한 배열을 두 번 해제해도 실제 free는 한 번',args:['11'],expected:'1 1'}
   ]
 };
 
@@ -361,12 +375,134 @@ int main(int argc, char **argv) {
         default: return 71;
     }
     return 0;
+}`,
+  'c-dynamic-student-array': `#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Student { int id; int score; };
+
+int create_students(size_t count, int initial_score, struct Student **out_students);
+void destroy_students(struct Student **students);
+
+void *__real_malloc(size_t size);
+void __real_free(void *pointer);
+
+static size_t allocation_calls;
+static size_t free_calls;
+static size_t requested_size;
+static int fail_next_allocation;
+
+void *__wrap_malloc(size_t size) {
+    ++allocation_calls;
+    requested_size = size;
+    if (fail_next_allocation) {
+        fail_next_allocation = 0;
+        return NULL;
+    }
+    return __real_malloc(size < 4096 ? 4096 : size);
+}
+
+void __wrap_free(void *pointer) {
+    if (pointer != NULL) ++free_calls;
+    __real_free(pointer);
+}
+
+int main(int argc, char **argv) {
+    if (argc != 2) return 70;
+    struct Student *students;
+    int status;
+    switch (atoi(argv[1])) {
+        case 0:
+            students = (struct Student *)(uintptr_t)1;
+            status = create_students(3, 70, &students);
+            status = status && students[0].id == 0 && students[0].score == 70
+                            && students[1].id == 0 && students[1].score == 70
+                            && students[2].id == 0 && students[2].score == 70
+                            && requested_size == 3 * sizeof *students && allocation_calls == 1;
+            destroy_students(&students);
+            printf("%d · 3개 원소 초기화\\n", status && free_calls == 1 && students == NULL);
+            break;
+        case 1:
+            students = NULL;
+            status = create_students(1, 0, &students);
+            printf("%d %d %d ", status, status ? students[0].id : -1, status ? students[0].score : -1);
+            destroy_students(&students);
+            printf("%zu %d\\n", free_calls, students == NULL);
+            break;
+        case 2:
+            students = NULL;
+            status = create_students(2, 100, &students);
+            printf("%d %d %d ", status,
+                   status && students[0].id == 0 && students[1].id == 0,
+                   status && students[0].score == 100 && students[1].score == 100);
+            destroy_students(&students);
+            printf("%zu %d\\n", free_calls, students == NULL);
+            break;
+        case 3:
+            students = (struct Student *)(uintptr_t)1;
+            status = create_students(0, 50, &students);
+            printf("%d %d %zu %zu\\n", status, students == NULL, allocation_calls, free_calls);
+            break;
+        case 4:
+            students = (struct Student *)(uintptr_t)1;
+            status = create_students(2, -1, &students);
+            printf("%d %d %zu\\n", status, students == (struct Student *)(uintptr_t)1, allocation_calls);
+            break;
+        case 5:
+            students = (struct Student *)(uintptr_t)1;
+            status = create_students(2, 101, &students);
+            printf("%d %d %zu\\n", status, students == (struct Student *)(uintptr_t)1, allocation_calls);
+            break;
+        case 6:
+            status = create_students(2, 50, NULL);
+            printf("%d %zu\\n", status, allocation_calls);
+            break;
+        case 7: {
+            size_t too_many = SIZE_MAX / sizeof(struct Student) + 1;
+            students = (struct Student *)(uintptr_t)1;
+            status = create_students(too_many, 50, &students);
+            printf("%d %d %zu\\n", status, students == (struct Student *)(uintptr_t)1, allocation_calls);
+            break;
+        }
+        case 8:
+            students = (struct Student *)(uintptr_t)1;
+            fail_next_allocation = 1;
+            status = create_students(2, 50, &students);
+            printf("%d %d %zu %zu\\n", status, students == (struct Student *)(uintptr_t)1,
+                   allocation_calls, free_calls);
+            break;
+        case 9:
+            destroy_students(NULL);
+            printf("%zu\\n", free_calls);
+            break;
+        case 10:
+            students = NULL;
+            destroy_students(&students);
+            printf("%zu %d\\n", free_calls, students == NULL);
+            break;
+        case 11:
+            students = NULL;
+            status = create_students(2, 50, &students);
+            destroy_students(&students);
+            destroy_students(&students);
+            printf("%d %zu\\n", status && students == NULL, free_calls);
+            break;
+        default: return 71;
+    }
+    return 0;
 }`
 };
 
-export function buildGradingExercises(metadata, casesById, harnessesById = {}) {
+const LINK_ARGS = {
+  'c-dynamic-student-array': ['-Wl,--wrap=malloc', '-Wl,--wrap=free']
+};
+
+export function buildGradingExercises(metadata, casesById, harnessesById = {}, linkArgsById = {}) {
   if (!Array.isArray(metadata) || !casesById || typeof casesById !== 'object' || Array.isArray(casesById)
-      || !harnessesById || typeof harnessesById !== 'object' || Array.isArray(harnessesById)) {
+      || !harnessesById || typeof harnessesById !== 'object' || Array.isArray(harnessesById)
+      || !linkArgsById || typeof linkArgsById !== 'object' || Array.isArray(linkArgsById)) {
     throw new Error('채점 메타데이터와 사례 객체가 필요합니다.');
   }
   const byId = new Map(metadata.map(exercise => [exercise.id, exercise]));
@@ -376,10 +512,18 @@ export function buildGradingExercises(metadata, casesById, harnessesById = {}) {
   for (const id of Object.keys(harnessesById)) {
     if (byId.get(id)?.grader !== 'c-function') throw new Error(`${id}: 함수형이 아닌 문제에 하네스가 등록되었습니다.`);
   }
+  for (const [id, linkArgs] of Object.entries(linkArgsById)) {
+    if (byId.get(id)?.grader !== 'c-function' || !Array.isArray(linkArgs) || linkArgs.length === 0
+        || linkArgs.some(arg => typeof arg !== 'string' || !/^-Wl,--wrap=(malloc|free)$/.test(arg))
+        || new Set(linkArgs).size !== linkArgs.length) {
+      throw new Error(`${id}: linkArgs는 허용된 함수형 링커 래퍼 배열이어야 합니다.`);
+    }
+  }
   const result = new Map();
   for (const exercise of metadata) {
     if (exercise.grader === null) continue;
     const harness = harnessesById[exercise.id];
+    const linkArgs = linkArgsById[exercise.id] ?? [];
     if (exercise.grader === 'c-function' && (typeof harness !== 'string' || harness.trim() === '')) {
       throw new Error(`${exercise.id}: 함수 채점 하네스 누락입니다.`);
     }
@@ -402,9 +546,9 @@ export function buildGradingExercises(metadata, casesById, harnessesById = {}) {
         args: Object.freeze(exercise.grader === 'c-function' ? [...testCase.args] : [])
       });
     });
-    result.set(exercise.id, Object.freeze({ ...exercise, harness, cases: Object.freeze(normalized) }));
+    result.set(exercise.id, Object.freeze({ ...exercise, harness, linkArgs: Object.freeze([...linkArgs]), cases: Object.freeze(normalized) }));
   }
   return result;
 }
 
-export const gradingExercises = buildGradingExercises(exercises, CASES, HARNESSES);
+export const gradingExercises = buildGradingExercises(exercises, CASES, HARNESSES, LINK_ARGS);

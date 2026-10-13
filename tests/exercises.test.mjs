@@ -32,7 +32,7 @@ test('every lesson challenge has one validated public exercise definition', () =
 });
 
 test('only implemented C exercises advertise their explicit grading strategy', () => {
-  const expected = ['c-array', 'c-array-max-function', 'c-bounded-string-length', 'c-clamp-function', 'c-fgets-logical-line', 'c-functions', 'c-hello', 'c-loops', 'c-multi-file', 'c-pointer', 'c-string-count-function', 'c-strtol-integer-input', 'c-struct-array-binary-search', 'c-struct-array-search', 'c-struct-array-sort', 'c-struct-student-registry', 'c-struct-student-score', 'c-types'];
+  const expected = ['c-array', 'c-array-max-function', 'c-bounded-string-length', 'c-clamp-function', 'c-dynamic-student-array', 'c-fgets-logical-line', 'c-functions', 'c-hello', 'c-loops', 'c-multi-file', 'c-pointer', 'c-string-count-function', 'c-strtol-integer-input', 'c-struct-array-binary-search', 'c-struct-array-search', 'c-struct-array-sort', 'c-struct-student-registry', 'c-struct-student-score', 'c-types'];
   assert.deepEqual(exercises.filter(exercise => isGradedExercise(exercise.id)).map(exercise => exercise.id).sort(), expected);
   assert.deepEqual([...gradingExercises.keys()].sort(), expected);
   for (const id of expected) {
@@ -87,6 +87,11 @@ test('only implemented C exercises advertise their explicit grading strategy', (
   assert.equal(gradingExercises.get('c-struct-student-registry').cases.length, 10);
   assert.deepEqual(exerciseById('c-struct-student-registry').requiredFiles, ['main.c', 'student.c', 'student.h']);
   assert.deepEqual(exerciseById('c-struct-student-registry').prerequisites, ['c-struct-array-binary-search', 'c-multi-file']);
+  assert.equal(exerciseById('c-dynamic-student-array').grader, 'c-function');
+  assert.equal(gradingExercises.get('c-dynamic-student-array').cases.length, 12);
+  assert.deepEqual(exerciseById('c-dynamic-student-array').prerequisites, ['c-struct-student-registry']);
+  assert.match(gradingExercises.get('c-dynamic-student-array').harness, /int create_students\(size_t count, int initial_score, struct Student \*\*out_students\);/);
+  assert.deepEqual(gradingExercises.get('c-dynamic-student-array').linkArgs, ['-Wl,--wrap=malloc', '-Wl,--wrap=free']);
   for (const id of ['rust-mut', 'ds-stack', 'algo-binary']) assert.equal(isGradedExercise(id), false);
 });
 
@@ -115,4 +120,5 @@ test('private grading definitions reject missing, unknown and malformed cases', 
   const functionCases = { sample: [{ input: 'sample(1)', args: ['0'], expected: '1' }] };
   assert.throws(() => buildGradingExercises([functionExercise], functionCases), /하네스 누락/);
   assert.throws(() => buildGradingExercises([functionExercise], { sample: [{ input: 'sample(1)', expected: '1' }] }, { sample: 'int main(void){return 0;}' }), /args/);
+  assert.throws(() => buildGradingExercises([functionExercise], functionCases, { sample: 'int main(void){return 0;}' }, { sample: ['-pthread'] }), /linkArgs/);
 });
