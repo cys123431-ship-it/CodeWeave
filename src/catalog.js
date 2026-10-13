@@ -26,10 +26,11 @@ export const lessons = [
     sections:[
       {heading:'변수는 이름이 붙은 저장 공간이다',text:'int는 정수, double은 실수 값을 나타내는 데 자주 사용합니다. 변수는 선언 후 값을 대입할 수 있으며, 선언과 동시에 초기화할 수도 있습니다. 자료형마다 표현 범위가 다르고, 실제 메모리 크기는 구현 환경의 영향을 받을 수 있습니다.',code:'int count = 3;\ndouble price = 12.5;\ncount = count + 1;'},
       {heading:'정수 나눗셈은 실수 나눗셈과 다르다',text:'정수 7을 정수 2로 나누면 소수 부분을 버린 정수 결과 3이 나옵니다. 7.0 / 2처럼 실수 연산이 되도록 피연산자를 구성하면 3.5가 됩니다. 값뿐 아니라 연산식에 참여하는 자료형을 함께 살펴보세요.',code:'printf("%d\\n", 7 / 2);    // 3\nprintf("%.1f\\n", 7.0 / 2); // 3.5'},
-      {heading:'입력을 받으면 변환된 값을 저장한다',text:'scanf("%d", &a)는 입력된 정수를 a에 저장하도록 요청합니다. 이때 &a는 a의 주소를 나타냅니다. 실제 프로그램에서는 scanf의 반환값을 검사하여 올바르게 입력받았는지 확인하는 습관이 중요합니다.'}
+      {heading:'입력을 받으면 변환된 값을 저장한다',text:'scanf("%d", &a)는 입력된 정수를 a에 저장하도록 요청합니다. 이때 &a는 a의 주소를 나타냅니다. 실제 프로그램에서는 scanf의 반환값을 검사하여 올바르게 입력받았는지 확인하는 습관이 중요합니다.'},
+      {heading:'연산 전에 입력과 결과의 범위를 정한다',text:'C는 int가 적어도 -32767부터 32767까지 표현됨을 보장하지만 정확한 폭은 구현마다 다를 수 있습니다. 이 실습은 a와 b를 각각 -10000 이상 10000 이하로 제한해 합을 -20000 이상 20000 이하로 만듭니다. 따라서 계약에 맞는 입력에서는 signed int 덧셈 오버플로가 일어나지 않습니다. 채점기는 정확히 두 정수만 제공하며 범위 밖 값, 변환 실패, 조기 EOF와 추가 토큰은 이 기초 문제의 채점 대상이 아닙니다. 이런 입력 검증은 뒤의 fgets·strtol 단원에서 다룹니다.'}
     ],
     quiz:{question:'C에서 int a = 7, b = 2; 일 때 a / b의 값은?',options:['3.5','3','4','컴파일 오류'],answer:1,explanation:'정수끼리 / 연산을 하면 정수 나눗셈 결과가 만들어집니다.'},
-    challenge:{id:'c-types',title:'두 정수의 합',description:'표준 입력에서 정수 두 개를 받아 그 합을 숫자 하나로 출력하세요. 예: 4 7 → 11. 여러 입력을 검사합니다.',starter:'#include <stdio.h>\n\nint main(void) {\n    int a, b;\n    // TODO: 정수 두 개를 읽고 합을 출력하세요.\n    return 0;\n}',input:'4 7',expected:'11'}
+    challenge:{id:'c-types',title:'두 정수의 합',description:'표준 입력에서 -10000 이상 10000 이하의 정수 두 개를 받아 합을 출력하세요. 채점 입력은 계약에 맞는 정수 두 개만 제공하며 결과 범위는 -20000~20000입니다.',starter:'#include <stdio.h>\n\nint main(void) {\n    int a, b;\n    if (scanf("%d%d", &a, &b) != 2) return 1;\n    // TODO: 계약 범위 안의 두 정수 합을 출력하세요.\n    return 0;\n}',input:'4 7',expected:'11'}
   },
   {
     id:'c-loops',track:'c',level:'기초',title:'조건문과 반복문',minutes:28,source:'쉽게 풀어쓴 C언어 Express 6~7장, The C Programming Language 1.3·3장 (주제 참조)',
@@ -59,10 +60,11 @@ export const lessons = [
     sections:[
       {heading:'포인터 변수는 다른 객체의 주소를 저장한다',text:'&x는 x의 주소를 구하고 *p는 p가 가리키는 객체에 접근합니다. 포인터를 사용하기 전에는 유효한 객체를 가리키는지 확인해야 합니다. 포인터 선언의 *와 역참조 연산의 *는 나타나는 문맥에 따라 역할이 다릅니다.',code:'int x = 7;\nint *p = &x;\n*p = 8;\nprintf("%d\\n", x); // 8'},
       {heading:'주소와 값은 서로 다른 개념이다',text:'p는 주소를 담은 변수이고 *p는 그 주소에 위치한 int 객체의 값입니다. 따라서 p 자체를 바꾸는 동작과 *p를 바꾸는 동작을 구별해야 합니다.'},
-      {heading:'함수에서 호출자의 값을 바꿀 수 있다',text:'함수 인수로 주소를 전달하면 함수 안에서 호출자 객체의 값을 수정할 수 있습니다. 다만 잘못된 주소, 초기화하지 않은 포인터, 수명이 끝난 객체에 접근하는 것은 위험합니다.',code:'void add_one(int *value) {\n    ++(*value);\n}' }
+      {heading:'함수에서 호출자의 값을 바꿀 수 있다',text:'함수 인수로 주소를 전달하면 함수 안에서 호출자 객체의 값을 수정할 수 있습니다. 다만 잘못된 주소, 초기화하지 않은 포인터, 수명이 끝난 객체에 접근하는 것은 위험합니다.',code:'void add_one(int *value) {\n    ++(*value);\n}'},
+      {heading:'역참조 연산에도 값 범위 계약이 필요하다',text:'++(*value)는 가리키는 int가 표현할 수 있는 최댓값일 때 signed overflow를 일으켜 정의되지 않은 동작이 됩니다. 이 실습은 증가 전 n을 -10000 이상 9999 이하로 제한하므로 결과는 -9999 이상 10000 이하이고 C가 보장하는 최소 int 범위 안에 있습니다. 채점기는 정확히 한 정수만 제공하며 범위 밖 값, 변환 실패, 조기 EOF와 추가 토큰은 이 기초 문제의 채점 대상이 아닙니다.'}
     ],
     quiz:{question:'int x = 7; int *p = &x; *p = 8; 이후 x의 값은?',options:['7','8','주소값','정의되지 않음'],answer:1,explanation:'p는 x를 가리키고, *p = 8은 x에 8을 대입합니다.'},
-    challenge:{id:'c-pointer',title:'포인터로 값 증가시키기',description:'정수 n을 입력받아 함수를 통해 포인터로 그 값을 1 증가시킨 뒤 출력하세요.',starter:'#include <stdio.h>\n\nvoid add_one(int *value) {\n    // TODO: 포인터로 가리키는 값을 1 증가시키세요.\n}\n\nint main(void) {\n    int n;\n    if (scanf("%d", &n) != 1) return 1;\n    add_one(&n);\n    printf("%d\\n", n);\n    return 0;\n}',input:'7',expected:'8'}
+    challenge:{id:'c-pointer',title:'포인터로 값 증가시키기',description:'-10000 이상 9999 이하의 정수 n 하나를 입력받아 함수를 통해 포인터로 값을 1 증가시킨 뒤 출력하세요. 결과 범위는 -9999~10000입니다.',starter:'#include <stdio.h>\n\nvoid add_one(int *value) {\n    // TODO: 포인터로 가리키는 값을 1 증가시키세요.\n}\n\nint main(void) {\n    int n;\n    if (scanf("%d", &n) != 1) return 1;\n    add_one(&n);\n    printf("%d\\n", n);\n    return 0;\n}',input:'7',expected:'8'}
   },
   {
     id:'c-functions',track:'c',level:'중급',title:'함수 설계: 선언·호출·값 전달',minutes:45,source:'쉽게 풀어쓴 C언어 Express 함수 단원, The C Programming Language 4.1~4.3 (주제 참조·독자 작성)',

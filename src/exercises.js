@@ -84,10 +84,10 @@ export function validateExerciseMetadata(definitions) {
 
 export const exercises = Object.freeze(validateExerciseMetadata([
   { id:'c-hello', kind:'concept', language:'c', grader:'stdin-output', concepts:['program-structure','standard-output'], prerequisites:[], publicExample:{input:'입력 없음',output:'Hello, CodeWeave!'} },
-  { id:'c-types', kind:'concept', language:'c', grader:'stdin-output', concepts:['variables','integer-arithmetic','standard-input'], prerequisites:['c-hello'], publicExample:{input:'4 7',output:'11'} },
+  { id:'c-types', kind:'concept', language:'c', grader:'stdin-output', concepts:['variables','integer-arithmetic','standard-input','input-contract','signed-overflow'], prerequisites:['c-hello'], publicExample:{input:'4 7',output:'11'} },
   { id:'c-loops', kind:'concept', language:'c', grader:'stdin-output', concepts:['conditionals','for-loop','accumulator'], prerequisites:['c-types'], publicExample:{input:'5',output:'15'} },
   { id:'c-array', kind:'practice', language:'c', grader:'stdin-output', concepts:['arrays','iteration','maximum'], prerequisites:['c-loops'], publicExample:{input:'5\n2 9 -3 4 1',output:'9'} },
-  { id:'c-pointer', kind:'concept', language:'c', grader:'stdin-output', concepts:['address','dereference','pointer-parameter'], prerequisites:['c-types'], publicExample:{input:'7',output:'8'} },
+  { id:'c-pointer', kind:'concept', language:'c', grader:'stdin-output', concepts:['address','dereference','pointer-parameter','input-contract','signed-overflow'], prerequisites:['c-types'], publicExample:{input:'7',output:'8'} },
   { id:'c-functions', kind:'practice', language:'c', grader:'stdin-output', concepts:['function-prototype','parameters','return-value'], prerequisites:['c-loops','c-pointer'], publicExample:{input:'15 0 10',output:'10'} },
   { id:'c-clamp-function', kind:'practice', language:'c', grader:'c-function', concepts:['function-contract','separate-compilation','test-harness'], prerequisites:['c-functions'], publicExample:{input:'clamp(15, 0, 10)',output:'10'} },
   { id:'c-array-max-function', kind:'practice', language:'c', grader:'c-function', concepts:['array-parameter','length-contract','output-pointer','boundary-cases'], prerequisites:['c-array','c-pointer','c-clamp-function'], publicExample:{input:'find_max({4, -2, 9, 1}, 4, &out)',output:'1 9'} },

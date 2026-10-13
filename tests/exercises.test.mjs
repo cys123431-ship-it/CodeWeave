@@ -51,6 +51,14 @@ test('only implemented C exercises advertise their explicit grading strategy', (
   assert.ok(gradingExercises.get('c-array').cases.some(testCase =>
     testCase.input.startsWith('20\n') && testCase.expected === '-1'
   ), 'c-array: 선언한 원소 개수 상한 20을 검사해야 합니다.');
+  assert.equal(gradingExercises.get('c-types').cases.length, 5);
+  assert.ok(gradingExercises.get('c-types').cases.some(testCase =>
+    testCase.input === '10000 10000\n' && testCase.expected === '20000'
+  ), 'c-types: 선언한 피연산자 상한과 합의 상한을 검사해야 합니다.');
+  assert.equal(gradingExercises.get('c-pointer').cases.length, 5);
+  assert.ok(gradingExercises.get('c-pointer').cases.some(testCase =>
+    testCase.input === '9999\n' && testCase.expected === '10000'
+  ), 'c-pointer: 선언한 증가 전 상한과 결과 상한을 검사해야 합니다.');
   assert.equal(gradingExercises.get('c-functions').cases.length, 6);
   assert.ok(gradingExercises.get('c-functions').cases.some(testCase =>
     testCase.input === '5 5 5\n' && testCase.expected === '5'
