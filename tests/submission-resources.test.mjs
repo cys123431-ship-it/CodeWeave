@@ -115,7 +115,7 @@ test('CPU budget kills a bounded busy loop before a longer wall deadline', { ski
   const compiled = spawnSync('gcc', ['-std=c11', source, '-o', binary], { encoding: 'utf8' });
   assert.equal(compiled.status, 0, compiled.stderr);
   const result = await runSubmission(binary, [], { cwd: dir, timeout: 8000 });
-  assert.equal(result.error?.code, undefined, 'the OS CPU limit, not the wall timer, must terminate it');
+  assert.equal(result.error?.code, undefined, 'the OS CPU limit, not the wall timer, must terminate it: ' + result.stderr);
   assert.equal(result.status, null);
   assert.ok(['SIGKILL', 'SIGXCPU'].includes(result.signal));
 });

@@ -55,6 +55,10 @@ jobs:
           gcc --version
       - name: POSIX resource and descendant regressions
         run: node --test tests/submission-resources.test.mjs
+      - name: Diagnose macOS limits on failure
+        if: failure()
+        run: |
+          /bin/bash --noprofile --norc -c 'ulimit -a; ps -o vsz= -p $$; ulimit -v 65536'
 
   browser:
     runs-on: ubuntu-latest
