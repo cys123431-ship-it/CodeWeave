@@ -34,11 +34,27 @@ jobs:
           node --check dev-server.mjs
           node --check server/static-files.mjs
           node --check server/grading-exercises.mjs
+          node --check server/run-submission.mjs
           node --check sw.js
       - name: Verify local grading test compiler
         run: gcc --version
       - name: Unit tests
         run: npm test
+
+  macos-resources:
+    runs-on: macos-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify resource runner syntax and compiler
+        run: |
+          node --check server/run-submission.mjs
+          gcc --version
+      - name: POSIX resource and descendant regressions
+        run: node --test tests/submission-resources.test.mjs
 
   browser:
     runs-on: ubuntu-latest

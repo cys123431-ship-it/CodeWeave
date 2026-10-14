@@ -8,6 +8,7 @@ import { openLearningFile, parseRequestPath } from './server/static-files.mjs';
 import { gradingExercises } from './server/grading-exercises.mjs';
 import { parseMultiFileSubmission } from './src/multi-file.js';
 import { classifyCompilerDiagnostic } from './src/compiler-feedback.js';
+import { runSubmission } from './server/run-submission.mjs';
 
 // IMPORTANT: trusted local development only. Compiled student programs are not sandboxed.
 // This binds only to loopback and MUST NOT be put directly on a public network.
@@ -90,10 +91,10 @@ async function grade(req,res){
  if(compile.error||compile.status!==0){const compileOutput=(compile.stderr||compile.error?.message||'').slice(0,3000);result={ok:false,message:'컴파일 실패',compileOutput,compilerFeedback:classifyCompilerDiagnostic({output:compileOutput,error:compile.error}),tests:[]};}
  else{
  const tests=[];for(const tc of exercise.cases){
- const out=spawnSync(binary,tc.args,{input:exercise.grader==='c-function'?'':tc.input,encoding:'utf8',timeout:1300,maxBuffer:30_000,cwd:dir});
+ const out=await runSubmission(binary,tc.args,{input:exercise.grader==='c-function'?'':tc.input,cwd:dir});
  const actual=(out.stdout||'').trim();const expected=tc.expected.trim();
  const fatal=Boolean(out.error)||out.status!==0;
- tests.push({passed:!fatal&&actual===expected,detail:out.error?.code==='ETIMEDOUT'?'시간 제한 초과':out.error?'실행 오류':out.status!==0?'비정상 종료 ('+out.status+')':actual===expected?'출력 일치':'예상: '+expected+'; 실제: '+(actual.slice(0,100)||'(없음)')});
+ tests.push({passed:!fatal&&actual===expected,detail:out.error?.code==='ETIMEDOUT'?'시간 제한 초과':out.error?'실행 오류':out.status!==0?'비정상 종료 ('+(out.signal||out.status)+')':actual===expected?'출력 일치':'예상: '+expected+'; 실제: '+(actual.slice(0,100)||'(없음)')});
  if(fatal)break;
  }
  result={ok:tests.every(x=>x.passed),message:tests.filter(x=>x.passed).length+'/'+tests.length+'개 테스트 통과',tests,compileOutput:compile.stderr?.slice(0,1000)};
