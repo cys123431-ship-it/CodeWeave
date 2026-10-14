@@ -32,7 +32,7 @@ test('every lesson challenge has one validated public exercise definition', () =
 });
 
 test('only implemented C exercises advertise their explicit grading strategy', () => {
-  const expected = ['c-array', 'c-array-max-function', 'c-bounded-string-length', 'c-clamp-function', 'c-dynamic-student-array', 'c-fgets-logical-line', 'c-functions', 'c-hello', 'c-loops', 'c-multi-file', 'c-pointer', 'c-realloc-student-capacity', 'c-string-count-function', 'c-strtol-integer-input', 'c-struct-array-binary-search', 'c-struct-array-search', 'c-struct-array-sort', 'c-struct-student-registry', 'c-struct-student-score', 'c-types'];
+  const expected = ['c-array', 'c-array-max-function', 'c-bounded-string-length', 'c-clamp-function', 'c-dynamic-student-array', 'c-fgets-logical-line', 'c-functions', 'c-hello', 'c-loops', 'c-multi-file', 'c-pointer', 'c-realloc-student-capacity', 'c-string-count-function', 'c-strtol-integer-input', 'c-struct-array-binary-search', 'c-struct-array-search', 'c-struct-array-sort', 'c-struct-student-registry', 'c-struct-student-score', 'c-student-vector-push', 'c-types'];
   assert.deepEqual(exercises.filter(exercise => isGradedExercise(exercise.id)).map(exercise => exercise.id).sort(), expected);
   assert.deepEqual([...gradingExercises.keys()].sort(), expected);
   for (const id of expected) {
@@ -120,6 +120,12 @@ test('only implemented C exercises advertise their explicit grading strategy', (
   assert.deepEqual(exerciseById('c-realloc-student-capacity').prerequisites, ['c-dynamic-student-array']);
   assert.match(gradingExercises.get('c-realloc-student-capacity').harness, /int reserve_students\(struct Student \*\*students, size_t length,/);
   assert.deepEqual(gradingExercises.get('c-realloc-student-capacity').linkArgs, ['-Wl,--wrap=realloc']);
+  assert.equal(exerciseById('c-student-vector-push').grader, 'c-function');
+  assert.equal(gradingExercises.get('c-student-vector-push').cases.length, 17);
+  assert.deepEqual(exerciseById('c-student-vector-push').prerequisites, ['c-realloc-student-capacity']);
+  assert.match(gradingExercises.get('c-student-vector-push').harness, /int push_student\(struct Student \*\*students, size_t \*length,/);
+  assert.match(gradingExercises.get('c-student-vector-push').harness, /int reserve_students\(struct Student \*\*students, size_t length,/);
+  assert.deepEqual(gradingExercises.get('c-student-vector-push').linkArgs, []);
   for (const id of ['rust-mut', 'ds-stack', 'algo-binary']) assert.equal(isGradedExercise(id), false);
 });
 

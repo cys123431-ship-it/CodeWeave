@@ -175,6 +175,25 @@ const CASES = {
     {input:'0 capacity인데 배열 포인터가 NULL이 아님',args:['10'],expected:'0 1 0 0'},
     {input:'new_capacity * sizeof 오버플로 · realloc 전 거부',args:['11'],expected:'0 1 0 0 1'},
     {input:'주입된 realloc 실패 · 포인터·길이·용량·원소 보존',args:['12'],expected:'0 1 2 1 1'}
+  ],
+  'c-student-vector-push': [
+    {input:'push_student(&students, &length, &capacity, (struct Student){309, 95})',args:['0'],expected:'1 · 길이 3 · 용량 4 · 새 학생 309:95'},
+    {input:'여유 슬롯에 추가 · reserve 호출 없음',args:['1'],expected:'1 2 4 1 0'},
+    {input:'마지막 여유 슬롯 사용 · 용량 유지',args:['2'],expected:'1 4 4 1 0'},
+    {input:'정규 빈 상태의 첫 push · 0에서 4로 성장',args:['3'],expected:'1 1 4 1 1 4'},
+    {input:'용량 1이 가득 참 · 1에서 2로 성장',args:['4'],expected:'1 2 2 1 1 2'},
+    {input:'용량 3이 가득 참 · 3에서 6으로 성장',args:['5'],expected:'1 4 6 1 1 6'},
+    {input:'INT_MIN 학번과 INT_MAX 점수 레코드 복사',args:['6'],expected:'1 1 1 0'},
+    {input:'students == NULL',args:['7'],expected:'0 0'},
+    {input:'length == NULL',args:['8'],expected:'0 0'},
+    {input:'capacity == NULL',args:['9'],expected:'0 0'},
+    {input:'length가 capacity보다 큰 잘못된 상태',args:['10'],expected:'0 1 3 2 0'},
+    {input:'양수 capacity인데 배열 포인터가 NULL',args:['11'],expected:'0 1 0 2 0'},
+    {input:'0 capacity인데 배열 포인터가 NULL이 아님',args:['12'],expected:'0 1 0 0 0'},
+    {input:'capacity 두 배의 size_t 오버플로 · reserve 전 거부',args:['13'],expected:'0 1 1 0'},
+    {input:'두 배 용량의 바이트 크기 오버플로 · reserve가 거부',args:['14'],expected:'0 1 1 1 1'},
+    {input:'주입된 reserve 실패 · 포인터·길이·용량·원소 보존',args:['15'],expected:'0 1 2 2 1 1'},
+    {input:'세 번 push하며 1에서 2, 다시 4로 반복 성장',args:['16'],expected:'1 3 4 2 4 1'}
   ]
 };
 
@@ -680,6 +699,274 @@ int main(int argc, char **argv) {
                    reallocation_calls == 1
                        && requested_size == 4 * sizeof *students);
             free(before);
+            break;
+        default: return 71;
+    }
+    return 0;
+}`,
+  'c-student-vector-push': `#include <limits.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Student { int id; int score; };
+
+int push_student(struct Student **students, size_t *length,
+                 size_t *capacity, struct Student value);
+
+static size_t reserve_calls;
+static size_t observed_length;
+static size_t requested_capacity;
+static int fail_next_reserve;
+
+int reserve_students(struct Student **students, size_t length,
+                     size_t *capacity, size_t new_capacity) {
+    ++reserve_calls;
+    observed_length = length;
+    requested_capacity = new_capacity;
+    if (students == NULL || capacity == NULL || length > *capacity) return 0;
+    if ((*capacity == 0) != (*students == NULL)) return 0;
+    if (new_capacity < *capacity || new_capacity < length) return 0;
+    if (new_capacity == *capacity) return 1;
+    if (new_capacity > SIZE_MAX / sizeof **students) return 0;
+    if (fail_next_reserve) {
+        fail_next_reserve = 0;
+        return 0;
+    }
+    size_t old_capacity = *capacity;
+    struct Student *grown = realloc(*students, new_capacity * sizeof *grown);
+    if (grown == NULL) return 0;
+    for (size_t i = old_capacity; i < new_capacity; ++i) {
+        grown[i] = (struct Student){0, 0};
+    }
+    *students = grown;
+    *capacity = new_capacity;
+    return 1;
+}
+
+static struct Student *make_students(size_t count) {
+    return malloc(count * sizeof(struct Student));
+}
+
+int main(int argc, char **argv) {
+    if (argc != 2) return 70;
+    struct Student *students;
+    struct Student *before;
+    size_t length;
+    size_t capacity;
+    int status;
+    switch (atoi(argv[1])) {
+        case 0:
+            students = make_students(2);
+            if (students == NULL) return 72;
+            students[0] = (struct Student){101, 70};
+            students[1] = (struct Student){205, 88};
+            length = 2;
+            capacity = 2;
+            status = push_student(&students, &length, &capacity,
+                                  (struct Student){309, 95});
+            status = status == 1 && length == 3 && capacity == 4
+                     && students[0].id == 101 && students[0].score == 70
+                     && students[1].id == 205 && students[1].score == 88
+                     && students[2].id == 309 && students[2].score == 95
+                     && reserve_calls == 1 && observed_length == 2
+                     && requested_capacity == 4;
+            printf("%d · 길이 3 · 용량 4 · 새 학생 309:95\\n", status);
+            free(students);
+            break;
+        case 1:
+            students = make_students(4);
+            if (students == NULL) return 72;
+            students[0] = (struct Student){1, 10};
+            length = 1;
+            capacity = 4;
+            status = push_student(&students, &length, &capacity,
+                                  (struct Student){2, 20});
+            printf("%d %zu %zu %d %zu\\n", status, length, capacity,
+                   students[0].id == 1 && students[1].id == 2
+                       && students[1].score == 20,
+                   reserve_calls);
+            free(students);
+            break;
+        case 2:
+            students = make_students(4);
+            if (students == NULL) return 72;
+            students[0] = (struct Student){1, 10};
+            students[1] = (struct Student){2, 20};
+            students[2] = (struct Student){3, 30};
+            before = students;
+            length = 3;
+            capacity = 4;
+            status = push_student(&students, &length, &capacity,
+                                  (struct Student){4, 40});
+            printf("%d %zu %zu %d %zu\\n", status, length, capacity,
+                   students == before && students[3].id == 4
+                       && students[3].score == 40,
+                   reserve_calls);
+            free(students);
+            break;
+        case 3:
+            students = NULL;
+            length = 0;
+            capacity = 0;
+            status = push_student(&students, &length, &capacity,
+                                  (struct Student){7, 77});
+            printf("%d %zu %zu %d %zu %zu\\n", status, length, capacity,
+                   students != NULL && students[0].id == 7
+                       && students[0].score == 77,
+                   reserve_calls, requested_capacity);
+            free(students);
+            break;
+        case 4:
+            students = make_students(1);
+            if (students == NULL) return 72;
+            students[0] = (struct Student){1, 10};
+            length = 1;
+            capacity = 1;
+            status = push_student(&students, &length, &capacity,
+                                  (struct Student){2, 20});
+            printf("%d %zu %zu %d %zu %zu\\n", status, length, capacity,
+                   students[0].id == 1 && students[1].id == 2,
+                   reserve_calls, requested_capacity);
+            free(students);
+            break;
+        case 5:
+            students = make_students(3);
+            if (students == NULL) return 72;
+            for (size_t i = 0; i < 3; ++i) students[i] = (struct Student){(int)i, (int)i};
+            length = 3;
+            capacity = 3;
+            status = push_student(&students, &length, &capacity,
+                                  (struct Student){9, 90});
+            printf("%d %zu %zu %d %zu %zu\\n", status, length, capacity,
+                   students[0].id == 0 && students[2].id == 2
+                       && students[3].id == 9,
+                   reserve_calls, requested_capacity);
+            free(students);
+            break;
+        case 6:
+            students = make_students(2);
+            if (students == NULL) return 72;
+            length = 0;
+            capacity = 2;
+            status = push_student(&students, &length, &capacity,
+                                  (struct Student){INT_MIN, INT_MAX});
+            printf("%d %d %d %zu\\n", status,
+                   students[0].id == INT_MIN,
+                   students[0].score == INT_MAX, reserve_calls);
+            free(students);
+            break;
+        case 7:
+            length = 0;
+            capacity = 0;
+            status = push_student(NULL, &length, &capacity,
+                                  (struct Student){1, 1});
+            printf("%d %zu\\n", status, reserve_calls);
+            break;
+        case 8:
+            students = NULL;
+            capacity = 0;
+            status = push_student(&students, NULL, &capacity,
+                                  (struct Student){1, 1});
+            printf("%d %zu\\n", status, reserve_calls);
+            break;
+        case 9:
+            students = NULL;
+            length = 0;
+            status = push_student(&students, &length, NULL,
+                                  (struct Student){1, 1});
+            printf("%d %zu\\n", status, reserve_calls);
+            break;
+        case 10:
+            students = make_students(2);
+            if (students == NULL) return 72;
+            before = students;
+            length = 3;
+            capacity = 2;
+            status = push_student(&students, &length, &capacity,
+                                  (struct Student){1, 1});
+            printf("%d %d %zu %zu %zu\\n", status, students == before,
+                   length, capacity, reserve_calls);
+            free(students);
+            break;
+        case 11:
+            students = NULL;
+            length = 0;
+            capacity = 2;
+            status = push_student(&students, &length, &capacity,
+                                  (struct Student){1, 1});
+            printf("%d %d %zu %zu %zu\\n", status, students == NULL,
+                   length, capacity, reserve_calls);
+            break;
+        case 12:
+            students = make_students(1);
+            if (students == NULL) return 72;
+            before = students;
+            length = 0;
+            capacity = 0;
+            status = push_student(&students, &length, &capacity,
+                                  (struct Student){1, 1});
+            printf("%d %d %zu %zu %zu\\n", status, students == before,
+                   length, capacity, reserve_calls);
+            free(students);
+            break;
+        case 13:
+            students = (struct Student *)(uintptr_t)1;
+            capacity = SIZE_MAX / 2 + 1;
+            length = capacity;
+            status = push_student(&students, &length, &capacity,
+                                  (struct Student){1, 1});
+            printf("%d %d %d %zu\\n", status,
+                   students == (struct Student *)(uintptr_t)1,
+                   length == capacity, reserve_calls);
+            break;
+        case 14: {
+            size_t original_capacity = SIZE_MAX / sizeof(struct Student);
+            students = (struct Student *)(uintptr_t)1;
+            capacity = original_capacity;
+            length = original_capacity;
+            status = push_student(&students, &length, &capacity,
+                                  (struct Student){1, 1});
+            printf("%d %d %d %d %zu\\n", status,
+                   students == (struct Student *)(uintptr_t)1,
+                   length == original_capacity,
+                   capacity == original_capacity, reserve_calls);
+            break;
+        }
+        case 15:
+            students = make_students(2);
+            if (students == NULL) return 72;
+            students[0] = (struct Student){101, 70};
+            students[1] = (struct Student){205, 88};
+            before = students;
+            length = 2;
+            capacity = 2;
+            fail_next_reserve = 1;
+            status = push_student(&students, &length, &capacity,
+                                  (struct Student){309, 95});
+            printf("%d %d %zu %zu %d %zu\\n", status, students == before,
+                   length, capacity,
+                   students[0].id == 101 && students[0].score == 70
+                       && students[1].id == 205 && students[1].score == 88,
+                   reserve_calls);
+            free(students);
+            break;
+        case 16:
+            students = make_students(1);
+            if (students == NULL) return 72;
+            students[0] = (struct Student){1, 10};
+            length = 1;
+            capacity = 1;
+            status = push_student(&students, &length, &capacity,
+                                  (struct Student){2, 20});
+            status = status && push_student(&students, &length, &capacity,
+                                             (struct Student){3, 30});
+            printf("%d %zu %zu %zu %zu %d\\n", status, length, capacity,
+                   reserve_calls, requested_capacity,
+                   students[0].id == 1 && students[1].id == 2
+                       && students[2].id == 3);
+            free(students);
             break;
         default: return 71;
     }

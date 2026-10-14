@@ -51,6 +51,7 @@ const structArrayBinarySearch = '#include <stddef.h>\nstruct Student{int id;int 
 const structArrayBinarySearchWrong = '#include <stddef.h>\nstruct Student{int id;int score;};\nint find_first_student_by_id(const struct Student a[],size_t n,int id,size_t *out){if(!a||!out||n==0)return 0;size_t l=0,r=n-1;while(l<=r){size_t m=l+(r-l)/2;if(a[m].id==id){*out=m;return 1;}if(a[m].id<id)l=m+1;else{if(m==0)break;r=m-1;}}return 0;}';
 const dynamicStudentArray = '#include <stddef.h>\n#include <stdint.h>\n#include <stdlib.h>\nstruct Student{int id;int score;};\nint create_students(size_t count,int initial_score,struct Student **out_students){if(!out_students||initial_score<0||initial_score>100)return 0;if(count==0){*out_students=NULL;return 1;}struct Student *students=NULL;if(count>SIZE_MAX/sizeof *students)return 0;students=malloc(count*sizeof *students);if(!students)return 0;for(size_t i=0;i<count;++i){students[i].id=0;students[i].score=initial_score;}*out_students=students;return 1;}\nvoid destroy_students(struct Student **students){if(!students)return;free(*students);*students=NULL;}';
 const reallocStudentCapacity = '#include <stddef.h>\n#include <stdint.h>\n#include <stdlib.h>\nstruct Student{int id;int score;};\nint reserve_students(struct Student **students,size_t length,size_t *capacity,size_t new_capacity){if(!students||!capacity||length>*capacity)return 0;if((*capacity==0)!=(*students==NULL))return 0;if(new_capacity<*capacity||new_capacity<length)return 0;if(new_capacity==*capacity)return 1;if(new_capacity>SIZE_MAX/sizeof **students)return 0;size_t old=*capacity;struct Student *grown=realloc(*students,new_capacity*sizeof *grown);if(!grown)return 0;for(size_t i=old;i<new_capacity;++i)grown[i]=(struct Student){0,0};*students=grown;*capacity=new_capacity;return 1;}';
+const studentVectorPush = '#include <stddef.h>\n#include <stdint.h>\nstruct Student{int id;int score;};\nint reserve_students(struct Student **students,size_t length,size_t *capacity,size_t new_capacity);\nint push_student(struct Student **students,size_t *length,size_t *capacity,struct Student value){if(!students||!length||!capacity||*length>*capacity||((*capacity==0)!=(*students==NULL)))return 0;if(*length==*capacity){size_t next;if(*capacity==0)next=4;else{if(*capacity>SIZE_MAX/2)return 0;next=*capacity*2;}if(!reserve_students(students,*length,capacity,next))return 0;}(*students)[*length]=value;(*length)++;return 1;}';
 const multiFileSolution = [
   {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\nint main(void){int v,l,h;if(scanf("%d%d%d",&v,&l,&h)!=3)return 1;printf("%d\\n",clamp(v,l,h));return 0;}'},
   {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
@@ -107,14 +108,15 @@ try {
     'c-multi-file': serializeMultiFileSubmission(multiFileSolution, { requiredNames: ['main.c','functions.c','functions.h'] }),
     'c-struct-student-registry': serializeMultiFileSubmission(studentRegistrySolution, { requiredNames: ['main.c','student.c','student.h'] }),
     'c-dynamic-student-array': dynamicStudentArray,
-    'c-realloc-student-capacity': reallocStudentCapacity
+    'c-realloc-student-capacity': reallocStudentCapacity,
+    'c-student-vector-push': studentVectorPush
   };
   for (const [exerciseId, code] of Object.entries(solutions)) {
     const response = await fetch(base + '/api/grade', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ exerciseId, code }) });
     const result = await response.json();
     assert.equal(result.ok, true, exerciseId + ': ' + JSON.stringify(result));
   }
-  console.log('PASS: all twenty C exercises compile and pass their real GCC tests');
+  console.log('PASS: all twenty-one C exercises compile and pass their real GCC tests');
 
   browser = await chromium.launch({ headless: true });
   context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
@@ -370,6 +372,18 @@ try {
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'realloc student capacity mobile overflow');
   await page.setViewportSize({ width: 1366, height: 900 });
   console.log('PASS: realloc lesson renders its preserved-failure figure and passes deterministic failure injection');
+  await page.goto(base + '/#lesson:c-student-vector-push');
+  await expect(page.locator('.detail-head h1')).toHaveText('동적 배열: 학생 한 명 안전하게 추가하기');
+  await expect(page.locator('.figure-box svg')).toContainText('reserve_students');
+  await expect(page.locator('.figure-box svg')).toContainText('0 → 4');
+  await expect(page.locator('#code-input')).toHaveValue(/push_student/);
+  await expect(page.locator('#code-input')).not.toHaveValue(/int main\s*\(/);
+  await submit(page, studentVectorPush);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'student vector push mobile overflow');
+  await page.setViewportSize({ width: 1366, height: 900 });
+  console.log('PASS: vector push lesson renders geometric growth and passes reserve reuse cases');
   await page.evaluate(({ failed }) => {
     localStorage.clear();
     localStorage.setItem('codeweave.drafts.v1', JSON.stringify({ 'c-types': failed, 'rust-mut': 'keep rust draft' }));
@@ -403,6 +417,7 @@ try {
   await expect(bench.locator('#lesson-select option[value="c-struct-student-registry"]')).toHaveCount(1);
   await expect(bench.locator('#lesson-select option[value="c-dynamic-student-array"]')).toHaveCount(1);
   await expect(bench.locator('#lesson-select option[value="c-realloc-student-capacity"]')).toHaveCount(1);
+  await expect(bench.locator('#lesson-select option[value="c-student-vector-push"]')).toHaveCount(1);
   await bench.locator('#lesson-select').selectOption('c-types');
   await submit(page, failed);
   await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);

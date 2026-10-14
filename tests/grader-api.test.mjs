@@ -65,6 +65,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     'c-struct-array-binary-search': '#include <stddef.h>\nstruct Student{int id;int score;};\nint find_first_student_by_id(const struct Student students[],size_t count,int target_id,size_t *out_index){if(count==0||!students||!out_index)return 0;size_t left=0,right=count;while(left<right){size_t mid=left+(right-left)/2;if(students[mid].id<target_id)left=mid+1;else right=mid;}if(left<count&&students[left].id==target_id){*out_index=left;return 1;}return 0;}',
     'c-dynamic-student-array': '#include <stddef.h>\n#include <stdint.h>\n#include <stdlib.h>\nstruct Student{int id;int score;};\nint create_students(size_t count,int initial_score,struct Student **out_students){if(!out_students||initial_score<0||initial_score>100)return 0;if(count==0){*out_students=NULL;return 1;}struct Student *students=NULL;if(count>SIZE_MAX/sizeof *students)return 0;students=malloc(count*sizeof *students);if(!students)return 0;for(size_t i=0;i<count;++i){students[i].id=0;students[i].score=initial_score;}*out_students=students;return 1;}\nvoid destroy_students(struct Student **students){if(!students)return;free(*students);*students=NULL;}',
     'c-realloc-student-capacity': '#include <stddef.h>\n#include <stdint.h>\n#include <stdlib.h>\nstruct Student{int id;int score;};\nint reserve_students(struct Student **students,size_t length,size_t *capacity,size_t new_capacity){if(!students||!capacity||length>*capacity)return 0;if((*capacity==0)!=(*students==NULL))return 0;if(new_capacity<*capacity||new_capacity<length)return 0;if(new_capacity==*capacity)return 1;if(new_capacity>SIZE_MAX/sizeof **students)return 0;size_t old=*capacity;struct Student *grown=realloc(*students,new_capacity*sizeof *grown);if(!grown)return 0;for(size_t i=old;i<new_capacity;++i)grown[i]=(struct Student){0,0};*students=grown;*capacity=new_capacity;return 1;}',
+    'c-student-vector-push': '#include <stddef.h>\n#include <stdint.h>\nstruct Student{int id;int score;};\nint reserve_students(struct Student **students,size_t length,size_t *capacity,size_t new_capacity);\nint push_student(struct Student **students,size_t *length,size_t *capacity,struct Student value){if(!students||!length||!capacity||*length>*capacity||((*capacity==0)!=(*students==NULL)))return 0;if(*length==*capacity){size_t next;if(*capacity==0)next=4;else{if(*capacity>SIZE_MAX/2)return 0;next=*capacity*2;}if(!reserve_students(students,*length,capacity,next))return 0;}(*students)[*length]=value;(*length)++;return 1;}',
     'c-multi-file': serializeMultiFileSubmission([
       {name:'main.c',content:'#include <stdio.h>\n#include "functions.h"\nint main(void){int v,l,h;if(scanf("%d%d%d",&v,&l,&h)!=3)return 1;printf("%d\\n",clamp(v,l,h));return 0;}'},
       {name:'functions.c',content:'#include "functions.h"\nint clamp(int v,int l,int h){if(v<l)return l;if(v>h)return h;return v;}'},
@@ -377,6 +378,24 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     const { result } = await submit('c-realloc-student-capacity', code);
     assert.equal(result.ok, false);
     assert.equal(result.tests[12].passed, false);
+  });
+  await t.test('student vector push rejects linear growth instead of the declared geometric policy', async () => {
+    const code = '#include <stddef.h>\n#include <stdint.h>\nstruct Student{int id;int score;};\nint reserve_students(struct Student **p,size_t n,size_t *c,size_t next);\nint push_student(struct Student **p,size_t *n,size_t *c,struct Student value){if(!p||!n||!c||*n>*c||((*c==0)!=(*p==NULL)))return 0;if(*n==*c){if(*c==SIZE_MAX)return 0;size_t next=*c==0?1:*c+1;if(!reserve_students(p,*n,c,next))return 0;}(*p)[*n]=value;(*n)++;return 1;}';
+    const { result } = await submit('c-student-vector-push', code);
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[3].passed, false);
+  });
+  await t.test('student vector push preserves length when reserve failure is injected', async () => {
+    const code = '#include <stddef.h>\n#include <stdint.h>\nstruct Student{int id;int score;};\nint reserve_students(struct Student **p,size_t n,size_t *c,size_t next);\nint push_student(struct Student **p,size_t *n,size_t *c,struct Student value){if(!p||!n||!c||*n>*c||((*c==0)!=(*p==NULL)))return 0;if(*n==*c){size_t next;if(*c==0)next=4;else{if(*c>SIZE_MAX/2)return 0;next=*c*2;}if(!reserve_students(p,*n,c,next)){(*n)++;return 0;}}(*p)[*n]=value;(*n)++;return 1;}';
+    const { result } = await submit('c-student-vector-push', code);
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[15].passed, false);
+  });
+  await t.test('student vector push must reuse reserve instead of duplicating allocation', async () => {
+    const code = '#include <stddef.h>\n#include <stdint.h>\n#include <stdlib.h>\nstruct Student{int id;int score;};\nint push_student(struct Student **p,size_t *n,size_t *c,struct Student value){if(!p||!n||!c||*n>*c||((*c==0)!=(*p==NULL)))return 0;if(*n==*c){size_t next;if(*c==0)next=4;else{if(*c>SIZE_MAX/2)return 0;next=*c*2;}if(next>SIZE_MAX/sizeof **p)return 0;struct Student *q=realloc(*p,next*sizeof *q);if(!q)return 0;*p=q;*c=next;}(*p)[*n]=value;(*n)++;return 1;}';
+    const { result } = await submit('c-student-vector-push', code);
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[0].passed, false);
   });
   await t.test('multi-file submission validates the file manifest before GCC', async () => {
     const missing = MULTI_FILE_DRAFT_PREFIX + JSON.stringify({ version: 1, files: [
