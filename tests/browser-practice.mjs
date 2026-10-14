@@ -122,6 +122,18 @@ try {
   context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
   context.on('page', p => p.on('pageerror', e => errors.push(e.message)));
   page = await context.newPage();
+  await page.goto(base + '/#lesson:c-hello');
+  await expect(page.locator('.detail-head h1')).toHaveText('첫 C 프로그램의 구조');
+  await expect(page.locator('.figure-box svg')).toContainText('전처리');
+  await expect(page.locator('.figure-box svg')).toContainText('목적 파일 hello.o');
+  await expect(page.locator('.article')).toContainText('printf 반환값과 출력 오류');
+  await expect(page.locator('#code-input')).toHaveValue(/int main\(void\)/);
+  await submit(page, solutions['c-hello']);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
+  await page.locator('#mark-theory').click();
+  await page.locator('[data-quiz="c-hello"][data-choice="0"]').click();
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  console.log('PASS: first C lesson renders the detailed build pipeline and reaches mastery through a real submission');
   await page.goto(base + '/#lesson:c-functions');
   await expect(page.locator('.detail-head h1')).toHaveText('함수 설계: 선언·호출·값 전달');
   await expect(page.locator('.figure-box svg')).toContainText('clamp');
