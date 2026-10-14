@@ -8,7 +8,10 @@ const CASES = {
     {input:'5\n2 9 -3 4 1\n',expected:'9'},
     {input:'1\n-12\n',expected:'-12'},
     {input:'4\n-9 -3 -5 -10\n',expected:'-3'},
-    {input:'20\n-20 -19 -18 -17 -16 -15 -14 -13 -12 -11 -10 -9 -8 -7 -6 -5 -4 -3 -2 -1\n',expected:'-1'}
+    {input:'20\n-20 -19 -18 -17 -16 -15 -14 -13 -12 -11 -10 -9 -8 -7 -6 -5 -4 -3 -2 -1\n',expected:'-1'},
+    {input:'4\n9 2 -3 1\n',expected:'9'},
+    {input:'6\n-7 0 -7 0 -9 -2\n',expected:'0'},
+    {input:'3\n-32767 0 32767\n',expected:'32767'}
   ],
   'c-pointer': [{input:'7\n',expected:'8'},{input:'-4\n',expected:'-3'},{input:'0\n',expected:'1'},{input:'9999\n',expected:'10000'},{input:'-10000\n',expected:'-9999'}],
   'c-functions': [{input:'5 0 10\n',expected:'5'},{input:'-3 0 10\n',expected:'0'},{input:'15 0 10\n',expected:'10'},{input:'-20 -10 -1\n',expected:'-10'},{input:'-1 -10 -1\n',expected:'-1'},{input:'5 5 5\n',expected:'5'}],

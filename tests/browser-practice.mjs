@@ -92,7 +92,7 @@ try {
     'c-hello': '#include <stdio.h>\nint main(void){puts("Hello, CodeWeave!");return 0;}',
     'c-types': correct,
     'c-loops': '#include <stdio.h>\nint main(void){int n;if(scanf("%d",&n)!=1)return 1;long sum=0;for(int i=1;i<=n;i++)sum+=i;printf("%ld\\n",sum);return 0;}',
-    'c-array': '#include <stdio.h>\nint main(void){int n,x,m;scanf("%d%d",&n,&m);for(int i=1;i<n;i++){scanf("%d",&x);if(x>m)m=x;}printf("%d\\n",m);return 0;}',
+    'c-array': "#include <stddef.h>\n#include <stdio.h>\n\nstatic int max_nonempty(const int values[], size_t count) {\n    int maximum = values[0];\n    for (size_t i = 1; i < count; ++i) {\n        if (values[i] > maximum) {\n            maximum = values[i];\n        }\n    }\n    return maximum;\n}\n\nint main(void) {\n    enum { CAPACITY = 20 };\n    int values[CAPACITY];\n    int count_input;\n    if (scanf(\"%d\", &count_input) != 1 || count_input < 1 || count_input > CAPACITY) {\n        return 1;\n    }\n    size_t count = (size_t)count_input;\n    for (size_t i = 0; i < count; ++i) {\n        if (scanf(\"%d\", &values[i]) != 1) {\n            return 1;\n        }\n    }\n    printf(\"%d\\n\", max_nonempty(values, count));\n    return 0;\n}",
     'c-pointer': '#include <stdio.h>\nvoid add_one(int *p){++*p;}\nint main(void){int n;scanf("%d",&n);add_one(&n);printf("%d\\n",n);return 0;}',
     'c-functions': '#include <stdio.h>\nint clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}\nint main(void){int value,low,high;scanf("%d%d%d",&value,&low,&high);printf("%d\\n",clamp(value,low,high));return 0;}',
     'c-clamp-function': functionOnly,
@@ -159,6 +159,31 @@ try {
   }
   await page.setViewportSize({ width: 1366, height: 900 });
   console.log('PASS: detailed loops lesson rejects an off-by-one, reaches mastery and fits 390px');
+  await page.goto(base + '/#lesson:c-array');
+  await expect(page.locator('.detail-head h1')).toHaveText('배열과 함수');
+  await expect(page.locator('.article > section')).toHaveCount(24);
+  await expect(page.locator('.article')).toContainText('sizeof로 구할 수 있는 길이');
+  await expect(page.locator('.article')).toContainText('최댓값 추적과 불변식');
+  await expect(page.locator('.figure-box svg')).toContainText('[0, count)');
+  await expect(page.locator('.figure-box svg')).toContainText('접근 금지');
+  await submit(page, solutions['c-array'].replace('int maximum = values[0];', 'int maximum = 0;'));
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await submit(page, solutions['c-array']);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('#mark-theory').click();
+  await page.locator('[data-quiz="c-array"][data-choice="2"]').click();
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'array introduction mobile overflow');
+  const arrayFigure = await page.locator('.figure-box svg').boundingBox();
+  assert.ok(arrayFigure && arrayFigure.x >= 0 && arrayFigure.x + arrayFigure.width <= 390, 'array figure fits the mobile viewport');
+  if (qaDir) {
+    await mkdir(qaDir, { recursive: true });
+    await page.locator('.figure-box').screenshot({ path: path.join(qaDir, 'array-half-open-mobile.png') });
+  }
+  await page.setViewportSize({ width: 1366, height: 900 });
+  console.log('PASS: array introduction rejects a zero candidate, reaches mastery and fits 390px');
   await page.goto(base + '/#lesson:c-functions');
   await expect(page.locator('.detail-head h1')).toHaveText('함수 설계: 선언·호출·값 전달');
   await expect(page.locator('.figure-box svg')).toContainText('clamp');
@@ -576,6 +601,13 @@ try {
   await expect(page.locator('.figure-box svg')).toContainText('갱신');
   await expect(page.locator('.article')).toContainText('누산형 범위는 반복 횟수와 다르다');
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'offline loops lesson mobile overflow');
+  await page.goto(base + '/#lesson:c-array');
+  await page.reload();
+  await expect(page.locator('.detail-head h1')).toHaveText('배열과 함수');
+  await expect(page.locator('.article > section')).toHaveCount(24);
+  await expect(page.locator('.figure-box svg')).toContainText('접근 금지');
+  await expect(page.locator('.article')).toContainText('함수 매개변수와 별도 길이');
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'offline array introduction mobile overflow');
   await context.setOffline(false);
   assert.deepEqual(errors, []);
   console.log('PASS: 390px mobile layout and offline reload of drafts/history; no browser exceptions');

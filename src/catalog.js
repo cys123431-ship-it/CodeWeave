@@ -94,15 +94,36 @@ export const lessons = [
     challenge:{id:'c-loops',title:'1부터 n까지의 합',description:'0 이상 1000 이하의 정수 n을 입력받아 1부터 n까지 합을 출력하세요. n=0이면 0을 출력합니다. 최대 합 500500은 최소 int 범위를 넘으므로 long 누산형과 %ld 출력을 사용하세요. 채점 입력은 계약에 맞는 정수 한 개입니다.',starter:'#include <stdio.h>\n\nint main(void) {\n    int n;\n    if (scanf("%d", &n) != 1) return 1;\n    // TODO: for 문으로 합을 계산하세요.\n    return 0;\n}',input:'5',expected:'15'}
   },
   {
-    id:'c-array',track:'c',level:'중급',title:'배열과 함수',minutes:32,source:'쉽게 풀어쓴 C언어 Express 8~9장, The C Programming Language 1.6·4장 (주제 참조)',
-    summary:'배열 요소에 접근하고 기능을 별도 함수로 분리합니다.',figure:'array',
+    id:'c-array',track:'c',level:'중급',title:'배열과 함수',minutes:65,source:'배열 객체·길이·순회·함수 계약에 관한 독자 작성 단원; C11 위원회 초안 N1570 의미 검토',
+    summary:'배열의 객체·유효 인덱스·사용 길이를 나누고 최댓값 불변식을 함수와 경계 테스트로 연결합니다.',figure:'array-half-open',
     sections:[
-      {heading:'배열의 인덱스는 0에서 시작한다',text:'int numbers[5]에는 int형 원소 다섯 개를 담을 수 있습니다. 인덱스는 0부터 4까지 유효합니다. 범위 밖의 원소에 접근하는 동작은 C에서 정의되지 않으므로, 반복문의 경계를 정확히 지켜야 합니다.',code:'int numbers[5] = {2, 4, 6, 8, 10};\nprintf("%d\\n", numbers[2]); // 6'},
-      {heading:'함수로 동작을 분리한다',text:'배열 출력, 최대값 찾기, 정렬 같은 기능은 함수로 분리할 수 있습니다. 함수를 호출할 때는 매개변수의 자료형과 역할을 확인해야 합니다. 배열을 함수에 전달하는 경우 배열의 길이도 함께 넘기면 안전한 반복 범위를 알 수 있습니다.',code:'int find_max(const int a[], int n) {\n    int m = a[0];\n    for (int i = 1; i < n; i++) {\n        if (a[i] > m) m = a[i];\n    }\n    return m;\n}'},
-      {heading:'문제를 나누면 시험과 실습에 유리하다',text:'전체 프로그램을 한 번에 작성하는 대신 입력 처리, 배열 생성, 계산, 출력으로 나누어 보면 오류 원인을 쉽게 좁힐 수 있습니다. 이후 별도의 .c 파일과 헤더 파일을 활용하는 프로젝트 구조로 확장할 수 있습니다.'}
+      {"heading":"단원 개요","text":"배열의 객체·원소·인덱스·초기화와 사용 길이를 구분합니다. 반복문으로 유효 범위를 처리하고 실제 원소에서 시작하는 최댓값을 함수로 분리한 뒤 기존 실습의 경계 입력으로 확인합니다."},
+      {"heading":"필요한 이유","text":"여러 값을 각각의 변수로 선언하면 반복 처리가 어렵습니다. 배열은 같은 형의 값을 순서대로 보관해 한 규칙을 여러 원소에 적용합니다. 크기를 선언했다고 접근이 자동 검사되는 것은 아니므로 경계를 명세로 정합니다."},
+      {"heading":"선수 지식","text":"변수의 형·초기화·대입·scanf 변환 개수와 for의 조건·갱신·불변식을 복습합니다. 배열을 받는 함수의 최소 형식도 소개하며 포인터 산술이나 동적 할당을 먼저 알 필요는 없습니다."},
+      {"heading":"학습 목표","text":"배열 객체와 원소, 원소 수와 마지막 인덱스를 구별합니다. 유효 범위 [0, count)를 순회하고 초기화·용량·사용 길이·sizeof를 설명하며, 별도 길이를 받는 함수와 최댓값 불변식을 구현해 음수·단일·첫/끝·중복을 검사합니다."},
+      {"heading":"배열 객체와 연속된 원소","text":"int a[5]는 int 원소 다섯 개로 구성된 배열 객체입니다. 같은 배열의 원소는 연속 배치되지만 int가 항상 4바이트인 것은 아닙니다. 그림은 원소 관계를 설명하며 주소 숫자·바이트 폭을 약속하지 않습니다."},
+      {"heading":"선언 용량과 사용 길이","text":"int a[20]의 물리적 용량은 20입니다. 입력 count가 5이면 이번 계산의 데이터는 앞 다섯 칸입니다. 고정 길이 배열을 대입으로 늘릴 수는 없습니다. VLA와 동적 확장은 후속 주제이며 이번 예제는 고정 용량만 사용합니다."},
+      {"heading":"인덱스와 반열린 구간","text":"원소 수 count에서 유효 인덱스는 0부터 count-1입니다. [0, count)는 0을 포함하고 count를 제외합니다. int a[5]의 a[5] 읽기·쓰기는 정의되지 않은 동작입니다. a[20]의 a[count]가 용량 안이어도 사용 데이터 밖일 수 있으므로 물리 경계와 논리 경계를 나눕니다."},
+      {"heading":"초기화와 미초기화 읽기","text":"자동 저장 기간의 int a[5];는 원소를 0으로 초기화하지 않습니다. 읽기 전에 유효 값을 저장해야 합니다. int a[5]={4,-2};의 뒤 세 원소는 0이고 {0} 초기화는 모두 0입니다. 채점용 배열은 성공적으로 입력받은 앞 count개만 읽습니다. 다음은 선언 코드 조각입니다.","code":"int partial[5] = {4, -2}; // 4, -2, 0, 0, 0\nint zeros[5] = {0};      // 모든 원소 0"},
+      {"heading":"원소 읽기·쓰기와 배열 전체 대입","text":"a[i]는 원소 객체입니다. 유효 범위에서 a[2]=7;로 값을 바꾸지만 배열 전체를 a=b;로 복사할 수는 없습니다. 원소별 복사 전에 목적 배열 용량을 검사합니다. 다음은 초기화된 다섯 칸 배열에서 실행할 코드 조각입니다.","code":"a[2] = 7;\nprintf(\"%d\\n\", a[2]); // 7"},
+      {"heading":"순회는 i < count로 제한한다","text":"i=0부터 i < count인 동안만 읽습니다. i <= count는 사용 범위 뒤를 한 번 더 처리합니다. 이번 입력 count는 1~20이라 첫 원소가 존재합니다. 빈 배열의 최댓값은 별도 실패 정책 없이는 정의할 수 없습니다."},
+      {"heading":"sizeof로 구할 수 있는 길이","text":"다음은 실제 고정 배열 객체가 있는 범위의 코드 조각입니다. sizeof a / sizeof a[0]는 물리적 원소 수입니다. sizeof는 바이트 수이고 결과 형은 size_t이므로 %zu로 출력합니다. a[20]의 결과는 입력 개수와 무관하게 20입니다. int·포인터 폭을 숫자로 가정하지 않습니다.","code":"size_t capacity = sizeof a / sizeof a[0]; // 실제 배열 객체일 때"},
+      {"heading":"함수 매개변수와 별도 길이","text":"매개변수 const int values[]는 원소를 가리키는 포인터 형으로 조정됩니다. 배열 전체나 길이가 자동으로 복사되지 않으므로 size_t count를 별도로 받습니다. 함수 안 sizeof values는 배열 전체 크기가 아니며 길이 계산에 쓰지 않습니다."},
+      {"heading":"const와 호출자 전제","text":"const int values[]는 이 접근 경로로 원소를 수정하지 않는 약속입니다. max_nonempty의 호출자는 count >= 1과 count개 초기화된 원소의 읽기 가능성을 보장해야 합니다. 포인터와 길이 인수만으로 실제 객체 유효성이 자동 증명되지는 않습니다."},
+      {"heading":"최댓값은 values[0]에서 시작한다","text":"후보를 0으로 잡으면 전체 음수 배열에서 존재하지 않는 0을 반환합니다. values[0]로 시작하고 인덱스 1부터 비교합니다. 단일 원소는 추가 비교 없이 그 값을 반환합니다. 최댓값 비교에 합이나 뺄셈이 필요하지 않습니다."},
+      {"heading":"최댓값 추적과 불변식","text":"{-9,-3,-5,-10}에서 후보는 -9로 시작해 -3,-3,-3이 됩니다. 조건 검사 직전 maximum은 [0,i)의 최댓값입니다. 현재 원소를 비교하고 i를 늘리면 불변식이 유지되고 i=count에서 전체 사용 범위의 최댓값입니다. 중복은 최댓값 자체를 바꾸지 않습니다."},
+      {"heading":"입력 범위와 채점 계약","text":"채점기는 n(1~20)과 int로 표현 가능한 정수 n개를 제공합니다. 합을 구하지 않아 signed 덧셈 넘침을 만들지 않습니다. 범위 밖 개수·변환 실패·조기 EOF·추가 토큰·표현 불가능한 텍스트는 채점 대상 밖입니다. 완성 예제의 scanf 검사는 임의 큰 숫자 파서가 아니며 강건한 입력은 fgets·strtol로 연결합니다."},
+      {"heading":"완성 프로그램 A: 초기화·길이·순회","text":"헤더와 main을 포함한 완성 프로그램입니다. 실제 배열 객체에서 count를 구해 다섯 원소를 출력합니다. 뒤 세 원소의 0은 입력이나 우연한 메모리 상태가 아니라 부분 초기화 규칙의 결과입니다.","code":"#include <stddef.h>\n#include <stdio.h>\n\nint main(void) {\n    int a[5] = {4, -2};\n    size_t count = sizeof a / sizeof a[0];\n    printf(\"count=%zu\\n\", count);\n    for (size_t i = 0; i < count; ++i) {\n        printf(\"a[%zu]=%d\\n\", i, a[i]);\n    }\n    return 0;\n}"},
+      {"heading":"완성 프로그램 B: 배열을 받는 함수","text":"입력/저장은 main, 최댓값 계산은 max_nonempty로 분리합니다. 개수 검사와 모든 입력 변환 성공 뒤에만 함수를 호출합니다. helper의 static은 이 파일 안에서만 쓰는 함수라는 뜻이며 보안 격리가 아닙니다.","code":"#include <stddef.h>\n#include <stdio.h>\n\nstatic int max_nonempty(const int values[], size_t count) {\n    int maximum = values[0];\n    for (size_t i = 1; i < count; ++i) {\n        if (values[i] > maximum) {\n            maximum = values[i];\n        }\n    }\n    return maximum;\n}\n\nint main(void) {\n    enum { CAPACITY = 20 };\n    int values[CAPACITY];\n    int count_input;\n    if (scanf(\"%d\", &count_input) != 1 || count_input < 1 || count_input > CAPACITY) {\n        return 1;\n    }\n    size_t count = (size_t)count_input;\n    for (size_t i = 0; i < count; ++i) {\n        if (scanf(\"%d\", &values[i]) != 1) {\n            return 1;\n        }\n    }\n    printf(\"%d\\n\", max_nonempty(values, count));\n    return 0;\n}"},
+      {"heading":"실행 결과와 이유","text":"A는 count=5 뒤 4·-2·0·0·0을 인덱스와 함께 출력합니다. B의 기존 입력 5 / 2 9 -3 4 1은 9, 1 / -12는 -12, 4 / -9 -3 -5 -10은 -3입니다. 첫/끝 최댓값과 중복 0도 검사합니다. 관찰용 출력은 B의 채점 출력에 섞지 않습니다."},
+      {"heading":"흔한 오류","text":"i <= count, 개수 확인 전 values[0], 최대 후보 0, 사용 길이 대신 용량 전체 순회, 입력 실패 뒤 미초기화 읽기, 함수 안 sizeof로 길이 추측, 배열 전체 대입을 구분합니다. 우연히 밖의 칸에 값이 보인다고 유효 접근은 아닙니다."},
+      {"heading":"중간 점검","text":"a[20]에 5개를 채운 용량·사용 길이는? a[5]={4,-2}의 a[4]는? 전체 음수 배열의 초기 후보는? 함수 매개변수에서 길이를 어떻게 아나요? 답은 20·5, 0, 첫 원소, 별도 count입니다."},
+      {"heading":"핵심 요약","text":"원소 수와 마지막 인덱스, 용량과 사용 길이, 초기화와 미초기화를 나눕니다. [0,count)를 지키고 함수에는 별도 길이를 전달합니다. 실제 첫 원소에서 최댓값을 시작하고 처리한 접두 범위를 불변식으로 설명합니다."},
+      {"heading":"기초·응용·도전 연습과 Mini Project","text":"기초는 기존 최댓값, 응용은 최솟값과 원소별 복사, 도전은 최대의 첫 위치와 모든 위치 구분입니다. Mini Project는 1~7개·0~100 점수를 저장해 최고점·합·평균을 계산하고 입력/계산/출력을 함수로 나눕니다. 명세와 예상 출력부터 적습니다."},
+      {"heading":"테스트와 풀이 개선·복습 연결","text":"단일·전체 음수·첫/끝·중복·용량 20을 테스트하고 최대 후보 0·마지막 원소 누락을 고칩니다. 다음 포인터 단원 뒤 기존 c-array-max-function에서 NULL·길이 0·출력 포인터·실패 보존으로 확장합니다. 유한 테스트는 모든 배열의 메모리 안전 증명이 아닙니다."}
     ],
     quiz:{question:'int a[5]의 마지막 유효한 인덱스는?',options:['5','1','4','0'],answer:2,explanation:'길이가 5인 배열의 인덱스 범위는 0~4입니다.'},
-    challenge:{id:'c-array',title:'배열에서 최댓값 찾기',description:'첫 번째 줄에 원소 개수 n(1~20), 두 번째 줄에 정수 n개를 입력받아 최댓값을 출력하세요.',starter:'#include <stdio.h>\n\nint main(void) {\n    int n, a[20];\n    if (scanf("%d", &n) != 1) return 1;\n    for (int i = 0; i < n; i++) scanf("%d", &a[i]);\n    // TODO: 가장 큰 값을 찾아 출력하세요.\n    return 0;\n}',input:'5\n2 9 -3 4 1',expected:'9'}
+    challenge:{id:'c-array',title:'배열에서 최댓값 찾기',description:'첫 번째 줄에 원소 개수 n(1~20), 두 번째 줄에 int로 표현 가능한 정수 n개를 입력받아 최댓값을 출력하세요. 첫 실제 원소에서 후보를 시작하고 [0, n)만 처리합니다. 채점 입력은 이 계약에 맞습니다.',starter:'#include <stdio.h>\n\nint main(void) {\n    int n, a[20];\n    if (scanf("%d", &n) != 1) return 1;\n    for (int i = 0; i < n; i++) scanf("%d", &a[i]);\n    // TODO: 가장 큰 값을 찾아 출력하세요.\n    return 0;\n}',input:'5\n2 9 -3 4 1',expected:'9'}
   },
   {
     id:'c-pointer',track:'c',level:'중급',title:'포인터의 주소와 역참조',minutes:34,source:'쉽게 풀어쓴 C언어 Express 11장, The C Programming Language 5.1~5.3 (주제 참조)',
