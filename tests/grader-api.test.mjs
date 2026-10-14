@@ -9,6 +9,19 @@ import { gradingExercises } from '../server/grading-exercises.mjs';
 import { MULTI_FILE_DRAFT_PREFIX, serializeMultiFileSubmission } from '../src/multi-file.js';
 
 const gccAvailable = spawnSync('gcc', ['--version']).status === 0;
+function assertRemainingCasesUnexecuted(result, exerciseId) {
+  const total = gradingExercises.get(exerciseId).cases.length;
+  assert.equal(result.tests.length, total);
+  assert.equal(result.message, '0/' + total + '개 테스트 통과');
+  assert.deepEqual(result.tests.slice(1),
+    Array.from({ length: total - 1 }, () => ({ passed: false, detail: '미실행' })));
+}
+function assertCompilerFailureCount(result, exerciseId) {
+  const total = gradingExercises.get(exerciseId).cases.length;
+  assert.equal(result.message, '0/' + total + '개 테스트 통과 · 컴파일 실패');
+  assert.deepEqual(result.tests,
+    Array.from({ length: total }, () => ({ passed: false, detail: '미실행' })));
+}
 test('local GCC API compiles whole-program, function-only and multi-file C exercises', { skip: !gccAvailable, timeout: 45000 }, async t => {
   const child = spawn(process.execPath, ['dev-server.mjs'], {
     env: { ...process.env, PORT: '0' }, stdio: ['ignore', 'pipe', 'pipe']
@@ -184,7 +197,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
   await t.test('compiler failure is stored as a failed iteration', async () => {
     const { result } = await submit('c-hello', 'int main(void){ syntax error }');
     assert.equal(result.ok, false);
-    assert.equal(result.message, '컴파일 실패');
+    assertCompilerFailureCount(result, 'c-hello');
     assert.ok(result.compileOutput);
     assert.equal(result.compilerFeedback.code, 'compile-error');
     assert.equal(result.compilerFeedback.phase, 'compile');
@@ -211,7 +224,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
   await t.test('function grader rejects a submitted main through the separate harness link', async () => {
     const { result } = await submit('c-clamp-function', 'int clamp(int value,int low,int high){return value;}\nint main(void){return 0;}');
     assert.equal(result.ok, false);
-    assert.equal(result.message, '컴파일 실패');
+    assertCompilerFailureCount(result, 'c-clamp-function');
     assert.match(result.compileOutput, /main/);
     assert.equal(result.compilerFeedback.code, 'duplicate-definition');
     assert.equal(result.compilerFeedback.phase, 'link');
@@ -229,7 +242,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
   await t.test('non-terminating function implementation hits the same time limit', async () => {
     const { result } = await submit('c-clamp-function', 'int clamp(int value,int low,int high){(void)value;(void)low;(void)high;for(;;){}}');
     assert.equal(result.ok, false);
-    assert.equal(result.tests.length, 1, 'fatal execution failures stop later cases');
+    assertRemainingCasesUnexecuted(result, 'c-clamp-function');
     assert.equal(result.tests[0].detail, '시간 제한 초과');
   });
   await t.test('array function rejects zero initialization for an all-negative array', async () => {
@@ -250,7 +263,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
   await t.test('non-terminating array function stops after the first timed-out case', async () => {
     const { result } = await submit('c-array-max-function', '#include <stddef.h>\nint find_max(const int values[],size_t length,int *out_max){(void)values;(void)length;(void)out_max;for(;;){}}');
     assert.equal(result.ok, false);
-    assert.equal(result.tests.length, 1);
+    assertRemainingCasesUnexecuted(result, 'c-array-max-function');
     assert.equal(result.tests[0].detail, '시간 제한 초과');
   });
   await t.test('string function stops at the terminator and excludes it from the count', async () => {
@@ -271,7 +284,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
   await t.test('non-terminating string function stops after the first timed-out case', async () => {
     const { result } = await submit('c-string-count-function', '#include <stddef.h>\nint count_char(const char *text,char target,size_t *out_count){(void)text;(void)target;(void)out_count;for(;;){}}');
     assert.equal(result.ok, false);
-    assert.equal(result.tests.length, 1);
+    assertRemainingCasesUnexecuted(result, 'c-string-count-function');
     assert.equal(result.tests[0].detail, '시간 제한 초과');
   });
   await t.test('bounded string function rejects a missing terminator without publishing capacity as a length', async () => {
@@ -363,7 +376,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
   await t.test('non-terminating student update stops after the first timed-out case', async () => {
     const { result } = await submit('c-struct-student-score', 'struct Student{int id;int score;};\nint update_score(struct Student *student,int delta){(void)student;(void)delta;for(;;){}}');
     assert.equal(result.ok, false);
-    assert.equal(result.tests.length, 1);
+    assertRemainingCasesUnexecuted(result, 'c-struct-student-score');
     assert.equal(result.tests[0].detail, '시간 제한 초과');
   });
   await t.test('structure array search returns the first duplicate match', async () => {
@@ -389,7 +402,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
   await t.test('non-terminating structure array search stops after the first timed-out case', async () => {
     const { result } = await submit('c-struct-array-search', '#include <stddef.h>\nstruct Student{int id;int score;};\nint find_student_index(const struct Student students[],size_t count,int target_id,size_t *out_index){(void)students;(void)count;(void)target_id;(void)out_index;for(;;){}}');
     assert.equal(result.ok, false);
-    assert.equal(result.tests.length, 1);
+    assertRemainingCasesUnexecuted(result, 'c-struct-array-search');
     assert.equal(result.tests[0].detail, '시간 제한 초과');
   });
   await t.test('structure array sort preserves duplicate-key order', async () => {
@@ -415,7 +428,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
   await t.test('non-terminating structure array sort stops after the first timed-out case', async () => {
     const { result } = await submit('c-struct-array-sort', '#include <stddef.h>\nstruct Student{int id;int score;};\nint stable_sort_students_by_id(struct Student students[],size_t count){(void)students;(void)count;for(;;){}}');
     assert.equal(result.ok, false);
-    assert.equal(result.tests.length, 1);
+    assertRemainingCasesUnexecuted(result, 'c-struct-array-sort');
     assert.equal(result.tests[0].detail, '시간 제한 초과');
   });
   await t.test('structure binary search returns the first duplicate match', async () => {
@@ -436,7 +449,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
   await t.test('non-terminating structure binary search stops after the first timed-out case', async () => {
     const { result } = await submit('c-struct-array-binary-search', '#include <stddef.h>\nstruct Student{int id;int score;};\nint find_first_student_by_id(const struct Student a[],size_t n,int id,size_t *out){(void)a;(void)n;(void)id;(void)out;for(;;){}}');
     assert.equal(result.ok, false);
-    assert.equal(result.tests.length, 1);
+    assertRemainingCasesUnexecuted(result, 'c-struct-array-binary-search');
     assert.equal(result.tests[0].detail, '시간 제한 초과');
   });
   await t.test('dynamic array rejects allocation-size overflow before calling malloc', async () => {
@@ -516,7 +529,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     ], { requiredNames: ['main.c','functions.c','functions.h'] });
     let response = await submit('c-multi-file', missingHeader);
     assert.equal(response.status, 200);
-    assert.equal(response.result.message, '컴파일 실패');
+    assertCompilerFailureCount(response.result, 'c-multi-file');
     assert.match(response.result.compileOutput, /missing\.h/);
     assert.equal(response.result.compilerFeedback.code, 'missing-header');
     const missingDefinition = serializeMultiFileSubmission([
@@ -525,7 +538,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
       { name: 'functions.h', content: 'int clamp(int,int,int);' }
     ], { requiredNames: ['main.c','functions.c','functions.h'] });
     response = await submit('c-multi-file', missingDefinition);
-    assert.equal(response.result.message, '컴파일 실패');
+    assertCompilerFailureCount(response.result, 'c-multi-file');
     assert.match(response.result.compileOutput, /clamp/);
     assert.equal(response.result.compilerFeedback.code, 'undefined-reference');
     assert.equal(response.result.compilerFeedback.phase, 'link');
@@ -552,7 +565,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
   await t.test('student registry missing definition is reported as a link failure', async () => {
     const response = await submit('c-struct-student-registry', studentRegistrySubmission('#include "student.h"\nint stable_sort_students_by_id(struct Student a[],size_t n){(void)a;(void)n;return 1;}'));
     assert.equal(response.status, 200);
-    assert.equal(response.result.message, '컴파일 실패');
+    assertCompilerFailureCount(response.result, 'c-struct-student-registry');
     assert.equal(response.result.compilerFeedback.code, 'undefined-reference');
     assert.equal(response.result.compilerFeedback.phase, 'link');
     assert.match(response.result.compileOutput, /find_first_student_by_id/);
@@ -565,7 +578,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     for (let index = 0; index < 8; index++) {
       const response = await submit('c-hello', 'int main(void){ syntax error }');
       assert.equal(response.status, 200);
-      assert.equal(response.result.message, '컴파일 실패');
+      assertCompilerFailureCount(response.result, 'c-hello');
     }
   });
 });

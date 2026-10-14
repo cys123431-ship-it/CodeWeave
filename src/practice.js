@@ -37,7 +37,9 @@ export function submissionCode(history, id, index) {
 export function formatGradingResult(result) {
   return [result.ok ? '✓ 모든 테스트 통과' : '× 채점 미통과', result.message || '',
     ...result.tests.map((test, index) => '테스트 ' + (index + 1) + ': ' +
-      (test.passed ? '통과' : '실패') + ' — ' + (test.detail || '')),
+      // The reserved detail survives existing v1 normalization and backups unchanged.
+      (!test.passed && test.detail === '미실행' ? '미실행' :
+        (test.passed ? '통과' : '실패') + ' — ' + (test.detail || ''))),
     formatCompilerFeedback(result.compilerFeedback), result.compileOutput || ''].filter(Boolean).join('\n');
 }
 

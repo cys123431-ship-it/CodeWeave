@@ -3,16 +3,48 @@ import assert from 'node:assert/strict';
 import { ITERATIONS_KEY, MAX_ITERATIONS, normalizeIterations } from '../src/iterations.js';
 import { recordGradedSubmission, submissionCode, validateGradingResult, attemptHistoryHtml, formatGradingResult } from '../src/practice.js';
 import { classifyCompilerDiagnostic } from '../src/compiler-feedback.js';
+import { createFullBackup, parseCodeWeaveBackup } from '../src/backup.js';
+import { createAttemptBackup, parseAttemptBackup } from '../src/attempt-backup.js';
 
 const ids = ['c-hello', 'c-types'];
 const at = '2026-10-11T02:00:00.000Z';
 const pass = { ok: true, message: '1/1 통과', tests: [{ passed: true, detail: '출력 일치' }] };
 const fail = { ok: false, message: '컴파일 실패', tests: [], compileOutput: 'expected ;' };
 const compilerFail = { ...fail, compilerFeedback: classifyCompilerDiagnostic({ output: fail.compileOutput }) };
+const interrupted = { ok: false, message: '1/3개 테스트 통과', tests: [
+  { passed: true, detail: '출력 일치' },
+  { passed: false, detail: '시간 제한 초과' },
+  { passed: false, detail: '미실행' }
+] };
 function memoryStorage(initial = {}) {
   const values = new Map(Object.entries(initial));
   return { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };
 }
+
+test('terminal distinguishes an unexecuted case from an executed failure', () => {
+  const output = formatGradingResult(interrupted);
+  assert.ok(output.includes('테스트 1: 통과 — 출력 일치'));
+  assert.ok(output.includes('테스트 2: 실패 — 시간 제한 초과'));
+  assert.ok(output.includes('테스트 3: 미실행'));
+  assert.ok(!output.includes('테스트 3: 실패'));
+});
+
+test('v1 submission history and both backup formats retain unexecuted case display', () => {
+  const storage = memoryStorage();
+  recordGradedSubmission(storage, ids, 'c-types', 'interrupted code', interrupted, at);
+  const original = normalizeIterations(JSON.parse(storage.getItem(ITERATIONS_KEY)), ids);
+  const payload = { drafts: { 'c-types': 'interrupted code' }, iterations: original };
+  const full = parseCodeWeaveBackup(createFullBackup({ ...payload, progress: {} }, ids, at),
+    { knownIds: ids, attemptIds: ids });
+  const attempts = parseAttemptBackup(createAttemptBackup(payload, ids, at), ids);
+  for (const history of [original, full.iterations, attempts.iterations]) {
+    assert.deepEqual(history['c-types'][0].tests, interrupted.tests);
+    const html = attemptHistoryHtml(history, 'c-types');
+    assert.ok(html.includes('1/3개 테스트 통과'));
+    assert.ok(html.includes('테스트 3: 미실행'));
+    assert.ok(!html.includes('테스트 3: 실패'));
+  }
+});
 
 test('lesson and workbench submissions share existing history without overwriting other problems', () => {
   const storage = memoryStorage();

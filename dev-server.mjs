@@ -88,16 +88,17 @@ async function grade(req,res){
    sources.push(harness);
  }
  const compile=spawnSync('gcc',['-std=c11','-Wall','-Wextra','-O0','-I',dir,...sources,...exercise.linkArgs,'-o',binary],{timeout:4500,maxBuffer:80_000,encoding:'utf8'});
- if(compile.error||compile.status!==0){const compileOutput=(compile.stderr||compile.error?.message||'').slice(0,3000);result={ok:false,message:'컴파일 실패',compileOutput,compilerFeedback:classifyCompilerDiagnostic({output:compileOutput,error:compile.error}),tests:[]};}
+ if(compile.error||compile.status!==0){const compileOutput=(compile.stderr||compile.error?.message||'').slice(0,3000);result={ok:false,message:'0/'+exercise.cases.length+'개 테스트 통과 · 컴파일 실패',compileOutput,compilerFeedback:classifyCompilerDiagnostic({output:compileOutput,error:compile.error}),tests:exercise.cases.map(()=>({passed:false,detail:'미실행'}))};}
  else{
  const tests=[];for(const tc of exercise.cases){
  const out=await runSubmission(binary,tc.args,{input:exercise.grader==='c-function'?'':tc.input,cwd:dir});
  const actual=(out.stdout||'').trim();const expected=tc.expected.trim();
  const fatal=Boolean(out.error)||out.status!==0;
  tests.push({passed:!fatal&&actual===expected,detail:out.error?.code==='ETIMEDOUT'?'시간 제한 초과':out.error?'실행 오류':out.status!==0?'비정상 종료 ('+(out.signal||out.status)+')':actual===expected?'출력 일치':'예상: '+expected+'; 실제: '+(actual.slice(0,100)||'(없음)')});
- if(fatal)break;
+ // Keep the declared case set visible without executing after a fatal failure.
+ if(fatal){tests.push(...exercise.cases.slice(tests.length).map(()=>({passed:false,detail:'미실행'})));break;}
  }
- result={ok:tests.every(x=>x.passed),message:tests.filter(x=>x.passed).length+'/'+tests.length+'개 테스트 통과',tests,compileOutput:compile.stderr?.slice(0,1000)};
+ result={ok:tests.every(x=>x.passed),message:tests.filter(x=>x.passed).length+'/'+exercise.cases.length+'개 테스트 통과',tests,compileOutput:compile.stderr?.slice(0,1000)};
  }
  }finally{await fs.rm(dir,{force:true,recursive:true});busy=false;ownsSlot=false;}
  // Release the grading slot and finish cleanup before the client can resubmit.
