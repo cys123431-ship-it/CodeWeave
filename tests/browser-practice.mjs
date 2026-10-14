@@ -93,7 +93,7 @@ try {
     'c-types': correct,
     'c-loops': '#include <stdio.h>\nint main(void){int n;if(scanf("%d",&n)!=1)return 1;long sum=0;for(int i=1;i<=n;i++)sum+=i;printf("%ld\\n",sum);return 0;}',
     'c-array': "#include <stddef.h>\n#include <stdio.h>\n\nstatic int max_nonempty(const int values[], size_t count) {\n    int maximum = values[0];\n    for (size_t i = 1; i < count; ++i) {\n        if (values[i] > maximum) {\n            maximum = values[i];\n        }\n    }\n    return maximum;\n}\n\nint main(void) {\n    enum { CAPACITY = 20 };\n    int values[CAPACITY];\n    int count_input;\n    if (scanf(\"%d\", &count_input) != 1 || count_input < 1 || count_input > CAPACITY) {\n        return 1;\n    }\n    size_t count = (size_t)count_input;\n    for (size_t i = 0; i < count; ++i) {\n        if (scanf(\"%d\", &values[i]) != 1) {\n            return 1;\n        }\n    }\n    printf(\"%d\\n\", max_nonempty(values, count));\n    return 0;\n}",
-    'c-pointer': '#include <stdio.h>\nvoid add_one(int *p){++*p;}\nint main(void){int n;scanf("%d",&n);add_one(&n);printf("%d\\n",n);return 0;}',
+    'c-pointer': "#include <stdio.h>\n\nvoid add_one(int *value) {\n    ++(*value);\n}\n\nint main(void) {\n    int n;\n    if (scanf(\"%d\", &n) != 1) {\n        return 1;\n    }\n    if (n < -10000 || n > 9999) {\n        return 1;\n    }\n    add_one(&n);\n    printf(\"%d\\n\", n);\n    return 0;\n}",
     'c-functions': '#include <stdio.h>\nint clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}\nint main(void){int value,low,high;scanf("%d%d%d",&value,&low,&high);printf("%d\\n",clamp(value,low,high));return 0;}',
     'c-clamp-function': functionOnly,
     'c-array-max-function': arrayMaxFunction,
@@ -184,6 +184,31 @@ try {
   }
   await page.setViewportSize({ width: 1366, height: 900 });
   console.log('PASS: array introduction rejects a zero candidate, reaches mastery and fits 390px');
+  await page.goto(base + '/#lesson:c-pointer');
+  await expect(page.locator('.detail-head h1')).toHaveText('포인터의 주소와 역참조');
+  await expect(page.locator('.article > section')).toHaveCount(29);
+  await expect(page.locator('.article')).toContainText('NULL 검사만으로는 유효성을 증명하지 못한다');
+  await expect(page.locator('.article')).toContainText('포인터도 값 전달');
+  await expect(page.locator('.figure-box svg')).toContainText('시점 A');
+  await expect(page.locator('.figure-box svg')).toContainText('alias는 value 그대로');
+  await submit(page, solutions['c-pointer'].replace('++(*value);', 'value++;'));
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await submit(page, solutions['c-pointer']);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('#mark-theory').click();
+  await page.locator('[data-quiz="c-pointer"][data-choice="1"]').click();
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'pointer introduction mobile overflow');
+  const pointerFigure = await page.locator('.figure-box svg').boundingBox();
+  assert.ok(pointerFigure && pointerFigure.x >= 0 && pointerFigure.x + pointerFigure.width <= 390, 'pointer figure fits the mobile viewport');
+  if (qaDir) {
+    await mkdir(qaDir, { recursive: true });
+    await page.locator('.figure-box').screenshot({ path: path.join(qaDir, 'pointer-alias-mobile.png') });
+  }
+  await page.setViewportSize({ width: 1366, height: 900 });
+  console.log('PASS: pointer introduction rejects pointer movement, reaches mastery and fits 390px');
   await page.goto(base + '/#lesson:c-functions');
   await expect(page.locator('.detail-head h1')).toHaveText('함수 설계: 선언·호출·값 전달');
   await expect(page.locator('.figure-box svg')).toContainText('clamp');
@@ -608,6 +633,13 @@ try {
   await expect(page.locator('.figure-box svg')).toContainText('접근 금지');
   await expect(page.locator('.article')).toContainText('함수 매개변수와 별도 길이');
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'offline array introduction mobile overflow');
+  await page.goto(base + '/#lesson:c-pointer');
+  await page.reload();
+  await expect(page.locator('.detail-head h1')).toHaveText('포인터의 주소와 역참조');
+  await expect(page.locator('.article > section')).toHaveCount(29);
+  await expect(page.locator('.figure-box svg')).toContainText('alias는 value 그대로');
+  await expect(page.locator('.article')).toContainText('객체 수명과 빌린 주소');
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'offline pointer introduction mobile overflow');
   await context.setOffline(false);
   assert.deepEqual(errors, []);
   console.log('PASS: 390px mobile layout and offline reload of drafts/history; no browser exceptions');
