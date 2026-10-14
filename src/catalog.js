@@ -214,6 +214,142 @@ export const lessons = [
     challenge:{id:'c-clamp-function',title:'clamp 함수 본문만 구현하기',description:'int clamp(int value, int low, int high)의 함수 구현만 제출하세요. main 함수와 입력·출력 코드는 작성하지 마세요. low <= high이며 범위 안 값은 그대로, 하한 밖은 low, 상한 밖은 high를 반환합니다.',starter:'int clamp(int value, int low, int high) {\n    // TODO: 함수 계약에 맞는 값을 반환하세요.\n    return value;\n}',input:'clamp(15, 0, 10)',expected:'10'}
   },
   {
+    "id": "c-recursion-factorial",
+    "track": "c",
+    "level": "중급 실습",
+    "title": "재귀: 종료 조건과 작은 팩토리얼",
+    "minutes": 70,
+    "source": "재귀·자동 상태·수치/깊이 계약에 관한 독자 작성 단원; C11 위원회 초안 N1570 5.2.4.2.1·6.2.4·6.5.2.2 의미 검토",
+    "summary": "더 작은 호출과 반환을 추적하고, 범위·출력 보존·반복 호출 계약을 실제 테스트합니다.",
+    "figure": "recursion-unwind",
+    "sections": [
+      {
+        "heading": "단원 개요",
+        "text": "재귀는 함수가 더 작은 같은 종류의 문제를 호출해 결과를 조립하는 설계입니다. 팩토리얼을 작은 예제로 삼아 종료 조건, 진행 척도, 호출별 자동 상태, 되돌아오며 수행하는 곱셈을 읽습니다. 실제 실습은 입력 범위를 먼저 제한하는 함수 계약과 연결합니다."
+      },
+      {
+        "heading": "필요한 이유",
+        "text": "나중에 트리 탐색이나 분할 정복에서는 데이터 구조 자체가 작은 같은 문제로 나뉩니다. 재귀를 문법 기교로 외우기보다 어떤 부분 문제를 맡기고 어떤 일을 남겨 두는지 설명하는 도구로 배웁니다. 단순 곱셈에서는 반복문이 더 직접적일 수 있습니다."
+      },
+      {
+        "heading": "선수 지식",
+        "text": "c-functions의 선언/정의·값 전달·자동/static 저장기간, c-pointer의 유효한 출력 객체와 NULL, c-clamp-function의 별도 main 하네스를 복습하세요. unsigned int와 unsigned long은 다른 자료형이며 출력 형식도 %u와 %lu로 구별합니다."
+      },
+      {
+        "heading": "학습 목표",
+        "text": "0!의 기준값 1, n! = n × (n-1)!의 축소 관계, n이라는 진행 척도를 설명합니다. 호출별 n과 smaller를 구분하고, 0..12의 수치 계약·최대 13개 활성 helper 호출·실패 시 출력 보존·반복 제출의 독립성을 검사합니다."
+      },
+      {
+        "heading": "문제를 나누는 계약",
+        "text": "factorial_checked(unsigned int n, unsigned long *out_value)는 0..12이면 n!를 기록하고 정확히 1을 반환합니다. n>12 또는 out_value==NULL이면 0을 반환하며 비NULL인 출력 객체의 기존 값을 보존합니다. 비NULL 주소는 살아 있고 쓰기 가능한 unsigned long 객체를 가리켜야 합니다. NULL 검사로 임의 주소나 수명 종료 포인터를 검증하지 않습니다."
+      },
+      {
+        "heading": "종료 조건: 더 호출하지 않는 답",
+        "text": "빈 곱을 1로 정하면 0!=1입니다. n==0일 때 1UL을 바로 반환하고 재귀 호출을 하지 않습니다. 종료 조건은 있어도 다음 호출이 그 조건으로 가까워지지 않으면 종료하지 못할 수 있습니다. 아래는 helper의 몸체 안 코드 조각입니다.",
+        "code": "if (n == 0) {\n    return 1UL;\n}"
+      },
+      {
+        "heading": "진행 척도: 0으로 줄어드는 n",
+        "text": "n>0인 경로에서만 n-1을 계산합니다. 음수가 없는 unsigned int의 n이 1씩 줄어 결국 0에 도달합니다. n==0에서 먼저 n-1을 계산하면 UINT_MAX로 순환할 수 있으므로 기준 분기와 감소 순서가 중요합니다. 외부의 큰 n은 재귀 진입 전에 거부합니다."
+      },
+      {
+        "heading": "각 호출의 자동 객체",
+        "text": "helper의 각 호출은 자기 n과 자동 객체 smaller를 가집니다. n=3 호출이 n=2 호출을 기다리는 동안 바깥 n은 여전히 3입니다. 같은 함수 본문에 쓰인 이름이 같은 객체 하나를 뜻하지 않습니다. smaller는 더 작은 호출의 반환값으로 초기화되기 전에 읽지 않습니다."
+      },
+      {
+        "heading": "정적 도식 읽기",
+        "text": "정적 그림의 왼쪽은 n=3→2→1→0으로 내려가는 호출, 오른쪽은 1→1→2→6으로 조립되는 반환입니다. n=0은 곱셈 없이 1을 돌려줍니다. 이는 실행 순서를 설명하는 논리적 호출 그림이며 C가 물리 스택 배치나 특정 주소·프레임 크기를 보장한다는 뜻은 아닙니다."
+      },
+      {
+        "heading": "단계별 예제: 작은 답으로 큰 답 만들기",
+        "text": "n=3 호출은 3을 보존하고 factorial_small(2)의 답을 기다립니다. n=2는 2를 보존하고 1의 답을 기다립니다. n=1은 0의 답 1을 받아 1을, n=2는 2를, n=3은 6을 반환합니다. 재귀 호출이 끝난 뒤 실행할 곱셈이 각 호출에 남아 있습니다."
+      },
+      {
+        "heading": "수치 범위: 정수형을 바꾸는 것만으로 끝나지 않는다",
+        "text": "12!=479001600이며 C11의 unsigned long은 적어도 0..4294967295를 표현합니다. 허용된 모든 중간 곱도 이 범위에 들어갑니다. unsigned long이 항상 32비트나 64비트라는 뜻은 아닙니다. 13!=6227020800은 최소 보장 범위를 넘으므로 실제 ULONG_MAX가 더 큰 환경에서도 이 문제는 13을 거부합니다."
+      },
+      {
+        "heading": "연산형과 출력 형식",
+        "text": "1UL은 unsigned long 상수이고 smaller도 unsigned long입니다. (unsigned long)n * smaller는 해당 형의 곱으로 계산합니다. 결과만 큰 형에 대입하고 앞서 작은 형에서 곱하는 실수를 피하세요. unsigned 연산의 범위 초과는 모듈러 순환이지 원하는 수학적 팩토리얼이 아닙니다. signed overflow는 정의되지 않은 동작입니다."
+      },
+      {
+        "heading": "깊이 제한과 실행 자원",
+        "text": "helper가 n부터 0까지 부르므로 활성 helper 호출은 최대 n+1, 여기서는 13개입니다. wrapper와 main까지 센 총 호출 깊이는 별개입니다. C는 임의 깊이에 필요한 실행 자원이 무한하거나 모든 환경에서 같은 최대 깊이를 제공한다고 보장하지 않습니다. 작은 상한도 샌드박스나 자원 고갈 탐지기가 아닙니다."
+      },
+      {
+        "heading": "static 함수와 static 지역 객체를 구분",
+        "text": "파일 범위 static 함수는 같은 번역 단위 내부에서 쓰는 helper라는 뜻이지 매번 결과를 기억하는 함수라는 뜻이 아닙니다. static 지역 누산 객체는 모든 호출과 다음 최상위 호출에도 공유됩니다. 독립 계산에 그런 상태를 두면 5! 다음 0!가 오염될 수 있으므로 여기서는 자동 상태와 반환값을 사용합니다."
+      },
+      {
+        "heading": "실패 보존과 성공 뒤 공개",
+        "text": "wrapper에서 범위와 NULL을 먼저 확인하고, helper 계산이 끝난 뒤 *out_value에 한 번만 기록합니다. 13과 UINT_MAX 요청은 계산 전에 거부되어 기존 값이 유지됩니다. 성공 상태와 계산 결과는 다른 정보입니다. 함수를 호출하는 식과 출력 객체를 관찰하는 printf는 별도 문장으로 둡니다."
+      },
+      {
+        "heading": "완성 프로그램 A: 범위 검사와 독립 계산",
+        "text": "복사해 C11로 컴파일할 수 있는 완성 프로그램입니다. 5·0·12·13을 같은 출력 객체로 차례로 계산하고 NULL도 거부합니다. 제출에는 main과 stdio.h가 필요 없으며 위쪽 helper와 factorial_checked만 사용합니다. 함수 자체는 printf/puts 같은 불필요한 출력을 남기지 않습니다.",
+        "code": "#include <stddef.h>\n#include <stdio.h>\n\nstatic unsigned long factorial_small(unsigned int n) {\n    if (n == 0) {\n        return 1UL;\n    }\n    unsigned long smaller = factorial_small(n - 1);\n    return (unsigned long)n * smaller;\n}\n\nint factorial_checked(unsigned int n, unsigned long *out_value) {\n    if (out_value == NULL || n > 12) {\n        return 0;\n    }\n    unsigned long result = factorial_small(n);\n    *out_value = result;\n    return 1;\n}\n\nint main(void) {\n    const unsigned int inputs[] = {5, 0, 12, 13};\n    unsigned long value = 77UL;\n    for (size_t i = 0; i < sizeof inputs / sizeof inputs[0]; ++i) {\n        int status = factorial_checked(inputs[i], &value);\n        printf(\"n=%u status=%d value=%lu\\n\", inputs[i], status, value);\n    }\n    int status = factorial_checked(5, NULL);\n    printf(\"NULL status=%d\\n\", status);\n    return 0;\n}"
+      },
+      {
+        "heading": "실행 결과 A와 바로 해 보는 변형",
+        "text": "성공은 각각 120·1·479001600을 기록하고 13의 실패는 마지막 값을 보존합니다. NULL은 상태 0만 출력합니다. inputs를 {3,1,0,3}으로 바꾸고 6·1·1·6을 먼저 예상해 보세요. 출력 객체의 초기값을 바꿔도 성공한 결과는 같아야 합니다.",
+        "code": "n=5 status=1 value=120\nn=0 status=1 value=1\nn=12 status=1 value=479001600\nn=13 status=0 value=479001600\nNULL status=0"
+      },
+      {
+        "heading": "완성 프로그램 B: 호출과 반환 관찰",
+        "text": "아래 완성 프로그램은 고정 입력 3으로 호출 순서를 관찰합니다. trace_factorial의 내부 전제는 n<=12입니다. 각 호출은 자기 n과 result를 가지고 enter는 감소 순서, leave는 반대 순서로 출력합니다. 이 디버그 관찰 코드는 채점 제출 함수에 넣지 않습니다.",
+        "code": "#include <stdio.h>\n\n/* 이 내부 관찰 함수의 전제: n <= 12. main은 3만 전달한다. */\nstatic unsigned long trace_factorial(unsigned int n) {\n    printf(\"enter %u\\n\", n);\n    if (n == 0) {\n        puts(\"leave 0 = 1\");\n        return 1UL;\n    }\n    unsigned long smaller = trace_factorial(n - 1);\n    unsigned long result = (unsigned long)n * smaller;\n    printf(\"leave %u = %lu\\n\", n, result);\n    return result;\n}\n\nint main(void) {\n    unsigned long result = trace_factorial(3);\n    printf(\"result = %lu\\n\", result);\n    return 0;\n}"
+      },
+      {
+        "heading": "실행 결과 B와 바로 해 보는 변형",
+        "text": "enter 3·2·1·0 뒤 leave 0·1·2·3이 나옵니다. 바깥의 n이 작은 호출로 덮어써지지 않으므로 각 leave의 n이 맞습니다. main의 인수를 0 또는 2로 바꾸어 enter/leave 수와 최종 답을 예상하세요. 전제 밖 큰 값으로 자원 고갈을 일부러 실행하지 않습니다.",
+        "code": "enter 3\nenter 2\nenter 1\nenter 0\nleave 0 = 1\nleave 1 = 1\nleave 2 = 2\nleave 3 = 6\nresult = 6"
+      },
+      {
+        "heading": "재귀와 반복·꼬리 호출",
+        "text": "반복형은 product=1UL에서 i=1..n을 곱하며 같은 계약을 구현할 수 있습니다. 이 helper는 재귀 호출 뒤 곱셈이 남으므로 꼬리 호출이 아닙니다. 꼬리 호출 형태로 바꿔도 C11이 꼬리 호출 최적화나 일정한 물리 스택 사용을 보장하지 않습니다. 확대 모델에서 이 재귀의 호출 수·논리적 보관 상태는 O(n), 반복 누산의 보관 상태는 O(1)이며 현재 n<=12는 작은 고정 범위입니다."
+      },
+      {
+        "heading": "흔한 오류",
+        "text": "0!를 0으로 반환, 감소 없이 자기 호출, 0에서 unsigned n-1 실행, 범위 검사 전에 하강, 실패 전에 출력 초기화, static 누산값 공유, 형식 불일치와 디버그 출력이 대표 오류입니다. 실패를 유한한 안전 입력으로 재현하고 첫 실패 계약을 고칩니다. 무한 재귀나 수명 종료 포인터를 시도해 보라는 연습은 아닙니다."
+      },
+      {
+        "heading": "중간 점검",
+        "text": "① 기준 분기와 진행 척도는 각각 무엇인가요? ② n=3의 smaller는 언제 초기화되나요? ③ n=12일 때 helper 활성 호출은 왜 13개인가요? ④ 13이 어떤 PC에서 표현돼도 왜 거부하나요? 답: n==0/감소하는 n, 작은 호출 반환 뒤, 0 포함, 이식 가능한 문제 계약 때문입니다."
+      },
+      {
+        "heading": "핵심 요약과 개념 확인",
+        "text": "재귀 설계에는 작은 문제의 계약·종료 조건·진행 척도·결과 조립이 함께 필요합니다. 호출별 자동 상태와 공유 static 상태를 나누고 수치 범위와 실행 자원 범위도 나눕니다. 퀴즈를 통과해도 이론 읽기나 코딩 실습 통과는 별도 상태이며, 실패 후 수정·재제출해야 숙달로 연결됩니다."
+      },
+      {
+        "heading": "기초·응용·도전 연습과 Mini Project",
+        "text": "기초: 0..4의 호출/반환 표와 답을 작성합니다. 응용: 같은 객체로 5→0→12→3→13을 호출해 실패 보존을 관찰합니다. 도전: 반복형을 따로 작성해 전 범위 결과를 비교하고 작은 음수/진수 변환 설계 전에 입력 계약을 정합니다. Mini Project: 0..12 팩토리얼 표를 만들되 표 출력은 main, 계산은 함수에 맡기며 13의 실패 기록도 남깁니다."
+      },
+      {
+        "heading": "테스트·풀이 개선·복습 연결",
+        "text": "하네스는 모든 n=0..12, 13·UINT_MAX, 여러 NULL 경계, 같은 객체 반복 호출과 서로 다른 출력 객체를 검사합니다. 출력 비교는 재귀 사용을 증명하지 않으며 올바른 반복형도 기능 계약을 통과할 수 있습니다. 반복 제출에서 실패 사례·수정 이유를 기록하고 자동 상태·출력 포인터를 복습한 뒤 재귀 트리/탐색의 더 큰 설계로 연결합니다."
+      }
+    ],
+    "quiz": {
+      "question": "이 단원의 factorial_small 재귀를 종료시키는 두 조건은?",
+      "options": [
+        "n==0에서 즉시 반환하고 n>0일 때만 n-1로 호출한다",
+        "unsigned이므로 어떤 n으로 시작해도 실행 자원이 무한하다",
+        "static 누산 객체가 호출마다 새로 생성된다",
+        "꼬리 호출 최적화가 모든 C11 환경에서 보장된다"
+      ],
+      "answer": 0,
+      "explanation": "종료 분기와 그 분기로 가까워지는 진행 척도가 함께 필요합니다. wrapper가 큰 n도 먼저 거부합니다."
+    },
+    "challenge": {
+      "id": "c-recursion-factorial",
+      "title": "범위가 있는 factorial_checked 구현",
+      "description": "int factorial_checked(unsigned int n, unsigned long *out_value)를 구현하세요. 0..12이면 n!를 기록하고 1을, n>12 또는 NULL이면 0을 반환하며 비NULL 출력 객체의 기존 값을 보존합니다. 주소는 유효하고 쓰기 가능한 unsigned long 객체라는 호출자 전제입니다. main·입력·출력은 작성하지 않으며 디버그 출력도 남기지 않습니다. 독립적인 반복 호출을 지원하세요. 재귀로 연습하되 기능 채점만으로 재귀 여부를 증명하지 않습니다.",
+      "starter": "#include <stddef.h>\n\nint factorial_checked(unsigned int n, unsigned long *out_value) {\n    // TODO: 범위/NULL 검사 → 작은 문제 계산 → 성공 뒤 결과 기록\n    (void)n;\n    (void)out_value;\n    return 0;\n}",
+      "input": "factorial_checked(5, &out)",
+      "expected": "1 120"
+    }
+  },
+  {
     id:'c-array-max-function',track:'c',level:'중급 실습',title:'배열 함수 실습: 최댓값과 출력 포인터',minutes:38,source:'C 배열·포인터·함수 계약에 관한 독자 작성 실습',
     summary:'배열과 길이를 받아 최댓값을 출력 매개변수에 기록하고 성공 여부를 반환하는 함수를 설계합니다.',figure:'array-output-contract',
     sections:[

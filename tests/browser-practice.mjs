@@ -89,6 +89,7 @@ try {
   assert.match(output, /CodeWeave local learning app:/);
   // Compile our own reference solutions through the actual local API.
   const solutions = {
+    'c-recursion-factorial': "#include <stddef.h>\n#include <stdio.h>\n\nstatic unsigned long factorial_small(unsigned int n) {\n    if (n == 0) {\n        return 1UL;\n    }\n    unsigned long smaller = factorial_small(n - 1);\n    return (unsigned long)n * smaller;\n}\n\nint factorial_checked(unsigned int n, unsigned long *out_value) {\n    if (out_value == NULL || n > 12) {\n        return 0;\n    }\n    unsigned long result = factorial_small(n);\n    *out_value = result;\n    return 1;\n}\n",
     'c-hello': '#include <stdio.h>\nint main(void){puts("Hello, CodeWeave!");return 0;}',
     'c-types': correct,
     'c-loops': '#include <stdio.h>\nint main(void){int n;if(scanf("%d",&n)!=1)return 1;long sum=0;for(int i=1;i<=n;i++)sum+=i;printf("%ld\\n",sum);return 0;}',
@@ -116,7 +117,7 @@ try {
     const result = await response.json();
     assert.equal(result.ok, true, exerciseId + ': ' + JSON.stringify(result));
   }
-  console.log('PASS: all twenty-one C exercises compile and pass their real GCC tests');
+  console.log(`PASS: all ${Object.keys(solutions).length} C exercises compile and pass their real GCC tests`);
 
   browser = await chromium.launch({ headless: true });
   context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
@@ -247,6 +248,38 @@ try {
   }
   await page.setViewportSize({ width: 1366, height: 900 });
   console.log('PASS: function lesson rejects discarded return, reaches mastery and preserves scope diagram readability at 390px');
+  await page.goto(base + '/#lesson:c-recursion-factorial');
+  await expect(page.locator('.detail-head h1')).toHaveText('재귀: 종료 조건과 작은 팩토리얼');
+  await expect(page.locator('.article > section')).toHaveCount(25);
+  await expect(page.locator('.article')).toContainText('진행 척도');
+  await expect(page.locator('.article')).toContainText('재귀 사용을 증명하지');
+  await expect(page.locator('.figure-box svg')).toContainText('n=0');
+  await expect(page.locator('.figure-box svg')).toContainText('3 × 2 = 6');
+  await expect(page.locator('#code-input')).not.toHaveValue(/main\s*\(/);
+  await expect(page.locator('.practice-zone')).toContainText('함수 직접 호출형');
+  await submit(page, '#include <stddef.h>\nint factorial_checked(unsigned int n,unsigned long *out){if(!out||n>12)return 0;static unsigned long result=1UL;for(unsigned int i=1;i<=n;i++)result*=i;*out=result;return 1;}');
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await submit(page, solutions['c-recursion-factorial']);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('#mark-theory').click();
+  await page.locator('[data-quiz="c-recursion-factorial"][data-choice="0"]').click();
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'recursion lesson mobile overflow');
+  const recursionFigure = await page.locator('.figure-box svg').boundingBox();
+  assert.ok(recursionFigure && recursionFigure.x >= 0 && recursionFigure.x + recursionFigure.width <= 390, 'recursion diagram fits mobile viewport');
+  const recursionTextSizes = await page.locator('.figure-box svg').evaluate(svg => [...svg.querySelectorAll('text')].map(label => {
+    const transform = label.getScreenCTM();
+    return parseFloat(getComputedStyle(label).fontSize) * Math.hypot(transform.a, transform.b);
+  }));
+  assert.ok(recursionTextSizes.length > 0 && recursionTextSizes.every(size => size >= 11.5), 'recursion diagram retains readable mobile text');
+  if (qaDir) {
+    await mkdir(qaDir, { recursive: true });
+    await page.locator('.figure-box').screenshot({ path: path.join(qaDir, 'recursion-unwind-mobile.png') });
+  }
+  await page.setViewportSize({ width: 1366, height: 900 });
+  console.log('PASS: recursion rejects shared state, reaches mastery and preserves call/return readability at 390px');
   await page.goto(base + '/#lesson:c-clamp-function');
   await expect(page.locator('.detail-head h1')).toHaveText('함수 구현 실습: 테스트 하네스와 계약');
   await expect(page.locator('#code-input')).not.toHaveValue(/main\s*\(/);
@@ -678,6 +711,13 @@ try {
   await expect(page.locator('.figure-box svg')).toContainText('int age = 15;');
   await expect(page.locator('.article')).toContainText('static 지역 객체');
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'offline function lesson mobile overflow');
+  await page.goto(base + '/#lesson:c-recursion-factorial');
+  await page.reload();
+  await expect(page.locator('.detail-head h1')).toHaveText('재귀: 종료 조건과 작은 팩토리얼');
+  await expect(page.locator('.article > section')).toHaveCount(25);
+  await expect(page.locator('.figure-box svg')).toContainText('return 1');
+  await expect(page.locator('.article')).toContainText('ULONG_MAX');
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'offline recursion lesson mobile overflow');
   await context.setOffline(false);
   assert.deepEqual(errors, []);
   console.log('PASS: 390px mobile layout and offline reload of drafts/history; no browser exceptions');

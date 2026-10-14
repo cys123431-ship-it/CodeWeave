@@ -3,6 +3,15 @@ const arrow=(x1,y1,x2,y2)=>`<path d="M${x1} ${y1} L${x2} ${y2}" stroke="#6b8d98"
 const wrap=inner=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 670 190" role="img" aria-label="학습 개념 그림"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 const wrapTall=(label,inner,viewBox='0 0 670 300',style='')=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"${style?` style="${style}"`:''} role="img" aria-label="${label}"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 export function figureFor(kind){
+ if(kind==='recursion-unwind')return wrapTall('재귀 팩토리얼의 감소 호출과 역순 반환을 설명하는 논리적 그림',
+  `<text x="170" y="26" text-anchor="middle" font-size="18" font-weight="700" fill="#28485b">작은 호출 ↓ · 반환 ↑</text>`+
+  [[3,'3 × 2 = 6'],[2,'2 × 1 = 2'],[1,'1 × 1 = 1'],[0,'return 1']].map(([n,result],i)=>{
+   const y=55+i*83;
+   return box(18,y,112,62,`n=${n}`,n===0?'#d7f4e6':'#e7f1ff')+box(163,y,159,62,result,n===0?'#d7f4e6':'#fff3d8')+
+    (i<3?arrow(74,y+65,74,y+79)+arrow(242,y+79,242,y+65):'');
+  }).join('')+
+  `<text x="170" y="401" text-anchor="middle" font-size="15" fill="#52687e">호출별 n은 서로 다른 상태</text><text x="170" y="434" text-anchor="middle" font-size="15" fill="#52687e">물리 스택 배치를 약속하지 않음</text>`,
+  '0 0 340 460','max-width:340px');
  if(kind==='function-scope-duration')return wrapTall('코드로 보는 내부 이름 가림과 블록 뒤 바깥 객체 유지',
   `<text x="170" y="25" text-anchor="middle" font-size="18" font-weight="700" fill="#28485b">이름 가림 · 바깥 객체 유지</text><rect x="18" y="45" width="304" height="95" rx="13" fill="#e7f1ff" stroke="#a3bdb9"/><text x="170" y="78" text-anchor="middle" font-size="18" font-weight="700" fill="#28485b">int age = 15;</text><text x="170" y="113" text-anchor="middle" font-size="16" fill="#52687e">바깥 age · 출력 15</text>`+arrow(170,146,170,166)+
   `<rect x="18" y="175" width="304" height="115" rx="13" fill="#fff3d8" stroke="#a3bdb9"/><text x="170" y="205" text-anchor="middle" font-size="18" font-weight="700" fill="#28485b">{ int age = 30; }</text><text x="170" y="236" text-anchor="middle" font-size="16" fill="#52687e">내부 age · 출력 30</text><text x="170" y="269" text-anchor="middle" font-size="15" fill="#9d4f40">바깥 이름만 가려짐</text>`+arrow(170,296,170,316)+

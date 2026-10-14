@@ -12,7 +12,7 @@ test('C exercise audit table stays synchronized with executable grading definiti
     .map(([, id, grader, count]) => ({ id, grader, count: Number(count) }));
   const gradedC = exercises.filter(exercise => exercise.language === 'c' && exercise.grader !== null);
 
-  assert.equal(rows.length, 21);
+  assert.equal(rows.length, 22);
   assert.deepEqual(rows.map(row => row.id), gradedC.map(exercise => exercise.id));
   for (const row of rows) {
     assert.equal(row.grader, gradedC.find(exercise => exercise.id === row.id).grader, row.id);

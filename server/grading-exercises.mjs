@@ -1,6 +1,28 @@
 import { exercises } from '../src/exercises.js';
 
 const CASES = {
+  'c-recursion-factorial': [
+    {"input":"factorial_checked(0, &out)","expected":"1 1","args":["0"]},
+    {"input":"factorial_checked(1, &out)","expected":"1 1","args":["1"]},
+    {"input":"factorial_checked(2, &out)","expected":"1 2","args":["2"]},
+    {"input":"factorial_checked(3, &out)","expected":"1 6","args":["3"]},
+    {"input":"factorial_checked(4, &out)","expected":"1 24","args":["4"]},
+    {"input":"factorial_checked(5, &out)","expected":"1 120","args":["5"]},
+    {"input":"factorial_checked(6, &out)","expected":"1 720","args":["6"]},
+    {"input":"factorial_checked(7, &out)","expected":"1 5040","args":["7"]},
+    {"input":"factorial_checked(8, &out)","expected":"1 40320","args":["8"]},
+    {"input":"factorial_checked(9, &out)","expected":"1 362880","args":["9"]},
+    {"input":"factorial_checked(10, &out)","expected":"1 3628800","args":["10"]},
+    {"input":"factorial_checked(11, &out)","expected":"1 39916800","args":["11"]},
+    {"input":"factorial_checked(12, &out)","expected":"1 479001600","args":["12"]},
+    {"input":"factorial_checked(13, &out) · 범위 밖 · 기존 77 보존","expected":"0 77","args":["13"]},
+    {"input":"factorial_checked(UINT_MAX, &out) · ULONG_MAX 보존","expected":"0 1","args":["14"]},
+    {"input":"factorial_checked(0, NULL)","expected":"0","args":["15"]},
+    {"input":"factorial_checked(12, NULL)","expected":"0","args":["16"]},
+    {"input":"factorial_checked(13, NULL)","expected":"0","args":["17"]},
+    {"input":"같은 객체 반복 호출 5→0→12→3→13","expected":"1 120\n1 1\n1 479001600\n1 6\n0 6","args":["18"]},
+    {"input":"서로 다른 출력 객체 · 성공과 실패 보존","expected":"1 6 1 24\n0 24","args":["19"]},
+  ],
   'c-hello': [{input:'',expected:'Hello, CodeWeave!'}],
   'c-types': [{input:'4 7\n',expected:'11'},{input:'-5 2\n',expected:'-3'},{input:'0 0\n',expected:'0'},{input:'10000 10000\n',expected:'20000'},{input:'-10000 -10000\n',expected:'-20000'}],
   'c-loops': [{input:'5\n',expected:'15'},{input:'0\n',expected:'0'},{input:'1\n',expected:'1'},{input:'10\n',expected:'55'},{input:'1000\n',expected:'500500'}],
@@ -201,6 +223,47 @@ const CASES = {
 };
 
 const HARNESSES = {
+  'c-recursion-factorial': `#include <limits.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int factorial_checked(unsigned int n, unsigned long *out_value);
+
+int main(int argc, char **argv) {
+    if (argc != 2) return 70;
+    int which = atoi(argv[1]);
+    unsigned long out = 77UL;
+    int status;
+    if (which >= 0 && which <= 13) {
+        status = factorial_checked((unsigned int)which, &out);
+        printf("%d %lu\\n", status, out);
+    } else if (which == 14) {
+        out = ULONG_MAX;
+        status = factorial_checked(UINT_MAX, &out);
+        printf("%d %d\\n", status, out == ULONG_MAX);
+    } else if (which >= 15 && which <= 17) {
+        const unsigned int inputs[] = {0, 12, 13};
+        status = factorial_checked(inputs[which - 15], NULL);
+        printf("%d\\n", status);
+    } else if (which == 18) {
+        const unsigned int inputs[] = {5, 0, 12, 3, 13};
+        for (size_t i = 0; i < sizeof inputs / sizeof inputs[0]; ++i) {
+            status = factorial_checked(inputs[i], &out);
+            printf("%d %lu\\n", status, out);
+        }
+    } else if (which == 19) {
+        unsigned long other = 88UL;
+        int first = factorial_checked(3, &out);
+        int second = factorial_checked(4, &other);
+        printf("%d %lu %d %lu\\n", first, out, second, other);
+        status = factorial_checked(13, &other);
+        printf("%d %lu\\n", status, other);
+    } else {
+        return 71;
+    }
+    return 0;
+}`,
   'c-clamp-function': `#include <stdio.h>
 #include <stdlib.h>
 

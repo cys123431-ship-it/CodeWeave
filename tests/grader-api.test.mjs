@@ -47,6 +47,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
   ], { requiredNames: ['main.c','student.c','student.h'] });
   const studentRegistryAlgorithms = '#include "student.h"\nint stable_sort_students_by_id(struct Student a[],size_t n){if(n==0)return 1;if(!a)return 0;for(size_t i=1;i<n;i++){struct Student key=a[i];size_t j=i;while(j>0&&a[j-1].id>key.id){a[j]=a[j-1];--j;}a[j]=key;}return 1;}\nint find_first_student_by_id(const struct Student a[],size_t n,int id,size_t *out){if(n==0||!a||!out)return 0;size_t l=0,r=n;while(l<r){size_t m=l+(r-l)/2;if(a[m].id<id)l=m+1;else r=m;}if(l<n&&a[l].id==id){*out=l;return 1;}return 0;}';
   const solutions = {
+    'c-recursion-factorial': "#include <stddef.h>\n#include <stdio.h>\n\nstatic unsigned long factorial_small(unsigned int n) {\n    if (n == 0) {\n        return 1UL;\n    }\n    unsigned long smaller = factorial_small(n - 1);\n    return (unsigned long)n * smaller;\n}\n\nint factorial_checked(unsigned int n, unsigned long *out_value) {\n    if (out_value == NULL || n > 12) {\n        return 0;\n    }\n    unsigned long result = factorial_small(n);\n    *out_value = result;\n    return 1;\n}\n",
     'c-hello': '#include <stdio.h>\nint main(void){puts("Hello, CodeWeave!");return 0;}',
     'c-types': '#include <stdio.h>\nint main(void){int a,b;if(scanf("%d%d",&a,&b)!=2)return 1;printf("%d\\n",a+b);return 0;}',
     'c-loops': '#include <stdio.h>\nint main(void){int n;if(scanf("%d",&n)!=1)return 1;long sum=0;for(int i=1;i<=n;i++)sum+=i;printf("%ld\\n",sum);return 0;}',
@@ -74,6 +75,42 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     'c-struct-student-registry': studentRegistrySubmission(studentRegistryAlgorithms)
   };
   const values = new Map();
+  await t.test('factorial rejects zero as its base result', async () => {
+    const { result } = await submit('c-recursion-factorial', solutions['c-recursion-factorial'].replace('return 1UL;', 'return 0UL;'));
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[0].passed, false);
+  });
+  await t.test('factorial rejects overwriting the output before failure validation', async () => {
+    const wrong = solutions['c-recursion-factorial'].replace('if (out_value == NULL || n > 12)', 'if (out_value != NULL) *out_value = 0UL;\n    if (out_value == NULL || n > 12)');
+    const { result } = await submit('c-recursion-factorial', wrong);
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[13].passed, false);
+    assert.equal(result.tests[14].passed, false);
+  });
+  await t.test('factorial rejects a shared accumulator that only fails on repeated calls', async () => {
+    const wrong = '#include <stddef.h>\nint factorial_checked(unsigned int n,unsigned long *out){if(!out||n>12)return 0;static unsigned long result=1UL;for(unsigned int i=1;i<=n;i++)result*=i;*out=result;return 1;}';
+    const { result } = await submit('c-recursion-factorial', wrong);
+    assert.equal(result.ok, false);
+    assert.ok(result.tests.slice(0,18).every(example => example.passed));
+    assert.equal(result.tests[18].passed, false);
+    assert.equal(result.tests[19].passed, false);
+  });
+  await t.test('factorial rejects 13 even when the host can represent its result', async () => {
+    const { result } = await submit('c-recursion-factorial', solutions['c-recursion-factorial'].replace('n > 12', 'n > 13'));
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[13].passed, false);
+  });
+  await t.test('factorial rejects debug output from the submitted function', async () => {
+    const wrong = '#include <stdio.h>\n' + solutions['c-recursion-factorial'].replace('if (out_value == NULL', 'puts("debug");\n    if (out_value == NULL');
+    const { result } = await submit('c-recursion-factorial', wrong);
+    assert.equal(result.ok, false);
+    assert.equal(result.tests[5].passed, false);
+  });
+  await t.test('functional factorial grading also accepts a correct iterative contract', async () => {
+    const { result } = await submit('c-recursion-factorial', '#include <stddef.h>\nint factorial_checked(unsigned int n,unsigned long *out){if(!out||n>12)return 0;unsigned long result=1UL;for(unsigned int i=1;i<=n;i++)result*=i;*out=result;return 1;}');
+    assert.equal(result.ok, true);
+    assert.equal(result.tests.length, 20);
+  });
   const storage = { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };
   for (const [id, code] of Object.entries(solutions)) {
     await t.test(id + ' passes real compiler and all grading cases', async () => {

@@ -1,5 +1,25 @@
 # CodeWeave 개발 일지
 
+## 2026-10-14 16:29 KST — 재귀 입문과 범위·반복 호출 팩토리얼 실습
+
+- 시작 SHA: `c30332a57264aa9cb6a13b9abbdc8cceaafc26d6` (`main`, tree `20886acee0ce813fa3d0144af8ce3811073f64ac`). GitHub branches/main의 실제 읽기·새 clone HEAD/tree가 일치하고 새 작업 트리는 깨끗했다. 앞선 체크아웃은 status만 읽어 보존했다. 열린 PR 0개, 시작 SHA의 Actions #56 `38528231217`은 test·browser 모두 성공이다. 필수 여섯 문서·최신 일지·공개/비공개 채점 정의·카탈로그·도식·검사·CI를 읽었다. 기준선 npm test 240/240, 실패/skip 0. 변경 뒤 재조회한 main도 같은 SHA다.
+- 목표/성공 조건: 최신 일지의 다음 작업인 재귀를 독립 단원으로 구현한다. 종료 조건·진행 척도·호출별 자동 상태·공유 static 상태·수치/깊이 계약을 20절 이상, 독자 정적 SVG, 두 컴파일 가능한 완성 예제, 함수형 스타터·선수·퀴즈·반복 제출과 연결한다. 0..12 전체와 범위/NULL·실패 보존·같은/다른 객체 반복을 실제 GCC로 검사하고 기존 24개 단원과 21개 채점 정의는 그대로 유지한다.
+- 테스트 우선: 신규 tests/recursion-content.test.mjs 8건을 먼저 작성했다. 구현 전 0/8 성공·8건 예상 실패로 단원/도식/원고/계약/예제가 없는 상태를 재현했다. 구현 뒤 8/8, metadata·audit 포함 표적 15/15가 성공했다. 기능 테스트로 구현이 재귀인지 증명할 수 없으므로 재귀 사용 정규식 강제는 넣지 않고 올바른 반복형도 승인한다.
+- 콘텐츠/구현: src/catalog.js에 c-recursion-factorial 25절·약 70분·독립 퀴즈/함수형 스타터를 추가하고 content/c/20-recursion-factorial.md에 251줄 원고를 작성했다. 종료/감소·호출별 상태·0!=1·복귀 곱셈·unsigned long 최소 보장·최대 13개 논리적 helper 활성 호출·실패 뒤 출력 보존·꼬리 호출 비보장·재귀/반복 비교·오류·점검·세 단계 연습·Mini Project·테스트·복습을 연결한다. src/figures.js의 340×460 세로 SVG는 n=3→2→1→0과 역순 반환 1→1→2→6을 표시한다. 물리 스택/주소/프레임 배치를 보장하거나 애니메이션을 만들지 않는다.
+- 채점/파일: src/exercises.js에 c-clamp-function/c-pointer를 선수로 갖는 공개 메타데이터만 추가한다. server/grading-exercises.mjs는 기존 c-function 경로에 20개 사례·별도 main 하네스만 등록한다. 13개 허용 n 전수·13·UINT_MAX·세 NULL 경계·같은 객체 5→0→12→3→13·서로 다른 객체를 검사한다. ULONG_MAX sentinel은 기호 비교로 관찰한다. dev-server.mjs·정적 파일 허용 목록·진도/초안/iteration/백업 v1 구현은 수정하지 않는다. 원고는 HTTP로 공개하지 않는다.
+- 검증 파일: 신규 콘텐츠 검사와 tests/grader-api.test.mjs의 다섯 오답 회귀(기준값 0·실패 전 출력 덮어쓰기·static 누산 공유·13 허용·디버그 출력), 올바른 반복형 승인, 참조 풀이를 추가했다. 공유 누산 오답은 단독 18개 사례는 통과하고 두 반복/독립 객체 시나리오만 실패한다. tests/exercises.test.mjs·tests/exercise-audit.test.mjs는 22문제 목록과 감사 행을 갱신했다. tests/browser-practice.mjs는 잘못된 공유 상태→수정→두 이력→이론/퀴즈→숙달·25절·390px/SVG 경계와 최소 11.5 CSS px 글자·오프라인·CI 그림 경로를 추가했다. GCC 성공 로그는 고정 영어 개수 대신 실제 풀이 개수로 출력하도록 재검토했다. sw.js는 자산 목록을 유지한 shell v33이다.
+- 검사 결과: 전체 npm test 255/255 성공·실패/skip 0. API 표적 98/98, 콘텐츠/metadata/audit 15/15가 통과했다. A/B·함수 부분·스타터와 별도 하네스는 -std=c11 -Wall -Wextra -Werror -Wpedantic에서 경고 없이 컴파일했다. A의 5·0·12·13/NULL 상태·출력과 B의 enter 3→0/leave 0→3·결과 6을 대조했다. 전체 C 22문제·209개 사례를 GCC API로 검사했다. 변경 JS/MJS 10개 node --check·git diff --check 성공. 새로운 내용이 없는 기존 24개 lesson 전체·quiz/challenge·공개 메타데이터와 21개 private grader 전체를 시작 SHA의 모듈과 deepEqual로 비교해 동일함을 확인했다.
+- 로컬 UI 한계: npm run test:browser의 선행 실제 GCC API 22문제는 성공했으나 browserType.launch: Executable doesn't exist at /root/.cache/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell로 화면 단계가 중단됐다. 반영 뒤 실제 Chromium CI와 생성된 이미지에서 새 시나리오를 확인한다. 현재까지 DOM/HTTP/API 성공을 브라우저 성공으로 주장하지 않으며 실제 Windows·Android·iPad/PWA 설치는 별도 미검증이다.
+- 출처 확인: 두 완전한 제공 원본을 재조회/접근했다. Express 87,753,393 bytes·750쪽의 목차 물리 13/인쇄 11쪽에서 9.8 순환 호출을 확인하고 해당 시작 물리 389/인쇄 387쪽을 읽었다. K&R 6,838,054 bytes·288쪽의 4.10 Recursion 물리 100~101/인쇄 86~87쪽을 읽었다. 부분 확인이며 두 책 전체 완독/대응표 완성은 아니다. 원고/문제/도식/코드는 먼저 독립 작성했고 본문·상용 코드/문제·캡처를 복제하지 않았다. C11 위원회 초안 N1570(https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf)의 수치 최소 보장·호출별 자동 객체·직접/간접 재귀 의미를 별도 검토했다. 임시 PDF 렌더링 파생물은 검토 후 제거하며 원본은 유지한다.
+- 문서/재검토: README·ROADMAP·ARCHITECTURE·CONTENT_POLICY·C_EXERCISE_AUDIT·이 일지에 22개 C/25개 공개 정의/209개 GCC 사례와 재귀 입문·현재 source 접근·후속 범위를 반영한다. 생성 2개/수정 15개, 총 17개 파일이다. 공개 정의·감사 행 순서, 원고와 화면 두 프로그램의 동일성·전체 기존 정의 보존을 확인했다. 함수형 반환은 정확한 1/0이며 비NULL 포인터는 유효한 쓰기 객체라는 전제를 숨기지 않는다. 시간 제한·유한 사례·NULL 검사로 실행 격리나 모든 포인터 안전성을 주장하지 않는다.
+  신규 원고를 stage한 뒤 git diff --cached --check가 EOF의 추가 빈 줄을 검출했다. 그 빈 줄만 제거하고 재검사에 성공했으며 실제 원고는 251줄이다. 검토용 PDF PNG 29개는 제거했고 원본은 그대로 유지하므로 파생물은 재생성할 수 있다.
+- 커밋/반영: 제목은 `feat: add bounded recursion factorial practice`다. 기존 base tree를 보존하는 GitHub blob/tree/commit와 expected-SHA 비강제 main ref 갱신을 사용한다. 각 blob/전체 tree와 로컬 검증본을 대조하고 ref 갱신 직전 최신 HEAD를 다시 조회한다. 자신의 SHA는 미리 넣지 않고 반영 뒤 실제 HEAD·파일·CI SHA/URL을 보고서에서 확인한다. GitHub 저장을 웹 호스팅/공개 실행 서버 배포로 보고하지 않는다.
+- 미완료/위험: 이 단원은 재귀 기초이지 트리/백트래킹/분할 정복 전체 과정이나 종합 C 교과서 완성이 아니다. 함수 기능 채점은 재귀 구현 여부·물리 스택 사용·꼬리 최적화·복잡도를 증명하지 않는다. dev-server.mjs는 loopback의 신뢰하는 개인 C만 실행하는 비격리 도구다. Rust/Cargo 채점·실기기/설치형 PWA·공개 실행 격리는 후속이다. 외부 서비스/보안 설정/CodeStep/사용자 데이터는 변경하지 않는다.
+- 다음 작업: 다차원 배열을 행·열의 객체/함수 매개변수 계약·초기화·행 우선 순회·행/열 경계로 제한한 작은 독립 단원으로 확장한다. 실제 일지·CI를 먼저 재조회하며 기존 배열 최댓값/재귀 단원·기록 형식은 유지한다. 자료구조/알고리즘의 재귀 트리·백트래킹은 깊이·진행 척도·자원 계약을 별도로 설계한다.
+- 분야별 상태: C 22문제(입출력 8·함수형 12·다중 파일 2), 실제 GCC 사례 209개, 전체 공개 정의/퀴즈 25개, shell v33. 기존 통합 백업·숙달 분리·정적 제한과 핵심 C 상세 경로에 재귀 입문을 추가했다. 자료구조/알고리즘 전체 과정·Rust 실행·설치형/실기기 PWA·공개 실행은 미완료다.
+
+---
+
 ## 2026-10-14 15:56~16:23 KST — 함수 범위·저장기간 확장과 원본 교재 접근 재확인
 
 - 시작 SHA: `9b78e084c41847bf92339b5c8c01959992b579e0` (`main`, tree `b15b7d9545025475fadd478de9eb48f9b91d795e`). GitHub branches/main·새 clone HEAD/origin/main이 일치했고 미커밋 변경은 없었다. 이전 체크아웃은 읽기 전용 status로 보존했다. 열린 PR 0개, Actions #55 `38522542669`의 test·실제 Chromium browser는 모두 성공이었다. 필수 여섯 문서·최신 일지·함수 원고/화면·도식·메타데이터·현재 여섯 사례·콘텐츠/API/브라우저 검사·CI 정의를 읽었다. 기준선 npm test 229/229, 실패/skip 0. 반영 전 최신 HEAD도 같은 SHA다.
