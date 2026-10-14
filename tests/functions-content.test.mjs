@@ -8,7 +8,7 @@ test('C function lesson provides a complete textbook-to-practice path', () => {
   const lesson = lessons.find(item => item.id === 'c-functions');
   assert.ok(lesson, 'c-functions lesson must be registered');
   assert.equal(lesson.track, 'c');
-  assert.equal(lesson.figure, 'function-call');
+  assert.equal(lesson.figure, 'function-scope-duration');
   assert.ok(lesson.sections.length >= 8, 'theory must be deeper than a short summary');
   const headings = lesson.sections.map(section => section.heading).join(' ');
   for (const topic of ['선수 지식', '학습 목표', '선언', '값 전달', '지역 변수', '흔한 오류', '핵심 요약', '복습']) {

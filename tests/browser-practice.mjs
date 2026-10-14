@@ -94,7 +94,7 @@ try {
     'c-loops': '#include <stdio.h>\nint main(void){int n;if(scanf("%d",&n)!=1)return 1;long sum=0;for(int i=1;i<=n;i++)sum+=i;printf("%ld\\n",sum);return 0;}',
     'c-array': "#include <stddef.h>\n#include <stdio.h>\n\nstatic int max_nonempty(const int values[], size_t count) {\n    int maximum = values[0];\n    for (size_t i = 1; i < count; ++i) {\n        if (values[i] > maximum) {\n            maximum = values[i];\n        }\n    }\n    return maximum;\n}\n\nint main(void) {\n    enum { CAPACITY = 20 };\n    int values[CAPACITY];\n    int count_input;\n    if (scanf(\"%d\", &count_input) != 1 || count_input < 1 || count_input > CAPACITY) {\n        return 1;\n    }\n    size_t count = (size_t)count_input;\n    for (size_t i = 0; i < count; ++i) {\n        if (scanf(\"%d\", &values[i]) != 1) {\n            return 1;\n        }\n    }\n    printf(\"%d\\n\", max_nonempty(values, count));\n    return 0;\n}",
     'c-pointer': "#include <stdio.h>\n\nvoid add_one(int *value) {\n    ++(*value);\n}\n\nint main(void) {\n    int n;\n    if (scanf(\"%d\", &n) != 1) {\n        return 1;\n    }\n    if (n < -10000 || n > 9999) {\n        return 1;\n    }\n    add_one(&n);\n    printf(\"%d\\n\", n);\n    return 0;\n}",
-    'c-functions': '#include <stdio.h>\nint clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}\nint main(void){int value,low,high;scanf("%d%d%d",&value,&low,&high);printf("%d\\n",clamp(value,low,high));return 0;}',
+    'c-functions': "#include <stdio.h>\n\nint clamp(int value, int low, int high);\n\nint main(void) {\n    int value, low, high;\n    if (scanf(\"%d%d%d\", &value, &low, &high) != 3) return 1;\n    printf(\"%d\\n\", clamp(value, low, high));\n    return 0;\n}\n\nint clamp(int value, int low, int high) {\n    if (value < low) return low;\n    if (value > high) return high;\n    return value;\n}\n",
     'c-clamp-function': functionOnly,
     'c-array-max-function': arrayMaxFunction,
     'c-string-count-function': stringCountFunction,
@@ -216,11 +216,37 @@ try {
   console.log('PASS: pointer introduction rejects pointer movement, reaches mastery and fits 390px');
   await page.goto(base + '/#lesson:c-functions');
   await expect(page.locator('.detail-head h1')).toHaveText('함수 설계: 선언·호출·값 전달');
-  await expect(page.locator('.figure-box svg')).toContainText('clamp');
+  await expect(page.locator('.article > section')).toHaveCount(29);
+  await expect(page.locator('.article')).toContainText('static 지역 객체');
+  await expect(page.locator('.article')).toContainText('범위·저장기간·연결');
+  await expect(page.locator('.figure-box svg')).toContainText('int age = 30;');
+  await expect(page.locator('.figure-box svg')).toContainText('바깥 이름만 가려짐');
   await expect(page.locator('#code-input')).toHaveValue(/int clamp\(int value, int low, int high\)/);
   await expect(page.locator('.practice-zone')).toContainText('Practice Exercise');
   await expect(page.locator('.practice-zone')).toContainText('선수 단원:');
-  console.log('PASS: function lesson, exercise metadata, static call figure and starter code render together');
+  await submit(page, solutions['c-functions'].replace('printf("%d\\n", clamp(value, low, high));', 'clamp(value, low, high);\n    printf("%d\\n", value);'));
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await submit(page, solutions['c-functions']);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('#mark-theory').click();
+  await page.locator('[data-quiz="c-functions"][data-choice="0"]').click();
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'function lesson mobile overflow');
+  const functionFigure = await page.locator('.figure-box svg').boundingBox();
+  assert.ok(functionFigure && functionFigure.x >= 0 && functionFigure.x + functionFigure.width <= 390, 'function figure fits the mobile viewport');
+  const functionTextSizes = await page.locator('.figure-box svg').evaluate(svg => [...svg.querySelectorAll('text')].map(label => {
+    const transform = label.getScreenCTM();
+    return parseFloat(getComputedStyle(label).fontSize) * Math.hypot(transform.a, transform.b);
+  }));
+  assert.ok(functionTextSizes.length > 0 && functionTextSizes.every(size => size >= 11.5), 'function diagram retains readable mobile text');
+  if (qaDir) {
+    await mkdir(qaDir, { recursive: true });
+    await page.locator('.figure-box').screenshot({ path: path.join(qaDir, 'function-scope-mobile.png') });
+  }
+  await page.setViewportSize({ width: 1366, height: 900 });
+  console.log('PASS: function lesson rejects discarded return, reaches mastery and preserves scope diagram readability at 390px');
   await page.goto(base + '/#lesson:c-clamp-function');
   await expect(page.locator('.detail-head h1')).toHaveText('함수 구현 실습: 테스트 하네스와 계약');
   await expect(page.locator('#code-input')).not.toHaveValue(/main\s*\(/);
@@ -645,6 +671,13 @@ try {
   await expect(page.locator('.figure-box svg')).toContainText('alias는 value 그대로');
   await expect(page.locator('.article')).toContainText('객체 수명과 빌린 주소');
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'offline pointer introduction mobile overflow');
+  await page.goto(base + '/#lesson:c-functions');
+  await page.reload();
+  await expect(page.locator('.detail-head h1')).toHaveText('함수 설계: 선언·호출·값 전달');
+  await expect(page.locator('.article > section')).toHaveCount(29);
+  await expect(page.locator('.figure-box svg')).toContainText('int age = 15;');
+  await expect(page.locator('.article')).toContainText('static 지역 객체');
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'offline function lesson mobile overflow');
   await context.setOffline(false);
   assert.deepEqual(errors, []);
   console.log('PASS: 390px mobile layout and offline reload of drafts/history; no browser exceptions');

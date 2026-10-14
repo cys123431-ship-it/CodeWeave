@@ -52,7 +52,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     'c-loops': '#include <stdio.h>\nint main(void){int n;if(scanf("%d",&n)!=1)return 1;long sum=0;for(int i=1;i<=n;i++)sum+=i;printf("%ld\\n",sum);return 0;}',
     'c-array': "#include <stddef.h>\n#include <stdio.h>\n\nstatic int max_nonempty(const int values[], size_t count) {\n    int maximum = values[0];\n    for (size_t i = 1; i < count; ++i) {\n        if (values[i] > maximum) {\n            maximum = values[i];\n        }\n    }\n    return maximum;\n}\n\nint main(void) {\n    enum { CAPACITY = 20 };\n    int values[CAPACITY];\n    int count_input;\n    if (scanf(\"%d\", &count_input) != 1 || count_input < 1 || count_input > CAPACITY) {\n        return 1;\n    }\n    size_t count = (size_t)count_input;\n    for (size_t i = 0; i < count; ++i) {\n        if (scanf(\"%d\", &values[i]) != 1) {\n            return 1;\n        }\n    }\n    printf(\"%d\\n\", max_nonempty(values, count));\n    return 0;\n}",
     'c-pointer': "#include <stdio.h>\n\nvoid add_one(int *value) {\n    ++(*value);\n}\n\nint main(void) {\n    int n;\n    if (scanf(\"%d\", &n) != 1) {\n        return 1;\n    }\n    if (n < -10000 || n > 9999) {\n        return 1;\n    }\n    add_one(&n);\n    printf(\"%d\\n\", n);\n    return 0;\n}",
-    'c-functions': '#include <stdio.h>\nint clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}\nint main(void){int value,low,high;if(scanf("%d%d%d",&value,&low,&high)!=3)return 1;printf("%d\\n",clamp(value,low,high));return 0;}',
+    'c-functions': "#include <stdio.h>\n\nint clamp(int value, int low, int high);\n\nint main(void) {\n    int value, low, high;\n    if (scanf(\"%d%d%d\", &value, &low, &high) != 3) return 1;\n    printf(\"%d\\n\", clamp(value, low, high));\n    return 0;\n}\n\nint clamp(int value, int low, int high) {\n    if (value < low) return low;\n    if (value > high) return high;\n    return value;\n}\n",
     'c-clamp-function': 'int clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}',
     'c-array-max-function': '#include <stddef.h>\nint find_max(const int values[],size_t length,int *out_max){if(values==NULL||length==0||out_max==NULL)return 0;int maximum=values[0];for(size_t i=1;i<length;i++)if(values[i]>maximum)maximum=values[i];*out_max=maximum;return 1;}',
     'c-string-count-function': '#include <stddef.h>\nint count_char(const char *text,char target,size_t *out_count){if(text==NULL||out_count==NULL)return 0;size_t count=0;for(size_t i=0;text[i]!=\'\\0\';++i)if(text[i]==target)++count;*out_count=count;return 1;}',
@@ -85,6 +85,13 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
       recordGradedSubmission(storage, lessons.map(l => l.id), id, code, result);
     });
   }
+  await t.test('function introduction rejects discarding the clamp return value and printing the caller input', async () => {
+    const wrong = solutions['c-functions'].replace('printf("%d\\n", clamp(value, low, high));', 'clamp(value, low, high);\n    printf("%d\\n", value);');
+    assert.notEqual(wrong, solutions['c-functions']);
+    const { result } = await submit('c-functions', wrong);
+    assert.equal(result.ok, false);
+    assert.ok(result.tests.some(example => !example.passed));
+  });
   await t.test('pointer introduction rejects moving the pointer without modifying the caller', async () => {
     const { result } = await submit('c-pointer', solutions['c-pointer'].replace('++(*value);', 'value++;'));
     assert.equal(result.ok, false);
