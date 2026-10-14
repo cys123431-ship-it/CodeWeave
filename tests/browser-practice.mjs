@@ -71,7 +71,10 @@ async function submit(page, code) {
   await page.locator('#code-input').fill(code);
   const response = page.waitForResponse(r => r.url().endsWith('/api/grade'));
   await page.locator('#grade-code').click();
-  await response;
+  const graded = await response;
+  const sentToken = graded.request().headers()['x-codeweave-token'];
+  assert.equal(sentToken, await page.locator('meta[name="codeweave-token"]').getAttribute('content'));
+  assert.match(sentToken, /^[0-9a-f]{64}$/);
   await ready(page);
 }
 async function fillMultiFile(page, files) {
@@ -113,8 +116,11 @@ try {
     'c-realloc-student-capacity': reallocStudentCapacity,
     'c-student-vector-push': studentVectorPush
   };
+  const html = await (await fetch(base + '/')).text();
+  const token = html.match(/<meta name="codeweave-token" content="([0-9a-f]{64})">/)?.[1];
+  assert.match(token ?? '', /^[0-9a-f]{64}$/);
   for (const [exerciseId, code] of Object.entries(solutions)) {
-    const response = await fetch(base + '/api/grade', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ exerciseId, code }) });
+    const response = await fetch(base + '/api/grade', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CodeWeave-Token': token }, body: JSON.stringify({ exerciseId, code }) });
     const result = await response.json();
     assert.equal(result.ok, true, exerciseId + ': ' + JSON.stringify(result));
   }

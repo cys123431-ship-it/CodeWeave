@@ -31,9 +31,12 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
       if (match) { clearTimeout(timer); resolve(match[0]); }
     });
   });
+  const page = await (await fetch(url + '/')).text();
+  const token = page.match(/<meta name="codeweave-token" content="([0-9a-f]{64})">/)?.[1];
+  assert.match(token ?? '', /^[0-9a-f]{64}$/);
   const submit = async (exerciseId, code) => {
     const response = await fetch(url + '/api/grade', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CodeWeave-Token': token },
       body: JSON.stringify({ exerciseId, code }), signal: AbortSignal.timeout(10000)
     });
     return { status: response.status, result: await response.json() };

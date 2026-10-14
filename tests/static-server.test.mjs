@@ -18,9 +18,9 @@ const publicFiles = [
 ];
 
 // Use raw request targets: fetch/URL would normalize traversal before sending it.
-function request(url, target, method = 'GET', body) {
+function request(url, target, method = 'GET', body, headers = {}) {
   return new Promise((resolve, reject) => {
-    const req = http.request(url, { path: target, method }, res => {
+    const req = http.request(url, { path: target, method, headers }, res => {
       const chunks = [];
       res.on('data', chunk => chunks.push(chunk));
       res.on('end', () => resolve({ status: res.statusCode, headers: res.headers, body: Buffer.concat(chunks) }));
@@ -84,15 +84,19 @@ test('static server serves the learning shell without exposing project files', {
       const expected = await fs.readFile(path.join(project, file));
       const response = await request(url, '/' + file + '?v=regression');
       assert.equal(response.status, 200, file);
-      assert.deepEqual(response.body, expected, file);
+      const originalBody = file.endsWith('.html')
+        ? Buffer.from(response.body.toString('utf8').replace(/  <meta name="codeweave-token" content="[0-9a-f]{64}">\n/, ''))
+        : response.body;
+      assert.deepEqual(originalBody, expected, file);
       assert.equal(response.headers['x-content-type-options'], 'nosniff');
       const head = await request(url, '/' + file, 'HEAD');
       assert.equal(head.status, 200, file);
-      assert.equal(Number(head.headers['content-length']), expected.length);
+      assert.equal(Number(head.headers['content-length']), response.body.length);
       assert.equal(head.headers['content-type'], response.headers['content-type']);
       assert.equal(head.body.length, 0);
     }
-    assert.deepEqual((await request(url, '/')).body, await fs.readFile(path.join(project, 'index.html')));
+    const root = (await request(url, '/')).body.toString('utf8');
+    assert.equal(root.replace(/  <meta name="codeweave-token" content="[0-9a-f]{64}">\n/, ''), await fs.readFile(path.join(project, 'index.html'), 'utf8'));
     assert.equal((await request(url, '/src/')).status, 404);
     assert.equal((await request(url, '/styles.css', 'POST')).status, 405);
     const shell = await fs.readFile(path.join(project, 'sw.js'), 'utf8');
@@ -105,7 +109,11 @@ test('static server serves the learning shell without exposing project files', {
     }
     assert.equal((await request(url, '/index.html')).status, 200);
     assert.equal((await request(url, '/api/grade')).status, 405);
-    const invalidGrade = await request(url, '/api/grade?source=test', 'POST', JSON.stringify({ exerciseId: 'unknown', code: '' }));
+    const html = (await request(url, '/')).body.toString('utf8');
+    const token = html.match(/<meta name="codeweave-token" content="([0-9a-f]{64})">/)[1];
+    const invalidGrade = await request(url, '/api/grade?source=test', 'POST', JSON.stringify({ exerciseId: 'unknown', code: '' }), {
+      'Content-Type': 'application/json', 'X-CodeWeave-Token': token
+    });
     assert.equal(invalidGrade.status, 400);
     assert.equal(JSON.parse(invalidGrade.body).ok, false);
   });

@@ -122,8 +122,9 @@ async function grade() {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
   try {
+    const token = document.querySelector('meta[name="codeweave-token"]')?.content ?? '';
     const response = await fetch('./api/grade', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
+      method: 'POST', headers: {'Content-Type':'application/json','X-CodeWeave-Token':token},
       body: JSON.stringify({exerciseId:id,code}), signal:controller.signal
     });
     if (!response.ok) throw new Error('HTTP ' + response.status);

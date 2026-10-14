@@ -111,7 +111,8 @@ async function grade(lesson,code){
  state.terminal[id]='로컬 GCC 채점 서버에 연결하는 중...';render();
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
  try{
-  const response=await fetch('./api/grade',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({exerciseId:id,code}),signal:controller.signal});
+  const token=document.querySelector('meta[name="codeweave-token"]')?.content ?? '';
+  const response=await fetch('./api/grade',{method:'POST',headers:{'Content-Type':'application/json','X-CodeWeave-Token':token},body:JSON.stringify({exerciseId:id,code}),signal:controller.signal});
   if(!response.ok)throw Error('채점 요청 실패 '+response.status);
   const result=await response.json();
   // Keep the actual grading result visible even if browser persistence fails.

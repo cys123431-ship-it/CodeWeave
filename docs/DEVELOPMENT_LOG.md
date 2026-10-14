@@ -1,4 +1,18 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 1단계 진행 중 확인함
+## 2026-10-14 21:03 KST — 1-1 로컬 채점 요청 차단
+- 시작/결과 SHA: 시작 ed87b1ed16d9201102926edabae8df5be7c6e344; 결과는 반영 뒤 조회. 커밋 제목 fix: require local JSON requests and per-start grading tokens.
+- 목표: JSON/Host/Origin/토큰 검증을 GCC·임시 디렉터리 생성보다 앞에 두고 두 화면의 정상 채점·PWA 캐시를 보존.
+- 변경 파일 수: 9개(서버·두 제출 화면·SW·API/정적/브라우저 검사·신규 보안 검사·일지).
+- 테스트 결과: 신규20건 기존 HEAD 2/20→수정 후20/20; 전체296/296·실패/skip 0; 변경8 JS/MJS 문법·diff 검사 성공. 로컬 UI 실행은 기존 Chromium 부재로 미실행, CI에서 검증.
+- CI URL과 결과: 시작 SHA https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38559408898 success; 결과 SHA CI는 반영 후 조회하며 검증 대기.
+- 발견한 문제: 필수4 거부 요청이 실제 GCC까지 실행됨; 토큰을 DOM에만 주입하고 캐시에는 제거. 늦은 캐시 열기/본문 선소비 실패1건도 재현·수정.
+- 검사 수정 이유: HTML은 동적 토큰만 제거해 원본 보존/실제 HEAD 길이를 검사하고 기존 API 검사는 유효 토큰을 추가; 중복 Host는 raw 헤더로 전송하고 HTTP 파서의400/서버403 조기 거부를 허용.
+- 보안 영향: 외부 POST 입력은 저장/실행 전에 거부; 정적 요청 Host도 검사해 rebinding 토큰 노출을 막고 시작별256비트 토큰은 저장·로그·백업하지 않음.
+- 단계별 완료율: 0단계3/3·이번 첫 줄로 실제 적용 확인; 1단계0/6(CI 대기), 2단계0/6. 새 단원/문제 추가 없음.
+- 다음 작업: 결과 SHA test/browser CI 성공 확인 후 1-1 상태 기록; 다음 항목1-2 프로세스 그룹·자원 제한.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 1단계 진행 중 확인함
 ## 2026-10-14 20:47 KST — 0-3 반영 확인과 1단계 전환
 - 시작/결과 SHA: 지침 결과 2767e36b29af638ac9152f26d28bad7f02cc644e 확인; 후속 결과는 반영 뒤 조회. 제목 docs: confirm policy rollout and advance to security stage.
 - 목표: 지침·예약·첫 줄 확인 계약의 반영을 검증하고 다음 항목을 1-1로 고정.
