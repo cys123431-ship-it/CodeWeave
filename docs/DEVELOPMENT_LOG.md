@@ -1,5 +1,25 @@
 # CodeWeave 개발 일지
 
+## 2026-10-14 11:55~12:13 KST — 조건문·반복문 교과서형 확장과 이식 가능한 누산
+
+- 시작 SHA: `59e18295c1e280c9d766db70691b3fde67718921` (`main`, tree `99883835cf278513d389b870ab670fca55b553f3`). 새 clone의 로컬 HEAD·origin/main·GitHub branches/main 읽기가 일치했고 미커밋 작업은 없었다. 열린 PR은 0개, 시작 SHA의 Actions #51 `38499668710`은 성공이었다. README·ROADMAP·ARCHITECTURE·CONTENT_POLICY·AUTONOMOUS_DEVELOPMENT·최신 일지와 관련 카탈로그·도식·채점 사례·콘텐츠/API/브라우저 검사·CI 정의를 읽었다. 기준선 npm test는 203/203 성공, 실패/skip 0이었다. 반영 전 branches/main 재조회도 같은 SHA였다.
+- 목표/성공 조건: 최신 일지의 다음 작업 c-loops를 16절 이상 교과서형 화면·독립 원고·정적 불변식 도식·두 실제 컴파일 완성 프로그램으로 확장한다. 0/비0 조건·분기·반복 상태·종료·off-by-one·누산 범위를 설명하고 0회·1회·상한을 검사한다. 기존 ID·퀴즈 정답 인덱스·스타터·공개 예시·입력 범위·선수 관계·저장 키·v1 백업을 유지한다.
+- 테스트 우선/발견: 신규 tests/loops-content.test.mjs의 7개 검사를 먼저 작성해 구현 전 7건 예상 실패를 확인했다. 기존 참조 풀이가 int 누산형을 사용했고 n=1 채점 사례·전용 원고·불변식 SVG·상세 교육 구성이 없었다. 최대 합 500500은 C 최소 int 최댓값 32767을 넘으므로 단순 PC 실행 성공을 이식성 근거로 쓰지 않았다.
+- 구현/파일: src/catalog.js의 c-loops를 3절에서 22절·약 60분으로 확장했다. 조건·단락 평가·분기·반복 시점·상태 추적·불변식·종료·break/continue·off-by-one·long/%ld·입력 전제·오류·점검·요약·기초/응용/도전·Mini Project·복습을 연결했다. src/figures.js에는 초기화→조건→참 본문→갱신→재검사와 거짓 종료를 구분하는 독자 SVG를 추가했다. content/c/03-conditionals-loops.md는 299줄 독립 원고와 상태 추적/채점용 완성 프로그램을 갖춘다. server/grading-exercises.mjs에 n=1을 추가해 이 문제는 5개, 전체 C 21문제는 186개 GCC 사례가 되었다. tests/grader-api.test.mjs와 tests/browser-practice.mjs의 참조 풀이도 long/%ld로 바꾸고 API에는 마지막 항 누락·본문 안 누산값 초기화 오답 회귀를 추가했다.
+- 브라우저/문서: tests/browser-practice.mjs는 반복문 22절·불변식 도식·오답→수정→실제 재제출→이론/퀴즈→숙달·390px 문서/SVG 경계·오프라인 재로딩을 추가하고 CI용 도식 스크린샷을 저장한다. sw.js는 shell v28로 갱신한다. README·ROADMAP·ARCHITECTURE·CONTENT_POLICY·C_EXERCISE_AUDIT는 상세 단원과 186개 사례 및 남은 두 기초 단원 부채를 반영했다.
+- C 의미 재검토: 공개 WG14 C11 위원회 초안 N1570(https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf)의 정수 최소 범위·논리 연산·분기/반복/점프·형식 입출력 의미를 조회했다. long의 최소 최댓값 2147483647과 최대 합/중간 곱 범위, i 최대 1001을 별도로 논증했다. 고정 비트폭이나 현재 GCC 결과를 언어 전체 보장으로 단정하지 않으며 signed overflow와 임의 큰 텍스트의 scanf 변환 한계를 명시했다. 코드 조각과 완성 프로그램을 구별했고 표준 원문·교재 본문을 복제하지 않았다.
+- 실행 검사: 최종 npm test 212/212 성공, 실패/skip 0. C 21문제·186개 기존/추가 GCC 사례와 두 오답 회귀가 성공했다. 새 완성 프로그램은 -std=c11 -Wall -Wextra -Werror -Wpedantic으로 경고 없이 컴파일됐다. A의 4줄 상태 추적 출력, B의 현재 5개 채점 사례 및 모든 허용 정수 n=0~1000의 1001개 수학적 기대값을 확인했다. B는 표현 가능한 범위 밖 -1/1001·abc·즉시 EOF에서 출력 없이 상태 1을 반환했다. 이 예제 검증은 기존 채점 입력 계약 확대가 아니다. 변경 JS/MJS 7개 node --check와 git diff --check도 성공했다.
+- 로컬 브라우저 제한: npm run test:browser의 선행 실제 GCC API는 C 21문제 모두 통과했으나 browserType.launch: Executable doesn't exist로 Chromium UI 단계가 중단됐다. 실제 Chromium·390px·오프라인 결과는 반영 뒤 원격 CI에서 별도 조회한다. DOM/HTTP/GCC 성공을 UI E2E 성공으로 보고하지 않으며 Windows/Android/iPad 실기기·PWA 설치는 이번 범위 밖이다.
+- PDF 접근: 현재 K&R 파일은 6,838,054 bytes·288쪽이며 pdfinfo·첫 페이지 렌더링·육안 확인에 성공했다. Express 파일은 15,179,776 bytes로 존재하지만 XRef/endstream/trailer 손상으로 파싱·렌더링하지 못했다. K&R 전체 본문 대조나 Express 읽기를 주장하지 않았고 어느 책의 PDF·본문·캡처·상용 문제도 저장소에 복제하지 않았다. 원고·도식·예제·문제는 독자 작성했다.
+- 호환/재검토: c-loops의 ID·정답 인덱스 1·스타터·공개 입력 5/출력 15·0~1000 입력 전제·선수 관계는 그대로다. n=1은 기존 계약 안의 추가 경계이며 정상 풀이 출력은 변하지 않는다. 모든 저장 키·v1 백업·초안·제출·숙달 구현과 정적 파일 허용 목록을 변경하지 않았다. 새 원고는 개발 문서이며 기존 catalog/figures 모듈이 화면과 오프라인 콘텐츠를 제공한다.
+- 미완료/실제 위험: c-array·c-pointer는 짧은 시범 콘텐츠다. Rust/Cargo 채점·전체 자료구조/알고리즘·실기기/PWA 설치·안전한 공개 실행 격리는 미완료다. dev-server.mjs는 loopback의 신뢰하는 개인 C 코드만 실행하는 비격리 도구이고 시간 제한은 샌드박스가 아니다. GitHub 반영은 실제 사이트 호스팅/공개 실행 배포와 다르다.
+- 커밋/원격 확인: 커밋 제목은 `docs: deepen conditionals and loops lesson`이다. 시작 SHA를 expected SHA로 사용하고 기존 base tree를 보존하며 강제 푸시하지 않는다. 자신의 결과 SHA를 일지에 미리 기입하지 않고 반영 뒤 원격 HEAD·tree·새/기존 파일 blob·CI를 조회해 보고서로 남긴다.
+- 반영 경로: 일반 HTTPS git push origin main은 `fatal: could not read Username for 'https://github.com': No such device or address`로 실패했다. GitHub 연결의 실제 원격 읽기는 성공했다. 승인된 연결의 blob/tree/commit·expected-SHA ref 갱신을 사용하며 각 파일 blob SHA를 로컬 git hash-object와 대조하고 원격 전체 tree도 로컬 검증 tree와 비교한다. 새 파일·기존 파일·일지의 실제 반영 및 CI 결과는 보고서에서 별도로 확인한다.
+- 다음 작업: c-array를 배열 객체·0 기반 인덱스·반열린 구간·길이 전달·전체 음수 최댓값·배열 초기화/접근 전제·함수 연계·경계 테스트를 갖춘 교과서형 단원으로 확장한다. c-array-max-function을 중복 생성하지 않고 입문 배열 문제와 기존 함수 실습의 역할을 구분한다. 1~20 개수 계약·스타터·기록을 보존하고 필요한 검사부터 작성한다.
+- 분야별 상태: C 채점 21개(입출력 8·함수형 11·다중 파일 2), GCC 사례 186개, 공개 문제 정의 24개다. 첫 프로그램·변수/자료형·조건/반복 기초 단원은 상세 확장했고 나머지 두 기초 단원과 전체 교과서·Rust·자료구조/알고리즘·실기기/설치형 PWA·공개 실행은 계속 개발해야 한다.
+
+---
+
 ## 2026-10-14 10:55~11:07 KST — 변수·자료형 교과서형 확장
 
 - 시작 SHA: `581b4d6d62ab7a8229f1784342bc2ca99bf8340b` (`main`, tree `ad7112b1a52a189e72342ae7d38e5044c64ce73e`). 새 clone의 로컬 HEAD·origin/main·GitHub branches/main 읽기가 일치했고 미커밋 작업은 없었다. 열린 PR은 0개, 시작 SHA의 Actions `38494949209`는 성공이었다. README·ROADMAP·ARCHITECTURE·CONTENT_POLICY·AUTONOMOUS_DEVELOPMENT·최신 일지와 관련 카탈로그·도식·입력 계약·브라우저·콘텐츠 검사·CI 정의를 읽었다. 기준선 `npm test`는 198/198 성공, 실패/skip 0이었다.

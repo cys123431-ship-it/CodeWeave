@@ -3,7 +3,7 @@ import { exercises } from '../src/exercises.js';
 const CASES = {
   'c-hello': [{input:'',expected:'Hello, CodeWeave!'}],
   'c-types': [{input:'4 7\n',expected:'11'},{input:'-5 2\n',expected:'-3'},{input:'0 0\n',expected:'0'},{input:'10000 10000\n',expected:'20000'},{input:'-10000 -10000\n',expected:'-20000'}],
-  'c-loops': [{input:'5\n',expected:'15'},{input:'0\n',expected:'0'},{input:'10\n',expected:'55'},{input:'1000\n',expected:'500500'}],
+  'c-loops': [{input:'5\n',expected:'15'},{input:'0\n',expected:'0'},{input:'1\n',expected:'1'},{input:'10\n',expected:'55'},{input:'1000\n',expected:'500500'}],
   'c-array': [
     {input:'5\n2 9 -3 4 1\n',expected:'9'},
     {input:'1\n-12\n',expected:'-12'},

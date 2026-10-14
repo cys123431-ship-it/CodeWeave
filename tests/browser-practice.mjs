@@ -91,7 +91,7 @@ try {
   const solutions = {
     'c-hello': '#include <stdio.h>\nint main(void){puts("Hello, CodeWeave!");return 0;}',
     'c-types': correct,
-    'c-loops': '#include <stdio.h>\nint main(void){int n,s=0;scanf("%d",&n);for(int i=1;i<=n;i++)s+=i;printf("%d\\n",s);return 0;}',
+    'c-loops': '#include <stdio.h>\nint main(void){int n;if(scanf("%d",&n)!=1)return 1;long sum=0;for(int i=1;i<=n;i++)sum+=i;printf("%ld\\n",sum);return 0;}',
     'c-array': '#include <stdio.h>\nint main(void){int n,x,m;scanf("%d%d",&n,&m);for(int i=1;i<n;i++){scanf("%d",&x);if(x>m)m=x;}printf("%d\\n",m);return 0;}',
     'c-pointer': '#include <stdio.h>\nvoid add_one(int *p){++*p;}\nint main(void){int n;scanf("%d",&n);add_one(&n);printf("%d\\n",n);return 0;}',
     'c-functions': '#include <stdio.h>\nint clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}\nint main(void){int value,low,high;scanf("%d%d%d",&value,&low,&high);printf("%d\\n",clamp(value,low,high));return 0;}',
@@ -134,6 +134,31 @@ try {
   await page.locator('[data-quiz="c-hello"][data-choice="0"]').click();
   await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
   console.log('PASS: first C lesson renders the detailed build pipeline and reaches mastery through a real submission');
+  await page.goto(base + '/#lesson:c-loops');
+  await expect(page.locator('.detail-head h1')).toHaveText('조건문과 반복문');
+  await expect(page.locator('.article > section')).toHaveCount(22);
+  await expect(page.locator('.article')).toContainText('불변식: 이미 더한 범위');
+  await expect(page.locator('.article')).toContainText('500500');
+  await expect(page.locator('.figure-box svg')).toContainText('거짓');
+  await expect(page.locator('.figure-box svg')).toContainText('갱신');
+  await submit(page, solutions['c-loops'].replace('i<=n', 'i<n'));
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await submit(page, solutions['c-loops']);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('#mark-theory').click();
+  await page.locator('[data-quiz="c-loops"][data-choice="1"]').click();
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'loops lesson mobile overflow');
+  const loopsFigure = await page.locator('.figure-box svg').boundingBox();
+  assert.ok(loopsFigure && loopsFigure.x >= 0 && loopsFigure.x + loopsFigure.width <= 390, 'loops figure fits the mobile viewport');
+  if (qaDir) {
+    await mkdir(qaDir, { recursive: true });
+    await page.locator('.figure-box').screenshot({ path: path.join(qaDir, 'loop-invariant-mobile.png') });
+  }
+  await page.setViewportSize({ width: 1366, height: 900 });
+  console.log('PASS: detailed loops lesson rejects an off-by-one, reaches mastery and fits 390px');
   await page.goto(base + '/#lesson:c-functions');
   await expect(page.locator('.detail-head h1')).toHaveText('함수 설계: 선언·호출·값 전달');
   await expect(page.locator('.figure-box svg')).toContainText('clamp');
@@ -544,6 +569,13 @@ try {
   await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(5);
   await expect(page.locator('#code-input')).toHaveValue(correct);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await page.goto(base + '/#lesson:c-loops');
+  await page.reload();
+  await expect(page.locator('.detail-head h1')).toHaveText('조건문과 반복문');
+  await expect(page.locator('.article > section')).toHaveCount(22);
+  await expect(page.locator('.figure-box svg')).toContainText('갱신');
+  await expect(page.locator('.article')).toContainText('누산형 범위는 반복 횟수와 다르다');
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'offline loops lesson mobile overflow');
   await context.setOffline(false);
   assert.deepEqual(errors, []);
   console.log('PASS: 390px mobile layout and offline reload of drafts/history; no browser exceptions');

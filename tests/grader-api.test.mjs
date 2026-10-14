@@ -49,7 +49,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
   const solutions = {
     'c-hello': '#include <stdio.h>\nint main(void){puts("Hello, CodeWeave!");return 0;}',
     'c-types': '#include <stdio.h>\nint main(void){int a,b;if(scanf("%d%d",&a,&b)!=2)return 1;printf("%d\\n",a+b);return 0;}',
-    'c-loops': '#include <stdio.h>\nint main(void){int n,s=0;if(scanf("%d",&n)!=1)return 1;for(int i=1;i<=n;i++)s+=i;printf("%d\\n",s);return 0;}',
+    'c-loops': '#include <stdio.h>\nint main(void){int n;if(scanf("%d",&n)!=1)return 1;long sum=0;for(int i=1;i<=n;i++)sum+=i;printf("%ld\\n",sum);return 0;}',
     'c-array': '#include <stdio.h>\nint main(void){int n,x,m;if(scanf("%d%d",&n,&m)!=2)return 1;for(int i=1;i<n;i++){if(scanf("%d",&x)!=1)return 1;if(x>m)m=x;}printf("%d\\n",m);return 0;}',
     'c-pointer': '#include <stdio.h>\nvoid add_one(int *p){++*p;}\nint main(void){int n;if(scanf("%d",&n)!=1)return 1;add_one(&n);printf("%d\\n",n);return 0;}',
     'c-functions': '#include <stdio.h>\nint clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}\nint main(void){int value,low,high;if(scanf("%d%d%d",&value,&low,&high)!=3)return 1;printf("%d\\n",clamp(value,low,high));return 0;}',
@@ -85,6 +85,16 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
       recordGradedSubmission(storage, lessons.map(l => l.id), id, code, result);
     });
   }
+  await t.test('loop grader rejects excluding the final term', async () => {
+    const { result } = await submit('c-loops', '#include <stdio.h>\nint main(void){int n;if(scanf("%d",&n)!=1)return 1;long sum=0;for(int i=1;i<n;i++)sum+=i;printf("%ld\\n",sum);return 0;}');
+    assert.equal(result.ok, false);
+    assert.ok(result.tests.some(example => !example.passed));
+  });
+  await t.test('loop grader rejects resetting the accumulator inside the body', async () => {
+    const { result } = await submit('c-loops', '#include <stdio.h>\nint main(void){int n;if(scanf("%d",&n)!=1)return 1;long sum=0;for(int i=1;i<=n;i++){sum=0;sum+=i;}printf("%ld\\n",sum);return 0;}');
+    assert.equal(result.ok, false);
+    assert.ok(result.tests.some(example => !example.passed));
+  });
   await t.test('compiler failure is stored as a failed iteration', async () => {
     const { result } = await submit('c-hello', 'int main(void){ syntax error }');
     assert.equal(result.ok, false);
