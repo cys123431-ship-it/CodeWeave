@@ -407,6 +407,20 @@ try {
   await page.goto(base + '/#lesson:c-types');
   // Hash navigation keeps the original module state; reload after seeding v1 data.
   await page.reload();
+  await expect(page.locator('.detail-head h1')).toHaveText('변수·자료형·연산자');
+  await expect(page.locator('.article')).toContainText('정수의 표현 범위와 구현 차이');
+  await expect(page.locator('.article')).toContainText('scanf는 변환 개수를 확인한다');
+  await expect(page.locator('.figure-box svg')).toContainText('double 3.0');
+  await expect(page.locator('.figure-box svg')).toContainText('double 3.5');
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'types lesson mobile overflow');
+  const typesFigure = await page.locator('.figure-box svg').boundingBox();
+  assert.ok(typesFigure && typesFigure.x >= 0 && typesFigure.x + typesFigure.width <= 390, 'types figure fits the mobile viewport');
+  if (qaDir) {
+    await mkdir(qaDir, { recursive: true });
+    await page.locator('.figure-box').screenshot({ path: path.join(qaDir, 'types-conversion-mobile.png') });
+  }
+  await page.setViewportSize({ width: 1366, height: 900 });
   await expect(page.locator('#code-input')).toHaveValue(failed);
   await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(1);
   await expect(page.locator('#attempt-history-container .attempt-list img')).toHaveCount(0);
@@ -514,7 +528,7 @@ try {
   await page.goto(base + '/#lesson:c-types');
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.waitForFunction(() => !!navigator.serviceWorker.controller);
-  for (const asset of ['/src/practice.js', '/src/mastery.js', '/src/exercises.js', '/src/multi-file.js', '/src/compiler-feedback.js']) {
+  for (const asset of ['/src/catalog.js', '/src/figures.js', '/src/practice.js', '/src/mastery.js', '/src/exercises.js', '/src/multi-file.js', '/src/compiler-feedback.js']) {
     assert.equal(await page.evaluate(async asset => !!(await caches.match(asset)), asset), true, 'cached ' + asset);
   }
   await page.setViewportSize({ width: 390, height: 844 });
@@ -525,6 +539,8 @@ try {
   }
   await context.setOffline(true);
   await page.reload();
+  await expect(page.locator('.article')).toContainText('정수의 표현 범위와 구현 차이');
+  await expect(page.locator('.figure-box svg')).toContainText('double 3.5');
   await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(5);
   await expect(page.locator('#code-input')).toHaveValue(correct);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);

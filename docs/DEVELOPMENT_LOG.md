@@ -1,5 +1,24 @@
 # CodeWeave 개발 일지
 
+## 2026-10-14 10:55~11:07 KST — 변수·자료형 교과서형 확장
+
+- 시작 SHA: `581b4d6d62ab7a8229f1784342bc2ca99bf8340b` (`main`, tree `ad7112b1a52a189e72342ae7d38e5044c64ce73e`). 새 clone의 로컬 HEAD·origin/main·GitHub branches/main 읽기가 일치했고 미커밋 작업은 없었다. 열린 PR은 0개, 시작 SHA의 Actions `38494949209`는 성공이었다. README·ROADMAP·ARCHITECTURE·CONTENT_POLICY·AUTONOMOUS_DEVELOPMENT·최신 일지와 관련 카탈로그·도식·입력 계약·브라우저·콘텐츠 검사·CI 정의를 읽었다. 기준선 `npm test`는 198/198 성공, 실패/skip 0이었다.
+- 목표/성공 조건: 최신 일지의 다음 작업 `c-types`를 교과서형으로 확장한다. 기존 ID·퀴즈 정답 인덱스·스타터·공개 예시·입력 범위·5개 채점 사례·선수 관계·저장 키와 v1 백업은 유지한다. 16절 이상 화면, 독립 원고, 연산 전후 변환 비교 SVG, 실제 GCC로 검사할 두 완성 프로그램, 오류·점검·세 단계 연습·Mini Project·복습과 모바일/오프라인 브라우저 시나리오를 갖춘다.
+- 테스트 우선: 신규 `tests/types-content.test.mjs`의 5개 검사를 먼저 추가했다. 기존 도식 이름, 전용 SVG와 원고 부재로 구현 전 0/5 성공·5건 예상 실패를 확인했다. 이후 표적 검사와 기존 정수 계약 검사 7/7이 성공했다. 새 검사는 화면과 원고의 완성 프로그램 A 소스가 동일함을 고정해 중복 예제의 drift도 막는다.
+- 구현/파일: `src/catalog.js`의 c-types를 4절에서 21절·약 55분으로 확장했다. 객체·선언·초기화·대입·지역 변수의 미초기화 읽기·C11 수치 최소 보장·CHAR_BIT·부동소수 범위/정밀도·정수 나눗셈·나머지·캐스트 시점·signed/unsigned 경계·printf/scanf 형식을 연결했다. `src/figures.js`는 `7 / 2 → int 3 → double 3.0`과 `(double)7 / 2 → double 3.5`를 대비하는 독자 정적 SVG를 추가했다. `content/c/02-variables-types.md`는 315줄 독립 원고로 필수 교육 구성을 갖췄다. `tests/browser-practice.mjs`는 상세 절·변환 도식·390px 문서/도식 경계·오프라인 콘텐츠를 기존 오답→수정→제출→숙달 흐름에 연결하고 CI용 도식 이미지를 저장한다. `sw.js`는 shell v27, README·ROADMAP·ARCHITECTURE·CONTENT_POLICY·C_EXERCISE_AUDIT는 두 기초 상세 단원과 남은 세 단원 부채를 반영했다.
+- C 정확성 검토: 공개된 WG14 C11 위원회 초안 N1570(https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf)을 조회해 5.2.4.2·6.3.1.3~4·6.5.5·6.7.9·7.21.6.1~2 관련 의미를 검토했다. 원고는 int/long 고정 폭·8비트 바이트·IEEE 754를 언어 보장으로 단정하지 않는다. 범위 밖 signed 정수 변환의 구현 정의 결과/신호와 signed 산술 넘침의 정의되지 않은 동작을 구분했다. scanf 변환 개수 2가 입력 범위나 임의 텍스트 안전성을 증명하지 않으며 int로 표현할 수 없는 변환은 정의되지 않은 동작일 수 있다고 명시했다. 표준 초안과 최종 표준을 구분하고 원문을 복제하지 않았다.
+- 실행 검사: 최종 `npm test` 203/203 성공, 실패/skip 0. 실제 GCC가 기존 C 21문제·185개 사례와 두 완성 프로그램을 검사했다. 프로그램 A는 `-std=c11 -Wall -Wextra -Werror -Wpedantic`으로 경고 없이 컴파일되어 초기화/대입·양수/음수 몫·나머지·3.0/3.5 변환·-3 캐스트의 4줄 출력을 확인했다. 프로그램 B는 기존 5개 입력을 정확히 통과하고 abc·한 정수 후 EOF·즉시 EOF에서 출력 없이 상태 1을 반환했다. 이 추가 예제 검증은 기존 채점 계약 확대가 아니다. 변경 JS/MJS 5개 `node --check`와 `git diff --check`도 성공했다.
+- 브라우저 제한: `npm run test:browser`의 선행 C 21문제 실제 GCC API는 모두 성공했으나 Chromium 실행 파일 부재(`browserType.launch: Executable doesn't exist`)로 로컬 UI 단계는 중단됐다. 상세 화면·390px·오프라인의 실제 실행 결과는 커밋 뒤 설치된 Chromium의 원격 CI로 별도 판정하며 Node/HTTP 성공을 브라우저 성공으로 보고하지 않는다. 실기기와 설치형 PWA는 이번 범위 밖이다.
+- PDF 접근: 현재 K&R 파일은 6,838,054 bytes·288쪽으로 pdfinfo와 첫 페이지 렌더링·육안 확인이 성공했다. 현재 C Express 파일은 15,179,776 bytes로 존재하나 XRef/endstream/trailer 손상으로 파싱·렌더링하지 못했다. K&R 본문 전체 대조나 Express 읽기를 주장하지 않았으며 두 책의 PDF·본문·캡처·상용 문제를 저장소에 복제하지 않았다. 원고·도식·예제·문제는 독자 작성했다.
+- 호환/재검토: c-types의 ID·정답 인덱스 1·스타터·공개 입력 4 7/출력 11·5개 사례와 모든 저장 형식은 그대로다. 원고는 정적 서버 허용 목록에 추가하지 않아 프로젝트 파일 접근 제한을 보존했다. 렌더링 모듈만 기존 오프라인 자산에서 갱신하며 사용자의 과거 숙달·초안·제출 데이터는 변경하지 않는다.
+- 미완료/위험: c-loops·c-array·c-pointer는 여전히 짧은 시범 콘텐츠다. Rust/Cargo 채점·전체 자료구조/알고리즘·실기기/PWA 설치·안전한 공개 실행 격리는 미완료다. dev-server.mjs는 loopback의 신뢰하는 개인 C 코드만 실행하는 비격리 도구이며 시간 제한은 샌드박스가 아니다. GitHub 반영은 실제 웹 호스팅/공개 실행 서버 배포와 다르다.
+- 커밋/원격 확인: 커밋 제목은 `docs: deepen C types and conversions lesson`이다. 시작 SHA를 expected SHA로 사용해 강제 푸시하지 않으며, 결과 SHA·원격 tree/파일 blob·새 CI는 반영 뒤 보고서로 남긴다. 커밋 일지에 자신의 SHA를 미리 채우지 않는다.
+- 반영 경로: 일반 HTTPS `git push origin main`은 `fatal: could not read Username for 'https://github.com': No such device or address`로 실패했다. 원격 읽기는 성공했고 HEAD는 시작 SHA 그대로였다. 검증한 변경 파일을 full-block base64로 읽어 GitHub 연결에서 blob SHA를 로컬과 대조하고 기존 base tree를 보존하는 commit·expected-SHA ref 갱신을 사용한다. 새 파일·기존 파일·일지의 실제 반영 결과는 원격 tree와 blob을 재조회해 보고한다.
+- 다음 작업: `c-loops`를 조건식·0/비0·분기·반복 상태·초기값/종료 조건·불변식·off-by-one·최대 합의 이식 가능한 누산형을 갖춘 교과서형 단원으로 확장한다. n=1000의 합 500500이 최소 int 범위를 넘는 점을 검토해 long 기반 누산 예제를 먼저 테스트로 고정하고 기존 ID·출력·저장 데이터를 유지한다.
+- 분야별 상태: C 채점 21개(입출력 8·함수형 11·다중 파일 2), GCC 사례 185개, 전체 공개 정의 24개, shell v27. c-hello와 c-types의 상세 기초 학습 경로를 마련했으나 전체 교과서 완료율은 주장하지 않는다.
+
+---
+
 ## 2026-10-14 10:01~10:13 KST — 첫 C 프로그램 교과서형 확장
 
 - 실행 시작 커밋: `26bff37edccfc503cbccb5e27814697962755c82` (`main`, tree `bcf310f60106cd4997c791ed566b736533f5fda1`). 새 작업 디렉터리에 원격 저장소를 다시 복제했고 로컬 HEAD·`origin/main`·`git ls-remote`와 GitHub 커밋 읽기가 일치하며 작업 트리가 깨끗함을 확인했다. 열린 PR은 0개였다. 시작 SHA의 Actions 실행 `38488520890`은 2026-10-14 09:09~09:10 KST에 완료됐고 결론은 성공이었다. 필수 `README.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`, `docs/CONTENT_POLICY.md`, `docs/AUTONOMOUS_DEVELOPMENT.md`, 최신 개발 일지와 관련 카탈로그·도식·콘텐츠·브라우저 검사를 읽었다. 변경 전 `npm test`는 194/194 성공, 실패/skip 0이며 실제 GCC를 사용했다.
