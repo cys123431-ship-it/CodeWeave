@@ -58,7 +58,7 @@ jobs:
       - name: Diagnose macOS limits on failure
         if: failure()
         run: |
-          /bin/bash --noprofile --norc -c 'ulimit -a; ps -o vsz= -p $$; ulimit -v 65536'
+          /bin/bash --noprofile --norc -c 'ulimit -a; ps -o vsz= -p $$'
 
   browser:
     runs-on: ubuntu-latest

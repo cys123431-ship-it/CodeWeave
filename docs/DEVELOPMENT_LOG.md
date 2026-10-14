@@ -4,9 +4,10 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 1단계 진행 중 확인함
 - 목표: POSIX 별도 그룹 종료와 CPU/가상 메모리/파일/프로세스 예산을 적용하고 정상 제출·재제출을 보존.
 - 변경 파일 수: 6개(실행 모듈·서버 연결·자원 회귀 검사·README 제한·macOS CI·일지).
 - 테스트 결과: 초기 신규10건4/10→10/10; 추가 soft 제한 보존0/1→1/1, SIGXFSZ 표시0/1→1/1; 최종11/11·전체307/307·실패/skip0, 변경3 JS/MJS 문법·커밋범위diff 확인. 로컬 UI는 기존 Chromium 부재로 미실행.
-- CI URL과 결과: 시작 SHA https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38563428495 success; 결과 SHA Linux 전체·macOS 자원·실제 브라우저 CI는 반영 후 조회, 현재 검증 대기.
+- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38570368443 및38570963445의 Linux307/307·browser success, macOS0/11 failure. 수정 SHA의 세 CI는 반영 후 재조회, 완료 아님.
 - 발견한 문제: 기존 별도 그룹/유한 예산 없음; 상속 soft 예산을 올리는 오류와 신호 null 표시 재현·수정. fork 검사3건은 이 로컬 환경에서 수정 전에도 통과했으며 실패로 꾸미지 않음.
-- 구현: 사례별 벽시계1.3초·출력각30000바이트, ulimit CPU2초/가상64MiB/파일당2MiB/UID 프로세스128개; 시간·출력 초과와 부모 정상 종료에도 그룹 SIGKILL, 제한 설정 실패 시 실행하지 않음.
+- 구현: 벽시계1.3초·출력각30000바이트, CPU2초/파일당2MiB/UID 프로세스128개; Linux AS64MiB, macOS AS기동 매핑+64MiB. 시간·출력 초과와 정상 종료에도 그룹 SIGKILL, 제한 설정 실패 시 실행하지 않음.
+- 검사 수정 이유: macOS Bash가435299648KiB를 이미 매핑해 절대64MiB 설정이 EINVAL로 실패함을 CI로 재현; VM 예산을 초기 매핑+64MiB로 구분하고 상속 검사는 실제 설정 예산과 대조. malloc96MiB 실패 기대는 유지.
 - 보안 영향: 고정 Bash 스크립트에 실행 경로/인수를 argv로 전달하고 startup 환경을 제거; 더 엄격한 상속 soft/hard 보존. Linux UID0에서는 NPROC가 강제되지 않아 설정값만 검증, 일반 계정 사용을 README에 명시.
 - 단계별 완료율: 0단계3/3, 1단계1/6(1-2 CI 대기), 2단계0/6; 신규 단원·문제와 저장 형식 변경 없음.
 - 다음 작업: macOS 실제 제한·Linux 전체·브라우저 결과 SHA CI 확인 후 1-2 상태 기록; 성공하면1-3 전체 사례/미실행 표시를 실패 검사부터 구현.

@@ -12,6 +12,16 @@ export const SUBMISSION_LIMITS = Object.freeze({
 // This is resource budgeting for trusted local C, NOT an execution sandbox.
 // Bash receives the executable/arguments as argv, never interpolated shell text.
 const limitScript = [
+  'vm_cap=' + SUBMISSION_LIMITS.virtualMemoryKiB,
+  ...(process.platform === 'darwin' ? [
+    // macOS maps a very large shared region before user code starts.
+    // Budget new mappings above the launcher's measured initial address space.
+    'vm_base=$(/bin/ps -o vsz= -p $$) || { echo CODEWEAVE_LIMIT_SETUP_FAILED >&2; exit 125; }',
+    'vm_base="${vm_base//[[:space:]]/}"',
+    '[[ "$vm_base" =~ ^[0-9]+$ ]] || { echo CODEWEAVE_LIMIT_SETUP_FAILED >&2; exit 125; }',
+    'vm_cap=$((vm_base + vm_cap))'
+  ] : []),
+  'export CODEWEAVE_AS_LIMIT_KIB="$vm_cap"',
   'set_limit() {',
   '  local current level target="$2";',
   '  for level in -S -H; do',
@@ -21,7 +31,7 @@ const limitScript = [
   '  ulimit "$1" "$target";',
   '}',
   'set_limit -t ' + SUBMISSION_LIMITS.cpuSeconds + ' &&',
-  'set_limit -v ' + SUBMISSION_LIMITS.virtualMemoryKiB + ' &&',
+  'set_limit -v "$vm_cap" &&',
   'set_limit -f ' + SUBMISSION_LIMITS.fileSizeKiB + ' &&',
   'set_limit -c 0 &&',
   'set_limit -u ' + SUBMISSION_LIMITS.userProcesses + ' || { echo CODEWEAVE_LIMIT_SETUP_FAILED >&2; exit 125; }',

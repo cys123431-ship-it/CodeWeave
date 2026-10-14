@@ -88,7 +88,7 @@ test('local API limits submission resources and cleans its process group', { ski
   await t.test('bounded malloc growth fails under the virtual memory limit', async () => {
     const code = prefix + '#include <string.h>\nint main(void){void *p[12];for(int i=0;i<12;++i){p[i]=malloc(8UL*1024*1024);if(!p[i])return 7;memset(p[i],1,8UL*1024*1024);}for(int i=0;i<12;++i)free(p[i]);' + hello + '}';
     const result = await submit(code);
-    assert.equal(result.ok, false, '96 MiB bounded allocation must exceed the 64 MiB limit');
+    assert.equal(result.ok, false, '96 MiB bounded allocation must exceed the configured mapping budget');
     assert.match(result.tests[0].detail, /비정상 종료/);
   });
   await t.test('bounded file growth fails under the file size limit', async () => {
@@ -98,7 +98,7 @@ test('local API limits submission resources and cleans its process group', { ski
     assert.match(result.tests[0].detail, /비정상 종료 \(SIGXFSZ\)/);
   });
   await t.test('inherits finite CPU, memory, file and user-process ceilings', async () => {
-    const code = prefix + 'int main(void){int ids[]={RLIMIT_CPU,RLIMIT_AS,RLIMIT_FSIZE,RLIMIT_NPROC};unsigned long caps[]={2,64UL*1024*1024,2UL*1024*1024,128};for(int i=0;i<4;++i){struct rlimit r;if(getrlimit(ids[i],&r)!=0||r.rlim_cur>caps[i]||r.rlim_max>caps[i])return 7;}' + hello + '}';
+    const code = prefix + '#include <limits.h>\nint main(void){const char *budget=getenv("CODEWEAVE_AS_LIMIT_KIB");if(!budget)return 8;char *end;unsigned long kib=strtoul(budget,&end,10);if(*end||kib==0||kib>ULONG_MAX/1024)return 9;int ids[]={RLIMIT_CPU,RLIMIT_AS,RLIMIT_FSIZE,RLIMIT_NPROC};unsigned long caps[]={2,kib*1024,2UL*1024*1024,128};for(int i=0;i<4;++i){struct rlimit r;if(getrlimit(ids[i],&r)!=0||r.rlim_cur>caps[i]||r.rlim_max>caps[i])return 7;}' + hello + '}';
     assert.equal((await submit(code)).ok, true);
   });
   await t.test('releases the grading slot after a resource failure', async () => {
