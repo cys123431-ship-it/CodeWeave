@@ -70,7 +70,9 @@ test('local API limits submission resources and cleans its process group', { ski
       const code = prefix + 'int main(void){pid_t child=fork();if(child<0)return 9;if(child==0){signal(SIGTERM,SIG_IGN);signal(SIGHUP,SIG_IGN);close(0);close(1);close(2);sleep(5);_exit(0);}FILE *f=fopen(' + JSON.stringify(pidFile) + ',"w");if(!f)return 8;fprintf(f,"%ld",(long)child);fclose(f);' + action + '}';
       const started = Date.now();
       const result = await submit(code);
-      const pid = Number(await fs.readFile(pidFile, 'utf8'));
+      const pid = Number(await fs.readFile(pidFile, 'utf8').catch(error => {
+        throw new Error('Child PID not recorded: ' + JSON.stringify(result), { cause: error });
+      }));
       assert.ok(Number.isSafeInteger(pid) && pid > 1);
       pids.add(pid);
       assert.ok(Date.now() - started < 3500, 'grading must not wait for the sleeping child');
@@ -111,12 +113,12 @@ test('CPU budget kills a bounded busy loop before a longer wall deadline', { ski
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'codeweave-cpu-test-'));
   t.after(() => fs.rm(dir, { recursive: true, force: true }));
   const source = path.join(dir, 'busy.c'), binary = path.join(dir, 'busy');
-  await fs.writeFile(source, '#include <time.h>\nint main(void){clock_t start=clock();volatile unsigned long n=0;while((double)(clock()-start)/CLOCKS_PER_SEC<6.0)++n;return 0;}');
+  await fs.writeFile(source, '#include <time.h>\n#include <stdio.h>\n#include <sys/resource.h>\nint main(void){int ids[]={RLIMIT_CPU,RLIMIT_AS,RLIMIT_FSIZE,RLIMIT_NPROC};for(int i=0;i<4;++i){struct rlimit r;if(getrlimit(ids[i],&r)==0)printf("limit%d=%lu/%lu\\n",ids[i],(unsigned long)r.rlim_cur,(unsigned long)r.rlim_max);}fflush(stdout);clock_t start=clock();volatile unsigned long n=0;while((double)(clock()-start)/CLOCKS_PER_SEC<6.0)++n;return 0;}');
   const compiled = spawnSync('gcc', ['-std=c11', source, '-o', binary], { encoding: 'utf8' });
   assert.equal(compiled.status, 0, compiled.stderr);
   const result = await runSubmission(binary, [], { cwd: dir, timeout: 8000 });
   assert.equal(result.error?.code, undefined, 'the OS CPU limit, not the wall timer, must terminate it: ' + result.stderr);
-  assert.equal(result.status, null);
+  assert.equal(result.status, null, 'runtime limits: ' + result.stdout + result.stderr);
   assert.ok(['SIGKILL', 'SIGXCPU'].includes(result.signal));
 });
 
