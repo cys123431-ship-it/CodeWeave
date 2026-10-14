@@ -1,14 +1,14 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 1단계 진행 중 확인함
 ## 2026-10-14 21:03 시작 / 21:18 KST 검증 — 1-1 로컬 채점 요청 차단
-- 시작/결과 SHA: 시작 ed87b1ed16d9201102926edabae8df5be7c6e344; 검증 결과 ad10d5cc22a98875e0165ed70d398c3acc2b4a4d. 후속 확인 기록 제목 docs: record verified CSRF security checks(자기 SHA는 반영 뒤 조회).
+- 시작/결과 SHA: 시작 ed87b1ed16d9201102926edabae8df5be7c6e344; 검증 결과 e581a6d8b4234ea02f47dfa15f15a567e03f63c3(보안 ad10d5c). 최종 공백 수정 제목 fix: clean security regression file ending(자기 SHA는 반영 뒤 조회).
 - 목표: JSON/Host/Origin/토큰 검증을 GCC·임시 디렉터리 생성보다 앞에 두고 두 화면의 정상 채점·PWA 캐시를 보존.
 - 변경 파일 수: 9개(서버·두 제출 화면·SW·API/정적/브라우저 검사·신규 보안 검사·일지).
 - 테스트 결과: 신규20건 기존 HEAD 2/20→수정 후20/20; 로컬/CI 전체296/296·실패/skip 0; 변경8 JS/MJS 문법·diff 성공. 로컬 Chromium 부재로 UI는 CI에서 실행, 실제 제출/재제출·백업·390px·오프라인 재로드 성공.
-- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38562711250 — 결과 ad10d5c의 test/browser 모두 success, 로그296/296 및 실제 브라우저 PASS 확인 후 완료 기록.
-- 발견한 문제: 필수4 거부 요청이 실제 GCC까지 실행됨; 토큰을 DOM에만 주입하고 캐시에는 제거. 늦은 캐시 열기/본문 선소비 실패1건도 재현·수정.
+- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38563071589 — 후속 결과 e581a6d test/browser success; 보안 ad10d5c의 run38562711250도296/296·실제 브라우저PASS 확인 후 완료 기록.
+- 발견한 문제: 필수4 거부 요청이 실제 GCC까지 실행됨; 캐시의 토큰 제거 및 늦은 캐시 열기/본문 선소비 실패1건 재현·수정. 최종 커밋범위diff 검사에서 신규 파일EOF 빈줄로 exit2 발생하여 제거·재검사.
 - 검사 수정 이유: HTML은 동적 토큰만 제거해 원본 보존/실제 HEAD 길이를 검사하고 기존 API 검사는 유효 토큰을 추가; 중복 Host는 raw 헤더로 전송하고 HTTP 파서의400/서버403 조기 거부를 허용.
 - 보안 영향: 외부 POST 입력은 저장/실행 전에 거부; 정적 요청 Host도 검사해 rebinding 토큰 노출을 막고 시작별256비트 토큰은 저장·로그·백업하지 않음.
-- 단계별 완료율: 0단계3/3·이번 첫 줄로 실제 적용 확인; 1단계1/6(1-1 완료), 2단계0/6。전체 플랫폼 완료율은 아님; 새 단원/문제 추가 없음.
+- 단계별 완료율: 0단계3/3·이번 첫 줄로 실제 적용 확인; 1단계1/6(1-1 완료), 2단계0/6. 전체 플랫폼 완료율은 아님; 새 단원/문제 추가 없음.
 - 다음 작업: 1-2 detached 프로세스 그룹·CPU/메모리/파일/프로세스 제한, fork/sleep 잔존·malloc 제한 실패 검사부터 작성.
 
 ---

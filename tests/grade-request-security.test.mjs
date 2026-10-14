@@ -216,4 +216,3 @@ test('PWA caches token-free HTML while online pages retain the live token', asyn
   assert.ok(!offlineHTML.includes(token));
   assert.equal(dispatch('/api/grade'), undefined, 'the worker must not cache API requests');
 });
-
