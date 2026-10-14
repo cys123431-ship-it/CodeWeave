@@ -9,12 +9,15 @@ import { gradingExercises } from './server/grading-exercises.mjs';
 import { parseMultiFileSubmission } from './src/multi-file.js';
 import { classifyCompilerDiagnostic } from './src/compiler-feedback.js';
 import { runSubmission } from './server/run-submission.mjs';
+import { MAX_CODE_LENGTH } from './src/iterations.js';
 
 // IMPORTANT: trusted local development only. Compiled student programs are not sandboxed.
 // This binds only to loopback and MUST NOT be put directly on a public network.
 const HOST='127.0.0.1';
 const PORT=Number(process.env.PORT || 4173);
 const ROOT=process.cwd();
+// Keep the existing UTF-16 code length contract; bound UTF-8 JSON bytes separately.
+const MAX_REQUEST_BYTES = MAX_CODE_LENGTH * 4 + 4096;
 const gradeToken = randomBytes(32);
 const tokenMeta = '  <meta name="codeweave-token" content="' + gradeToken.toString('hex') + '">\n';
 const send=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(data));};
@@ -62,11 +65,11 @@ async function grade(req,res){
  if(!authorizeGrade(req,res))return;
  if(busy)return send(res,429,{ok:false,message:'다른 코드를 채점하고 있어요. 잠시 후 다시 시도하세요.'});
  const chunks=[];let size=0,ownsSlot=false;
- try{for await(const chunk of req){size+=chunk.length;if(size>40_000)return send(res,413,{ok:false,message:'요청 크기가 너무 큽니다.'});chunks.push(chunk)};
+ try{for await(const chunk of req){size+=chunk.length;if(size>MAX_REQUEST_BYTES)return send(res,413,{ok:false,message:'요청 크기가 너무 큽니다.'});chunks.push(chunk)};
  let value;try{value=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{return send(res,400,{ok:false,message:'잘못된 JSON입니다.'});}
  const {code,exerciseId}=value??{};
  const exercise=gradingExercises.get(exerciseId);
- if(typeof code!=='string'||code.length>25_000||!exercise)return send(res,400,{ok:false,message:'지원하지 않는 문제 또는 코드 길이입니다.'});
+ if(typeof code!=='string'||code.length>MAX_CODE_LENGTH||!exercise)return send(res,400,{ok:false,message:'지원하지 않는 문제 또는 코드 길이입니다.'});
  let submittedFiles=null;
  if(exercise.grader==='c-multi-file'){
    try{submittedFiles=parseMultiFileSubmission(code,{requiredNames:exercise.requiredFiles});}
