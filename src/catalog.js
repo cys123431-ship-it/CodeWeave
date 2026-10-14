@@ -350,6 +350,147 @@ export const lessons = [
     }
   },
   {
+    "id": "c-matrix-row-sums",
+    "track": "c",
+    "level": "중급 실습",
+    "title": "다차원 배열: 행·열과 안전한 행 합",
+    "minutes": 75,
+    "source": "중첩 배열·고정 열 함수·실패 보존에 관한 독자 작성 단원; GCC 공식 문서와 C11 컴파일 제약 확인",
+    "summary": "배열의 배열과 행 포인터를 구분하고, 전체 검증 뒤 행별 결과를 기록합니다.",
+    "figure": "matrix-row-contract",
+    "sections": [
+      {
+        "heading": "단원 개요",
+        "text": "int matrix[2][3]는 int 세 개짜리 행 두 개로 이루어진 배열입니다. 표처럼 읽되 객체의 실제 중첩 구조, 두 첨자의 범위, 행 단위 포인터와 함수 계약까지 연결합니다. 고정 3열·최대 4행의 작은 합 실습으로 검증 범위를 명확히 합니다."
+      },
+      {
+        "heading": "필요한 이유",
+        "text": "성적표·좌표 격자·영상 조각은 행과 열이 있습니다. 1차원 배열의 길이만 바꾸면 int **나 열 크기 추측 오류가 생길 수 있습니다. 입력 객체의 모양, 함수가 접근할 범위와 결과를 공개하는 시점을 먼저 정하면 경계·부분 갱신 오류를 줄일 수 있습니다."
+      },
+      {
+        "heading": "선수 지식",
+        "text": "c-array의 객체·인덱스·초기화·sizeof, c-pointer의 주소/역참조·NULL·수명, c-array-max-function의 출력 포인터와 실패 보존을 복습합니다. 이번 예제는 const 입력 행렬을 사용하고 표준 입력 파싱은 새로 추가하지 않습니다."
+      },
+      {
+        "heading": "학습 목표",
+        "text": "2행×3열의 중첩 객체, 행 우선 배치와 순회, matrix와 matrix[0]의 서로 다른 포인터 변환을 설명합니다. 함수의 고정 열 폭과 별도 rows를 읽고 0..4행·3열·원소 범위·출력 capacity·실패 보존을 actual GCC와 반복 제출로 확인합니다."
+      },
+      {
+        "heading": "행은 int 세 개짜리 배열 객체",
+        "text": "matrix의 각 원소는 int[3]이고 matrix[0]는 첫 행 배열입니다. matrix[0][2]는 첫 행의 마지막 int 객체입니다. 행 수 2, 열 수 3을 뒤집지 않으며 그림 속 행/열 좌표를 코드의 [r][c]와 연결합니다. 아래는 완성 프로그램이 아닌 선언 코드 조각이며 size_t 원형에는 stddef.h가 필요합니다.",
+        "code": "const int matrix[2][3] = {\n    {1, 2, 3},\n    {4, 5, 6}\n};"
+      },
+      {
+        "heading": "반열린 행·열 경계",
+        "text": "이 객체의 유효 행은 [0,2), 각 행의 유효 열은 [0,3)입니다. matrix[1][2]는 마지막 원소이지만 matrix[0][3]은 첫 행을 벗어납니다. 다음 행이 연속 배치되어 있어도 잘못된 첨자가 허용되는 것은 아닙니다. 끝 바로 다음 주소 형성과 원소 읽기를 구분하고 잘못된 역참조 예제를 실행하지 않습니다."
+      },
+      {
+        "heading": "행 우선 배치와 순회",
+        "text": "행 배열의 원소가 연속되고 행들도 바깥 배열의 원소로 순서대로 이어집니다. 마지막 첨자인 열이 가장 빨리 변하는 행 우선 배치를 따릅니다. r을 바깥, c를 안쪽 반복으로 두면 각 행을 차례로 읽습니다. 이것이 모든 PC에서 같은 주소·int 바이트 수·성능을 보장하는 것은 아닙니다."
+      },
+      {
+        "heading": "중괄호 초기화와 생략 칸",
+        "text": "{{1,2,3},{4}}로 초기화하면 둘째 행의 나머지 두 칸은 0입니다. 행 중괄호를 표시해 모양을 읽기 쉽게 합니다. 초기화 없는 자동 배열은 값이 자동으로 0이라는 뜻이 아닙니다. 선언 시 행 수를 생략해 initializer로 추론할 수 있어도 내부 열 폭은 알려져 있어야 합니다."
+      },
+      {
+        "heading": "sizeof는 실제 배열 객체가 보일 때",
+        "text": "sizeof matrix/sizeof matrix[0]는 행 수, sizeof matrix[0]/sizeof matrix[0][0]는 열 수입니다. 바이트 크기를 고정 숫자로 나누지 않습니다. 함수 매개변수로 조정된 matrix는 포인터이므로 sizeof matrix로 호출자 행 수를 복구할 수 없습니다."
+      },
+      {
+        "heading": "두 단계 배열 변환",
+        "text": "대부분의 식에서 matrix는 첫 행을 가리키는 포인터로 변환됩니다. 비const 행렬의 형으로 설명하면 int (*)[3]이며 matrix+1은 행 하나만큼 이동합니다. matrix[0]는 첫 int를 가리키는 포인터로 변환되어 matrix[0]+1은 같은 행의 다음 칸을 가리킵니다. &matrix는 행렬 전체의 주소라 형과 증가 단위가 또 다릅니다."
+      },
+      {
+        "heading": "함수 매개변수와 고정 열 폭",
+        "text": "const int matrix[][3]는 매개변수에서 const int (*matrix)[3]로 조정됩니다. 첫 차원의 행 수는 rows로 별도 전달하지만 내부 열 수 3은 행 하나의 형과 이동 단위에 필요합니다. int matrix[4][3]라고 적은 매개변수도 4행을 자동 검증하지 않습니다. 아래는 완성 프로그램이 아닌 선언 코드 조각이며 size_t 원형에는 stddef.h가 필요합니다.",
+        "code": "int sum_rows3(const int matrix[][3], size_t rows, long *out_sums);"
+      },
+      {
+        "heading": "int **는 같은 모양이 아니다",
+        "text": "int **는 int * 객체를 가리키는 포인터입니다. int[2][3]가 행 포인터 객체 두 개를 저장하는 구조는 아닙니다. 열 폭 2와 3인 배열 포인터도 다른 형이므로 임의 캐스트로 맞는 듯 보이게 만들지 않습니다. 포인터 배열·동적 행별 할당은 다른 계약의 후속 주제입니다."
+      },
+      {
+        "heading": "C11 const 배열 경계와 VLA 후속",
+        "text": "이 단원의 입력 객체도 처음부터 const int 행렬로 선언합니다. C11에서 int (*)[3]를 const int (*)[3]로 암묵 변환하는 것은 단순 int *→const int *와 같다고 일반화할 수 없으며 GCC의 엄격 옵션에서 진단됩니다. C23의 배열 qualifier 규칙과 구분합니다. 런타임 열 수를 받는 VLA 매개변수는 C11 지원 차이와 양수 폭·수명 계약을 따로 설계할 후속이며 지금은 고정 3열입니다."
+      },
+      {
+        "heading": "정적 도식 읽기",
+        "text": "두 박스가 matrix[0]·matrix[1] 행 객체이고 각각 [0]·[1]·[2] 값을 포함합니다. 첫 행 1·2·3의 합은 6, 둘째 행 4·5·6의 합은 15입니다. 열 [3]은 접근 금지이며 행렬이 int **라는 주소 표처럼 그리지 않습니다."
+      },
+      {
+        "heading": "단계별 예제와 호출자 계약",
+        "text": "sum_rows3는 rows==0이면 NULL도 허용하고 1을 반환하며 아무것도 읽거나 쓰지 않습니다. 1..4행이면 실제 rows개의 const int[3] 행과 rows개 이상의 쓰기 가능한 long 출력 객체를 제공해야 하고 둘은 겹치지 않아야 합니다. NULL 검사나 행 개수 인수만으로 실제 객체 크기·주소·수명을 확인할 수는 없습니다."
+      },
+      {
+        "heading": "수치 범위와 별도 누산형",
+        "text": "각 원소는 [-10000,10000]이고 세 칸의 합/모든 중간 합은 [-30000,30000]입니다. 이 범위는 C의 최소 int 범위에도 들어가지만 결과 형은 명시적으로 long, 출력 형식은 %ld로 고정합니다. 열 수/범위를 확대하면 다시 수치 증명이 필요합니다. 이번 long 형 선택이 모든 크기의 합이나 signed overflow를 자동 해결하지 않습니다."
+      },
+      {
+        "heading": "모든 검증 뒤 출력 공개",
+        "text": "실패한 행 뒤 이미 앞 행 결과가 바뀌면 실패 보존 계약에 맞지 않습니다. long totals[4]라는 작은 자동 배열에 각 행의 합을 준비하고 모든 행·원소를 검증한 뒤 out_sums[0..rows)를 기록합니다. rows 이후의 미사용 출력은 그대로 유지합니다. 4는 과제 정책이지 C의 일반 행 상한이 아닙니다."
+      },
+      {
+        "heading": "완성 프로그램 A: 초기화·행 우선 순회",
+        "text": "완성 C11 프로그램입니다. 실제 객체가 보이는 main에서 sizeof 비율로 2행/3열을 계산하고 {{1,2,3},{4}}의 생략된 칸을 확인합니다. 코드 조각과 달리 헤더와 main을 포함하므로 그대로 컴파일할 수 있습니다.",
+        "code": "#include <stddef.h>\n#include <stdio.h>\n\nint main(void) {\n    const int matrix[2][3] = {{1, 2, 3}, {4}};\n    size_t rows = sizeof matrix / sizeof matrix[0];\n    size_t columns = sizeof matrix[0] / sizeof matrix[0][0];\n    printf(\"rows=%zu cols=%zu\\n\", rows, columns);\n    for (size_t r = 0; r < rows; ++r) {\n        printf(\"row %zu:\", r);\n        for (size_t c = 0; c < columns; ++c) {\n            printf(\" %d\", matrix[r][c]);\n        }\n        putchar('\\n');\n    }\n    return 0;\n}"
+      },
+      {
+        "heading": "실행 결과 A와 가까운 변형 연습",
+        "text": "행 0은 1·2·3, 행 1은 4·0·0입니다. 둘째 초기화 행을 {4,5,6}으로 바꾸고 결과를 먼저 예측하세요. 전체 행 수를 3으로 늘리고 마지막 행을 {7}로 추가하면 남은 칸이 어떻게 초기화되는지 가까이서 확인합니다.",
+        "code": "rows=2 cols=3\nrow 0: 1 2 3\nrow 1: 4 0 0"
+      },
+      {
+        "heading": "완성 프로그램 B: 행 합과 실패 보존",
+        "text": "아래 완성 프로그램은 정상 두 행을 계산한 뒤 마지막 셀이 10001인 요청을 같은 출력 배열로 시도합니다. 함수 본문은 임시 결과를 사용해 앞 행도 보존합니다. 제출에는 main·입력/출력을 넣지 않고 sum_rows3와 필요한 stddef.h만 사용합니다.",
+        "code": "#include <stddef.h>\n#include <stdio.h>\n\nint sum_rows3(const int matrix[][3], size_t rows, long *out_sums) {\n    if (rows == 0) {\n        return 1;\n    }\n    if (rows > 4 || matrix == NULL || out_sums == NULL) {\n        return 0;\n    }\n    long totals[4];\n    for (size_t r = 0; r < rows; ++r) {\n        long sum = 0;\n        for (size_t c = 0; c < 3; ++c) {\n            if (matrix[r][c] < -10000 || matrix[r][c] > 10000) {\n                return 0;\n            }\n            sum += (long)matrix[r][c];\n        }\n        totals[r] = sum;\n    }\n    for (size_t r = 0; r < rows; ++r) {\n        out_sums[r] = totals[r];\n    }\n    return 1;\n}\n\nint main(void) {\n    const int valid[2][3] = {{1, 2, 3}, {4, 5, 6}};\n    const int invalid[2][3] = {{9, 8, 7}, {1, 2, 10001}};\n    long sums[3] = {77, 77, 77};\n    int status = sum_rows3(valid, 2, sums);\n    printf(\"valid status=%d sums=%ld,%ld tail=%ld\\n\",\n           status, sums[0], sums[1], sums[2]);\n    status = sum_rows3(invalid, 2, sums);\n    printf(\"invalid status=%d sums=%ld,%ld tail=%ld\\n\",\n           status, sums[0], sums[1], sums[2]);\n    status = sum_rows3(NULL, 0, NULL);\n    printf(\"empty status=%d\\n\", status);\n    return 0;\n}"
+      },
+      {
+        "heading": "실행 결과 B와 가까운 변형 연습",
+        "text": "정상 합은 6·15, 세 번째 미사용 출력은 77입니다. 뒤 행의 잘못된 셀 때문에 실패하면 정상 결과와 미사용 값 모두 유지됩니다. invalid의 마지막 값을 -10001과 -10000으로 바꾸고 각각 실패/성공과 결과를 예측하세요. 행이 0인 요청은 성공하지만 결과 원소가 없습니다.",
+        "code": "valid status=1 sums=6,15 tail=77\ninvalid status=0 sums=6,15 tail=77\nempty status=1"
+      },
+      {
+        "heading": "흔한 오류",
+        "text": "행/열 뒤집기, c<=3 또는 r<=rows, sizeof 포인터로 길이 추측, int ** 혼동, C11 qualifier 경고 무시, 잘못된 마지막 셀 전에 앞 결과 공개, rows 뒤 출력 지우기, 디버그 출력이 대표 오류입니다. bounds 오류를 실제 역참조로 실행하지 말고 올바른 반열린 반복을 검토합니다."
+      },
+      {
+        "heading": "중간 점검",
+        "text": "① matrix[0]의 형은? int[3] 행 배열입니다. ② 조정된 함수 matrix는 왜 rows를 알 수 없나요? 포인터만 전달되기 때문입니다. ③ 뒤 행 오류 시 앞 결과는? 그대로 보존입니다. ④ rows==0에 NULL은? 이번 계약상 성공이며 읽기/쓰기 없음입니다."
+      },
+      {
+        "heading": "핵심 요약과 개념 확인",
+        "text": "2차원 배열은 배열의 배열입니다. 각 첨자의 범위·고정 열 폭·행 포인터와 int ** 차이를 구분합니다. sizeof는 객체가 보일 때만 개수를 구하며 C11 const 규칙을 최신 C 규칙과 혼동하지 않습니다. 입력 전체 검증 뒤 결과를 공개하고 사용하지 않는 출력도 보존합니다."
+      },
+      {
+        "heading": "기초·응용·도전 연습과 Mini Project",
+        "text": "기초: 2×3 값을 [r][c]로 읽고 초기화 빈 칸을 예상합니다. 응용: 1행/4행·음수·±10000과 뒤 행 오류를 비교합니다. 도전: 모든 성공 합을 기준 이중 반복과 비교하고 함수 선언의 열 폭 오류를 컴파일 단계에서 구분합니다. Mini Project: 작은 주간 기록 표를 행 합으로 요약하되 값 범위와 빈 표/실패 정책을 먼저 정하고 출력은 main에 둡니다."
+      },
+      {
+        "heading": "테스트·풀이 개선·복습 연결",
+        "text": "20개 하네스 사례는 최소/최대 행·열별 기여·음수/0·±30000·부분 초기화·빈 범위/NULL·SIZE_MAX·앞/마지막 셀 오류·전체/미사용 출력 보존·연속 호출을 확인합니다. 결과 비교가 잘못된 포인터나 모든 메모리 안전을 증명하지는 않습니다. 실패를 고쳐 재제출하고 이론 읽기·퀴즈·실습·숙달을 따로 확인한 뒤 파일 I/O의 표 읽기/오류 계약으로 연결합니다."
+      }
+    ],
+    "quiz": {
+      "question": "const int matrix[][3] 함수 매개변수에서 3과 rows의 역할은?",
+      "options": [
+        "3은 한 행의 열 폭이고 rows는 별도 전달한 사용 행 수다",
+        "3은 최대 행 수이고 열 수는 포인터가 자동 검증한다",
+        "matrix는 int **이며 모든 행의 길이가 자동 저장된다",
+        "sizeof matrix만으로 원래 행렬의 행 수를 복구한다"
+      ],
+      "answer": 0,
+      "explanation": "바깥 배열 매개변수는 행 포인터로 조정되지만 내부 열 폭은 남습니다. rows와 실제 객체 범위는 호출자 계약입니다."
+    },
+    "challenge": {
+      "id": "c-matrix-row-sums",
+      "title": "sum_rows3 함수만 구현하기",
+        "description": "int sum_rows3(const int matrix[][3], size_t rows, long *out_sums)를 구현하세요. rows는 0..4, 각 원소는 [-10000,10000]입니다. 0행이면 NULL도 성공 1이며 읽기/쓰기가 없습니다. 양수 행의 NULL, rows>4, 원소 범위 오류는 0을 반환하고 출력 전체를 보존합니다. 성공은 rows개 합만 쓰며 미사용 출력도 보존합니다. 실제 const int[3] 행과 충분한 long 출력 객체는 살아 있고 서로 겹치지 않는다는 호출자 전제입니다. main·입출력·디버그 출력을 넣지 마세요. 공개 하네스는 출력 네 칸을 77로 시작하고 상태값 뒤 네 출력값을 표시합니다. 표기된 {{...}} 호출은 설명용이며 C 소스 문장이 아닙니다.",
+      "starter": "#include <stddef.h>\n\nint sum_rows3(const int matrix[][3], size_t rows, long *out_sums) {\n    // TODO: 빈 범위 → 크기/NULL 검사 → 전체 결과 준비 → 성공 뒤 공개\n    (void)matrix;\n    (void)rows;\n    (void)out_sums;\n    return 0;\n}",
+      "input": "sum_rows3({{1,2,3},{4,5,6}}, 2, out)",
+      "expected": "1 6 15 77 77"
+    }
+  },
+  {
     id:'c-array-max-function',track:'c',level:'중급 실습',title:'배열 함수 실습: 최댓값과 출력 포인터',minutes:38,source:'C 배열·포인터·함수 계약에 관한 독자 작성 실습',
     summary:'배열과 길이를 받아 최댓값을 출력 매개변수에 기록하고 성공 여부를 반환하는 함수를 설계합니다.',figure:'array-output-contract',
     sections:[

@@ -1,5 +1,27 @@
 # CodeWeave 개발 일지
 
+## 2026-10-14 17:04 시작 / 20:04~20:18 KST 후속 검증 — 다차원 배열의 행·열 계약과 실패 보존
+
+- 시작 SHA: `93f99c240f6a7c84645c826fc2c0ae78e75bba2b` (`main`, tree `d79c3ef9341cc77bd1be2b780f2a10bd411a50c3`). 실제 GitHub 읽기·새 clone HEAD/tree·origin/main이 일치했고 시작 작업 트리는 깨끗했다. 필수 여섯 문서·최신 일지·관련 소스/검사·CI를 읽었다. 이전 체크아웃은 덮어쓰지 않았다. 시작 및 후속 조회의 열린 PR은 0개, 기존 Actions #57 `38531195099`는 success다. 20:17 재조회도 같은 HEAD였으며 이 기록의 시간 범위를 연속 실행이나 중간 시각의 완료로 해석하지 않는다.
+- 목표/성공 조건: 최신 일지의 다차원 배열 작업을 고정 3열·0..4행의 의미 있는 작은 단원으로 완성한다. 20절 이상 이론·원고·독자 정적 SVG·두 완성 프로그램·코드 조각·퀴즈·함수형 실습을 연결하고 행/열 경계·초기화·행 우선·행 포인터/int **·C11 qualifier·빈 범위·실패 보존·미사용 출력·반복 호출을 검증한다. 기존 25개 단원/공개 정의·22개 서버 채점 정의·진도/초안/제출/백업 v1·정적 허용 목록은 그대로 유지한다.
+- 테스트 우선: 신규 tests/matrix-rows-content.test.mjs의 첫 9건은 구현 전 1/9 성공·8건 예상 실패였다. GCC의 형/qualifier 컴파일 제약 검사만 이미 통과했고 새 단원·도식·원고·채점 정의의 부재를 확인했다. 이후 선언 코드 조각 검사 1건을 추가해 최종 표적은 10/10이다.
+- 콘텐츠/구현: src/catalog.js에 c-matrix-row-sums의 26절·약 75분·퀴즈·함수 스타터를 추가했다. content/c/21-matrix-row-sums.md는 247줄 독립 원고로 필요성/선수/목표·깊은 이론·도식 읽기·두 완성 예제/출력 이유·예제 가까이 변형 실습·오류/점검/요약/퀴즈·세 수준 연습·센서 기록 Mini Project·테스트/복습을 연결한다. src/figures.js의 340×440 세로 SVG는 두 행 객체·세 열·합 6/15·열 [3] 금지·int ** 차이를 표시하며 애니메이션은 없다.
+- 실습/서버: src/exercises.js에 Practice·선수 c-array-max-function·공개 예시를 등록했다. server/grading-exercises.mjs에는 별도 번역 단위 하네스와 20개 사례를 추가한다. sum_rows3는 0행이면 접근 없이 1, 1..4행이면 각 원소 ±10000을 검사해 long 합을 임시 저장한 뒤 사용 행만 공개한다. 크기/NULL/원소 오류는 0과 전체 출력 보존이다. 공개 하네스의 77 초기값·상태+네 출력 관찰 형식과 설명용 호출 표기가 C 소스가 아님을 명시했다.
+- 검사 파일: tests/matrix-rows-content.test.mjs가 원고/화면 일치·형 경계·두 예제·두 조각·스타터·20개 사례를 실제 GCC로 확인한다. tests/grader-api.test.mjs에는 참조 풀이와 여섯 오답(마지막 열/행 누락, 검증 전 출력, 미사용 칸 변경, 빈 범위 거부, 범위 오류 허용)을 추가했다. tests/exercises.test.mjs·tests/exercise-audit.test.mjs는 23개 실제 채점 정의와 공개 예시/감사 표를 대조한다.
+- 브라우저/PWA: tests/browser-practice.mjs는 26절·실제 잘못된 조기 공개→수정→재제출·이력 2회·이론/퀴즈/전체 숙달·390px 문서/SVG 경계·최소 표시 글자 크기 11.5 CSS px·오프라인 재로딩·matrix-rows-mobile.png 경로를 추가했다. sw.js는 기존 자산 목록을 유지하고 shell v34다. 이 레이아웃 회귀 기준은 접근성 인증이나 실기기/PWA 설치를 대신하지 않는다.
+- 변경 범위: 신규 원고/검사 2개와 기존 15개, 총 17개 파일이다. README·ROADMAP·ARCHITECTURE·CONTENT_POLICY·C_EXERCISE_AUDIT·이 일지에 현재 범위·출처·검사·한계·다음 목표를 반영한다. dev-server.mjs·정적 허용 목록·기록 저장 구현·CodeStep·외부 서비스는 변경하지 않는다.
+- 실제 최종 검사: npm test 272/272 성공·실패/skip 0, 표적 10/10, 메타데이터/감사 표적 7/7 성공. C 23문제·229개 채점 사례와 신규 여섯 오답 거부를 실제 loopback GCC API로 검증했다. A/B·두 선언 조각·함수 참조·스타터는 -std=c11 -Wall -Wextra -Werror -Wpedantic으로 경고 없이 컴파일했다. 열 폭 불일치/int **/pre-C23 qualifier 잘못된 소스는 -c 실패만 확인하며 실행하지 않았다. 변경 JS/MJS 10개 node --check와 git diff --check 성공. 시작 SHA 모듈을 직접 불러와 기존 25개 단원/공개 정의·22개 채점 정의를 deepEqual로 전부 대조했다.
+- 발견/재수정: 첫 표적 15/16의 실패는 새 감사 행 미등록(22≠23)이었고 표/정의를 동기화했다. 공개 예시 설명 문자열도 실제 입력과 맞췄다. API 표적의 초기 98/105는 존재하지 않는 compiler 응답 필드 참조로 새 여섯 검사와 상위 검사가 실패한 것이며 실제 응답의 ok/tests/compileOutput으로 수정했다. 이어 전체 269/271은 가드 값 변경 오답에서 서버가 비정상 종료(72)로 3번째 사례 후 중단하는 기존 동작을 “항상 20개 반환”이라고 가정한 검사 오류였다. 필요한 실패 사례 존재·컴파일 원문 비어 있음·ok=false로 수정한 뒤 271/271, 선언 조각 추가 후 272/272를 재확인했다. 18시 후속의 경로 변수 미설정은 undefined 경로 patch 읽기 실패로 파일을 변경하지 않았고 실제 경로/소스에서 상태를 다시 복원해 진행했다. 제품 장애나 원격 쓰기 실패로 오인하지 않는다.
+- 로컬 UI 한계: npm run test:browser의 선행 C 23문제 API는 모두 성공했으나 browserType.launch: Executable doesn't exist at /root/.cache/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell 때문에 화면 단계는 실행하지 못했다. 새 실제 Chromium CI·390px·오프라인·이미지 재검토는 반영 뒤 확인해 보고서에 남긴다. DOM/API/HTTP 성공을 화면 E2E로 주장하지 않는다.
+- C 의미/보안 검토: 실제 행/출력 객체의 크기·수명·쓰기 가능성·입출력 비중첩은 호출자 전제이며 NULL만으로 증명하지 않는다. ±30000은 최소 int 범위에도 들어가므로 long이 꼭 필요하다고 설명하지 않는다. C11 const 행 포인터 변환은 평범한 int *의 qualifier 추가와 구분하며 C23에 일반화하지 않는다. GCC 공식 문서 https://gcc.gnu.org/onlinedocs/gcc/Pointers-to-Arrays.html 를 조회하고 엄격 C11 제약과 대조했다. N1570 재조회는 Timeout fetching 오류여서 이번 원문 읽기 성공으로 기재하지 않는다. 유한 가드/결과 검사는 임의 포인터 안전성·악성 제출 격리를 증명하지 않으며 기존 loopback 신뢰 개인 C 실행 경계를 유지한다.
+- PDF 실제 접근: 별도 완전한 원본의 pdfinfo를 다시 확인해 Express 87,753,393바이트·750쪽/K&R 6,838,054바이트·288쪽을 확인했다. 렌더링/육안 읽기 범위는 Express 10.6 시작(물리 432/인쇄 430쪽), K&R 5.7 시작(물리 124/인쇄 110쪽)의 도입부다. pdftotext의 빈 결과는 스캔 파일 특성이며 전체 절/책 완독이나 본문 대조로 보고하지 않는다. 원고·코드·문제·SVG는 독립 작성이고 PDF·상용 예제·캡처는 Git/사이트에 없다. 검토용 PNG 두 개만 제거했으며 원본은 보존하고 파생물은 재생성 가능하다.
+- 커밋/반영: 제목은 `feat: add matrix row contract and boundary practice`다. 최신 main 확인 뒤 기존 base tree를 보존한 GitHub atomic blob/tree/commit과 expected-SHA 비강제 ref 갱신을 사용한다. 로컬 검증본과 모든 blob/전체 tree를 대조한다. 아직 모르는 자신의 SHA는 기입하지 않으며 실제 결과 SHA·원격 HEAD/새·기존 파일·CI/이미지는 반영 후 보고한다. GitHub 저장을 실제 호스팅/공개 실행 배포로 보고하지 않는다.
+- 미완료/다음 작업: 다음은 C 파일 스트림의 열기/닫기·수명·EOF/오류 구분·읽기 결과 공개를 작은 단원으로 집필하고 tmpfile 기반 독립 예제/경계 검사를 연결한다. 임의 사용자 경로를 호스트에서 실행하는 공개 API는 만들지 않는다. 가변 열/VLA·포인터 배열·자료구조/알고리즘 전체 과정·Rust/Cargo/test·실제 Windows/Android/태블릿/PWA 설치·공개 실행 격리는 후속이다.
+- 분야 상태: 통합 백업/숙달 분리/정적 제한은 보존, C 23문제(입출력 8·함수 13·다중 파일 2)·229사례/전체 공개 정의·퀴즈 26개/shell v34다. 다차원 배열 입문을 추가했지만 전체 교과서 완성도/근거 없는 완료율은 계산하지 않는다.
+
+---
+
+
 ## 2026-10-14 16:29 KST — 재귀 입문과 범위·반복 호출 팩토리얼 실습
 
 - 시작 SHA: `c30332a57264aa9cb6a13b9abbdc8cceaafc26d6` (`main`, tree `20886acee0ce813fa3d0144af8ce3811073f64ac`). GitHub branches/main의 실제 읽기·새 clone HEAD/tree가 일치하고 새 작업 트리는 깨끗했다. 앞선 체크아웃은 status만 읽어 보존했다. 열린 PR 0개, 시작 SHA의 Actions #56 `38528231217`은 test·browser 모두 성공이다. 필수 여섯 문서·최신 일지·공개/비공개 채점 정의·카탈로그·도식·검사·CI를 읽었다. 기준선 npm test 240/240, 실패/skip 0. 변경 뒤 재조회한 main도 같은 SHA다.

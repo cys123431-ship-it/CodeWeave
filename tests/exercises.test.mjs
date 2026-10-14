@@ -32,7 +32,7 @@ test('every lesson challenge has one validated public exercise definition', () =
 });
 
 test('only implemented C exercises advertise their explicit grading strategy', () => {
-  const expected = ['c-array', 'c-array-max-function', 'c-bounded-string-length', 'c-clamp-function', 'c-dynamic-student-array', 'c-fgets-logical-line', 'c-functions', 'c-hello', 'c-loops', 'c-multi-file', 'c-pointer', 'c-realloc-student-capacity', 'c-recursion-factorial', 'c-string-count-function', 'c-strtol-integer-input', 'c-struct-array-binary-search', 'c-struct-array-search', 'c-struct-array-sort', 'c-struct-student-registry', 'c-struct-student-score', 'c-student-vector-push', 'c-types'];
+const expected = ['c-array', 'c-array-max-function', 'c-bounded-string-length', 'c-clamp-function', 'c-dynamic-student-array', 'c-fgets-logical-line', 'c-functions', 'c-hello', 'c-loops', 'c-matrix-row-sums', 'c-multi-file', 'c-pointer', 'c-realloc-student-capacity', 'c-recursion-factorial', 'c-string-count-function', 'c-strtol-integer-input', 'c-struct-array-binary-search', 'c-struct-array-search', 'c-struct-array-sort', 'c-struct-student-registry', 'c-struct-student-score', 'c-student-vector-push', 'c-types'];
   assert.deepEqual(exercises.filter(exercise => isGradedExercise(exercise.id)).map(exercise => exercise.id).sort(), expected);
   assert.deepEqual([...gradingExercises.keys()].sort(), expected);
   for (const id of expected) {

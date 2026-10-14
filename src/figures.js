@@ -3,6 +3,15 @@ const arrow=(x1,y1,x2,y2)=>`<path d="M${x1} ${y1} L${x2} ${y2}" stroke="#6b8d98"
 const wrap=inner=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 670 190" role="img" aria-label="학습 개념 그림"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 const wrapTall=(label,inner,viewBox='0 0 670 300',style='')=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"${style?` style="${style}"`:''} role="img" aria-label="${label}"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 export function figureFor(kind){
+ if(kind==='matrix-row-contract')return wrapTall('삼 열짜리 두 행 배열과 각각의 합, 제외된 열 경계',
+  `<text x="170" y="25" text-anchor="middle" font-size="18" font-weight="700" fill="#28485b">배열의 배열 · 2행 × 3열</text>`+
+  [[1,2,3],[4,5,6]].map((row,r)=>{
+   const y=52+r*150;
+   return `<rect x="15" y="${y}" width="310" height="126" rx="13" fill="#e7f1ff" stroke="#a3bdb9"/><text x="34" y="${y+25}" font-size="17" font-weight="700" fill="#28485b">matrix[${r}]</text>`+
+    row.map((value,c)=>box(30+c*95,y+38,85,44,String(value),'#d7f4e6')+`<text x="${72+c*95}" y="${y+108}" text-anchor="middle" font-size="15" fill="#52687e">[${c}]</text>`).join('')+
+    `<text x="293" y="${y+25}" text-anchor="end" font-size="17" font-weight="700" fill="#28485b">합 ${r===0?6:15}</text>`;
+  }).join('')+`<text x="170" y="363" text-anchor="middle" font-size="16" font-weight="700" fill="#9d4f40">열 [3] 접근 금지</text><text x="170" y="400" text-anchor="middle" font-size="15" fill="#52687e">matrix + 1은 다음 행의 주소</text><text x="170" y="428" text-anchor="middle" font-size="15" fill="#52687e">int ** 구조가 아님</text>`,
+  '0 0 340 440','max-width:340px');
  if(kind==='recursion-unwind')return wrapTall('재귀 팩토리얼의 감소 호출과 역순 반환을 설명하는 논리적 그림',
   `<text x="170" y="26" text-anchor="middle" font-size="18" font-weight="700" fill="#28485b">작은 호출 ↓ · 반환 ↑</text>`+
   [[3,'3 × 2 = 6'],[2,'2 × 1 = 2'],[1,'1 × 1 = 1'],[0,'return 1']].map(([n,result],i)=>{

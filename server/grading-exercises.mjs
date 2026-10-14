@@ -1,6 +1,28 @@
 import { exercises } from '../src/exercises.js';
 
 const CASES = {
+  'c-matrix-row-sums': [
+    {"input":"sum_rows3({{1,2,3},{4,5,6}}, 2, out)","expected":"1 6 15 77 77","args":["0"]},
+    {"input":"한 행 · 음수와 0","expected":"1 5 77 77 77","args":["1"]},
+    {"input":"최대 4행","expected":"1 1 2 3 15","args":["2"]},
+    {"input":"모든 원소 음수","expected":"1 -6 -15 77 77","args":["3"]},
+    {"input":"두 행 모두 0","expected":"1 0 0 77 77","args":["4"]},
+    {"input":"상한 원소 · 행 합 30000","expected":"1 30000 77 77 77","args":["5"]},
+    {"input":"하한 원소 · 행 합 -30000","expected":"1 -30000 77 77 77","args":["6"]},
+    {"input":"첫 칸 상한 초과 · 출력 보존","expected":"0 77 77 77 77","args":["7"]},
+    {"input":"첫 칸 하한 미만 · 출력 보존","expected":"0 77 77 77 77","args":["8"]},
+    {"input":"마지막 칸 오류 · 앞 행 결과도 공개 금지","expected":"0 77 77 77 77","args":["9"]},
+    {"input":"5행 거부 · 읽기 전에 검사","expected":"0 77 77 77 77","args":["10"]},
+    {"input":"SIZE_MAX 행 수 거부","expected":"0 77 77 77 77","args":["11"]},
+    {"input":"양수 행 수 · NULL 입력","expected":"0 77 77 77 77","args":["12"]},
+    {"input":"양수 행 수 · NULL 출력","expected":"0 77 77 77 77","args":["13"]},
+    {"input":"빈 범위 · NULL 입력/출력","expected":"1 77 77 77 77","args":["14"]},
+    {"input":"빈 범위 · 비NULL 입력을 읽지 않음","expected":"1 77 77 77 77","args":["15"]},
+    {"input":"부분 초기화 · 생략 원소 0","expected":"1 1 2 77 77","args":["16"]},
+    {"input":"사용 행 뒤의 잘못된 원소는 읽지 않음","expected":"1 6 77 77 77","args":["17"]},
+    {"input":"같은 출력 객체 반복 호출 · 성공/짧은 성공/실패","expected":"1 6 15 77 77\n1 5 15 77 77\n0 5 15 77 77","args":["18"]},
+    {"input":"서로 다른 출력 객체 · 미사용 칸 보존","expected":"1 6 1 15 77 77","args":["19"]},
+  ],
   'c-recursion-factorial': [
     {"input":"factorial_checked(0, &out)","expected":"1 1","args":["0"]},
     {"input":"factorial_checked(1, &out)","expected":"1 1","args":["1"]},
@@ -223,6 +245,72 @@ const CASES = {
 };
 
 const HARNESSES = {
+  'c-matrix-row-sums': `#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int sum_rows3(const int matrix[][3], size_t rows, long *out_sums);
+
+static void print_result(int status, const long out[4]) {
+    printf("%d %ld %ld %ld %ld\\n", status, out[0], out[1], out[2], out[3]);
+}
+
+int main(int argc, char **argv) {
+    if (argc != 2) return 70;
+    long guarded[6] = {55, 77, 77, 77, 77, 66};
+    long *out = guarded + 1;
+    int status;
+    const int normal[2][3] = {{1, 2, 3}, {4, 5, 6}};
+    const int one[1][3] = {{7, -2, 0}};
+    const int invalid[2][3] = {{9, 8, 7}, {1, 2, 10001}};
+    switch (atoi(argv[1])) {
+        case 0: status = sum_rows3(normal, 2, out); break;
+        case 1: status = sum_rows3(one, 1, out); break;
+        case 2: {
+            const int a[4][3] = {{1, 0, 0}, {0, 2, 0}, {0, 0, 3}, {4, 5, 6}};
+            status = sum_rows3(a, 4, out); break;
+        }
+        case 3: {
+            const int a[2][3] = {{-1, -2, -3}, {-4, -5, -6}};
+            status = sum_rows3(a, 2, out); break;
+        }
+        case 4: { const int a[2][3] = {{0}, {0}}; status = sum_rows3(a, 2, out); break; }
+        case 5: { const int a[1][3] = {{10000, 10000, 10000}}; status = sum_rows3(a, 1, out); break; }
+        case 6: { const int a[1][3] = {{-10000, -10000, -10000}}; status = sum_rows3(a, 1, out); break; }
+        case 7: { const int a[1][3] = {{10001, 0, 0}}; status = sum_rows3(a, 1, out); break; }
+        case 8: { const int a[1][3] = {{-10001, 0, 0}}; status = sum_rows3(a, 1, out); break; }
+        case 9: status = sum_rows3(invalid, 2, out); break;
+        case 10: status = sum_rows3(normal, 5, out); break;
+        case 11: status = sum_rows3(normal, SIZE_MAX, out); break;
+        case 12: status = sum_rows3(NULL, 1, out); break;
+        case 13: status = sum_rows3(normal, 1, NULL); break;
+        case 14: status = sum_rows3(NULL, 0, NULL); break;
+        case 15: status = sum_rows3(invalid, 0, out); break;
+        case 16: { const int a[2][3] = {{1}, {2}}; status = sum_rows3(a, 2, out); break; }
+        case 17: {
+            const int a[2][3] = {{1, 2, 3}, {10001, 10001, 10001}};
+            status = sum_rows3(a, 1, out); break;
+        }
+        case 18:
+            status = sum_rows3(normal, 2, out); print_result(status, out);
+            status = sum_rows3(one, 1, out); print_result(status, out);
+            status = sum_rows3(invalid, 2, out); break;
+        case 19: {
+            long other[4] = {88, 88, 88, 88};
+            int first = sum_rows3(normal, 1, out);
+            int second = sum_rows3(normal + 1, 1, other);
+            if (guarded[0] != 55 || guarded[5] != 66 ||
+                other[1] != 88 || other[2] != 88 || other[3] != 88) return 72;
+            printf("%d %ld %d %ld %ld %ld\\n", first, out[0], second, other[0], out[1], out[2]);
+            return 0;
+        }
+        default: return 71;
+    }
+    if (guarded[0] != 55 || guarded[5] != 66) return 72;
+    print_result(status, out);
+    return 0;
+}`,
   'c-recursion-factorial': `#include <limits.h>
 #include <stddef.h>
 #include <stdio.h>

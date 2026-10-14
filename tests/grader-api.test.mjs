@@ -47,6 +47,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
   ], { requiredNames: ['main.c','student.c','student.h'] });
   const studentRegistryAlgorithms = '#include "student.h"\nint stable_sort_students_by_id(struct Student a[],size_t n){if(n==0)return 1;if(!a)return 0;for(size_t i=1;i<n;i++){struct Student key=a[i];size_t j=i;while(j>0&&a[j-1].id>key.id){a[j]=a[j-1];--j;}a[j]=key;}return 1;}\nint find_first_student_by_id(const struct Student a[],size_t n,int id,size_t *out){if(n==0||!a||!out)return 0;size_t l=0,r=n;while(l<r){size_t m=l+(r-l)/2;if(a[m].id<id)l=m+1;else r=m;}if(l<n&&a[l].id==id){*out=l;return 1;}return 0;}';
   const solutions = {
+    'c-matrix-row-sums': "#include <stddef.h>\n#include <stdio.h>\n\nint sum_rows3(const int matrix[][3], size_t rows, long *out_sums) {\n    if (rows == 0) {\n        return 1;\n    }\n    if (rows > 4 || matrix == NULL || out_sums == NULL) {\n        return 0;\n    }\n    long totals[4];\n    for (size_t r = 0; r < rows; ++r) {\n        long sum = 0;\n        for (size_t c = 0; c < 3; ++c) {\n            if (matrix[r][c] < -10000 || matrix[r][c] > 10000) {\n                return 0;\n            }\n            sum += (long)matrix[r][c];\n        }\n        totals[r] = sum;\n    }\n    for (size_t r = 0; r < rows; ++r) {\n        out_sums[r] = totals[r];\n    }\n    return 1;\n}\n",
     'c-recursion-factorial': "#include <stddef.h>\n#include <stdio.h>\n\nstatic unsigned long factorial_small(unsigned int n) {\n    if (n == 0) {\n        return 1UL;\n    }\n    unsigned long smaller = factorial_small(n - 1);\n    return (unsigned long)n * smaller;\n}\n\nint factorial_checked(unsigned int n, unsigned long *out_value) {\n    if (out_value == NULL || n > 12) {\n        return 0;\n    }\n    unsigned long result = factorial_small(n);\n    *out_value = result;\n    return 1;\n}\n",
     'c-hello': '#include <stdio.h>\nint main(void){puts("Hello, CodeWeave!");return 0;}',
     'c-types': '#include <stdio.h>\nint main(void){int a,b;if(scanf("%d%d",&a,&b)!=2)return 1;printf("%d\\n",a+b);return 0;}',
@@ -112,6 +113,24 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     assert.equal(result.tests.length, 20);
   });
   const storage = { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };
+  for (const [name, mutate, failedCase] of [
+    ['final column omission', code => code.replace('c < 3', 'c < 2'), 0],
+    ['final row omission', code => code.replaceAll('r < rows', 'r + 1 < rows'), 0],
+    ['publishing before all validation', code => code.replace('totals[r] = sum;', 'totals[r] = sum; out_sums[r] = sum;'), 9],
+    ['overwriting an unused output slot', code => code.replace('    return 1;\n}', '    out_sums[rows] = 0;\n    return 1;\n}'), 0],
+    ['rejecting the empty range', code => code.replace('if (rows == 0) {\n        return 1;', 'if (rows == 0) {\n        return 0;'), 14],
+    ['accepting out-of-range cells', code => code.replace('matrix[r][c] < -10000 || matrix[r][c] > 10000', 'matrix[r][c] < -10001 || matrix[r][c] > 10001'), 7]
+  ]) {
+    await t.test('matrix rejects ' + name, async () => {
+      const wrong = mutate(solutions['c-matrix-row-sums']);
+      assert.notEqual(wrong, solutions['c-matrix-row-sums']);
+      const { result } = await submit('c-matrix-row-sums', wrong);
+      assert.ok(result.tests.length > failedCase, JSON.stringify(result));
+      assert.equal(result.compileOutput, '');
+      assert.equal(result.ok, false);
+      assert.equal(result.tests[failedCase].passed, false);
+    });
+  }
   for (const [id, code] of Object.entries(solutions)) {
     await t.test(id + ' passes real compiler and all grading cases', async () => {
       const { status, result } = await submit(id, code);
