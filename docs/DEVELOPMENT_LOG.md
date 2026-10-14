@@ -1,5 +1,18 @@
 # CodeWeave 개발 일지
 
+## 2026-10-14 15:24~15:28 KST — CI 이미지 재검토 뒤 포인터 도식 모바일 가독성 수정
+
+- 후속 시작 SHA: `417abd01439eb7a07681d78a5df1627169e01969` (`main`, tree `fd38b127ed659fa0e723fb0665f54b69843c77cf`). 앞선 포인터 확장 커밋의 원격 HEAD·전체 tree 및 원고/검사/카탈로그/일지/sw blob이 로컬 검증본과 일치했다. Actions #54 `38521826890`은 test·실제 Chromium browser 모두 성공했고 로그에서 229/229·실패/skip 0, C 21문제 GCC, 포인터 오답→수정→숙달·390px·오프라인 확인을 읽었다.
+- 발견/성공 조건: 해당 CI의 codeweave-browser-qa 아티팩트 `11874058331`을 내려받아 ZIP SHA-256 `775a169c83aaf315171a432fe4848a1779c5004e1a2f092fabc685ed6150b631`을 API digest와 대조하고 pointer-alias-mobile.png를 실제로 열었다. 670폭의 두 열 SVG가 좁은 화면에서 지나치게 축소되어 글자가 작았다. 넘침/내용 검사 성공만으로 가독성을 완료로 간주하지 않는다. 390px에서 모든 SVG text의 변환 후 표시 크기를 11.5 CSS px 이상으로 검사하고, 두 시점/별칭 의미·정적 SVG·저장 데이터는 보존한다. 이 값은 이번 레이아웃의 회귀 기준이며 접근성 표준 합격/실기기 검증을 뜻하지 않는다.
+- 테스트 우선: 기존 포인터 도식 검사에 세로 340×440 viewBox와 데스크톱 최대 폭 조건을 먼저 추가했다. 구현 전 포인터 표적 검사 6/7 성공·1건 예상 실패로 기존 가로 레이아웃을 재현했다. 브라우저 검사에는 getComputedStyle와 getScreenCTM으로 실제 글자 크기를 계산하는 조건을 추가했다. 기존 로컬 Chromium 미설치 때문에 이 화면 조건의 실제 실행은 새 원격 CI에서 확인한다.
+- 수정 파일/구현: src/figures.js에서 두 시점을 세로로 배치하고 짧은 설명 줄을 나눴으며 최대 폭 340px로 데스크톱 과확대를 방지했다. wrapTall의 선택적 viewBox/style 인수는 기본값을 유지해 다른 도식 출력은 바꾸지 않는다. tests/pointers-content.test.mjs와 tests/browser-practice.mjs가 구조·실제 모바일 표시 크기를 검사한다. sw.js는 shell v31, docs/ARCHITECTURE.md도 같은 버전으로 맞췄다. 이 일지까지 기존 6개 파일을 수정하며 신규 파일/문제·애니메이션·외부 서비스는 추가하지 않는다.
+- 재검사: 포인터 표적 7/7 성공, 전체 npm test 229/229 성공·실패/skip 0, C 21문제/189개 실제 GCC 사례·세 완성 프로그램도 그대로 성공했다. 변경 JS/MJS 4개 node --check 및 git diff --check 성공. 이번 후속 수정은 로컬 브라우저를 설치/실행한 결과가 아니며 새 Chromium CI와 이미지의 시각 재검토를 반영 후 확인한다.
+- 호환/위험: c-pointer의 29절·스타터·퀴즈·다섯 사례·입출력 계약·모든 진도/초안/제출/백업 키는 그대로다. 원본 PDF는 변경하지 않았으며 임시 표지 렌더링 1개만 제거했다. CI 이미지와 ZIP은 검사용 임시 파일이며 사이트/저장소에 복제하지 않았다. 390px의 폰트/너비와 Chromium 오프라인 검사는 Windows·Android·태블릿 실기기/PWA 설치·안전한 공개 실행을 대신하지 않는다.
+- 커밋/원격 반영: 후속 제목은 `fix: keep pointer diagram legible on mobile`이다. 최신 원격 HEAD를 다시 읽고 위 후속 시작 SHA를 parent/expected SHA로 사용해 기존 base tree 보존·blob/tree 대조·비강제 ref 갱신을 수행한다. 아직 모르는 후속 결과 SHA는 기입하지 않으며 HEAD·파일·CI·모바일 이미지의 실제 결과를 보고서로 남긴다.
+- 다음 작업/분야 상태: 앞선 함수 선언/정의·범위/저장기간 확장 우선순위를 유지한다. C 21개/189사례·공개 24개·포인터 상세 29절은 유지되며 shell v31이다. 전체 C 교과서·Rust/Cargo·전체 자료구조/알고리즘·실기기/설치형 PWA·공개 실행 격리는 미완료다.
+
+---
+
 ## 2026-10-14 15:04~15:21 KST — 포인터 입문 교과서형 확장과 별칭·수명 계약
 
 - 시작 SHA: `e5f41f07851969bdfcba192ac5aef8f649721274` (`main`, tree `16e5f5d76add59494c3937eb845ff62d7854aee7`). 새 clone의 HEAD·origin/main·GitHub branches/main 읽기가 일치했고 미커밋 작업은 없었다. 이전 체크아웃도 읽기 전용 status로 확인해 보존했다. 열린 PR 0개, 시작 SHA의 Actions #53 `38516228295`는 test·실제 Chromium browser 모두 성공이었다. 필수 여섯 문서와 최신 일지, 포인터 입문·도식·문제 메타데이터·비공개 사례·콘텐츠/API/브라우저 검사·CI 정의를 읽었다. 기준선 npm test 220/220 성공, 실패/skip 0.

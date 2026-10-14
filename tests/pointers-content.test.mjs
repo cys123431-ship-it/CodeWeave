@@ -38,6 +38,8 @@ test('pointer practice identity, starter, quiz, prerequisites and all five gradi
 test('pointer alias figure contrasts changing a referent with reassigning one pointer', () => {
   const svg = figureFor('pointer-alias-contract');
   for (const label of ['role="img"', '시점 A', '시점 B', 'p', 'alias', 'value=8', 'other=21', '재대입', '그대로']) assert.ok(svg.includes(label), label);
+  assert.ok(svg.includes('viewBox="0 0 340 440"'), 'stacked snapshots preserve readable mobile scale');
+  assert.ok(svg.includes('max-width:340px'), 'desktop rendering does not stretch the portrait diagram');
   assert.doesNotMatch(svg, /<script|animate|onload=/i);
 });
 

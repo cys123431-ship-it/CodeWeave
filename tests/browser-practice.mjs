@@ -203,6 +203,11 @@ try {
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'pointer introduction mobile overflow');
   const pointerFigure = await page.locator('.figure-box svg').boundingBox();
   assert.ok(pointerFigure && pointerFigure.x >= 0 && pointerFigure.x + pointerFigure.width <= 390, 'pointer figure fits the mobile viewport');
+  const pointerTextSizes = await page.locator('.figure-box svg').evaluate(svg => [...svg.querySelectorAll('text')].map(label => {
+    const transform = label.getScreenCTM();
+    return { label: label.textContent, pixels: parseFloat(getComputedStyle(label).fontSize) * Math.hypot(transform.a, transform.b) };
+  }));
+  assert.ok(pointerTextSizes.length > 0 && pointerTextSizes.every(label => label.pixels >= 11.5), 'pointer diagram text must remain at least 11.5 CSS px at 390px: ' + JSON.stringify(pointerTextSizes));
   if (qaDir) {
     await mkdir(qaDir, { recursive: true });
     await page.locator('.figure-box').screenshot({ path: path.join(qaDir, 'pointer-alias-mobile.png') });
