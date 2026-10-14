@@ -10,7 +10,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const project = fileURLToPath(new URL('../', import.meta.url));
 const posix = process.platform !== 'win32';
 const gcc = spawnSync('gcc', ['--version']).status === 0;
-const prefix = '#define _POSIX_C_SOURCE 200809L\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <signal.h>\n#include <sys/types.h>\n#include <sys/resource.h>\n';
+const prefix = '#define _DARWIN_C_SOURCE\n#define _POSIX_C_SOURCE 200809L\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <signal.h>\n#include <sys/types.h>\n#include <sys/resource.h>\n';
 const hello = 'puts("Hello, CodeWeave!");return 0;';
 
 async function alive(pid) {
@@ -100,8 +100,9 @@ test('local API limits submission resources and cleans its process group', { ski
     assert.match(result.tests[0].detail, /비정상 종료 \(SIGXFSZ\)/);
   });
   await t.test('inherits finite CPU, memory, file and user-process ceilings', async () => {
-    const code = prefix + '#include <limits.h>\nint main(void){const char *budget=getenv("CODEWEAVE_AS_LIMIT_KIB");if(!budget)return 8;char *end;unsigned long kib=strtoul(budget,&end,10);if(*end||kib==0||kib>ULONG_MAX/1024)return 9;int ids[]={RLIMIT_CPU,RLIMIT_AS,RLIMIT_FSIZE,RLIMIT_NPROC};unsigned long caps[]={2,kib*1024,2UL*1024*1024,128};for(int i=0;i<4;++i){struct rlimit r;if(getrlimit(ids[i],&r)!=0||r.rlim_cur>caps[i]||r.rlim_max>caps[i])return 7;}' + hello + '}';
-    assert.equal((await submit(code)).ok, true);
+    const code = prefix + '#include <limits.h>\nint main(void){const char *budget=getenv("CODEWEAVE_AS_LIMIT_KIB");if(!budget)return 8;char *end;unsigned long kib=strtoul(budget,&end,10);if(*end||kib==0||kib>ULONG_MAX/1024)return 9;int ids[]={RLIMIT_CPU,RLIMIT_AS,RLIMIT_FSIZE,RLIMIT_NPROC};unsigned long caps[]={2,kib*1024,2UL*1024*1024,' + (process.platform === 'darwin' ? 512 : 128) + '};for(int i=0;i<4;++i){struct rlimit r;if(getrlimit(ids[i],&r)!=0||r.rlim_cur>caps[i]||r.rlim_max>caps[i])return 7;}' + hello + '}';
+    const result = await submit(code);
+    assert.equal(result.ok, true, JSON.stringify(result));
   });
   await t.test('releases the grading slot after a resource failure', async () => {
     assert.equal((await submit(prefix + 'int main(void){' + hello + '}')).ok, true);
@@ -113,7 +114,7 @@ test('CPU budget kills a bounded busy loop before a longer wall deadline', { ski
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'codeweave-cpu-test-'));
   t.after(() => fs.rm(dir, { recursive: true, force: true }));
   const source = path.join(dir, 'busy.c'), binary = path.join(dir, 'busy');
-  await fs.writeFile(source, '#include <time.h>\n#include <stdio.h>\n#include <sys/resource.h>\nint main(void){int ids[]={RLIMIT_CPU,RLIMIT_AS,RLIMIT_FSIZE,RLIMIT_NPROC};for(int i=0;i<4;++i){struct rlimit r;if(getrlimit(ids[i],&r)==0)printf("limit%d=%lu/%lu\\n",ids[i],(unsigned long)r.rlim_cur,(unsigned long)r.rlim_max);}fflush(stdout);clock_t start=clock();volatile unsigned long n=0;while((double)(clock()-start)/CLOCKS_PER_SEC<6.0)++n;return 0;}');
+  await fs.writeFile(source, '#include <time.h>\n#include <stdio.h>\n#include <sys/resource.h>\nint main(void){int ids[]={RLIMIT_CPU,RLIMIT_AS,RLIMIT_FSIZE,RLIMIT_NPROC};for(int i=0;i<4;++i){struct rlimit r;if(getrlimit(ids[i],&r)==0)printf("limit%d=%lu/%lu\\n",ids[i],(unsigned long)r.rlim_cur,(unsigned long)r.rlim_max);}fflush(stdout);clock_t start=clock();volatile unsigned long n=0;while((double)(clock()-start)/CLOCKS_PER_SEC<6.0){for(unsigned long i=0;i<10000000UL;++i)++n;}return 0;}');
   const compiled = spawnSync('gcc', ['-std=c11', source, '-o', binary], { encoding: 'utf8' });
   assert.equal(compiled.status, 0, compiled.stderr);
   const result = await runSubmission(binary, [], { cwd: dir, timeout: 8000 });

@@ -4,7 +4,7 @@ export const SUBMISSION_LIMITS = Object.freeze({
   cpuSeconds: 2,
   virtualMemoryKiB: 65536,
   fileSizeKiB: 2048,
-  userProcesses: 128,
+  userProcesses: process.platform === 'darwin' ? 512 : 128,
   wallTimeMs: 1300,
   outputBytes: 30000
 });
