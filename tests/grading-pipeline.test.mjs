@@ -4,6 +4,9 @@ import { Readable } from 'node:stream';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import http from 'node:http';
+import { spawn } from 'node:child_process';
+import { once } from 'node:events';
 import { gradingExercises } from '../server/grading-exercises.mjs';
 import { serializeMultiFileSubmission } from '../src/multi-file.js';
 
@@ -20,6 +23,65 @@ async function workspace(t) {
   t.after(() => fs.rm(dir, { recursive: true, force: true }));
   return dir;
 }
+
+test('parseRequest reports rejection before closing an unfinished request stream', async () => {
+  const { parseRequest } = await pipeline();
+  const events = [];
+  async function* body() {
+    try {
+      yield Buffer.alloc(25000 * 4 + 4097);
+    } finally {
+      events.push('close');
+    }
+  }
+  const result = await parseRequest(body(), rejected => events.push('reject:' + rejected.status));
+  assert.equal(result.status, 413);
+  assert.deepEqual(events, ['reject:413', 'close']);
+});
+
+test('oversized unfinished HTTP body receives 413 instead of a connection reset', { timeout: 10000 }, async t => {
+  const server = spawn(process.execPath, ['dev-server.mjs'], {
+    env: { ...process.env, PORT: '0' }, stdio: ['ignore', 'pipe', 'pipe']
+  });
+  t.after(async () => {
+    if (server.exitCode === null && server.signalCode === null) {
+      const ended = once(server, 'exit');
+      server.kill();
+      await ended;
+    }
+  });
+  const base = await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(Error('server startup timed out')), 5000);
+    let output = '';
+    server.once('error', error => { clearTimeout(timer); reject(error); });
+    server.once('exit', code => { clearTimeout(timer); reject(Error('server exited: ' + code)); });
+    server.stdout.on('data', chunk => {
+      output += chunk;
+      const match = output.match(/http:\/\/127\.0\.0\.1:\d+/);
+      if (match) {
+        clearTimeout(timer);
+        resolve(match[0]);
+      }
+    });
+  });
+  const html = await (await fetch(base)).text();
+  const token = html.match(/name="codeweave-token" content="([0-9a-f]{64})"/)?.[1];
+  assert.match(token ?? '', /^[0-9a-f]{64}$/);
+  const status = await new Promise((resolve, reject) => {
+    const req = http.request(base + '/api/grade', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CodeWeave-Token': token }
+    }, res => {
+      res.resume();
+      res.on('error', reject);
+      res.on('end', () => { resolve(res.statusCode); req.destroy(); });
+    });
+    req.setTimeout(3000, () => req.destroy(Error('response timed out')));
+    req.on('error', reject);
+    // Do not end the body: the server must reject before the client finishes uploading.
+    req.write(Buffer.alloc(25000 * 4 + 4097, 32));
+  });
+  assert.equal(status, 413);
+});
 
 test('parseRequest preserves UTF-8 across byte chunks and resolves the declared exercise', async () => {
   const { parseRequest } = await pipeline();

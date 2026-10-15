@@ -10,13 +10,19 @@ import { MAX_CODE_LENGTH } from '../src/iterations.js';
 // Preserve the existing UTF-16 code length and bounded UTF-8 JSON contracts.
 const MAX_REQUEST_BYTES = MAX_CODE_LENGTH * 4 + 4096;
 
-export async function parseRequest(req) {
+export async function parseRequest(req, onReject = () => {}) {
+  function reject(status, message) {
+    const rejection = { status, result: { ok: false, message } };
+    onReject(rejection);
+    return rejection;
+  }
   const chunks = [];
   let size = 0;
   for await (const chunk of req) {
     size += chunk.length;
     if (size > MAX_REQUEST_BYTES) {
-      return { status: 413, result: { ok: false, message: '요청 크기가 너무 큽니다.' } };
+      // Respond before leaving the iterator, matching the original HTTP handler.
+      return reject(413, '요청 크기가 너무 큽니다.');
     }
     chunks.push(chunk);
   }
@@ -25,12 +31,12 @@ export async function parseRequest(req) {
   try {
     value = JSON.parse(Buffer.concat(chunks).toString('utf8'));
   } catch {
-    return { status: 400, result: { ok: false, message: '잘못된 JSON입니다.' } };
+    return reject(400, '잘못된 JSON입니다.');
   }
   const { code, exerciseId } = value ?? {};
   const exercise = gradingExercises.get(exerciseId);
   if (typeof code !== 'string' || code.length > MAX_CODE_LENGTH || !exercise) {
-    return { status: 400, result: { ok: false, message: '지원하지 않는 문제 또는 코드 길이입니다.' } };
+    return reject(400, '지원하지 않는 문제 또는 코드 길이입니다.');
   }
 
   let submittedFiles = null;
@@ -38,7 +44,7 @@ export async function parseRequest(req) {
     try {
       submittedFiles = parseMultiFileSubmission(code, { requiredNames: exercise.requiredFiles });
     } catch (error) {
-      return { status: 400, result: { ok: false, message: error.message } };
+      return reject(400, error.message);
     }
   }
   return { code, exercise, submittedFiles };

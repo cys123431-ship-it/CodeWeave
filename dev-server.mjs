@@ -72,9 +72,9 @@ async function grade(req, res) {
   }
   let ownsSlot = false;
   try {
-    const submission = await parseRequest(req);
+    const submission = await parseRequest(req, ({ status, result }) => send(res, status, result));
     if (submission.status) {
-      return send(res, submission.status, submission.result);
+      return;
     }
     if (busy) {
       return send(res, 429, { ok: false, message: '다른 코드를 채점하고 있어요. 잠시 후 다시 시도하세요.' });
