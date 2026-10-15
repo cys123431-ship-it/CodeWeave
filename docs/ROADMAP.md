@@ -68,7 +68,7 @@
 
 | ID | 단원 | 상태 | 기존 단원·검증 근거 |
 |---|---|---|---|
-| D01 | 단일 연결 리스트: 순회와 첫 일치 검색 | 진행 중 | [원고](../content/ds/01-linked-list.md) · [검사](../tests/ds-list.test.mjs) |
+| D01 | 단일 연결 리스트: 순회와 첫 일치 검색 | 진행 중 | `ds-list-find` · [원고](../content/ds/01-linked-list.md) · [검사](../tests/ds-list.test.mjs) · [검사](../tests/roadmap.test.mjs) · [검사](../tests/browser-practice.mjs) |
 | D02 | 배열 스택: push·pop·용량과 빈 상태 | 진행 중 | `ds-stack` |
 | D03 | 원형 큐: 삽입·삭제·순환 경계 | 미착수 | — |
 | D04 | 동적 배열 리스트: 삽입·삭제·이동 비용 | 미착수 | — |

@@ -803,6 +803,89 @@ export const lessons = [
     challenge:{id:'rust-mut',title:'가변 변수 연습',description:'가변 변수 n을 사용해 3에서 4로 바꾸어 출력하는 코드를 작성해 보세요. Rust 자동 채점 연결은 다음 단계에 구현합니다.',starter:'fn main() {\n    let mut n = 3;\n    // TODO\n    println!("{}", n);\n}',input:'입력 없음',expected:'4'}
   },
   {
+  "id": "ds-list-find",
+  "track": "ds",
+  "level": "기초",
+  "title": "단일 연결 리스트: 순회와 첫 일치 검색",
+  "minutes": 25,
+  "source": "D01 독자 작성 원고·정적 도식·C 함수형 실습",
+  "summary": "next를 따라 노드를 순회하고, 같은 값이 여러 개여도 첫 노드의 정확한 주소를 찾아봅니다.",
+  "figure": "list-first-match",
+  "sections": [
+    {
+      "heading": "개요·필요성·선수 지식·목표",
+      "text": "배열의 인덱스 대신 다음 노드의 주소로 순서를 표현합니다. 반복문·NULL·구조체·포인터와 구조체 배열 검색을 먼저 익히세요. 이번 목표는 읽기 전용 순회와 첫 일치 검색입니다. 삽입·삭제·할당과 해제는 D05에서 따로 배웁니다."
+    },
+    {
+      "heading": "노드: 값과 다음 주소",
+      "text": "value는 저장한 정수, next는 다음 노드의 주소입니다. next가 NULL이면 마지막, head가 NULL이면 빈 리스트입니다. 아래는 선언 조각이며 완성 프로그램이 아닙니다.",
+      "code": "struct Node {\n    int value;\n    const struct Node *next;\n};"
+    },
+    {
+      "heading": "도식 읽기와 수명 계약",
+      "text": "위 도식은 7 → 2 → 7 → NULL입니다. 화살표는 메모리 간격이 아니라 next 연결입니다. 호출자는 검색 중 살아 있는 유한·비순환 노드들을 제공합니다. 함수는 값이나 next를 바꾸거나 노드를 해제하지 않습니다. 반환 주소도 호출자가 계속 소유합니다. 순환·해제된 주소·잘못된 포인터를 이 함수가 복구해 주지는 않습니다."
+    },
+    {
+      "heading": "순회: NULL 확인 → 값 확인 → next 이동",
+      "text": "p를 head로 시작하고 p가 NULL이 아닐 때만 멤버를 읽습니다. 확인 뒤 p = p->next로 이동합니다. p++는 연결을 따르지 않습니다. 아래는 함수 안에서 사용할 순회 조각입니다.",
+      "code": "for (const struct Node *p = head; p != NULL; p = p->next) {\n    /* p->value를 확인한다. */\n}"
+    },
+    {
+      "heading": "첫 일치는 값이 아니라 노드의 주소",
+      "text": "p->value가 target과 같으면 즉시 p를 반환합니다. 끝까지 없으면 NULL을 반환합니다. 중복 7의 마지막 노드나 복사본의 주소는 정답이 아닙니다. 반환된 포인터는 NULL인지 확인한 뒤에만 역참조하세요."
+    },
+    {
+      "heading": "완성 프로그램: 순회 출력과 두 번 검색",
+      "text": "이 블록은 main을 포함한 실행 가능한 완성 예제입니다. 지역 노드 last·middle·first는 main이 실행 중인 동안 살아 있습니다. 이 전체 프로그램은 관찰용이며 함수 제출창에는 main을 넣지 않습니다.",
+      "code": "#include <stddef.h>\n#include <stdio.h>\n\nstruct Node { int value; const struct Node *next; };\n\nconst struct Node *list_find(const struct Node *head, int target) {\n    for (const struct Node *p = head; p != NULL; p = p->next) {\n        if (p->value == target) return p;\n    }\n    return NULL;\n}\n\nint main(void) {\n    struct Node last = {7, NULL};\n    struct Node middle = {2, &last};\n    struct Node first = {7, &middle};\n    for (const struct Node *p = &first; p != NULL; p = p->next) {\n        printf(\"%d%s\", p->value, p->next == NULL ? \"\\n\" : \" \");\n    }\n    puts(list_find(&first, 7) == &first ? \"first\" : \"wrong\");\n    puts(list_find(&first, 5) == NULL ? \"missing\" : \"wrong\");\n    return 0;\n}\n"
+    },
+    {
+      "heading": "실제 출력과 단계별 이유",
+      "text": "next 순서로 7·2·7을 방문해 첫 줄을 출력합니다. 목표 7은 first에서 바로 발견하므로 first가 나오며, 목표 5는 마지막 next가 NULL이 될 때까지 없으므로 missing입니다. first와 last의 값은 같지만 주소가 다릅니다.",
+      "code": "7 2 7\nfirst\nmissing"
+    },
+    {
+      "heading": "흔한 오류: 끝·중복·반복 호출",
+      "text": "p->next만 반복 조건으로 삼으면 마지막 노드를 건너뛰거나 빈 리스트에서 잘못 접근합니다. 발견 위치를 계속 덮어쓰면 마지막 중복을 반환합니다. static 커서가 남으면 다음 검색이 head에서 시작하지 않습니다. 매 호출마다 지역 p를 head로 초기화하고 첫 일치에서 반환하세요."
+    },
+    {
+      "heading": "중간 점검과 핵심 요약",
+      "text": "빈 리스트에서 먼저 value를 읽을 수 있나요? 없습니다. 같은 값의 복사본을 반환해도 될까요? 아닙니다. 호출자가 준 정확한 노드여야 합니다. 요약은 NULL 확인 → 값 비교 → next 이동, 발견 시 즉시 반환, 입력은 보존입니다. 아래 퀴즈로 개념을 확인하세요."
+    },
+    {
+      "heading": "기초·응용·도전 연습",
+      "text": "기초: 함수 제출창에서 list_find를 완성하세요. 응용: 하나뿐인 노드의 일치/미일치와 첫·중간·끝 검색을 추적하세요. 도전: 중복 값과 INT_MIN/INT_MAX에서도 첫 주소를 찾고, 같은 head를 두 번 검색해 보세요. 입력 노드의 값과 next를 변경해서는 안 됩니다."
+    },
+    {
+      "heading": "Mini Project: 목표 2 찾기",
+      "text": "완성 프로그램에 list_find(&first, 2)를 추가하고 결과가 &middle인지 비교해 출력하세요. 반환값이 NULL일 수 있다는 사실을 확인하고, 목표값을 5·7·2로 바꾸며 예측과 실제 결과를 나란히 적으세요. 이 프로젝트의 main은 로컬 완성 예제로 실행하며 함수 채점에는 제출하지 않습니다."
+    },
+    {
+      "heading": "테스트·개선·복습과 다음 단원",
+      "text": "10개 사례는 빈 리스트, 한 노드, 첫·중간·끝, 미발견, 중복, 정수 경계, 반복 호출과 입력 보존을 검사합니다. 공개 입력 ‘첫 노드’의 출력 1은 하네스가 정확한 주소와 입력 보존을 확인했다는 뜻이지 함수가 정수 1을 반환한다는 뜻은 아닙니다. 채점 실패의 사례를 추적→수정→재제출하고 이전 코드를 비교하세요. 최악 O(n) 시간·O(1) 추가 공간입니다. 이론 읽기·퀴즈·실습 통과·복습 상태는 별개이며 모두 충족한 뒤 숙달로 표시됩니다. 복습은 빈 리스트와 중복부터, 다음 D02에서는 스택 순서를 배웁니다."
+    }
+  ],
+  "quiz": {
+    "question": "7 → 2 → 7 리스트에서 첫 일치 검색 함수가 목표 7에 반환할 것은?",
+    "options": [
+      "첫 노드의 정확한 주소",
+      "마지막 노드의 주소",
+      "값 7의 지역 복사본 주소",
+      "정수 1"
+    ],
+    "answer": 0,
+    "explanation": "head에서 next를 따라 처음 만난 일치 노드 자체의 주소를 반환합니다. 같은 값이어도 다른 객체는 정답이 아닙니다."
+  },
+  "challenge": {
+    "id": "ds-list-find",
+    "title": "첫 일치 노드의 주소 찾기",
+    "description": "주어진 Node 선언과 같은 형식으로 const struct Node *list_find(const struct Node *head, int target)를 작성하세요. 호출자는 살아 있는 유한 비순환 노드를 제공합니다. 첫 일치 노드의 주소, 미발견/빈 리스트이면 NULL을 반환하고 값과 next는 보존하세요. 할당·해제·main·printf는 작성하지 않습니다. 출력 1은 별도 하네스의 주소/보존 검사 성공입니다.",
+    "starter": "#include <stddef.h>\n\nstruct Node {\n    int value;\n    const struct Node *next;\n};\n\nconst struct Node *list_find(const struct Node *head, int target) {\n    /* TODO: head부터 next를 따라 첫 일치 노드를 찾으세요. */\n    (void)head;\n    (void)target;\n    return NULL;\n}\n",
+    "input": "첫 노드",
+    "expected": "1"
+  }
+},
+  {
     id:'ds-stack',track:'ds',level:'기초',title:'스택: 나중에 넣은 것이 먼저 나온다',minutes:23,source:'자료구조 교육 콘텐츠 독자 작성 초안 (전용 교재 미제공)',
     summary:'스택의 push·pop을 이해하고 호출 스택과의 관계를 살펴봅니다.',figure:'stack',
     sections:[

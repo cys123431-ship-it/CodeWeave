@@ -30,6 +30,8 @@ const errors = [];
 const qaDir = process.env.CODEWEAVE_QA_DIR;
 const correct = '#include <stdio.h>\nint main(void){int a,b;if(scanf("%d %d",&a,&b)!=2)return 1;printf("%d\\n",a+b);return 0;}';
 const failed = '#include <stdio.h>\nint main(void){puts("0");return 0;}';
+const listFind = '#include <stddef.h>\nstruct Node { int value; const struct Node *next; };\nconst struct Node *list_find(const struct Node *head, int target) { for (const struct Node *p = head; p != NULL; p = p->next) { if (p->value == target) return p; } return NULL; }';
+const listLast = listFind.replace('for (const struct', 'const struct Node *found = NULL; for (const struct').replace('return p;', 'found = p;').replace('return NULL;', 'return found;');
 const functionOnly = 'int clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}';
 const arrayMaxFunction = '#include <stddef.h>\nint find_max(const int values[],size_t length,int *out_max){if(!values||length==0||!out_max)return 0;int maximum=values[0];for(size_t i=1;i<length;i++)if(values[i]>maximum)maximum=values[i];*out_max=maximum;return 1;}';
 const arrayMaxWrong = '#include <stddef.h>\nint find_max(const int values[],size_t length,int *out_max){if(!values||length==0||!out_max)return 0;int maximum=0;for(size_t i=0;i<length;i++)if(values[i]>maximum)maximum=values[i];*out_max=maximum;return 1;}';
@@ -92,6 +94,7 @@ try {
   assert.match(output, /CodeWeave local learning app:/);
   // Compile our own reference solutions through the actual local API.
   const solutions = {
+    'ds-list-find': listFind,
     'c-matrix-row-sums': "#include <stddef.h>\n#include <stdio.h>\n\nint sum_rows3(const int matrix[][3], size_t rows, long *out_sums) {\n    if (rows == 0) {\n        return 1;\n    }\n    if (rows > 4 || matrix == NULL || out_sums == NULL) {\n        return 0;\n    }\n    long totals[4];\n    for (size_t r = 0; r < rows; ++r) {\n        long sum = 0;\n        for (size_t c = 0; c < 3; ++c) {\n            if (matrix[r][c] < -10000 || matrix[r][c] > 10000) {\n                return 0;\n            }\n            sum += (long)matrix[r][c];\n        }\n        totals[r] = sum;\n    }\n    for (size_t r = 0; r < rows; ++r) {\n        out_sums[r] = totals[r];\n    }\n    return 1;\n}\n",
     'c-recursion-factorial': "#include <stddef.h>\n#include <stdio.h>\n\nstatic unsigned long factorial_small(unsigned int n) {\n    if (n == 0) {\n        return 1UL;\n    }\n    unsigned long smaller = factorial_small(n - 1);\n    return (unsigned long)n * smaller;\n}\n\nint factorial_checked(unsigned int n, unsigned long *out_value) {\n    if (out_value == NULL || n > 12) {\n        return 0;\n    }\n    unsigned long result = factorial_small(n);\n    *out_value = result;\n    return 1;\n}\n",
     'c-hello': '#include <stdio.h>\nint main(void){puts("Hello, CodeWeave!");return 0;}',
@@ -306,6 +309,36 @@ try {
   }
   await page.setViewportSize({ width: 1366, height: 900 });
   console.log('PASS: function lesson rejects discarded return, reaches mastery and preserves scope diagram readability at 390px');
+  await page.goto(base + '/#lesson:c-recursion-factorial');
+  // New DS unit must complete the same correction and mastery flow as C units.
+  await page.goto(base + '/#lesson:ds-list-find');
+  await expect(page.locator('.detail-head h1')).toHaveText('단일 연결 리스트: 순회와 첫 일치 검색');
+  await expect(page.locator('.figure-box svg')).toHaveAttribute('role', 'img');
+  await expect(page.locator('.practice-zone')).toContainText('함수 직접 호출형');
+  await expect(page.locator('#code-input')).not.toHaveValue(/int main\s*\(/);
+  await page.locator('#mark-theory').click();
+  await page.locator('[data-quiz="ds-list-find"][data-choice="0"]').click();
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, listLast);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, listFind);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'D01 mobile overflow');
+  const listFigure = await page.locator('.figure-box svg').boundingBox();
+  assert.ok(listFigure && listFigure.x >= 0 && listFigure.x + listFigure.width <= 390);
+  if (qaDir) {
+    await mkdir(qaDir, { recursive: true });
+    await page.screenshot({ path: path.join(qaDir, 'linked-list-mobile.png'), fullPage: true });
+  }
+  await page.setViewportSize({ width: 1366, height: 900 });
+  console.log('PASS: D01 linked-list first-match failure/correction, separate mastery and 390px layout');
+  await page.locator('.next-action [data-route="lesson:ds-stack"]').click();
+  await expect(page.locator('.detail-head h1')).toHaveText('스택: 나중에 넣은 것이 먼저 나온다');
+  console.log('PASS: D01 next-unit navigation stays in the DS track');
   await page.goto(base + '/#lesson:c-recursion-factorial');
   await expect(page.locator('.detail-head h1')).toHaveText('재귀: 종료 조건과 작은 팩토리얼');
   await expect(page.locator('.article')).toContainText('진행 척도');
@@ -732,6 +765,8 @@ try {
   const backup = Buffer.concat(chunks);
   assert.equal(JSON.parse(backup).kind, 'full-backup');
   assert.equal(JSON.parse(backup)['iterations']['c-types'].length, 5);
+  assert.equal(JSON.parse(backup)['iterations']['ds-list-find'].length, 2);
+  await expect(bench.locator('#lesson-select option[value="ds-list-find"]')).toHaveCount(1);
   bench.on('dialog', d => d.accept());
   await bench.locator('#import-file').setInputFiles({ name: 'attempts.json', mimeType: 'application/json', buffer: backup });
   await expect(bench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
@@ -805,7 +840,20 @@ try {
   await expect(page.locator('.figure-box svg')).toContainText('열 [3] 접근 금지');
   await expect(page.locator('.article')).toContainText('모든 검증 뒤 출력 공개');
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'offline matrix lesson mobile overflow');
+  await page.goto(base + '/#lesson:ds-list-find');
+  await page.reload();
+  await expect(page.locator('.detail-head h1')).toHaveText('단일 연결 리스트: 순회와 첫 일치 검색');
+  await expect(page.locator('.figure-box svg')).toHaveAttribute('role', 'img');
+  // The deliberately restored legacy backup replaces drafts, but retains history.
+  // Recover the DS draft from its latest correct attempt, then reload offline.
+  await page.locator('[data-restore-attempt="0"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(listFind);
+  await page.reload();
+  await expect(page.locator('#code-input')).toHaveValue(listFind);
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'offline D01 mobile overflow');
   await context.setOffline(false);
+  console.log('PASS: D01 backup preserves two attempts and offline reload restores its draft/history/diagram');
   assert.deepEqual(errors, []);
   console.log('PASS: 390px mobile layout and offline reload of drafts/history; no browser exceptions');
 } catch (error) {
