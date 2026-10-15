@@ -6,6 +6,7 @@ export function formatRustProcessFailure(output) {
   return JSON.stringify({
     status: output?.status ?? null, signal: output?.signal ?? null,
     code: output?.error?.code ?? null,
+    observation: output?.observation,
     stdout: typeof output?.stdout === 'string' ? output.stdout.slice(-2000) : '',
     stderr: typeof output?.stderr === 'string' ? output.stderr.slice(-3000) : ''
   });

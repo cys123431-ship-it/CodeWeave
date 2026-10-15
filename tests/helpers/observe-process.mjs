@@ -1,0 +1,102 @@
+// Trusted test tools only. Not imported by dev-server or any production runner.
+import { spawn } from 'node:child_process';
+import fs from 'node:fs/promises';
+import { performance } from 'node:perf_hooks';
+
+async function processSnapshot(root) {
+  if (process.platform !== 'linux') return { available: false, reason: 'Linux /proc only', rows: [] };
+  try {
+    const self = await fs.readFile('/proc/self/stat', 'utf8');
+    if (Number(self.split(' ')[0]) !== process.pid) {
+      return { available: false, reason: 'PID namespace mismatch', rows: [] };
+    }
+    const names = (await fs.readdir('/proc')).filter(name => /^\d+$/.test(name));
+    const processes = (await Promise.all(names.map(async pid => {
+      try {
+        const stat = await fs.readFile(`/proc/${pid}/stat`, 'utf8');
+        const match = /^(\d+) \((.*)\) ([A-Za-z]) (\d+) (\d+)/.exec(stat);
+        return match && { pid: Number(match[1]), command: match[2].slice(0, 64), state: match[3], ppid: Number(match[4]), pgid: Number(match[5]) };
+      } catch { return null; }
+    }))).filter(Boolean);
+    const owned = new Set([root]);
+    for (let i = 0; i < processes.length; i++) {
+      let changed = false;
+      for (const p of processes) {
+        if (!owned.has(p.pid) && (owned.has(p.ppid) || p.pgid === root)) {
+          owned.add(p.pid);
+          changed = true;
+        }
+      }
+      if (!changed) break;
+    }
+    return { available: true, rows: processes.filter(p => owned.has(p.pid)).slice(0, 32) };
+  } catch (error) {
+    return { available: false, reason: error.code || 'snapshot failure', rows: [] };
+  }
+}
+
+export function observeProcess(command, args, {
+  cwd, env, timeout = 2000, maxBuffer = 80000, stage = 'trusted-tool'
+} = {}) {
+  if (typeof command !== 'string' || !Array.isArray(args) || args.some(a => typeof a !== 'string')
+      || !Number.isInteger(timeout) || timeout < 1 || timeout > 60000
+      || !Number.isInteger(maxBuffer) || maxBuffer < 1 || maxBuffer > 80000) {
+    throw new TypeError('Invalid trusted process observation options');
+  }
+  const start = performance.now();
+  const posix = process.platform !== 'win32';
+  return new Promise(resolve => {
+    const child = spawn(command, args, { cwd, env, detached: posix, stdio: ['ignore', 'pipe', 'pipe'] });
+    const stdout = [], stderr = [];
+    let bytes = 0, status = null, signal = null, failure, finished = false;
+    let timer, snapshotTimer, cleanupTimer;
+    let processes = { available: false, reason: 'deadline not approached', rows: [] };
+    function finish() {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      clearTimeout(snapshotTimer);
+      clearTimeout(cleanupTimer);
+      resolve({ status, signal, error: failure,
+        stdout: Buffer.concat(stdout).toString('utf8'), stderr: Buffer.concat(stderr).toString('utf8'),
+        observation: { stage, durationMs: Math.round(performance.now() - start), pid: child.pid ?? null, processes }
+      });
+    }
+    function stop() {
+      if (child.pid) {
+        try {
+          if (posix) process.kill(-child.pid, 'SIGKILL');
+          else child.kill('SIGKILL');
+        } catch (error) { if (error.code !== 'ESRCH') failure ??= error; }
+      }
+      cleanupTimer ??= setTimeout(() => {
+        failure ??= Object.assign(new Error('Trusted tool pipe cleanup timed out'), { code: 'ECLEANUP' });
+        child.stdout.destroy();
+        child.stderr.destroy();
+        finish();
+      }, 500);
+    }
+    function collect(chunk, chunks) {
+      const remaining = Math.max(0, maxBuffer - bytes);
+      if (remaining) chunks.push(chunk.subarray(0, remaining));
+      bytes += chunk.length;
+      if (bytes > maxBuffer && !failure) {
+        failure = Object.assign(new Error('Trusted tool output limit exceeded'), { code: 'ENOBUFS' });
+        stop();
+      }
+    }
+    child.stdout.on('data', chunk => collect(chunk, stdout));
+    child.stderr.on('data', chunk => collect(chunk, stderr));
+    child.once('error', error => { failure ??= error; stop(); });
+    child.once('exit', (code, reason) => { status = code; signal = reason; stop(); });
+    child.once('close', finish);
+    snapshotTimer = setTimeout(async () => {
+      const snapshot = await processSnapshot(child.pid);
+      if (!finished) processes = snapshot;
+    }, Math.max(1, Math.floor(timeout * 0.75)));
+    timer = setTimeout(() => {
+      failure ??= Object.assign(new Error('Trusted tool deadline exceeded'), { code: 'ETIMEDOUT' });
+      stop();
+    }, timeout);
+  });
+}

@@ -116,6 +116,13 @@ grader가 null인 동안 Rust 이론/퀴즈가 통과해도 practiceAvailable/pr
 
 ## 8. 확인한 공식 근거
 
+### 신뢰된 CI 빌드 관찰 (2026-10-16)
+
+- 테스트 전용 observeProcess는 Cargo 빌드의 단계·경과 시간·종료 코드/신호·제한된 출력을 보존한다. 기존 15초 제한·성공 기대값·필수 CI 실행은 유지하고 자동 재시도하지 않는다.
+- POSIX에서 별도 그룹을 만들고 시간/출력 초과뿐 아니라 정상 부모 종료 뒤에도 남은 그룹을 정리한다. 이는 CPU/메모리/파일/네트워크 격리나 운영 Rust 실행기 구현이 아니다.
+- Linux에서는 제한 시간의 75%에 자식 PID/부모/그룹/상태/명령 이름 최대32개를 관찰한다. 인수·환경은 수집하지 않는다. /proc와 Node의 PID 공간 불일치는 관찰 불가로 명시한다.
+- 정상·비정상·도구 부재·강제 중단·출력 초과·부모 종료 후 자식 정리는 Node 합성 프로세스로 검사한다. 실제 Cargo 6개 빌드 단계의 시간은 CI에서 확인한다. 반복된 과거 중단의 근본 원인은 아직 확정하지 않았다.
+
 2026-10-16 KST에 다음 Cargo 원문을 확인했다. 설정/명령 의미만 참조하고 본문·교육 문제는 복제하지 않았다.
 - [cargo test](https://doc.rust-lang.org/cargo/commands/cargo-test.html): no-run·target 선택·frozen·libtest 인수.
 - [Cargo targets](https://doc.rust-lang.org/cargo/reference/cargo-targets.html): integration test·자동 탐색·doctest.

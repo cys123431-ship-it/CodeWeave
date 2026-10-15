@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-16 07:02 KST — 신뢰된 Cargo 빌드 관찰·자식 정리
+- 시작/결과 SHA: 시작 1d19c74295154a44249d00644fc2090ea3d47b14; 결과 커밋 제목 test: observe trusted Cargo builds and clean descendant groups.
+- 목표: 반복된 Cargo 15초 중단의 단계/시간/자식 상태를 보존하고 테스트 도구의 잔류 프로세스를 정리.
+- 변경 파일 수: 9개(신뢰 테스트 관찰기·검사·기존 Rust 검사2·진단 formatter·CI·설계·활성/보관 일지).
+- 테스트 결과: 신규6건 0/6→6/6; 전체 로컬442건440통과·실패0·skip2; 변경MJS5개 문법·roadmap/diff 성공; Rust 실제 빌드는 Cargo/rustc 부재로 CI 필수; 15초 제한/성공 기대값 유지, 삭제0.
+- CI URL과 결과: 시작 SHA https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38809026879 성공; 결과 SHA CI 확인 대기.
+- 발견한 문제: 로컬 Node PID와 /proc PID 공간 불일치. snapshot 기대값을 관찰 가능 여부에 따라 분리한 이유이며 실제 자식 종료 검사는 유지; CI PID 일치 시 정확한 자식 행 필수. 종료 신호 직후 관찰 경쟁을 발견해 최대500ms 종료 대조로 변경(생존 시 실패 유지). 과거 Cargo 중단 근본 원인은 미확정.
+- 보안 영향: 테스트 전용 신뢰 도구만 spawn; 운영 API 연결0. 인수/환경 수집 없이 제한된 상태/출력만 기록하며 POSIX 그룹 정리, 자원 격리 주장은 하지 않음.
+- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·next=F-G/F01.
+- 다음 작업: 실제 CI 관찰 결과로 Cargo 중단 원인을 좁히고 Rust 빌드/실행 자원 상한·문법/경고·도구체인 고정 검증. 운영 API/숙달 잠금 유지.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 06:04 KST — Rust 사례 결과·미실행 판정
 - 시작/결과 SHA: 시작 fa91de5dacb4a39c32d867aa641ebde088a0c76e; 판정 검증 8e767f7182c281350c0d1360398271e95ac8ade9; 중간12645c086ffee753c3b5dc0f838132f561e51c6d CI실패; 진단 커밋 제목 test: retain Cargo timeout metadata for diagnosis.
 - 목표: F01 관찰 기반 결과 수집·전체 분모·Cargo 진단·v1 호환 구현 및 반복 Cargo 중단의 진단 정보 보존.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 기존 JSON/Host/Origin/토큰·GCC 제한·파일 접근 경계를 유지하고 같은 c-function 하네스/사례를 재사용; 사용자 저장/백업 키 변경 없음.
 - 단계별 완료율: 기반0·1·2단계 완료; A3/5=60.0%·B10/11=90.9%·C4/8=50.0%·D1/8=12.5%·E1/8=12.5%·F/G0/8·H/I0/6; 분모 변경0, E01 한정 범위 완료 뒤 F-G/F01로 전환.
 - 다음 작업: Rust F01 cargo test 채점기 설계(스키마·스타터·별도 하네스·진단·실패/재제출·자원/보안 경계)부터 진행; 설계만으로 완료/다음 C 전환 금지. 생성 로드맵의 과거 D01 안내 문구는 다음 작업에서 정리.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-16 01:04 KST — E01 선형·이진 탐색 계약·원고 준비(1/2)
-- 시작/결과 SHA: 시작 80f4092c4165080c389d7aad3c35060c200c902e; 검증 결과 dd39c96e6b32ca3cf7cbe102343f9948800f91e6; 확인 기록 제목 docs: record isolated GCC timeout and retry.
-- 목표: 기존algo-binary ID를 유지할 첫 일치 위치 계약, 정렬 전제·반열린 범위·비용 설명,10사례·원고·정적 도식을 준비.
-- 변경 파일 수: 10개(공통생성기·운영재export·검색계약·검사·원고·SVG·로드맵JSON/MD·활성/보관 일지).
-- 테스트 결과: 신규11건0/11→11/11; 정답10사례·오답6종·완성예제GCC출력; 로컬/CI403/403·macOS12/12·실패/취소/skip0; 기존Chromium/D01/390px/백업/오프라인 회귀 성공; JS/MJS5개 문법·roadmap --check·diff 성공.
-- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38767581181/attempts/2 — 검증 결과SHA test403/403·macOS12/12·browser 성공; 구현CI38767220789도성공. E01 화면/API는다음실행.
-- 발견한 문제: 기록SHA dd39c96의browser에서기존D01 컴파일spawnSync gcc ETIMEDOUT(4.5초)1회; server/src/tests차이0, 실패작업1회재실행성공·원인미확정·제한/기대값변경0. 생성기분리로순환의존예방; 삭제0.
-- 보안 영향: 기존compile/runCases와GCC제한 재사용; 준비계약만추가하고실행API·정적파일허용목록·사용자저장/백업키 변경없음.
-- 단계별 완료율: 기반0·1·2단계완료; A3/5·B10/11·C4/8·D1/8·E/F/G0/8·H/I0/6 유지; E01진행중·차례E/E01 유지,분모변경0.
-- 다음 작업: E01 2/2로기존catalog/exercises·운영등록·README·브라우저/검색계약검사·로드맵/일지(10파일이내) 연결; 12절·원고102줄·10사례 유지, 기존초안/진도보존; 성공CI 후Rust F01.

@@ -5,6 +5,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { formatRustProcessFailure } from '../server/rust-results.mjs';
+import { observeProcess } from './helpers/observe-process.mjs';
 
 const api = () => import('../server/rust-preparation.mjs');
 const cases = Array.from({ length: 8 }, (_, i) => ({ id: `case_0${i}`, label: `fixture ${i}` }));
@@ -135,9 +136,11 @@ test('Real Cargo builds the fixed package and lists eight nonexecuted tests, rej
     const env = { PATH: process.env.PATH, HOME: process.env.HOME, ...workspace.plan.environment,
       CARGO_HOME: path.join(parent, 'cargo-home'), RUSTUP_HOME: process.env.RUSTUP_HOME,
       CARGO_TARGET_DIR: workspace.targetDir };
-    const compiled = spawnSync(workspace.plan.compile.command, workspace.plan.compile.args, {
-      cwd: workspace.dir, env, encoding: 'utf8', timeout: 15000, maxBuffer: 80000
+    const compiled = await observeProcess(workspace.plan.compile.command, workspace.plan.compile.args, {
+      cwd: workspace.dir, env, timeout: 15000, maxBuffer: 80000,
+      stage: source === harness ? 'prepare-normal' : source.includes('#[ignore]') ? 'prepare-ignored' : 'prepare-empty'
     });
+    console.log('Cargo observation:', JSON.stringify(compiled.observation));
     assert.equal(compiled.status, 0, formatRustProcessFailure(compiled));
     const executable = await selectRustArtifact(compiled.stdout, workspace);
     const options = { cwd: workspace.dir, env, encoding: 'utf8', timeout: 2000, maxBuffer: 80000 };
