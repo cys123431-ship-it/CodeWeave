@@ -20,18 +20,18 @@
 | functions-content.test.mjs | 8 및 5 | 퀴즈 정답 문장·하네스/부작용 설명 | 2차 정리 |
 | recursion-content.test.mjs | 20 | 재귀/자원 설명, 호출/반환 도식 문구/고정 치수 | 2차 정리 |
 | matrix-rows-content.test.mjs | 20 | 행 객체/경계 설명, 도식 레이블 | 2차 정리 |
-| fgets-content.test.mjs | 11 | 정확히7바이트·EOF·잘림 판단 문장 | 미처리 |
-| strtol-content.test.mjs | 12 | endptr·errno·ERANGE·비트 수 가정 문장 | 미처리 |
-| struct-content.test.mjs | 11 | 값 복사·padding·덧셈 전 범위/원본 보존 문장 | 미처리 |
-| struct-array-content.test.mjs | 11 | sizeof students·중복 첫 위치·출력 객체 문장 | 미처리 |
-| struct-array-sort-content.test.mjs | 11 | 안정 정렬·구조체 전체·오버플로 문장 | 미처리 |
-| struct-array-binary-search-content.test.mjs | 11 | 정렬 전제·right = mid·첫 위치 문장 | 미처리 |
+| fgets-content.test.mjs | 11 | 정확히7바이트·EOF·잘림 판단 문장 | 3차 정리 |
+| strtol-content.test.mjs | 12 | endptr·errno·ERANGE·비트 수 가정 문장 | 3차 정리 |
+| struct-content.test.mjs | 11 | 값 복사·padding·덧셈 전 범위/원본 보존 문장 | 3차 정리 |
+| struct-array-content.test.mjs | 11 | sizeof students·중복 첫 위치·출력 객체 문장 | 3차 정리 |
+| struct-array-sort-content.test.mjs | 11 | 안정 정렬·구조체 전체·오버플로 문장 | 3차 정리 |
+| struct-array-binary-search-content.test.mjs | 11 | 정렬 전제·right = mid·첫 위치 문장 | 3차 정리 |
 | student-registry-content.test.mjs | 12 | 파일 이름/순서·같은 id 상대 순서 문장 | 미처리 |
 | dynamic-memory-content.test.mjs | 12 | malloc(0)·소유권·할당 실패 주입 문장 | 미처리 |
 | realloc-content.test.mjs | 12 | 임시 포인터·주소 변경·--wrap=realloc 문장 | 미처리 |
 | student-vector-push-content.test.mjs | 12 | 0→4·두 배·길이 공개·격리 설명 문장 | 미처리 |
 
-처리 범위는 12/22 파일이며 2-4 전체 완료가 아니다. 1회 변경 파일10개 제한을 지키기 위해 나머지10개는 후속 실행에서 같은 원칙으로 정리한다. 다음 묶음은 fgets/strtol/struct/struct-array/struct-array-sort/struct-array-binary-search를 우선한다.
+처리 범위는 18/22 파일이며 2-4 전체 완료가 아니다. 나머지4개는 student-registry/dynamic-memory/realloc/student-vector-push이며 다음 실행에서 같은 원칙으로 정리한다.
 
 ## 1차에 삭제한 검사
 
@@ -71,3 +71,13 @@
 3. `second content batch still rejects an uncompilable matrix example`: 화면/원고의 동일한 완성 예제에 함께 `#error`를 넣고 코드 일치 검사만이 아니라 실제 컴파일 진단으로 거부함을 확인한다. 수정 전후 통과. GCC/Clang의 `#error` 진단 표기 차이는 허용하되 실제 `error:`를 요구한다.
 
 신규3개는 수정 전2/3→수정 후3/3, 변형 회귀 전체는5/6→6/6이다. 테스트 함수 삭제 없이3개 추가해 전체366→369건이다. 2-4 전체 완료와 A~I 로드맵 완료율은 아직 주장하지 않는다.
+
+## 3차 — 입출력·구조체
+
+기준은 `c939c810a3b5145a59f41b2b9712b72a3b246f5b`이다. fgets/strtol/struct/struct-array/struct-array-sort/struct-array-binary-search 6개 파일을 추가 정리했다.
+
+- 완전 삭제한 테스트 함수는0개다. 최소 절 수, 화면/원고의 개념 단어와 특정 문장, 도식 레이블, fgets/strtol 실습 설명에 출력 문자열이 들어가는지 확인하던 조건을 삭제했다. 수록된 본문·스타터·채점 기대값 자체는 수정하지 않았다.
+- 이미지 역할·스크립트/애니메이션 거부, 스타터의 진입점/버퍼/함수 인터페이스, 필수 원고 헤딩은 유지한다. 실제 API/브라우저 채점의 빈 입력·긴 입력·잘못된 입력·출력 보존·중복 안정 정렬·첫 위치 탐색과 GCC 검사는 변경하지 않는다.
+- 새 회귀 검사 `input and structure content accepts editorial changes without changing starter interfaces`는 같은 임시 변형 도구로 새6개 파일을 실행한다. 수정 전 실패→수정 후 통과다. 기존 필수 헤딩 누락 거부 검사도 구조체 원고까지 확장했다.
+- 첫 정리 후에도 구조체 배열 원고의 본문에만 있는 “완성 프로그램” 단어 조건 때문에 변형 검사가 실패했다(중간 전체369/370). 단어 존재는 컴파일이나 헤딩 검증이 아니므로 사용자 지시에 따라 이 조건도6개 파일에서 삭제했다. 본문이나 기대값을 맞춰 쓰지 않았으며 필수 헤딩 배열은 그대로다.
+- 신규1개는0/1→1/1, 변형 회귀 전체는6/7→7/7이다. 테스트 함수 추가1·삭제0으로 전체369→370건이다. 나머지4개를 정리하기 전에는 2-4를 완료 처리하지 않는다.

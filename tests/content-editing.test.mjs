@@ -13,6 +13,11 @@ const manuscripts = ['01-hello', '02-variables-types', '03-conditionals-loops',
 const secondBatch = ['arrays', 'pointers', 'function-scope', 'functions', 'recursion', 'matrix-rows'];
 const secondManuscripts = ['04-arrays', '05-pointers', '06-functions',
   '20-recursion-factorial', '21-matrix-row-sums'];
+const thirdBatch = ['fgets', 'strtol', 'struct', 'struct-array',
+  'struct-array-sort', 'struct-array-binary-search'];
+const thirdManuscripts = ['10-fgets-logical-line', '11-strtol-integer-input',
+  '12-struct-student-score', '13-struct-array-search',
+  '14-struct-array-sort', '15-struct-array-binary-search'];
 
 async function fixture(t) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'codeweave-editorial-'));
@@ -73,6 +78,14 @@ test('second content batch accepts edited explanations without changing runnable
   assert.equal(result.status, 0, result.stdout + result.stderr);
 });
 
+test('input and structure content accepts editorial changes without changing starter interfaces', async t => {
+  const directory = await fixture(t);
+  await rewriteProse(directory, thirdManuscripts);
+  const result = verify(directory, thirdBatch);
+  assert.match(result.stdout, /tests [1-9]\d*/);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
 test('second content batch still rejects a missing function learning heading', async t => {
   const directory = await fixture(t);
   const file = path.join(directory, 'content/c/06-functions.md');
@@ -108,12 +121,14 @@ lessons.find(item => item.id === 'c-matrix-row-sums').sections
 
 test('required manuscript heading removal is still rejected', async t => {
   const directory = await fixture(t);
-  const file = path.join(directory, 'content/c/01-hello.md');
-  await writeFile(file, (await readFile(file, 'utf8')).replace('## 학습 목표', '## 목표 변경'));
-  const result = verify(directory, ['hello']);
-  assert.equal(result.error, undefined);
-  assert.notEqual(result.status, 0);
-  assert.match(result.stdout + result.stderr, /## 학습 목표/);
+  for (const [name, selected] of [['01-hello', 'hello'], ['12-struct-student-score', 'struct']]) {
+    const file = path.join(directory, 'content/c/' + name + '.md');
+    await writeFile(file, (await readFile(file, 'utf8')).replace('## 학습 목표', '## 목표 변경'));
+    const result = verify(directory, [selected]);
+    assert.equal(result.error, undefined);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stdout + result.stderr, /## 학습 목표/);
+  }
 });
 
 test('a broken complete example is still rejected by GCC', {
