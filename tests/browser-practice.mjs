@@ -655,12 +655,17 @@ try {
   await page.setViewportSize({ width: 1366, height: 900 });
   console.log('PASS: vector push lesson renders geometric growth and passes reserve reuse cases');
   await page.evaluate(({ failed }) => {
+    // Keep the actually graded DS attempts for the subsequent all-track backup check.
+    // Reset legacy C data/progress independently; this fixture is not a product reset.
+    const dsHistory = JSON.parse(localStorage.getItem('codeweave.iterations.v1'))['ds-list-find'];
+    const dsDraft = JSON.parse(localStorage.getItem('codeweave.drafts.v1'))['ds-list-find'];
+    if (dsHistory?.length !== 2 || typeof dsDraft !== 'string') throw Error('D01 setup did not produce two attempts and a draft');
     localStorage.clear();
-    localStorage.setItem('codeweave.drafts.v1', JSON.stringify({ 'c-types': failed, 'rust-mut': 'keep rust draft' }));
+    localStorage.setItem('codeweave.drafts.v1', JSON.stringify({ 'c-types': failed, 'rust-mut': 'keep rust draft', 'ds-list-find': dsDraft }));
     localStorage.setItem('codeweave.iterations.v1', JSON.stringify({ 'c-types': [{
       at: '2026-10-11T02:30:00.000Z', code: failed, passed: false,
       message: '<img src=x onerror=alert(1)>', tests: [{ passed: false, detail: 'legacy failure' }]
-    }] }));
+    }], 'ds-list-find': dsHistory }));
   }, { failed });
   await page.goto(base + '/#lesson:c-types');
   // Hash navigation keeps the original module state; reload after seeding v1 data.
