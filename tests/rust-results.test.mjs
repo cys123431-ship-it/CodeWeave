@@ -117,11 +117,21 @@ test('Rust-shaped results round-trip existing v1 attempts without activating Rus
 
 const cargo = spawnSync('cargo', ['--version'], { encoding: 'utf8', timeout: 3000 });
 const rustc = spawnSync('rustc', ['--version'], { encoding: 'utf8', timeout: 3000 });
+test('Rust process diagnostic retains timeout metadata even when stderr is nonempty', async () => {
+  const { formatRustProcessFailure } = await api();
+  const diagnostic = JSON.parse(formatRustProcessFailure({ status: null, signal: 'SIGTERM',
+    error: { code: 'ETIMEDOUT' }, stdout: 'artifact message', stderr: 'Compiling fixture' }));
+  assert.equal(diagnostic.code, 'ETIMEDOUT');
+  assert.equal(diagnostic.signal, 'SIGTERM');
+  assert.equal(diagnostic.status, null);
+  assert.equal(diagnostic.stdout, 'artifact message');
+  assert.equal(diagnostic.stderr, 'Compiling fixture');
+});
 test('Real Rust case bodies distinguish all-pass, assertion failure and early exit without a libtest report', {
   skip: (cargo.status !== 0 || rustc.status !== 0) && process.env.CODEWEAVE_REQUIRE_RUST !== '1' ? 'Cargo/rustc unavailable locally; mandatory in CI' : false,
   timeout: 90000
 }, async t => {
-  const { runRustCases, buildRustResult } = await api();
+  const { runRustCases, buildRustResult, formatRustProcessFailure } = await api();
   console.log('Rust result fixture toolchain:', checkRustToolchain(cargo, rustc));
   const parent = await fs.mkdtemp(path.join(os.tmpdir(), 'codeweave-rust-results-'));
   t.after(() => fs.rm(parent, { recursive: true, force: true }));
@@ -133,7 +143,7 @@ test('Real Rust case bodies distinguish all-pass, assertion failure and early ex
       CARGO_HOME: path.join(parent, 'cargo-home'), CARGO_TARGET_DIR: workspace.targetDir, ...workspace.plan.environment };
     const options = { cwd: workspace.dir, env, encoding: 'utf8', timeout: 2000, maxBuffer: 80000 };
     const compiled = spawnSync('cargo', workspace.plan.compile.args, { ...options, timeout: 15000 });
-    assert.equal(compiled.status, 0, JSON.stringify({ code: compiled.error?.code, signal: compiled.signal, stderr: compiled.stderr }));
+    assert.equal(compiled.status, 0, formatRustProcessFailure(compiled));
     const binary = await selectRustArtifact(compiled.stdout, workspace);
     validateRustListing(spawnSync(binary, workspace.plan.list.args, options), spawnSync(binary, workspace.plan.listIgnored.args, options), cases);
     const tests = await runRustCases(workspace.plan, tc => spawnSync(binary, tc.args, options));

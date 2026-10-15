@@ -2,6 +2,15 @@
 const unexecuted = () => ({ passed: false, detail: '미실행' });
 const fatal = detail => ({ passed: false, fatal: true, detail });
 
+export function formatRustProcessFailure(output) {
+  return JSON.stringify({
+    status: output?.status ?? null, signal: output?.signal ?? null,
+    code: output?.error?.code ?? null,
+    stdout: typeof output?.stdout === 'string' ? output.stdout.slice(-2000) : '',
+    stderr: typeof output?.stderr === 'string' ? output.stderr.slice(-3000) : ''
+  });
+}
+
 function declaredCases(plan) {
   const cases = plan?.runCases;
   if (!Array.isArray(cases) || cases.length < 8 || cases.length > 12

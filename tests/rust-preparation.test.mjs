@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { spawnSync } from 'node:child_process';
+import { formatRustProcessFailure } from '../server/rust-results.mjs';
 
 const api = () => import('../server/rust-preparation.mjs');
 const cases = Array.from({ length: 8 }, (_, i) => ({ id: `case_0${i}`, label: `fixture ${i}` }));
@@ -137,7 +138,7 @@ test('Real Cargo builds the fixed package and lists eight nonexecuted tests, rej
     const compiled = spawnSync(workspace.plan.compile.command, workspace.plan.compile.args, {
       cwd: workspace.dir, env, encoding: 'utf8', timeout: 15000, maxBuffer: 80000
     });
-    assert.equal(compiled.status, 0, compiled.stderr || compiled.error?.message);
+    assert.equal(compiled.status, 0, formatRustProcessFailure(compiled));
     const executable = await selectRustArtifact(compiled.stdout, workspace);
     const options = { cwd: workspace.dir, env, encoding: 'utf8', timeout: 2000, maxBuffer: 80000 };
     const all = spawnSync(executable, workspace.plan.list.args, options);
