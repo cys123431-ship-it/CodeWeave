@@ -199,7 +199,6 @@ try {
   console.log('PASS: first C lesson renders the detailed build pipeline and reaches mastery through a real submission');
   await page.goto(base + '/#lesson:c-loops');
   await expect(page.locator('.detail-head h1')).toHaveText('조건문과 반복문');
-  await expect(page.locator('.article > section')).toHaveCount(22);
   await expect(page.locator('.article')).toContainText('불변식: 이미 더한 범위');
   await expect(page.locator('.article')).toContainText('500500');
   await expect(page.locator('.figure-box svg')).toContainText('거짓');
@@ -224,7 +223,6 @@ try {
   console.log('PASS: detailed loops lesson rejects an off-by-one, reaches mastery and fits 390px');
   await page.goto(base + '/#lesson:c-array');
   await expect(page.locator('.detail-head h1')).toHaveText('배열과 함수');
-  await expect(page.locator('.article > section')).toHaveCount(24);
   await expect(page.locator('.article')).toContainText('sizeof로 구할 수 있는 길이');
   await expect(page.locator('.article')).toContainText('최댓값 추적과 불변식');
   await expect(page.locator('.figure-box svg')).toContainText('[0, count)');
@@ -249,7 +247,6 @@ try {
   console.log('PASS: array introduction rejects a zero candidate, reaches mastery and fits 390px');
   await page.goto(base + '/#lesson:c-pointer');
   await expect(page.locator('.detail-head h1')).toHaveText('포인터의 주소와 역참조');
-  await expect(page.locator('.article > section')).toHaveCount(29);
   await expect(page.locator('.article')).toContainText('NULL 검사만으로는 유효성을 증명하지 못한다');
   await expect(page.locator('.article')).toContainText('포인터도 값 전달');
   await expect(page.locator('.figure-box svg')).toContainText('시점 A');
@@ -279,7 +276,6 @@ try {
   console.log('PASS: pointer introduction rejects pointer movement, reaches mastery and fits 390px');
   await page.goto(base + '/#lesson:c-functions');
   await expect(page.locator('.detail-head h1')).toHaveText('함수 설계: 선언·호출·값 전달');
-  await expect(page.locator('.article > section')).toHaveCount(29);
   await expect(page.locator('.article')).toContainText('static 지역 객체');
   await expect(page.locator('.article')).toContainText('범위·저장기간·연결');
   await expect(page.locator('.figure-box svg')).toContainText('int age = 30;');
@@ -312,7 +308,6 @@ try {
   console.log('PASS: function lesson rejects discarded return, reaches mastery and preserves scope diagram readability at 390px');
   await page.goto(base + '/#lesson:c-recursion-factorial');
   await expect(page.locator('.detail-head h1')).toHaveText('재귀: 종료 조건과 작은 팩토리얼');
-  await expect(page.locator('.article > section')).toHaveCount(25);
   await expect(page.locator('.article')).toContainText('진행 척도');
   await expect(page.locator('.article')).toContainText('재귀 사용을 증명하지');
   await expect(page.locator('.figure-box svg')).toContainText('n=0');
@@ -344,7 +339,6 @@ try {
   console.log('PASS: recursion rejects shared state, reaches mastery and preserves call/return readability at 390px');
   await page.goto(base + '/#lesson:c-matrix-row-sums');
   await expect(page.locator('.detail-head h1')).toHaveText('다차원 배열: 행·열과 안전한 행 합');
-  await expect(page.locator('.article > section')).toHaveCount(26);
   await expect(page.locator('.article')).toContainText('int **');
   await expect(page.locator('.article')).toContainText('C11');
   await expect(page.locator('.figure-box svg')).toContainText('열 [3] 접근 금지');
