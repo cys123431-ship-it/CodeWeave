@@ -10,7 +10,8 @@ test('C exercise audit table stays synchronized with executable grading definiti
   const markdown = await readFile(auditPath, 'utf8');
   const rows = [...markdown.matchAll(/^\| `([^`]+)` \| `([^`]+)` \| (\d+) \|/gm)]
     .map(([, id, grader, count]) => ({ id, grader, count: Number(count) }));
-  const gradedC = exercises.filter(exercise => exercise.language === 'c' && exercise.grader !== null);
+  // This table audits the C track; C-implemented DS/algorithm tracks are separate.
+  const gradedC = exercises.filter(exercise => exercise.id.startsWith('c-') && exercise.grader !== null);
 
   assert.equal(rows.length, 23);
   assert.deepEqual(rows.map(row => row.id), gradedC.map(exercise => exercise.id));
