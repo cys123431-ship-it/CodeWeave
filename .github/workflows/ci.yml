@@ -41,6 +41,8 @@ jobs:
           node --check server/rust-results.mjs
           node --check tests/helpers/observe-process.mjs
           node --check tests/rust-observer.test.mjs
+          node --check tests/helpers/rust-budget.mjs
+          node --check tests/rust-resources.test.mjs
           node --check sw.js
       - name: Verify local grading test compiler
         run: gcc --version
@@ -67,6 +69,12 @@ jobs:
           gcc --version
       - name: POSIX resource and descendant regressions
         run: node --test tests/submission-resources.test.mjs
+      - name: Trusted Rust execution resource probes
+        run: |
+          rustc --version
+          node --test tests/rust-resources.test.mjs
+        env:
+          CODEWEAVE_REQUIRE_RUST: '1'
       - name: Diagnose macOS limits on failure
         if: failure()
         run: |

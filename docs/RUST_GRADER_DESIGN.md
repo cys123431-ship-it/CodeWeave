@@ -108,6 +108,14 @@ grader가 null인 동안 Rust 이론/퀴즈가 통과해도 practiceAvailable/pr
 
 ## 7. 다음 구현 순서와 완료 문턱
 
+### 신뢰된 CI 테스트 바이너리의 실행 예산 (2026-10-16)
+
+테스트 전용 `tests/helpers/rust-budget.mjs`가 고정 Bash 스크립트와 argv를 분리하며 PATH/LANG/LC_ALL/TMPDIR만 전달한다. 운영 코드·API에서는 사용하지 않는다.
+실행 후보는 CPU2초, 가상 메모리256MiB, 파일2MiB, 사용자 프로세스 Linux128/macOS512, 코어0, 벽시계2초, 합산 출력80KB다. macOS는 공유 영역을 위해 Bash 초기 VSZ에256MiB를 더한 주소 공간 예산이며 RSS 상한이 아니다.
+기존의 더 낮은 soft/hard 한도를 높이지 않고 설정 실패 시 바이너리 실행 전125로 멈춘다. 사용자별 프로세스 한도는 제출별 격리가 아니며 root에서는 집행되지 않을 수 있다.
+CI는 실제 Rust의 getrlimit·그룹 ID·384MiB 예약 거부·4MiB 파일/SIGXFSZ·CPU 소진·정상/시간 초과 뒤 fork 자식 정리를 Linux/macOS에서 검증한다. 기존 Cargo 결과 fixture의 정상/단언 실패/조기 exit도 제한된 실행기를 거친다.
+Cargo 빌드 자원 한도와 도구체인 고정은 여전히 미완료다. 이 실행 예산 검증은 기존 C 한도를 변경하지 않고 Rust API/실습/숙달을 활성화하지 않는다. Windows Rust 실행은 지원하지 않는다.
+
 1. 준비 어댑터와 합성 fixture의 파일 생성/도구 상태/JSON 산출물/열거 검사를 추가했다. 실제 Cargo 확인은 결과 SHA의 필수 CI 근거로 판단하며 UI/API는 계속 잠근다.
 2. 실제 Cargo 합성 코드의 정상/틀린 assert/보고 없는 조기 exit와 순수 관찰값의 컴파일 진단/치명적 중단/v1 호환 검사를 추가했다. 실제 문법/경고/시간/메모리/자식 정리는 후속 실측·회귀가 남아 있다.
 3. 승인된 신뢰 로컬 실행 경계가 검증되면 별도 Rust 어댑터와 API 라우팅/결과/v1 저장 호환을 연결한다.

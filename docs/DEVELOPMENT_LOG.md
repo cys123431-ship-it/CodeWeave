@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-16 07:59 KST — 신뢰된 Rust 바이너리 실행 자원 검증
+- 시작/결과 SHA: 시작 b7441345c0542db88952de11557264e6c2ece08d; 결과 커밋 제목 test: validate trusted Rust execution resource budgets.
+- 목표: 운영 API를 열지 않고 Rust 실행 예산·그룹·초과 실패를 실제 Linux/macOS CI에서 검증.
+- 변경 파일 수: 7개(테스트 전용 예산기·신규 검사·기존 Rust 결과 검사·CI·설계·활성/보관 일지).
+- 테스트 결과: 신규4건 0/4→4/4, 실제Rust1건 로컬skip; 전체447건444통과·실패0·skip3(Cargo/rustc 부재); 변경MJS3개 문법·roadmap/diff 성공; 테스트 삭제0·기대값 완화0.
+- CI URL과 결과: 시작 SHA https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38815784443 성공; 결과 SHA CI 대기, 완료 기록 보류.
+- 발견한 문제: 과거 Cargo15초 중단 원인은 미확정; 이번에는 빌드 한도를 변경하지 않고 실행 후보 CPU2초·주소공간256MiB·파일2MiB·NPROC128/512·벽시계2초를 분리 검증.
+- 보안 영향: 외부 입력/API 추가0; 고정 셸 argv·환경허용목록, Windows 사전 거부. 신뢰된 합성 Rust만 실행하며 기존 C 실행기·v1 저장키는 변경하지 않음.
+- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·next=F-G/F01.
+- 다음 작업: 실제 CI 자원 결과 확인 후 Cargo 빌드 한도·문법/경고·도구체인 고정 검증. 이후 F01 이론/퀴즈 범위를 전달하고 C 차례 전환 검토.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 07:02 KST — 신뢰된 Cargo 빌드 관찰·자식 정리
 - 시작/결과 SHA: 시작 1d19c74295154a44249d00644fc2090ea3d47b14; 구현 4e0df1f4fb181e1321c109656a86035af72caad2; 확인 기록 제목 docs: record verified Cargo observation results.
 - 목표: 반복된 Cargo 15초 중단의 단계/시간/자식 상태를 보존하고 테스트 도구의 잔류 프로세스를 정리.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 제출 manifest/경로/하네스/인수/환경을 거부하는 순수 계획기만 추가; 파일 쓰기·Cargo 실행·HTTP 등록·저장/백업 키 변경0. build/offline 설정은 격리나 악성 결과 검증이 아님.
 - 단계별 완료율: 기반0·1·2단계 완료; A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지, 분모변경0; F01 설계 착수로 진행 중, next=F-G/F01 유지.
 - 다음 작업: Rust 전용 비활성 어댑터의 작업 파일·도구 탐지·Cargo JSON 산출물·테스트 열거부터 실제 도구 회귀로 구현; UI/API는 계속 잠금. 설계만으로 단원 완료/C 차례 전환 금지.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-16 03:02 KST — E01 화면·API·기존 기록 연결(2/2)
-- 시작/결과 SHA: 시작 8a56e87c2b50292afdd27b3b515c0f8cc30bc536; 검증 결과 9be9605e54ddd3009628375b8f2c4aa21450fdd4; 확인 기록 제목 docs: confirm E01 and advance to Rust design.
-- 목표: 기존 algo-binary의 12절·25분 설명, 퀴즈·함수 제출·10사례·오답 수정·숙달·백업/오프라인을 기존 ID로 연결.
-- 변경 파일 수: 10개(catalog/exercises·운영 등록·README·메타데이터/API/호환 검사·브라우저·로드맵 JSON/MD·활성/보관 일지).
-- 테스트 결과: 신규 3건 0/3(옛 도식·미채점 상태·API400)→3/3; 로컬/CI 406/406·macOS12/12·실패/취소/skip0; Chromium E01 수정/숙달·390px·백업/오프라인 성공 및 캡처 확인; JS/MJS5개 문법·roadmap --check·diff 성공.
-- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38784082096 — 검증 결과 SHA test/browser/macos-resources 모두 성공; 첫 CI38783682899 browser 실패 이력 보존.
-- 발견한 문제: reload는 저장 퀴즈를 임시 피드백에 재생하지 않아 data-retry 대기가 실패; 저장 correct/selected 직접 검증 후 재선택으로 검사 준비 수정. 과거 algo-binary 미채점 assert만 새 계약으로 교체, 테스트 함수 삭제0. 이전 로컬 승인검토 사용량 한도는 이번 정상 실행/원격 CI 확인.
-- 보안 영향: 기존 JSON/Host/Origin/토큰·GCC 제한·파일 접근 경계를 유지하고 같은 c-function 하네스/사례를 재사용; 사용자 저장/백업 키 변경 없음.
-- 단계별 완료율: 기반0·1·2단계 완료; A3/5=60.0%·B10/11=90.9%·C4/8=50.0%·D1/8=12.5%·E1/8=12.5%·F/G0/8·H/I0/6; 분모 변경0, E01 한정 범위 완료 뒤 F-G/F01로 전환.
-- 다음 작업: Rust F01 cargo test 채점기 설계(스키마·스타터·별도 하네스·진단·실패/재제출·자원/보안 경계)부터 진행; 설계만으로 완료/다음 C 전환 금지. 생성 로드맵의 과거 D01 안내 문구는 다음 작업에서 정리.

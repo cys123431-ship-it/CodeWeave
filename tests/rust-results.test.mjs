@@ -5,6 +5,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { observeProcess } from './helpers/observe-process.mjs';
+import { rustBudget } from './helpers/rust-budget.mjs';
 import { createRustPlan } from '../server/rust-contract.mjs';
 import { prepareRustWorkspace, selectRustArtifact, validateRustListing, checkRustToolchain } from '../server/rust-preparation.mjs';
 import { recordIteration, normalizeIterations } from '../src/iterations.js';
@@ -150,7 +151,12 @@ test('Real Rust case bodies distinguish all-pass, assertion failure and early ex
     assert.equal(compiled.status, 0, formatRustProcessFailure(compiled));
     const binary = await selectRustArtifact(compiled.stdout, workspace);
     validateRustListing(spawnSync(binary, workspace.plan.list.args, options), spawnSync(binary, workspace.plan.listIgnored.args, options), cases);
-    const tests = await runRustCases(workspace.plan, tc => spawnSync(binary, tc.args, options));
+    const tests = await runRustCases(workspace.plan, tc => {
+      const invocation = rustBudget(binary, tc.args, { env });
+      return observeProcess(invocation.command, invocation.args, {
+        cwd: workspace.dir, env: invocation.env, timeout: 2000, maxBuffer: 80000, stage: tc.id
+      });
+    });
     const result = buildRustResult(workspace.plan, compiled, tests);
     assert.equal(tests.filter(tc => tc.passed).length, expected);
     assert.equal(result.ok, expected === 8);
