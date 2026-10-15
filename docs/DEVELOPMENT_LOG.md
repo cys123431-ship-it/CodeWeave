@@ -1,10 +1,10 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 06:04 KST — Rust 사례 결과·미실행 판정
-- 시작/결과 SHA: 시작 fa91de5dacb4a39c32d867aa641ebde088a0c76e; 결과 SHA는 CI 확인 뒤 기록; 커밋 제목 feat: classify inactive Rust case results and failures.
+- 시작/결과 SHA: 시작 fa91de5dacb4a39c32d867aa641ebde088a0c76e; 검증 결과 8e767f7182c281350c0d1360398271e95ac8ade9; 확인 기록 제목 docs: record Rust case result verification.
 - 목표: F01 관찰 함수 기반 사례 수집·단언 실패 계속·치명적 중단·전체 분모·Cargo 진단·기존 v1 결과 호환 구현.
 - 변경 파일 수: 9개(결과 어댑터·검사·CI 문법검사·설계/아키텍처·로드맵 JSON/MD·활성/보관 일지).
-- 테스트 결과: 신규9건0/9→9/9; 실행 헤더/추가 보고·컴파일 운영 오류도 각각 실패 재현→통과; 로컬435건 중433통과·실패0·skip2(Cargo/rustc 부재); 변경MJS2개 문법·roadmap --check·diff 성공; 실제 Rust/브라우저는 CI 대기.
-- CI URL과 결과: 시작SHA https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38800427670 성공; 결과SHA CI 대기.
+- 테스트 결과: 신규9건0/9→9/9; 헤더/추가 보고·컴파일 운영 오류도 실패→통과; 로컬435건 중433통과·skip2(Cargo/rustc 부재); CI435/435·macOS12/12·실패/취소/skip0; 실제Rust 8/8·단언실패7/8·조기exit0 실패/미실행, v1 보존 및 Chromium25문제·390px·백업/오프라인 성공; 변경MJS2개 문법·roadmap --check·diff 성공.
+- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38807911255 — 검증 결과SHA test/browser/macos-resources 모두 성공; F01 진행 중 유지.
 - 발견한 문제: exit0만으로 통과하지 않도록 단일ID·running1·합계·종료0/101 대조; ENOENT/ELIMIT는 운영 오류 전파. 테스트 함수 삭제0, C 기대값·제한 변경0.
 - 보안 영향: 기본 호스트 실행기/프로세스 import/HTTP 등록 없음; 명시적 관찰 함수만 호출. CI만 신뢰된 합성 Rust 함수 실행, 운영 API·저장/백업 키 변경0; 출력 판정은 악성 결과 진위 증명이 아님.
 - 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지, 분모변경0; F01 진행 중·next=F-G/F01 유지.
