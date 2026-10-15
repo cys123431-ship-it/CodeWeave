@@ -52,7 +52,9 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
       method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CodeWeave-Token': token },
       body: JSON.stringify({ exerciseId, code }), signal: AbortSignal.timeout(10000)
     });
-    return { status: response.status, result: await response.json() };
+    const result = await response.json();
+    assert.doesNotMatch(result.compileOutput ?? '', /\[-Werror(?:=|\])/, 'legacy logical-error fixtures must reach their intended check without incidental warnings');
+    return { status: response.status, result };
   };
   const studentRegistryMain = '#include <stdio.h>\n#include "student.h"\nenum{MAX_STUDENTS=16};\nint main(void){struct Student a[MAX_STUDENTS];int n_input,target;if(scanf("%d%d",&n_input,&target)!=2||n_input<0||n_input>MAX_STUDENTS){puts("INVALID");return 0;}size_t n=(size_t)n_input;for(size_t i=0;i<n;i++)if(scanf("%d%d",&a[i].id,&a[i].score)!=2){puts("INVALID");return 0;}if(!stable_sort_students_by_id(a,n))return 1;if(n==0)puts("EMPTY");else{for(size_t i=0;i<n;i++){if(i)putchar(\' \');printf("%d:%d",a[i].id,a[i].score);}putchar(\'\\n\');}size_t index;if(find_first_student_by_id(a,n,target,&index))printf("FOUND %zu %d\\n",index,a[index].score);else puts("NOT FOUND");return 0;}';
   const studentRegistryHeader = '#ifndef STUDENT_H\n#define STUDENT_H\n#include <stddef.h>\nstruct Student{int id;int score;};\nint stable_sort_students_by_id(struct Student students[],size_t count);\nint find_first_student_by_id(const struct Student students[],size_t count,int target_id,size_t *out_index);\n#endif';
@@ -222,7 +224,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     assert.equal(result.tests[0].detail, '시간 제한 초과');
   });
   await t.test('function grader rejects a submitted main through the separate harness link', async () => {
-    const { result } = await submit('c-clamp-function', 'int clamp(int value,int low,int high){return value;}\nint main(void){return 0;}');
+    const { result } = await submit('c-clamp-function', 'int clamp(int value,int low,int high){(void)low;(void)high;return value;}\nint main(void){return 0;}');
     assert.equal(result.ok, false);
     assertCompilerFailureCount(result, 'c-clamp-function');
     assert.match(result.compileOutput, /main/);
@@ -277,7 +279,7 @@ test('local GCC API compiles whole-program, function-only and multi-file C exerc
     assert.ok(result.tests.some(test => !test.passed && /예상: 0 77/.test(test.detail)));
   });
   await t.test('string function grader detects output side effects', async () => {
-    const { result } = await submit('c-string-count-function', '#include <stddef.h>\n#include <stdio.h>\nint count_char(const char *text,char target,size_t *out_count){puts("debug");if(!text||!out_count)return 0;*out_count=0;return 1;}');
+    const { result } = await submit('c-string-count-function', '#include <stddef.h>\n#include <stdio.h>\nint count_char(const char *text,char target,size_t *out_count){(void)target;puts("debug");if(!text||!out_count)return 0;*out_count=0;return 1;}');
     assert.equal(result.ok, false);
     assert.match(result.tests[0].detail, /예상:.*실제:/);
   });

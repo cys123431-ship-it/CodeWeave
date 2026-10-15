@@ -127,6 +127,26 @@ try {
   console.log(`PASS: all ${Object.keys(solutions).length} C exercises compile and pass their real GCC tests`);
 
   browser = await chromium.launch({ headless: true });
+  const warningContext = await browser.newContext();
+  warningContext.on('page', p => p.on('pageerror', e => errors.push(e.message)));
+  try {
+    for (const [route, terminal, workbench] of [
+      ['/#lesson:c-hello', '.terminal[role="status"]', false],
+      ['/workbench.html', '#grade-result', true]
+    ]) {
+      const warningPage = await warningContext.newPage();
+      await warningPage.goto(base + route);
+      if (workbench) await warningPage.locator('#lesson-select').selectOption('c-hello');
+      await submit(warningPage, '#include <stdio.h>\nint main(void){int unused=7;puts("Hello, CodeWeave!");return 0;}');
+      await expect(warningPage.locator(terminal)).toContainText('컴파일 실패');
+      await expect(warningPage.locator(terminal)).toContainText('unused-variable');
+      await expect(warningPage.locator(terminal)).toContainText('테스트 1: 미실행');
+      await submit(warningPage, solutions['c-hello']);
+      await expect(warningPage.locator(terminal)).toContainText('모든 테스트 통과');
+      await warningPage.close();
+    }
+  } finally { await warningContext.close(); }
+  console.log('PASS: both submission screens reject compiler warnings, show the diagnostic and accept the corrected code');
   context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
   context.on('page', p => p.on('pageerror', e => errors.push(e.message)));
   page = await context.newPage();

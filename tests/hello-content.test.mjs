@@ -59,7 +59,7 @@ test('hello manuscript complete program compiles cleanly and produces its stated
   const executable = path.join(directory, process.platform === 'win32' ? 'hello.exe' : 'hello');
   await writeFile(source, match[1]);
 
-  const compiled = spawnSync('gcc', ['-std=c11', '-Wall', '-Wextra', '-Wpedantic', source, '-o', executable], { encoding: 'utf8' });
+  const compiled = spawnSync('gcc', ['-std=c11', '-Wall', '-Wextra', '-Werror', '-Wpedantic', source, '-o', executable], { encoding: 'utf8' });
   assert.equal(compiled.status, 0, compiled.stderr);
   assert.equal(compiled.stderr, '');
 

@@ -60,7 +60,7 @@
 GCC에서는 학습용으로 다음 명령을 사용할 수 있다.
 
 ```sh
-gcc -std=c11 -Wall -Wextra -Wpedantic -c hello.c -o hello.o
+gcc -std=c11 -Wall -Wextra -Werror -Wpedantic -c hello.c -o hello.o
 ```
 
 `hello.o`라는 이름과 `gcc` 옵션은 이 도구의 인터페이스다. Windows의 다른 도구는 `.obj` 같은 이름을 쓸 수 있으며, 구현이 중간 파일을 사용자에게 보여 주지 않을 수도 있다.
@@ -78,7 +78,7 @@ gcc hello.o -o hello
 한 번에 다음처럼 실행하면 GCC 드라이버가 필요한 단계를 순서대로 호출한다.
 
 ```sh
-gcc -std=c11 -Wall -Wextra -Wpedantic hello.c -o hello
+gcc -std=c11 -Wall -Wextra -Werror -Wpedantic hello.c -o hello
 ```
 
 ### 4. `main`은 호스트 환경의 시작 함수다
@@ -301,9 +301,11 @@ run -> check
 GCC가 있는 환경에서는 다음처럼 경고를 켠다.
 
 ```sh
-gcc -std=c11 -Wall -Wextra -Wpedantic hello.c -o hello
+gcc -std=c11 -Wall -Wextra -Werror -Wpedantic hello.c -o hello
 ./hello
 ```
+
+채점기와 같은 옵션이며, `-Werror` 때문에 경고도 컴파일 실패로 처리한다. 진단을 확인해 경고를 고친 뒤 다시 제출한다.
 
 자동 검사는 다음을 별도로 확인해야 한다.
 
