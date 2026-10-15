@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 2단계 진행 중 확인함
+## 2026-10-15 20:02 KST — 2-5 입문 단원 핵심 경로와 심화 분리
+- 시작/결과 SHA: 시작 486a4f57ada3d4bd0a65ee3f86f5bf22d8ce65f9; 결과는 반영 후 조회, 제목 feat: separate beginner paths from advanced notes.
+- 목표: hello/types/loops를 입문자 관점으로 검토하고 핵심 설명·예제·실습은 노출, 표준·구현 해설은 접힌 심화로 분리.
+- 변경 파일 수: 10개(화면·카탈로그·원고3·앱/브라우저 검사·SW·활성/보관 일지).
+- 테스트 결과: 신규2건0/2→2/2; 관련18/18; 전체374/374·실패/skip0; JS/MJS5개 문법·diff 성공; 함수 삭제0·추가2; 브라우저는 CI 대기.
+- CI URL과 결과: 결과 SHA 생성 후 조회 예정; 성공 확인 전2-5 완료 처리하지 않음.
+- 발견한 문제: 기존 예상42/55/60분을 유지하고 분할안20+22/25+30/25+20+15분을 원고에 제안(실측 아님). 교육 본문 수정은 사용자2-5 요청 때문이며 기존 코드·퀴즈·실습 계약·기대값은 보존.
+- 보안 영향: 새 심화 데이터·코드·제목을 HTML 이스케이프; native details만 사용, 외부 입력·실행 API·파일 접근·저장 키·백업 형식 변경 없음; SW 셸 버전만 갱신.
+- 단계별 완료율: 0단계3/3, 1단계6/6, 2단계4/6 유지; 2-5 세 단원 반영·CI 대기, A~I 분모는2-6에서 확정.
+- 다음 작업: 결과 CI 성공 확인 후2-5 완료 기록; 2-6 A~I 확정 단원/상태/분모와 D→E→Rust→C 순환을 구체화. 새 단원/문제는 아직 보류.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 2단계 진행 중 확인함
 ## 2026-10-15 18:59 KST — 2-4 콘텐츠 검사 품질 정리 최종 묶음
 - 시작/결과 SHA: 시작 e98892fd66f5327f71a415b9786329c9b57a99a1; 구현 결과 ff817f32aac625b27df7f6a330243a5985c5a7b8; 확인 기록 제목 docs: confirm content test quality cleanup.
 - 목표: 남은4개와 추가 공통 검사2개를 정리하고22개 콘텐츠 검사 전체를 재검토해 2-4 검증 마무리.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 2단계 진행 중 확인함
 - 보안 영향: 임시 복사본의 신뢰하는 예제만 실행; 외부 입력·코드 실행 API·파일 접근 범위·진도/초안/제출·백업 형식 변경 없음.
 - 단계별 완료율: 0단계3/3, 1단계6/6, 2단계3/6 유지; 2-4는6/22파일 정리 검증, A~I 분모는2-6에서 확정.
 - 다음 작업: 2-4 나머지16개 중 arrays/pointers/function-scope/functions/recursion/matrix-rows 우선 정리.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 2단계 진행 중 확인함
-## 2026-10-15 13:04 시작 / 14:58 재개 / 15:02 KST 검증 — 2-3 브라우저 검증 경로 고정
-- 시작/결과 SHA: 시작 9333a23541a1e5ffdb11e058ddfe4a440ce69a45; 검증 결과3dff60c4422948d104eb46036c7f8fd34d6d74e9; 후속 제목 docs: confirm browser verification route(자기 SHA는 반영 후 조회).
-- 목표: Chromium 설치를 한 번 점검하고 이후 실행의 실제 UI 검증 경로를 고정.
-- 변경 파일 수: 5개(운영 지침·로컬 안내·신규 운영 검사·활성 일지·월별 보관).
-- 테스트 결과: 신규2건 수정 전0/2→수정 후2/2; 재개 후 로컬/CI364/364·macOS11/11·실패/skip0; 문법·diff·CI 실제 Chromium 제출/백업/390px/오프라인 성공. 삭제 검사 없음.
-- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38689897300 — 결과3dff60c의 test/browser/macos-resources 및 전체 success 확인 후2-3 완료 기록.
-- 발견한 문제: Playwright1.62.1 패키지 설치 성공, Chromium v1234 설치 명령1회는 내장 재시도 후 손상 ZIP 오류(End of central directory record signature not found; Download failure, code=1)로 실패. 로컬 UI 실행 안 함; 설치 안내 대신 CI SHA·작업·로그·아티팩트 대조 절차로 교체.
-- 보안 영향: 문서·운영 계약 검사만 추가하며 외부 입력·코드 실행·파일 접근·학습자 데이터 형식 변경 없음.
-- 단계별 완료율: 0단계3/3, 1단계6/6, 2단계3/6(2-1~2-3 완료); A~I 분모는2-6에서 확정.
-- 다음 작업: 2-4 콘텐츠 표현 강제 검사 목록화·정리. 향후 로컬 설치 반복 없이 결과 SHA의 CI를 확인.

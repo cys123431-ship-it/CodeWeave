@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DRAFTS_KEY, PROGRESS_KEY } from '../src/logic.js';
 import { ITERATIONS_KEY, recordIteration } from '../src/iterations.js';
+import { lessons } from '../src/catalog.js';
+let renderSection;
 
 // A small event/DOM fixture exercises the real app module. It is not browser E2E.
 const decode = text => text.replace(/&lt;/g, '<').replace(/&gt;/g, '>')
@@ -55,7 +57,7 @@ test('main lesson loads old workbench attempts, submits, restores, and keeps qui
     fetch: async () => { calls++; await new Promise(resolve => { release = resolve; }); return { ok: true, json: async () => pass }; }
   };
   for (const [key, value] of Object.entries(bindings)) Object.defineProperty(globalThis, key, { value, writable: true, configurable: true });
-  await import('../src/app.js?flow-test');
+  ({ section: renderSection } = await import('../src/app.js?flow-test'));
   assert.match(document.root.innerHTML, /old failed code/);
   const editor = document.querySelector('#code-input');
   editor.value = 'new passing code'; await editor.fire('input');
@@ -112,4 +114,33 @@ test('main lesson loads old workbench attempts, submits, restores, and keeps qui
   await document.querySelector('#toggle-review').fire('click');
   assert.deepEqual(JSON.parse(values.get(PROGRESS_KEY)).review, []);
   assert.match(document.root.innerHTML, /✓ 전체 숙달/);
+});
+
+test('advanced sections use closed native disclosures and escape headings text and code', () => {
+  const html = renderSection({ advanced: true, heading: '<img src=x onerror=alert(1)>',
+    text: '<script>alert(1)</script>', code: 'printf("<hello>");' });
+  assert.match(html, /^<details\b[^>]*><summary>/);
+  assert.doesNotMatch(html, /<details[^>]*\bopen\b|<script>|<img/);
+  assert.ok(html.includes('&lt;script&gt;'));
+  assert.ok(html.includes('&lt;hello&gt;'));
+  assert.ok(html.includes('</details>'));
+  const core = renderSection({ heading: 'Core', text: 'Read this first', code: 'return 0;' });
+  assert.match(core, /^<section><h2>/);
+  assert.doesNotMatch(core, /<details/);
+  const note = renderSection({ heading: 'Core', text: 'Start here', advancedText: '<img src=x>' });
+  assert.match(note, /<details class="advanced"><summary>/);
+  assert.ok(note.includes('&lt;img src=x&gt;'));
+  assert.doesNotMatch(note, /<img|<details[^>]*\bopen\b/);
+});
+
+test('beginner lessons retain visible complete programs while optional notes are collapsible', () => {
+  for (const id of ['c-hello', 'c-types', 'c-loops']) {
+    const lesson = lessons.find(item => item.id === id);
+    const advanced = lesson.sections.filter(item => item.advanced === true);
+    assert.ok(advanced.length > 0, id);
+    for (const item of advanced) assert.match(renderSection(item), /^<details/);
+    const programs = lesson.sections.filter(item => item.code?.includes('int main(void)'));
+    assert.ok(programs.length > 0, id);
+    for (const item of programs) assert.match(renderSection(item), /^<section>/);
+  }
 });

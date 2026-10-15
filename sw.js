@@ -1,4 +1,4 @@
-const CACHE='codeweave-shell-v35';
+const CACHE='codeweave-shell-v36';
 const ASSETS=['./','./index.html','./styles.css','./src/app.js','./src/catalog.js','./src/logic.js','./src/figures.js','./workbench.html','./workbench.css','./src/workbench.js','./src/iterations.js','./src/practice.js','./src/attempt-backup.js','./src/backup.js','./src/mastery.js','./src/exercises.js','./src/multi-file.js','./src/compiler-feedback.js','./manifest.webmanifest','./assets/icon.svg'];
 async function cacheShellResponse(cache, key, response) {
   if (!response.ok) return;

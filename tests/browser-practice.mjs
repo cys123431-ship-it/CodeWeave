@@ -150,6 +150,21 @@ try {
   context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
   context.on('page', p => p.on('pageerror', e => errors.push(e.message)));
   page = await context.newPage();
+  for (const id of ['c-hello', 'c-types', 'c-loops']) {
+    await page.goto(base + '/#lesson:' + id);
+    const note = page.locator('article details.advanced').first();
+    await expect(note).toHaveCount(1);
+    assert.equal(await note.evaluate(el => el.open), false);
+    const body = note.locator('p').first();
+    await expect(body).not.toBeVisible();
+    await note.locator('summary').focus();
+    await page.keyboard.press('Enter');
+    await expect(body).toBeVisible();
+    await page.keyboard.press('Space');
+    await expect(body).not.toBeVisible();
+    await expect(page.locator('#code-input')).toBeVisible();
+  }
+  console.log('PASS: all three beginner lessons keep advanced notes closed, keyboard-toggleable and separate from practice');
   const interruptedCode = '#include <stdio.h>\nint main(void){int a,b;if(scanf("%d%d",&a,&b)!=2)return 8;if(a<0)return 7;printf("%d\\n",a+b);return 0;}';
   await page.goto(base + '/#lesson:c-types');
   await submit(page, interruptedCode);
