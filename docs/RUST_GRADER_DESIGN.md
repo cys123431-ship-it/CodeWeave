@@ -1,9 +1,16 @@
 # Rust Cargo 채점 계약 — F01 설계
 
-검토일: 2026-10-16 KST. 상태: **설계와 순수 계획 생성기만 검증**. Cargo 실행기·API·새 Rust 단원은 아직 없다.
+검토일: 2026-10-16 KST. 상태: **설계·계획 생성기와 내부 준비 어댑터**. 운영 Cargo 실행기·API·새 Rust 단원은 아직 없다.
 `server/rust-contract.mjs`는 문자열/인수 배열만 반환하며 디렉터리 생성, 파일 쓰기, 프로세스 실행을 하지 않는다.
 `executionEnabled: false`는 이 상태를 표시한다. 이를 제거하는 것만으로 실행 허용 조건을 충족하지 않는다.
 이번 설계는 F01 착수 근거이지 단원 완료가 아니며 next는 F-G/F01에 남긴다.
+
+`server/rust-preparation.mjs`는 먼저 제출을 검증하고 전용 0700 임시 디렉터리/0600 고정 파일을 만든다.
+도구 상태·Cargo JSON 산출물·libtest 목록을 검증하지만 프로세스를 실행하지 않으며 HTTP 경로에 연결하지 않는다.
+산출물은 한 개의 성공한 build-finished와 현재 manifest/test profile/codeweave target을 요구하고 target 밖·비일반 파일·심볼릭 링크를 거부한다.
+이는 신뢰된 작업 디렉터리의 준비 검사이며 악성 동시 파일 교체나 하드 링크까지 격리하는 경계가 아니다.
+신뢰된 합성 Cargo 검사는 CI에서 필수다. 로컬 Cargo/rustc가 없으면 이 1건만 이유를 표시해 skip하고 도구를 자동 설치하지 않는다.
+CI는 설치된 cargo/rustc 버전을 출력하며 이 준비 검증만으로 도구체인 고정·자원 제한·Rust 채점 완료를 주장하지 않는다.
 
 ## 1. 기존 C 함수형 경로와의 대응
 
@@ -52,7 +59,7 @@ Rustup 다운로드나 crates.io 접근, 사용자 toolchain override를 실행 
 
 1. compile 성공 뒤 Cargo JSON compiler-artifact 중 현재 manifest의 integration target codeweave/test profile 실행 파일 **한 개**를 선택한다.
 2. 산출물은 전용 target 아래의 실제 일반 파일인지 확인한다. 임의 경로·심볼릭 링크·0개/복수 산출물은 운영 오류다.
-3. 해당 바이너리의 `--list --format terse`로 실제 목록을 얻고 서버 cases와 정확히 대조한다. 추가/누락/중복/ignored 테스트는 계약 오류다.
+3. 해당 바이너리의 `--list --format terse`와 별도 `--list --ignored --format terse`를 모두 성공 종료로 얻는다. 첫 목록은 서버 cases와 정확히 대조하고 ignored 목록은 비어야 한다. 추가/누락/중복/benchmark/ignored는 계약 오류다.
 4. 각 ID에 `[case_NN, --exact, --test-threads=1]`를 전달해 별도 프로세스 그룹에서 한 건씩 실행한다. 사용자 코드/인수를 명령에 보간하지 않는다.
 5. exit0만 보고 통과시키지 않는다. 한 건 실행·성공 및 열거 일치까지 확인한다. 필터 오타로 0 tests가 된 경우는 실패다.
 6. 일반 assert 실패는 다음 독립 사례를 계속 실행한다. 시간/출력/자원 초과·신호 종료·알 수 없는 실행 오류는 그룹을 정리하고 나머지를 미실행으로 채운다.
@@ -92,7 +99,7 @@ grader가 null인 동안 Rust 이론/퀴즈가 통과해도 practiceAvailable/pr
 
 ## 7. 다음 구현 순서와 완료 문턱
 
-1. 이 계획기의 합성 fixture로 파일 생성/도구 탐지/JSON 산출물/열거 검사를 테스트 주도 구현. UI/API는 아직 잠근다.
+1. 준비 어댑터와 합성 fixture의 파일 생성/도구 상태/JSON 산출물/열거 검사를 추가했다. 실제 Cargo 확인은 결과 SHA의 필수 CI 근거로 판단하며 UI/API는 계속 잠근다.
 2. 실제 Cargo로 정상·틀린 assert·문법·경고·0건·ignored·가짜 출력·시간/메모리/자식 정리 회귀를 실행한다.
 3. 승인된 신뢰 로컬 실행 경계가 검증되면 별도 Rust 어댑터와 API 라우팅/결과/v1 저장 호환을 연결한다.
 4. F01은 그보다 좁은 이론/퀴즈 단원으로 먼저 전달할 수 있으나 로드맵 진행 중과 실습 잠금을 유지한다. 실제 전달/검증 전에는 차례를 넘기지 않는다.
@@ -105,3 +112,4 @@ grader가 null인 동안 Rust 이론/퀴즈가 통과해도 practiceAvailable/pr
 - [Cargo targets](https://doc.rust-lang.org/cargo/reference/cargo-targets.html): integration test·자동 탐색·doctest.
 - [Build scripts](https://doc.rust-lang.org/cargo/reference/build-scripts.html): 빌드 중 호스트 실행과 build 비활성.
 - [External tools](https://doc.rust-lang.org/cargo/reference/external-tools.html): 컴파일 진단·compiler-artifact JSON.
+- [rustc tests](https://doc.rust-lang.org/rustc/tests/index.html): list는 사례를 실행하지 않으며 ignored 필터는 별도 선택이다. 일반 목록만으로 ignored 여부를 추정하지 않는다.

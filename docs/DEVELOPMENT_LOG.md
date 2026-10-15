@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-16 05:02 KST — Rust 파일·산출물·테스트 열거 준비
+- 시작/결과 SHA: 시작 4c9fb921e889dfd373948a86f3ad41b2e5609b4e; 결과 SHA는 CI 확인 뒤 기록; 커밋 제목 feat: validate inactive Rust workspace and Cargo discovery.
+- 목표: F01 비활성 준비 어댑터로 고정 파일 생성·도구 상태·Cargo 산출물·일반/ignored 목록 대조를 검증.
+- 변경 파일 수: 10개(준비 어댑터·검사·계획기·CI·설계/아키텍처·로드맵 JSON/MD·활성/보관 일지).
+- 테스트 결과: 신규8건0/8→8/8; kind 배열 흉내 객체도 실패 재현→거부; 전체425건 중424통과·실패0·skip1(Cargo/rustc 로컬 부재); 변경MJS3개 문법·roadmap --check·diff 성공; 실제 Cargo 합성 검사/브라우저는 CI 대기.
+- CI URL과 결과: 시작SHA https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38791831237 성공; 결과SHA CI 대기.
+- 발견한 문제: 일반 list만으로 ignored를 구별할 수 없어 별도 --list --ignored를 추가. 잘못된 JSON·빌드 실패·0/복수/외부/링크 산출물·0/누락/중복/benchmark/ignored·실패 열거를 거부; 테스트 함수 삭제0.
+- 보안 영향: 고정 파일을 새 전용 디렉터리에만 쓰며 운영 Cargo 실행·HTTP 등록·저장/백업 키 변경0; CI만 신뢰된 합성 코드를 빌드/열거하고 함수 본문은 실행하지 않음. 경로 검사는 격리가 아님.
+- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지, 분모변경0; F01 진행 중·next=F-G/F01 유지.
+- 다음 작업: CI Cargo 산출물/8건 일반·ignored·빈 목록 확인 후 사례 실행 결과·진단/미실행·자원/자식 정리 회귀를 별도 구현; 운영 Rust API는 계속 잠금.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 04:01 KST — F01 Cargo 채점 계약 설계
 - 시작/결과 SHA: 시작 00be75a2edfb5c3b6b80f617dd1dd701bd8d8d01; 검증 결과 24b9d3cdfba083a6e509f2fb7170ac6c0ac25689; 확인 기록 제목 docs: record Rust contract design verification.
 - 목표: Rust 첫 작업으로 단일 소스·고정 패키지·서버 하네스·8~12사례·Cargo 빌드/열거/실행·진단/재제출 계약 설계.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 기존 JSON/Host/Origin/토큰·GCC 제한·정적 파일 허용목록 재사용; 새C 함수형ID만등록, 파일/네트워크 권한·사용자 저장/백업 키 변경 없음.
 - 단계별 완료율: 기반0·1·2단계 완료; A3/5=60.0%·B10/11=90.9%·C4/8=50.0%·D1/8=12.5%·E/F/G0/8·H/I0/6; 분모변경0, D01 완료는한정범위.
 - 다음 작업: E/E01 알고리즘 샘플을 복잡도·선형/이진 탐색 전제·첫 일치의 좁은 실습으로 확장(8~12사례); 다음은Rust→C→자료구조. D01 삽입/삭제/소유권은기존D05에남김.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-15 23:02 KST — D01 연결 리스트 계약·원고 준비(1/2)
-- 시작/결과 SHA: 시작 9a725453397d92c1128d228b80f8da860ed055c7; 검증 결과 dde774bd30333d33dd265d0a2a9c1daf8817f64a; 확인 기록 제목 docs: record linked-list contract CI evidence.
-- 목표: 호출자 소유 유한 비순환 리스트의 첫 일치 검색을 기존 함수형 파이프라인으로 검증; 화면 연결 전 진행 중 유지.
-- 변경 파일 수: 10개(계약 모듈·원고·SVG·신규/기존 검사2개·로드맵JSON/MD·활성/보관 일지).
-- 테스트 결과: 신규10건 수정 전 각각 실패→10/10 통과; 정답10사례·오답6종·완성 예제 GCC 출력 검증; 로컬/CI390/390·macOS12/12·실패/취소/skip0; 기존Chromium390px/오프라인 회귀 성공; JS/MJS5개 문법·roadmap --check·diff 성공; 신규D01 화면 검사는다음실행.
-- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38749665839 — 검증 결과SHA test/browser/macos-resources 성공; D01 계약·원고 준비 검증만 완료, 단원은 진행 중.
-- 발견한 문제: 기존 C 검사/감사표가 전체 Map 또는 C언어 전체를 C트랙23개와 동일시함; C23개 기대값 유지, Map은 실제 메타데이터·감사표는c- ID 범위로 대조(트랙 확장 목적, 숫자 맞추기 아님). 공개예시를 실제 하네스 판정1과 일치시킴; API/화면 미등록.
-- 보안 영향: 기존 compile/runCases 자원 제한 재사용, 함수 계약 입력 보존·주소 동일성 검사; 공개 실행/API·파일 허용목록 변경 없음.
-- 단계별 완료율: 기반0·1·2단계 완료 유지; A60.0%·B90.9%·C50.0%·D~I0.0%; D01 진행 중, 다음차례 D/D01 유지.
-- 다음 작업: D01 2/2로 catalog/exercises/서버등록·README/SW·브라우저 제출/오답/재제출 검증·로드맵/일지(10파일 이내) 연결, 성공 CI 후 E/E01로 전환.

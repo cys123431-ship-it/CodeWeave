@@ -513,7 +513,7 @@
           "status": "진행 중",
           "lessonIds": [],
           "manuscripts": [],
-          "tests": ["tests/rust-contract.test.mjs"]
+          "tests": ["tests/rust-contract.test.mjs", "tests/rust-preparation.test.mjs"]
         },
         {
           "id": "F02",

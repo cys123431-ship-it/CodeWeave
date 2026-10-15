@@ -95,6 +95,7 @@ export function createRustPlan(request, definitions) {
       CARGO_INCREMENTAL: '0', CARGO_TERM_COLOR: 'never', RUST_BACKTRACE: '0'
     },
     list: { artifact: 'codeweave', args: ['--list', '--format', 'terse'] },
+    listIgnored: { artifact: 'codeweave', args: ['--list', '--ignored', '--format', 'terse'] },
     runCases: definition.cases.map(entry => ({
       id: entry.id, label: entry.label, artifact: 'codeweave',
       args: [entry.id, '--exact', '--test-threads=1']

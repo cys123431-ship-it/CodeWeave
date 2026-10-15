@@ -36,11 +36,19 @@ jobs:
           node --check server/grading-exercises.mjs
           node --check server/grading-pipeline.mjs
           node --check server/run-submission.mjs
+          node --check server/rust-contract.mjs
+          node --check server/rust-preparation.mjs
           node --check sw.js
       - name: Verify local grading test compiler
         run: gcc --version
+      - name: Verify trusted Rust fixture tools
+        run: |
+          cargo --version
+          rustc --version
       - name: Unit tests
         run: npm test
+        env:
+          CODEWEAVE_REQUIRE_RUST: '1'
 
   macos-resources:
     runs-on: macos-latest
