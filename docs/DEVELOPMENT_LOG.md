@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-16 06:04 KST — Rust 사례 결과·미실행 판정
+- 시작/결과 SHA: 시작 fa91de5dacb4a39c32d867aa641ebde088a0c76e; 결과 SHA는 CI 확인 뒤 기록; 커밋 제목 feat: classify inactive Rust case results and failures.
+- 목표: F01 관찰 함수 기반 사례 수집·단언 실패 계속·치명적 중단·전체 분모·Cargo 진단·기존 v1 결과 호환 구현.
+- 변경 파일 수: 9개(결과 어댑터·검사·CI 문법검사·설계/아키텍처·로드맵 JSON/MD·활성/보관 일지).
+- 테스트 결과: 신규9건0/9→9/9; 실행 헤더/추가 보고·컴파일 운영 오류도 각각 실패 재현→통과; 로컬435건 중433통과·실패0·skip2(Cargo/rustc 부재); 변경MJS2개 문법·roadmap --check·diff 성공; 실제 Rust/브라우저는 CI 대기.
+- CI URL과 결과: 시작SHA https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38800427670 성공; 결과SHA CI 대기.
+- 발견한 문제: exit0만으로 통과하지 않도록 단일ID·running1·합계·종료0/101 대조; ENOENT/ELIMIT는 운영 오류 전파. 테스트 함수 삭제0, C 기대값·제한 변경0.
+- 보안 영향: 기본 호스트 실행기/프로세스 import/HTTP 등록 없음; 명시적 관찰 함수만 호출. CI만 신뢰된 합성 Rust 함수 실행, 운영 API·저장/백업 키 변경0; 출력 판정은 악성 결과 진위 증명이 아님.
+- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지, 분모변경0; F01 진행 중·next=F-G/F01 유지.
+- 다음 작업: 실제 Rust 빌드/실행 자원 상한·그룹 종료/자식 정리·문법/경고 회귀·도구체인 고정부터 검증; 운영 API·Rust 숙달 비활성 유지.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 05:02 KST — Rust 파일·산출물·테스트 열거 준비
 - 시작/결과 SHA: 시작 4c9fb921e889dfd373948a86f3ad41b2e5609b4e; 검증 결과 9dcfeec2afa8429d398a50d1fb0b418728a987b0; 확인 기록 제목 docs: preserve Cargo build timeout and retry evidence.
 - 목표: F01 비활성 준비 어댑터로 고정 파일 생성·도구 상태·Cargo 산출물·일반/ignored 목록 대조를 검증.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 기존compile/runCases와GCC제한 재사용; 준비계약만추가하고실행API·정적파일허용목록·사용자저장/백업키 변경없음.
 - 단계별 완료율: 기반0·1·2단계완료; A3/5·B10/11·C4/8·D1/8·E/F/G0/8·H/I0/6 유지; E01진행중·차례E/E01 유지,분모변경0.
 - 다음 작업: E01 2/2로기존catalog/exercises·운영등록·README·브라우저/검색계약검사·로드맵/일지(10파일이내) 연결; 12절·원고102줄·10사례 유지, 기존초안/진도보존; 성공CI 후Rust F01.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-16 00:00 KST — D01 화면·API·수정 재제출 연결(2/2)
-- 시작/결과 SHA: 시작 a1692d40e3a93829ee23d3369e1da1ad64be88d2; 검증 결과 cb7738378ac7daff2ec02b1eab4e1981895cb379; 확인 기록 제목 docs: confirm D01 and advance to algorithms.
-- 목표: D01의12절 설명·퀴즈·함수 제출·10사례 실제 채점·오답 수정·숙달·다음 단원·오프라인 기록 복원을 연결.
-- 변경 파일 수: 10개(catalog/exercises·운영 채점·브라우저/로드맵 검사·README·로드맵JSON/MD·활성/보관 일지).
-- 테스트 결과: 신규2건0/2(화면 누락·API400)→2/2; 중간17/18의생성MD 동기화 수정; 로컬/CI392/392·macOS12/12·실패/취소/skip0; Chromium D01오답/수정/숙달/다음·390px·백업/오프라인 성공; JS/MJS5개 문법·diff·roadmap --check 성공.
-- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38758565563 — 검증 결과SHA test/browser/macos-resources 성공 후D01 완료; 첫CI38758054274 browser실패 이력 보존.
-- 발견한 문제: 첫CI의기존legacy 검사준비가localStorage.clear로DS 이력을지웠음; 실제DS2건을준비데이터에보존해백업검사, 기대값2 유지. 순환검사D고정을next.track으로일반화; 원형/운영 하네스 동일성검사 유지. 초판원고 준비상태는README로시점명시; 삭제0.
-- 보안 영향: 기존 JSON/Host/Origin/토큰·GCC 제한·정적 파일 허용목록 재사용; 새C 함수형ID만등록, 파일/네트워크 권한·사용자 저장/백업 키 변경 없음.
-- 단계별 완료율: 기반0·1·2단계 완료; A3/5=60.0%·B10/11=90.9%·C4/8=50.0%·D1/8=12.5%·E/F/G0/8·H/I0/6; 분모변경0, D01 완료는한정범위.
-- 다음 작업: E/E01 알고리즘 샘플을 복잡도·선형/이진 탐색 전제·첫 일치의 좁은 실습으로 확장(8~12사례); 다음은Rust→C→자료구조. D01 삽입/삭제/소유권은기존D05에남김.

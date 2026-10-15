@@ -38,6 +38,7 @@ jobs:
           node --check server/run-submission.mjs
           node --check server/rust-contract.mjs
           node --check server/rust-preparation.mjs
+          node --check server/rust-results.mjs
           node --check sw.js
       - name: Verify local grading test compiler
         run: gcc --version

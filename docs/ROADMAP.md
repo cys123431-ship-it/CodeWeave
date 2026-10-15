@@ -94,7 +94,7 @@
 
 | ID | 단원 | 상태 | 기존 단원·검증 근거 |
 |---|---|---|---|
-| F01 | Cargo 프로젝트·cargo test와 채점 계약 | 진행 중 | [검사](../tests/rust-contract.test.mjs) · [검사](../tests/rust-preparation.test.mjs) |
+| F01 | Cargo 프로젝트·cargo test와 채점 계약 | 진행 중 | [검사](../tests/rust-contract.test.mjs) · [검사](../tests/rust-preparation.test.mjs) · [검사](../tests/rust-results.test.mjs) |
 | F02 | 변수 바인딩·가변성과 스칼라 형 | 진행 중 | `rust-mut` |
 | F03 | 조건·반복·식과 범위 | 미착수 | — |
 | F04 | 함수·반환값과 단위 테스트 | 미착수 | — |

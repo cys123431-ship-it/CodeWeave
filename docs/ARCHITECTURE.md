@@ -14,7 +14,7 @@
 
 ## C 컴파일 정책
 
-Rust는 [F01 Cargo 채점 설계](RUST_GRADER_DESIGN.md)의 계획 생성기와 내부 파일/산출물/테스트 목록 준비 검사까지 분리했다. 실제 Cargo 합성 검사는 CI 전용이며 운영 실행·API·Rust 실습 숙달은 계속 비활성이다.
+Rust는 [F01 Cargo 채점 설계](RUST_GRADER_DESIGN.md)의 계획·파일/산출물/목록 준비와 사례별 결과 판정을 분리했다. 결과 수집은 주입한 관찰 함수만 사용하고 기본 호스트 실행기는 없다. 실제 Cargo 합성 실행은 CI 전용이며 운영 API·Rust 실습 숙달은 계속 비활성이다.
 
 채점기와 단원의 기본 옵션은 `-std=c11 -Wall -Wextra -Werror -Wpedantic`으로 통일하며 활성화된 경고는 컴파일 실패로 처리해 실행하지 않는다(원본 진단과 전체 사례의 미실행 상태를 보존). GCC 경고 의미는 [공식 Warning Options](https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html)를 따르며 진단 범위는 컴파일러에 따라 달라질 수 있다.
 
