@@ -510,10 +510,10 @@
         {
           "id": "F01",
           "title": "Cargo 프로젝트·cargo test와 채점 계약",
-          "status": "미착수",
+          "status": "진행 중",
           "lessonIds": [],
           "manuscripts": [],
-          "tests": []
+          "tests": ["tests/rust-contract.test.mjs"]
         },
         {
           "id": "F02",
