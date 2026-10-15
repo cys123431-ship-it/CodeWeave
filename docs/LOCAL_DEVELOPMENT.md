@@ -16,13 +16,13 @@ npm start
 npm test
 ```
 
-실제 Chromium/GCC 검사는 GitHub Actions의 browser 작업에서 실행된다. 로컬 브라우저 검사가 필요한 환경의 설치 명령은 다음과 같으며 반복 설치 시도 여부는 운영 지침 2-3에서 결정한다.
+## 브라우저 검증 경로
 
-```bash
-npm install --no-save --package-lock=false playwright@1.62.1
-npx playwright install --with-deps chromium
-npm run test:browser
-```
+자동 개발 환경의 고정 경로는 [운영 지침의 상시 제약](AUTONOMOUS_DEVELOPMENT.md#상시-제약)에 기록한다. 이후 실행에서는 같은 환경의 브라우저 설치나 실행 파일 탐색을 반복하지 않는다. 일반 `npm test`와 GCC/API 검사는 로컬에서 계속 실행한다.
+
+실제 Chromium/GCC 검사는 [GitHub Actions 설정](../.github/workflows/ci.yml)의 `browser` 작업에서 `npm run test:browser`로 실행한다. [실행 목록](https://github.com/cys123431-ship-it/CodeWeave/actions/workflows/ci.yml)에서 반드시 결과 커밋 SHA를 대조하고, 전체 실행과 `test`·`browser`·`macos-resources` 작업의 성공을 확인한다. `browser` 로그의 실제 검사 결과와 `codeweave-browser-qa` 아티팩트를 함께 검토한다. 다른 SHA의 성공이나 대기 중인 작업으로 현재 변경을 완료 처리하지 않는다.
+
+브라우저 검사가 실패하면 로그의 첫 오류를 확인해 다음 작업의 우선순위로 삼는다. CI 다운로드 장애와 UI/채점 회귀를 구별하고, 재시도했다면 원래 실패와 재시도 결과를 모두 남긴다. 테스트를 skip하거나 인증·격리를 해제해 성공으로 만들지 않는다. 별도 개발자의 이미 준비된 Playwright/Chromium 환경에서는 같은 npm 명령을 사용할 수 있지만, 그것이 이 자동 개발 환경의 설치 재시도를 허용하는 뜻은 아니다.
 
 DOM fixture 통과, 실제 Chromium 통과, 실제 기기의 PWA 설치 검증은 서로 다른 증거다.
 
