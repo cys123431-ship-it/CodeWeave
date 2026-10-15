@@ -1,10 +1,10 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-15 23:02 KST — D01 연결 리스트 계약·원고 준비(1/2)
-- 시작/결과 SHA: 시작 9a725453397d92c1128d228b80f8da860ed055c7; 결과 SHA는 CI 확인 후 기록; 커밋 제목 feat: prepare linked-list traversal contract.
+- 시작/결과 SHA: 시작 9a725453397d92c1128d228b80f8da860ed055c7; 검증 결과 dde774bd30333d33dd265d0a2a9c1daf8817f64a; 확인 기록 제목 docs: record linked-list contract CI evidence.
 - 목표: 호출자 소유 유한 비순환 리스트의 첫 일치 검색을 기존 함수형 파이프라인으로 검증; 화면 연결 전 진행 중 유지.
 - 변경 파일 수: 10개(계약 모듈·원고·SVG·신규/기존 검사2개·로드맵JSON/MD·활성/보관 일지).
-- 테스트 결과: 신규10건 수정 전 각각 실패→10/10 통과; 정답10사례·오답6종·완성 예제 GCC 출력 검증; 최종 전체390/390·실패/취소/skip0; 변경JS/MJS5개 문법·roadmap --check·diff 성공; 공개 예시 불일치도 재현·수정, CI 대기.
-- CI URL과 결과: 결과 SHA 생성 후 조회 예정; 아직 완료 아님.
+- 테스트 결과: 신규10건 수정 전 각각 실패→10/10 통과; 정답10사례·오답6종·완성 예제 GCC 출력 검증; 로컬/CI390/390·macOS12/12·실패/취소/skip0; 기존Chromium390px/오프라인 회귀 성공; JS/MJS5개 문법·roadmap --check·diff 성공; 신규D01 화면 검사는다음실행.
+- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38749665839 — 검증 결과SHA test/browser/macos-resources 성공; D01 계약·원고 준비 검증만 완료, 단원은 진행 중.
 - 발견한 문제: 기존 C 검사/감사표가 전체 Map 또는 C언어 전체를 C트랙23개와 동일시함; C23개 기대값 유지, Map은 실제 메타데이터·감사표는c- ID 범위로 대조(트랙 확장 목적, 숫자 맞추기 아님). 공개예시를 실제 하네스 판정1과 일치시킴; API/화면 미등록.
 - 보안 영향: 기존 compile/runCases 자원 제한 재사용, 함수 계약 입력 보존·주소 동일성 검사; 공개 실행/API·파일 허용목록 변경 없음.
 - 단계별 완료율: 기반0·1·2단계 완료 유지; A60.0%·B90.9%·C50.0%·D~I0.0%; D01 진행 중, 다음차례 D/D01 유지.
