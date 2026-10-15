@@ -16,23 +16,21 @@ const gccAvailable = spawnSync('gcc', ['--version']).status === 0;
 const flags = ['-std=c11', '-Wall', '-Wextra', '-Werror', '-Wpedantic'];
 const factorials = [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600];
 
-test('recursion lesson has a bounded function contract and a full original learning path', () => {
+test('recursion lesson retains required headings and function interface', () => {
   assert.ok(lesson());
   assert.equal(lesson().track, 'c');
-  assert.ok(lesson().sections.length >= 20);
   assert.equal(lesson().figure, 'recursion-unwind');
-  const text = lesson().sections.map(section => section.heading + '\n' + section.text).join('\n');
-  for (const topic of ['단원 개요', '필요한 이유', '선수 지식', '학습 목표', '종료 조건', '진행 척도', '자동 객체', 'static', '13', 'ULONG_MAX', 'unsigned long', '꼬리 호출', '반복', '완성 프로그램 A', '완성 프로그램 B', '흔한 오류', '중간 점검', '핵심 요약', 'Mini Project', '복습', '재귀 사용을 증명하지']) assert.ok(text.includes(topic), topic);
+  const headings = lesson().sections.map(section => section.heading).join('\n');
+  for (const topic of ['단원 개요', '필요한 이유', '선수 지식', '학습 목표', '완성 프로그램 A', '완성 프로그램 B', '흔한 오류', '중간 점검', '핵심 요약', 'Mini Project', '복습']) assert.ok(headings.includes(topic), topic);
   assert.deepEqual(exerciseById(id).prerequisites, ['c-clamp-function', 'c-pointer']);
   assert.equal(exerciseById(id).grader, 'c-function');
   assert.doesNotMatch(lesson().challenge.starter, /\bmain\s*\(/);
   assert.match(lesson().challenge.starter, /int factorial_checked\(unsigned int n, unsigned long \*out_value\)/);
-  for (const topic of ['0..12', 'NULL', '보존', 'main', '출력']) assert.ok(lesson().challenge.description.includes(topic), topic);
 });
 
-test('recursion diagram uses readable static call and return snapshots rather than a physical stack promise', () => {
+test('recursion figure retains image semantics without executable markup', () => {
   const svg = figureFor('recursion-unwind');
-  for (const label of ['role="img"', 'viewBox="0 0 340 460"', 'max-width:340px', 'n=3', 'n=2', 'n=1', 'n=0', 'return 1', '3 × 2 = 6', '물리 스택']) assert.ok(svg.includes(label), label);
+  assert.match(svg, /role="img"/);
   assert.doesNotMatch(svg, /<script|animate|onload=/i);
 });
 
@@ -44,13 +42,12 @@ test('factorial grader enumerates every accepted n and rejects bounds/null while
     assert.deepEqual(definition.cases[n].args, [String(n)]);
     assert.equal(definition.cases[n].expected, `1 ${factorials[n]}`);
   }
-  for (const topic of ['UINT_MAX', 'ULONG_MAX', 'NULL', '반복', '서로 다른']) assert.ok(definition.cases.map(example => example.input).join(' ').includes(topic), topic);
   assert.match(definition.harness, /int factorial_checked\(unsigned int n, unsigned long \*out_value\);/);
 });
 
-test('recursion manuscript contains the complete learning path and explicit numeric/resource limits', async () => {
+test('recursion manuscript retains required learning headings', async () => {
   const text = await readFile(manuscriptURL, 'utf8');
-  for (const topic of ['## 단원 개요', '## 필요한 이유', '## 선수 지식', '## 학습 목표', '## 정적 도식 읽기', '## 단계별 예제', '## 완성 프로그램 A', '## 완성 프로그램 B', '## 실행 결과', '## 왜 이런 결과가 나오는가', '## 흔한 오류', '## 중간 점검', '## 핵심 요약', '## 개념 확인', '## 기초 연습', '## 응용 연습', '## 도전 문제', '## Mini Project', '## 테스트 및 풀이 개선', '## 복습 연결', '4294967295', '479001600', '13개', '꼬리 호출', 'N1570']) assert.ok(text.includes(topic), topic);
+  for (const topic of ['## 단원 개요', '## 필요한 이유', '## 선수 지식', '## 학습 목표', '## 정적 도식 읽기', '## 단계별 예제', '## 완성 프로그램 A', '## 완성 프로그램 B', '## 실행 결과', '## 왜 이런 결과가 나오는가', '## 흔한 오류', '## 중간 점검', '## 핵심 요약', '## 개념 확인', '## 기초 연습', '## 응용 연습', '## 도전 문제', '## Mini Project', '## 테스트 및 풀이 개선', '## 복습 연결']) assert.ok(text.includes(topic), topic);
 });
 
 async function compiled(t, code, harness = '') {

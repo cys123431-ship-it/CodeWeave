@@ -8,18 +8,18 @@
 
 | 파일 | 기존 최소 절 수 | 표현 강제의 예 | 처리 |
 |---|---:|---|---|
-| hello-content.test.mjs | 12 | C99·printf 음수·문자열 리터럴 문장, 번역/링크 도식 문구 | 이번 정리 |
-| types-content.test.mjs | 16 | CHAR_BIT·FLT_DIG·정의되지 않은 동작, 변환 도식 문구 | 이번 정리 |
-| loops-content.test.mjs | 16 | 500500·32767·N1570, 반복 도식 문구 | 이번 정리 |
-| array-max-content.test.mjs | 9 | INT_MIN·출력 보존 설명, 상태 도식 문구 | 이번 정리 |
-| string-content.test.mjs | 10 | 널 종료·문자열 리터럴 문장, 여기서 중지 도식 문구 | 이번 정리 |
-| bounded-string-content.test.mjs | 11 | 읽기 가능 보장·fgets 성공 문장, capacity 도식 문구 | 이번 정리 |
-| arrays-content.test.mjs | 18 | 미초기화·const·N1570, 인덱스 도식 문구 | 미처리 |
-| pointers-content.test.mjs | 20 | 포인터도 값 전달·NULL 검사만·수명, 별칭 도식 문구 | 미처리 |
-| function-scope-content.test.mjs | 20 | 저장기간·상수 식·스택·N1570, 가림 도식 문구/고정 치수 | 미처리 |
-| functions-content.test.mjs | 8 및 5 | 퀴즈 정답 문장·하네스/부작용 설명 | 미처리 |
-| recursion-content.test.mjs | 20 | 재귀/자원 설명, 호출/반환 도식 문구/고정 치수 | 미처리 |
-| matrix-rows-content.test.mjs | 20 | 행 객체/경계 설명, 도식 레이블 | 미처리 |
+| hello-content.test.mjs | 12 | C99·printf 음수·문자열 리터럴 문장, 번역/링크 도식 문구 | 1차 정리 |
+| types-content.test.mjs | 16 | CHAR_BIT·FLT_DIG·정의되지 않은 동작, 변환 도식 문구 | 1차 정리 |
+| loops-content.test.mjs | 16 | 500500·32767·N1570, 반복 도식 문구 | 1차 정리 |
+| array-max-content.test.mjs | 9 | INT_MIN·출력 보존 설명, 상태 도식 문구 | 1차 정리 |
+| string-content.test.mjs | 10 | 널 종료·문자열 리터럴 문장, 여기서 중지 도식 문구 | 1차 정리 |
+| bounded-string-content.test.mjs | 11 | 읽기 가능 보장·fgets 성공 문장, capacity 도식 문구 | 1차 정리 |
+| arrays-content.test.mjs | 18 | 미초기화·const·N1570, 인덱스 도식 문구 | 2차 정리 |
+| pointers-content.test.mjs | 20 | 포인터도 값 전달·NULL 검사만·수명, 별칭 도식 문구 | 2차 정리 |
+| function-scope-content.test.mjs | 20 | 저장기간·상수 식·스택·N1570, 가림 도식 문구/고정 치수 | 2차 정리 |
+| functions-content.test.mjs | 8 및 5 | 퀴즈 정답 문장·하네스/부작용 설명 | 2차 정리 |
+| recursion-content.test.mjs | 20 | 재귀/자원 설명, 호출/반환 도식 문구/고정 치수 | 2차 정리 |
+| matrix-rows-content.test.mjs | 20 | 행 객체/경계 설명, 도식 레이블 | 2차 정리 |
 | fgets-content.test.mjs | 11 | 정확히7바이트·EOF·잘림 판단 문장 | 미처리 |
 | strtol-content.test.mjs | 12 | endptr·errno·ERANGE·비트 수 가정 문장 | 미처리 |
 | struct-content.test.mjs | 11 | 값 복사·padding·덧셈 전 범위/원본 보존 문장 | 미처리 |
@@ -31,9 +31,9 @@
 | realloc-content.test.mjs | 12 | 임시 포인터·주소 변경·--wrap=realloc 문장 | 미처리 |
 | student-vector-push-content.test.mjs | 12 | 0→4·두 배·길이 공개·격리 설명 문장 | 미처리 |
 
-처리 범위는 6/22 파일이며 2-4 전체 완료가 아니다. 1회 변경 파일10개 제한을 지키기 위해 나머지16개는 후속 실행에서 같은 원칙으로 정리한다. 다음 묶음은 arrays/pointers/function-scope/functions/recursion/matrix-rows를 우선한다.
+처리 범위는 12/22 파일이며 2-4 전체 완료가 아니다. 1회 변경 파일10개 제한을 지키기 위해 나머지10개는 후속 실행에서 같은 원칙으로 정리한다. 다음 묶음은 fgets/strtol/struct/struct-array/struct-array-sort/struct-array-binary-search를 우선한다.
 
-## 이번에 삭제한 검사
+## 1차에 삭제한 검사
 
 - 완전 삭제한 테스트: `loop reference solutions use a portable long accumulator and matching output format`. 다른 검사 파일의 C 소스 문자열에서 변수 이름·`long`·`%ld`를 찾던 검사다. 실제 GCC 출력·전체 허용 n(0~1000)·잘못된 입력·채점 API·브라우저 검사는 그대로 유지한다.
 - 위6개 파일의 `lesson.sections.length >= ...` 조건을 삭제했다.
@@ -54,3 +54,20 @@
 회귀 도구 검토에서 중첩 Node runner의 `NODE_TEST_CONTEXT` 상속과 첫 코드 조각 대신 완성 프로그램을 선택해야 하는 문제가 발견돼 도구를 교정했다. 기대값을 완화하지 않고 자식 runner의 실제 검사 수, 필수 헤딩 오류, GCC 진단을 확인한 뒤 수정 전2/3·수정 후3/3을 기록했다.
 
 보안 영향: 임시 복사본에서 기존의 신뢰하는 예제만 실행하며 외부 입력·채점 API·정적 파일 허용 범위·학습자 저장 키와 백업 형식은 변경하지 않는다.
+
+## 2차 — 배열·포인터·함수·재귀·행렬
+
+기준은 `dd60685f646dc23c1ef6fe07c59e5ce599fa6f23`이다. 위6개 파일을 추가 정리했으며 이번에 완전히 삭제한 테스트 함수는 없다. 복합 테스트 이름은 남아 있는 헤딩·인터페이스·정적 SVG 검증 범위에 맞게 고쳤다.
+
+- 삭제: 6개 파일의 최소 절 수, 화면/원고 개념 단어 목록, 도식 교육 레이블과 고정 viewBox/max-width 문자열 조건, 실습 설명의 단어 조건, 원고의 오래된 문장 부재 조건.
+- 함수의 문제 설명·제목과 퀴즈 질문/선택지/해설 전체를 고정하던 문자열/객체 조건은 제거했다. 이는 사용자 요청에 따른 교육 문구 결합 해제다. 실습 id/starter/input/expected, 퀴즈 정답 인덱스·선택지 수·유효 인덱스, 선수 개념과6개 채점 사례 값은 유지한다. 실제 앱·문제·퀴즈 데이터는 바꾸지 않았다.
+- 함수/행렬의 코드 조각 수2개 고정은 제거하고 비어 있으면 실패하도록 했다. 모든 발견된 조각의 실제 컴파일·화면/원고 코드 일치 검사는 계속한다. 행렬 설명에 `코드 조각`이라는 단어를 강제하던 조건도 제거했다.
+- 재귀/행렬 채점 사례의 설명 레이블 단어 조건은 제거했다. 각20개 실제 GCC 하네스 실행·입출력·반환/출력 보존과 기존 배열/포인터 경계·컴파일/링크 오류 검사는 유지한다.
+
+수정 전 추가한3개 회귀 검사는 다음과 같다(기존3개도 계속 실행).
+
+1. `second content batch accepts edited explanations without changing runnable contracts`: 같은 임시 변형 도구로 새6개 검사 파일을 실행하고 설명·퀴즈 해설과 함수 정답 선택지의 동의 표현을 허용하는지 확인한다. 수정 전 실패→수정 후 통과.
+2. `second content batch still rejects a missing function learning heading`: 함수 원고의 학습 목표 헤딩 누락은 계속 거부한다. 수정 전후 통과.
+3. `second content batch still rejects an uncompilable matrix example`: 화면/원고의 동일한 완성 예제에 함께 `#error`를 넣고 코드 일치 검사만이 아니라 실제 컴파일 진단으로 거부함을 확인한다. 수정 전후 통과. GCC/Clang의 `#error` 진단 표기 차이는 허용하되 실제 `error:`를 요구한다.
+
+신규3개는 수정 전2/3→수정 후3/3, 변형 회귀 전체는5/6→6/6이다. 테스트 함수 삭제 없이3개 추가해 전체366→369건이다. 2-4 전체 완료와 A~I 로드맵 완료율은 아직 주장하지 않는다.
