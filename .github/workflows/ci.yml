@@ -34,6 +34,7 @@ jobs:
           node --check dev-server.mjs
           node --check server/static-files.mjs
           node --check server/grading-exercises.mjs
+          node --check server/grading-pipeline.mjs
           node --check server/run-submission.mjs
           node --check sw.js
       - name: Verify local grading test compiler
