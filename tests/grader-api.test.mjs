@@ -22,7 +22,9 @@ function assertCompilerFailureCount(result, exerciseId) {
   assert.deepEqual(result.tests,
     Array.from({ length: total }, () => ({ passed: false, detail: '미실행' })));
 }
-test('local GCC API compiles whole-program, function-only and multi-file C exercises', { skip: !gccAvailable, timeout: 45000 }, async t => {
+// This is the total orchestration budget for all sequential integration cases,
+// not a submission deadline. Per-request/compiler/program limits stay unchanged.
+test('local GCC API compiles whole-program, function-only and multi-file C exercises', { skip: !gccAvailable, timeout: 120000 }, async t => {
   const child = spawn(process.execPath, ['dev-server.mjs'], {
     env: { ...process.env, PORT: '0' }, stdio: ['ignore', 'pipe', 'pipe']
   });

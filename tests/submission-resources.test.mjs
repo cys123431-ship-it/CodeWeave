@@ -13,6 +13,16 @@ const gcc = spawnSync('gcc', ['--version']).status === 0;
 const prefix = '#define _DARWIN_C_SOURCE\n#define _POSIX_C_SOURCE 200809L\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <signal.h>\n#include <sys/types.h>\n#include <sys/resource.h>\n';
 const hello = 'puts("Hello, CodeWeave!");return 0;';
 
+test('default test runner bounds worker fanout before exercising user process limits', async () => {
+  const pkg = JSON.parse(await fs.readFile(path.join(project, 'package.json'), 'utf8'));
+  const command = pkg.scripts.test;
+  const bound = command.match(/(?:^|\s)--test-concurrency=(\d+)(?:\s|$)/);
+  assert.ok(bound, 'npm test must explicitly bound concurrent test workers');
+  assert.ok(Number(bound[1]) >= 1 && Number(bound[1]) <= 2, 'workers share RLIMIT_NPROC with the tested programs');
+  assert.match(command, /\bnode --test\b/);
+  assert.ok(command.endsWith('tests/*.test.mjs'), 'all behavioral suites must remain selected');
+});
+
 async function alive(pid) {
   try { process.kill(pid, 0); } catch (error) {
     if (error.code === 'ESRCH') return false;
