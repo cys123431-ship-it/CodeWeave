@@ -329,7 +329,9 @@ try {
   await expect(page.locator('.detail-head h1')).toHaveText('복잡도와 선형·이진 탐색의 전제');
   await expect(page.locator('#code-input')).toHaveValue('// my prior sample draft');
   await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
-  await page.locator('[data-retry="algo-binary"]').click();
+  const savedSearchQuiz = await page.evaluate(() => JSON.parse(localStorage.getItem('codeweave.progress.v1')).results['algo-binary']);
+  assert.equal(savedSearchQuiz.correct, true);
+  assert.equal(savedSearchQuiz.selected, 2);
   await page.locator('[data-quiz="algo-binary"][data-choice="2"]').click();
   await page.locator('#mark-theory').click();
   await submit(page, searchWrong);
