@@ -1,14 +1,14 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 07:59 KST — 신뢰된 Rust 바이너리 실행 자원 검증
-- 시작/결과 SHA: 시작 b7441345c0542db88952de11557264e6c2ece08d; 결과 커밋 제목 test: validate trusted Rust execution resource budgets.
+- 시작/결과 SHA: 시작 b7441345c0542db88952de11557264e6c2ece08d; 구현 847ed6f7302990163d1771544d305065df416ab8; 확인 기록 제목 docs: record verified Rust execution budgets.
 - 목표: 운영 API를 열지 않고 Rust 실행 예산·그룹·초과 실패를 실제 Linux/macOS CI에서 검증.
 - 변경 파일 수: 7개(테스트 전용 예산기·신규 검사·기존 Rust 결과 검사·CI·설계·활성/보관 일지).
-- 테스트 결과: 신규4건 0/4→4/4, 실제Rust1건 로컬skip; 전체447건444통과·실패0·skip3(Cargo/rustc 부재); 변경MJS3개 문법·roadmap/diff 성공; 테스트 삭제0·기대값 완화0.
-- CI URL과 결과: 시작 SHA https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38815784443 성공; 결과 SHA CI 대기, 완료 기록 보류.
+- 테스트 결과: 신규4건 0/4→4/4; CI447/447·skip0·macOS C12/12+Rust5/5·browser 성공; 전체447건444통과·실패0·skip3(Cargo/rustc 부재); 변경MJS3개 문법·roadmap/diff 성공; 테스트 삭제0·기대값 완화0.
+- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38821274668 구현 전체 성공; Linux rustc1.99.0/macOS1.98.1에서 실제 자원 검사 성공; 확인 기록 SHA는 후속 CI 검증.
 - 발견한 문제: 과거 Cargo15초 중단 원인은 미확정; 이번에는 빌드 한도를 변경하지 않고 실행 후보 CPU2초·주소공간256MiB·파일2MiB·NPROC128/512·벽시계2초를 분리 검증.
 - 보안 영향: 외부 입력/API 추가0; 고정 셸 argv·환경허용목록, Windows 사전 거부. 신뢰된 합성 Rust만 실행하며 기존 C 실행기·v1 저장키는 변경하지 않음.
 - 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·next=F-G/F01.
-- 다음 작업: 실제 CI 자원 결과 확인 후 Cargo 빌드 한도·문법/경고·도구체인 고정 검증. 이후 F01 이론/퀴즈 범위를 전달하고 C 차례 전환 검토.
+- 다음 작업: F01 이론/퀴즈만의 좁은 단원을 전달·검증한 뒤 C 차례 전환 검토. Cargo 빌드 한도·문법/경고·도구체인 고정은 후속 Rust 작업; API/실습 숙달 잠금 유지.
 
 ---
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
