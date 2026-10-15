@@ -1,0 +1,757 @@
+{
+  "version": 1,
+  "confirmedOn": "2026-10-15",
+  "baseline": "13d85b04c6156ed69a44637bda91f0963abc0676",
+  "evidenceCI": "https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38733858917",
+  "rotation": [
+    "D",
+    "E",
+    "F-G",
+    "C"
+  ],
+  "next": {
+    "track": "D",
+    "unit": "D01"
+  },
+  "limits": {
+    "screenSections": [
+      10,
+      15
+    ],
+    "manuscriptLines": 150,
+    "gradingCases": [
+      8,
+      12
+    ],
+    "maxRuns": 2
+  },
+  "stages": [
+    {
+      "id": "A",
+      "title": "C 기초",
+      "units": [
+        {
+          "id": "A01",
+          "title": "Windows·터미널·GCC 환경과 첫 진단 읽기",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "A02",
+          "title": "첫 C 프로그램: 출력·줄바꿈·성공 종료",
+          "status": "완료",
+          "lessonIds": [
+            "c-hello"
+          ],
+          "manuscripts": [
+            "content/c/01-hello.md"
+          ],
+          "tests": [
+            "tests/hello-content.test.mjs",
+            "tests/app-flow.test.mjs"
+          ]
+        },
+        {
+          "id": "A03",
+          "title": "변수·초기화·연산과 두 정수 합",
+          "status": "완료",
+          "lessonIds": [
+            "c-types"
+          ],
+          "manuscripts": [
+            "content/c/02-variables-types.md"
+          ],
+          "tests": [
+            "tests/types-content.test.mjs",
+            "tests/basic-integer-contracts.test.mjs"
+          ]
+        },
+        {
+          "id": "A04",
+          "title": "조건·반복 상태와 1부터 n까지의 합",
+          "status": "완료",
+          "lessonIds": [
+            "c-loops"
+          ],
+          "manuscripts": [
+            "content/c/03-conditionals-loops.md"
+          ],
+          "tests": [
+            "tests/loops-content.test.mjs"
+          ]
+        },
+        {
+          "id": "A05",
+          "title": "입출력 형식·입력 성공 확인과 작은 계산기",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        }
+      ]
+    },
+    {
+      "id": "B",
+      "title": "C 핵심",
+      "units": [
+        {
+          "id": "B01",
+          "title": "배열·길이 계약·최댓값·고정 열 행렬",
+          "status": "완료",
+          "lessonIds": [
+            "c-array",
+            "c-array-max-function",
+            "c-matrix-row-sums"
+          ],
+          "manuscripts": [
+            "content/c/04-arrays.md",
+            "content/c/07-array-max-function.md",
+            "content/c/21-matrix-row-sums.md"
+          ],
+          "tests": [
+            "tests/arrays-content.test.mjs",
+            "tests/array-max-content.test.mjs",
+            "tests/matrix-rows-content.test.mjs"
+          ]
+        },
+        {
+          "id": "B02",
+          "title": "포인터: 주소·역참조·수명과 호출자 변경",
+          "status": "완료",
+          "lessonIds": [
+            "c-pointer"
+          ],
+          "manuscripts": [
+            "content/c/05-pointers.md"
+          ],
+          "tests": [
+            "tests/pointers-content.test.mjs"
+          ]
+        },
+        {
+          "id": "B03",
+          "title": "함수 설계·범위·저장 기간과 clamp 하네스",
+          "status": "완료",
+          "lessonIds": [
+            "c-functions",
+            "c-clamp-function"
+          ],
+          "manuscripts": [
+            "content/c/06-functions.md"
+          ],
+          "tests": [
+            "tests/functions-content.test.mjs",
+            "tests/function-scope-content.test.mjs"
+          ]
+        },
+        {
+          "id": "B04",
+          "title": "재귀의 종료 조건과 작은 팩토리얼",
+          "status": "완료",
+          "lessonIds": [
+            "c-recursion-factorial"
+          ],
+          "manuscripts": [
+            "content/c/20-recursion-factorial.md"
+          ],
+          "tests": [
+            "tests/recursion-content.test.mjs"
+          ]
+        },
+        {
+          "id": "B05",
+          "title": "문자열: 문자 세기·용량·널 종료 경계",
+          "status": "완료",
+          "lessonIds": [
+            "c-string-count-function",
+            "c-bounded-string-length"
+          ],
+          "manuscripts": [
+            "content/c/08-strings-count-function.md",
+            "content/c/09-bounded-string-length.md"
+          ],
+          "tests": [
+            "tests/string-content.test.mjs",
+            "tests/bounded-string-content.test.mjs"
+          ]
+        },
+        {
+          "id": "B06",
+          "title": "구조체·포인터와 학생 점수의 상태 보존",
+          "status": "완료",
+          "lessonIds": [
+            "c-struct-student-score"
+          ],
+          "manuscripts": [
+            "content/c/12-struct-student-score.md"
+          ],
+          "tests": [
+            "tests/struct-content.test.mjs"
+          ]
+        },
+        {
+          "id": "B07",
+          "title": "구조체 배열: 검색·안정 정렬·첫 위치 탐색",
+          "status": "완료",
+          "lessonIds": [
+            "c-struct-array-search",
+            "c-struct-array-sort",
+            "c-struct-array-binary-search"
+          ],
+          "manuscripts": [
+            "content/c/13-struct-array-search.md",
+            "content/c/14-struct-array-sort.md",
+            "content/c/15-struct-array-binary-search.md"
+          ],
+          "tests": [
+            "tests/struct-array-content.test.mjs",
+            "tests/struct-array-sort-content.test.mjs",
+            "tests/struct-array-binary-search-content.test.mjs"
+          ]
+        },
+        {
+          "id": "B08",
+          "title": "동적 학생 배열: 생성·초기화·소유권·해제",
+          "status": "완료",
+          "lessonIds": [
+            "c-dynamic-student-array"
+          ],
+          "manuscripts": [
+            "content/c/17-dynamic-student-array.md"
+          ],
+          "tests": [
+            "tests/dynamic-memory-content.test.mjs"
+          ]
+        },
+        {
+          "id": "B09",
+          "title": "realloc: 용량 확대와 실패 보존",
+          "status": "완료",
+          "lessonIds": [
+            "c-realloc-student-capacity"
+          ],
+          "manuscripts": [
+            "content/c/18-realloc-student-capacity.md"
+          ],
+          "tests": [
+            "tests/realloc-content.test.mjs"
+          ]
+        },
+        {
+          "id": "B10",
+          "title": "동적 배열 push: 기하급수 성장과 함수 합성",
+          "status": "완료",
+          "lessonIds": [
+            "c-student-vector-push"
+          ],
+          "manuscripts": [
+            "content/c/19-student-vector-push.md"
+          ],
+          "tests": [
+            "tests/student-vector-push-content.test.mjs"
+          ]
+        },
+        {
+          "id": "B11",
+          "title": "typedef·enum·union으로 자료형 조합하기",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        }
+      ]
+    },
+    {
+      "id": "C",
+      "title": "C 심화",
+      "units": [
+        {
+          "id": "C01",
+          "title": "헤더·분할 컴파일과 세 파일 clamp 조립",
+          "status": "완료",
+          "lessonIds": [
+            "c-multi-file"
+          ],
+          "manuscripts": [
+            "content/c/06-functions.md"
+          ],
+          "tests": [
+            "tests/multi-file.test.mjs",
+            "tests/compiler-feedback.test.mjs",
+            "tests/grader-api.test.mjs"
+          ]
+        },
+        {
+          "id": "C02",
+          "title": "학생 명부: 안정 정렬과 첫 학번 탐색 조립",
+          "status": "완료",
+          "lessonIds": [
+            "c-struct-student-registry"
+          ],
+          "manuscripts": [
+            "content/c/16-struct-student-registry.md"
+          ],
+          "tests": [
+            "tests/student-registry-content.test.mjs"
+          ]
+        },
+        {
+          "id": "C03",
+          "title": "fgets 조각과 논리적인 한 줄",
+          "status": "완료",
+          "lessonIds": [
+            "c-fgets-logical-line"
+          ],
+          "manuscripts": [
+            "content/c/10-fgets-logical-line.md"
+          ],
+          "tests": [
+            "tests/fgets-content.test.mjs"
+          ]
+        },
+        {
+          "id": "C04",
+          "title": "strtol로 정수·범위·잔여 입력 검증",
+          "status": "완료",
+          "lessonIds": [
+            "c-strtol-integer-input"
+          ],
+          "manuscripts": [
+            "content/c/11-strtol-integer-input.md"
+          ],
+          "tests": [
+            "tests/strtol-content.test.mjs"
+          ]
+        },
+        {
+          "id": "C05",
+          "title": "파일 입출력: 스트림 수명·오류·EOF",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "C06",
+          "title": "전처리 매크로·조건부 컴파일과 중복 평가",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "C07",
+          "title": "오류 반환·errno와 자원 정리 경로",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "C08",
+          "title": "표준 라이브러리·함수 포인터와 빌드 자동화",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        }
+      ]
+    },
+    {
+      "id": "D",
+      "title": "자료구조 — C",
+      "units": [
+        {
+          "id": "D01",
+          "title": "단일 연결 리스트: 순회와 첫 일치 검색",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "D02",
+          "title": "배열 스택: push·pop·용량과 빈 상태",
+          "status": "진행 중",
+          "lessonIds": [
+            "ds-stack"
+          ],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "D03",
+          "title": "원형 큐: 삽입·삭제·순환 경계",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "D04",
+          "title": "동적 배열 리스트: 삽입·삭제·이동 비용",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "D05",
+          "title": "연결 리스트의 소유권·삽입·삭제·해제",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "D06",
+          "title": "이진 탐색 트리: 탐색·삽입·순회",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "D07",
+          "title": "해시 테이블: 충돌·탐색·삭제 표식",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "D08",
+          "title": "그래프 표현: 인접 목록과 자원 정리",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        }
+      ]
+    },
+    {
+      "id": "E",
+      "title": "알고리즘 — C",
+      "units": [
+        {
+          "id": "E01",
+          "title": "복잡도와 선형·이진 탐색의 전제",
+          "status": "진행 중",
+          "lessonIds": [
+            "algo-binary"
+          ],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "E02",
+          "title": "안정 정렬과 비교·이동 횟수",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "E03",
+          "title": "분할 정복: 병합 정렬과 보조 공간",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "E04",
+          "title": "재귀 트리·백트래킹과 되돌리기",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "E05",
+          "title": "탐욕 선택과 반례로 명세 검증",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "E06",
+          "title": "동적 계획: 상태·점화식·기저 사례",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "E07",
+          "title": "BFS·DFS와 방문 상태",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "E08",
+          "title": "최단 경로: 우선순위와 도달 불가",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        }
+      ]
+    },
+    {
+      "id": "F",
+      "title": "Rust 기초",
+      "units": [
+        {
+          "id": "F01",
+          "title": "Cargo 프로젝트·cargo test와 채점 계약",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "F02",
+          "title": "변수 바인딩·가변성과 스칼라 형",
+          "status": "진행 중",
+          "lessonIds": [
+            "rust-mut"
+          ],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "F03",
+          "title": "조건·반복·식과 범위",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "F04",
+          "title": "함수·반환값과 단위 테스트",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "F05",
+          "title": "소유권·이동·복사와 자원 해제",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "F06",
+          "title": "공유 참조·가변 빌림과 슬라이스",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "F07",
+          "title": "String·Vec와 경계 있는 접근",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "F08",
+          "title": "Option·Result와 실패를 값으로 다루기",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        }
+      ]
+    },
+    {
+      "id": "G",
+      "title": "Rust 응용",
+      "units": [
+        {
+          "id": "G01",
+          "title": "enum·구조체와 패턴 매칭",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "G02",
+          "title": "HashMap·컬렉션 선택과 소유권",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "G03",
+          "title": "제네릭·트레이트와 인터페이스 계약",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "G04",
+          "title": "이터레이터·클로저와 오류 전달",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "G05",
+          "title": "모듈·가시성·여러 소스 파일",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "G06",
+          "title": "Cargo 다중 파일 채점과 통합 테스트",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "G07",
+          "title": "파일·스트림과 오류 경로",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "G08",
+          "title": "수명 매개변수와 빌림 API 설계",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        }
+      ]
+    },
+    {
+      "id": "H",
+      "title": "C와 Rust 연결 학습·재구현",
+      "units": [
+        {
+          "id": "H01",
+          "title": "C 포인터·수명과 Rust 빌림의 대응",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "H02",
+          "title": "학생 동적 배열을 Vec로 재구현",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "H03",
+          "title": "스택·큐를 같은 테스트 계약으로 재구현",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "H04",
+          "title": "리스트·트리의 소유권 설계 비교",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "H05",
+          "title": "탐색·정렬의 C/Rust 결과·비용 비교",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "H06",
+          "title": "FFI 경계·표현·unsafe 책임을 분리하기",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        }
+      ]
+    },
+    {
+      "id": "I",
+      "title": "종합 프로젝트·플랫폼 마무리",
+      "units": [
+        {
+          "id": "I01",
+          "title": "C 학생 명부 CLI: 파일 저장·복구·실패 처리",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "I02",
+          "title": "Rust 명부 CLI: 같은 명세와 교차 테스트",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "I03",
+          "title": "로그 분석 도구: 스트림·파싱·오류 보고",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "I04",
+          "title": "경로 탐색 실험실: 그래프 명세와 검증",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "I05",
+          "title": "C/Rust 종합 프로젝트의 회귀·성능·리팩터링",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        },
+        {
+          "id": "I06",
+          "title": "통합 PWA 학습·백업·접근성·실기기 인수 검사",
+          "status": "미착수",
+          "lessonIds": [],
+          "manuscripts": [],
+          "tests": []
+        }
+      ]
+    }
+  ]
+}
