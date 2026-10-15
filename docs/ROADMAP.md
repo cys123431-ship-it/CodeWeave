@@ -81,7 +81,7 @@
 
 | ID | 단원 | 상태 | 기존 단원·검증 근거 |
 |---|---|---|---|
-| E01 | 복잡도와 선형·이진 탐색의 전제 | 진행 중 | `algo-binary` · [원고](../content/algo/01-search.md) · [검사](../tests/algo-search.test.mjs) |
+| E01 | 복잡도와 선형·이진 탐색의 전제 | 진행 중 | `algo-binary` · [원고](../content/algo/01-search.md) · [검사](../tests/algo-search.test.mjs) · [검사](../tests/exercises.test.mjs) · [검사](../tests/browser-practice.mjs) |
 | E02 | 안정 정렬과 비교·이동 횟수 | 미착수 | — |
 | E03 | 분할 정복: 병합 정렬과 보조 공간 | 미착수 | — |
 | E04 | 재귀 트리·백트래킹과 되돌리기 | 미착수 | — |

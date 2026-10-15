@@ -30,6 +30,8 @@ const errors = [];
 const qaDir = process.env.CODEWEAVE_QA_DIR;
 const correct = '#include <stdio.h>\nint main(void){int a,b;if(scanf("%d %d",&a,&b)!=2)return 1;printf("%d\\n",a+b);return 0;}';
 const failed = '#include <stdio.h>\nint main(void){puts("0");return 0;}';
+const searchFunctions = "#include <stddef.h>\n#include <stdio.h>\n\nsize_t linear_find_first(const int values[], size_t count, int target) {\n    for (size_t i = 0; i < count; ++i) {\n        if (values[i] == target) return i;\n    }\n    return count;\n}\n\nsize_t binary_find_first(const int values[], size_t count, int target) {\n    size_t left = 0;\n    size_t right = count;\n    while (left < right) {\n        size_t mid = left + (right - left) / 2;\n        if (values[mid] < target) left = mid + 1;\n        else right = mid;\n    }\n    if (left < count && values[left] == target) return left;\n    return count;\n}\n";
+const searchWrong = searchFunctions.replace('if (values[mid] < target)', 'if (values[mid] == target) return mid;\n        if (values[mid] < target)');
 const listFind = '#include <stddef.h>\nstruct Node { int value; const struct Node *next; };\nconst struct Node *list_find(const struct Node *head, int target) { for (const struct Node *p = head; p != NULL; p = p->next) { if (p->value == target) return p; } return NULL; }';
 const listLast = listFind.replace('for (const struct', 'const struct Node *found = NULL; for (const struct').replace('return p;', 'found = p;').replace('return NULL;', 'return found;');
 const functionOnly = 'int clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}';
@@ -94,6 +96,7 @@ try {
   assert.match(output, /CodeWeave local learning app:/);
   // Compile our own reference solutions through the actual local API.
   const solutions = {
+    'algo-binary': searchFunctions,
     'ds-list-find': listFind,
     'c-matrix-row-sums': "#include <stddef.h>\n#include <stdio.h>\n\nint sum_rows3(const int matrix[][3], size_t rows, long *out_sums) {\n    if (rows == 0) {\n        return 1;\n    }\n    if (rows > 4 || matrix == NULL || out_sums == NULL) {\n        return 0;\n    }\n    long totals[4];\n    for (size_t r = 0; r < rows; ++r) {\n        long sum = 0;\n        for (size_t c = 0; c < 3; ++c) {\n            if (matrix[r][c] < -10000 || matrix[r][c] > 10000) {\n                return 0;\n            }\n            sum += (long)matrix[r][c];\n        }\n        totals[r] = sum;\n    }\n    for (size_t r = 0; r < rows; ++r) {\n        out_sums[r] = totals[r];\n    }\n    return 1;\n}\n",
     'c-recursion-factorial': "#include <stddef.h>\n#include <stdio.h>\n\nstatic unsigned long factorial_small(unsigned int n) {\n    if (n == 0) {\n        return 1UL;\n    }\n    unsigned long smaller = factorial_small(n - 1);\n    return (unsigned long)n * smaller;\n}\n\nint factorial_checked(unsigned int n, unsigned long *out_value) {\n    if (out_value == NULL || n > 12) {\n        return 0;\n    }\n    unsigned long result = factorial_small(n);\n    *out_value = result;\n    return 1;\n}\n",
@@ -311,6 +314,43 @@ try {
   console.log('PASS: function lesson rejects discarded return, reaches mastery and preserves scope diagram readability at 390px');
   await page.goto(base + '/#lesson:c-recursion-factorial');
   // New DS unit must complete the same correction and mastery flow as C units.
+  await page.evaluate(() => {
+    const id = 'algo-binary';
+    const drafts = JSON.parse(localStorage.getItem('codeweave.drafts.v1') || '{}');
+    drafts[id] = '// my prior sample draft';
+    localStorage.setItem('codeweave.drafts.v1', JSON.stringify(drafts));
+    const progress = JSON.parse(localStorage.getItem('codeweave.progress.v1') || '{}');
+    progress.completed = [...new Set([...(progress.completed || []), id])];
+    progress.results = { ...progress.results, [id]: { correct: true, selected: 2 } };
+    localStorage.setItem('codeweave.progress.v1', JSON.stringify(progress));
+  });
+  await page.goto(base + '/#lesson:algo-binary');
+  await page.reload();
+  await expect(page.locator('.detail-head h1')).toHaveText('복잡도와 선형·이진 탐색의 전제');
+  await expect(page.locator('#code-input')).toHaveValue('// my prior sample draft');
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await page.locator('[data-retry="algo-binary"]').click();
+  await page.locator('[data-quiz="algo-binary"][data-choice="2"]').click();
+  await page.locator('#mark-theory').click();
+  await submit(page, searchWrong);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, searchFunctions);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('모든 테스트 통과');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'E01 mobile overflow');
+  const searchFigure = await page.locator('.figure-box svg').boundingBox();
+  assert.ok(searchFigure && searchFigure.x >= 0 && searchFigure.x + searchFigure.width <= 390);
+  if (qaDir) {
+    await mkdir(qaDir, { recursive: true });
+    await page.screenshot({ path: path.join(qaDir, 'search-first-mobile.png'), fullPage: true });
+  }
+  await page.locator('[data-route="track:algo"]').first().click();
+  await expect(page.locator('[data-route="lesson:algo-binary"]')).toHaveCount(1);
+  await page.setViewportSize({ width: 1366, height: 900 });
+  console.log('PASS: E01 preserves legacy draft/quiz, corrects a duplicate error, reaches mastery and fits 390px');
   await page.goto(base + '/#lesson:ds-list-find');
   await expect(page.locator('.detail-head h1')).toHaveText('단일 연결 리스트: 순회와 첫 일치 검색');
   await expect(page.locator('.figure-box svg')).toHaveAttribute('role', 'img');
@@ -659,13 +699,16 @@ try {
     // Reset legacy C data/progress independently; this fixture is not a product reset.
     const dsHistory = JSON.parse(localStorage.getItem('codeweave.iterations.v1'))['ds-list-find'];
     const dsDraft = JSON.parse(localStorage.getItem('codeweave.drafts.v1'))['ds-list-find'];
+    const algoHistory = JSON.parse(localStorage.getItem('codeweave.iterations.v1'))['algo-binary'];
+    const algoDraft = JSON.parse(localStorage.getItem('codeweave.drafts.v1'))['algo-binary'];
+    if (algoHistory?.length !== 2 || typeof algoDraft !== 'string') throw Error('E01 setup did not produce two attempts and a draft');
     if (dsHistory?.length !== 2 || typeof dsDraft !== 'string') throw Error('D01 setup did not produce two attempts and a draft');
     localStorage.clear();
-    localStorage.setItem('codeweave.drafts.v1', JSON.stringify({ 'c-types': failed, 'rust-mut': 'keep rust draft', 'ds-list-find': dsDraft }));
+    localStorage.setItem('codeweave.drafts.v1', JSON.stringify({ 'c-types': failed, 'rust-mut': 'keep rust draft', 'ds-list-find': dsDraft, 'algo-binary': algoDraft }));
     localStorage.setItem('codeweave.iterations.v1', JSON.stringify({ 'c-types': [{
       at: '2026-10-11T02:30:00.000Z', code: failed, passed: false,
       message: '<img src=x onerror=alert(1)>', tests: [{ passed: false, detail: 'legacy failure' }]
-    }], 'ds-list-find': dsHistory }));
+    }], 'ds-list-find': dsHistory, 'algo-binary': algoHistory }));
   }, { failed });
   await page.goto(base + '/#lesson:c-types');
   // Hash navigation keeps the original module state; reload after seeding v1 data.
@@ -771,6 +814,9 @@ try {
   assert.equal(JSON.parse(backup).kind, 'full-backup');
   assert.equal(JSON.parse(backup)['iterations']['c-types'].length, 5);
   assert.equal(JSON.parse(backup)['iterations']['ds-list-find'].length, 2);
+  assert.equal(JSON.parse(backup)['iterations']['algo-binary'].length, 2);
+  assert.equal(JSON.parse(backup).drafts['algo-binary'], searchFunctions);
+  await expect(bench.locator('#lesson-select option[value="algo-binary"]')).toHaveCount(1);
   await expect(bench.locator('#lesson-select option[value="ds-list-find"]')).toHaveCount(1);
   bench.on('dialog', d => d.accept());
   await bench.locator('#import-file').setInputFiles({ name: 'attempts.json', mimeType: 'application/json', buffer: backup });
@@ -859,6 +905,19 @@ try {
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'offline D01 mobile overflow');
   await context.setOffline(false);
   console.log('PASS: D01 backup preserves two attempts and offline reload restores its draft/history/diagram');
+  await context.setOffline(true);
+  await page.goto(base + '/#lesson:algo-binary');
+  await page.reload();
+  await expect(page.locator('.detail-head h1')).toHaveText('복잡도와 선형·이진 탐색의 전제');
+  await expect(page.locator('.figure-box svg')).toHaveAttribute('role', 'img');
+  await page.locator('[data-restore-attempt="0"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(searchFunctions);
+  await page.reload();
+  await expect(page.locator('#code-input')).toHaveValue(searchFunctions);
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'offline E01 mobile overflow');
+  await context.setOffline(false);
+  console.log('PASS: E01 backup and offline attempt restoration retain the original exercise ID');
   assert.deepEqual(errors, []);
   console.log('PASS: 390px mobile layout and offline reload of drafts/history; no browser exceptions');
 } catch (error) {

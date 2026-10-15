@@ -443,7 +443,7 @@
             "algo-binary"
           ],
           "manuscripts": ["content/algo/01-search.md"],
-          "tests": ["tests/algo-search.test.mjs"]
+          "tests": ["tests/algo-search.test.mjs", "tests/exercises.test.mjs", "tests/browser-practice.mjs"]
         },
         {
           "id": "E02",

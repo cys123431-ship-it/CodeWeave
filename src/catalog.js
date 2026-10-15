@@ -896,13 +896,85 @@ export const lessons = [
     challenge:{id:'ds-stack',title:'스택 직접 구현 계획',description:'push와 pop의 동작을 C 함수로 설계하고 코드를 저장하세요. 자동 채점 과제는 후속 단계에서 추가합니다.',starter:'// TODO: 배열과 top 변수로 스택을 설계하세요.\n',input:'—',expected:'—'}
   },
   {
-    id:'algo-binary',track:'algo',level:'기초',title:'이진 탐색과 정렬 전제',minutes:26,source:'알고리즘 교육 콘텐츠 독자 작성 초안 (전용 교재 미제공)',
-    summary:'정렬된 배열에서 탐색 범위를 절반으로 줄이는 이유를 설명합니다.',figure:'array',
-    sections:[
-      {heading:'이진 탐색은 정렬된 자료가 필요하다',text:'탐색 범위의 가운데 원소를 목표값과 비교해 남겨둘 절반을 결정합니다. 값이 정렬되어 있지 않다면 한쪽 절반을 안전하게 버릴 수 없으므로 이 알고리즘의 전제가 무너집니다.'},
-      {heading:'비교할 때마다 후보 범위가 줄어든다',text:'범위가 절반씩 줄어들기 때문에 비교 횟수는 입력 크기의 로그에 비례합니다. 시간복잡도는 O(log n)이며, 선형 탐색 O(n)과 비교하면 정렬된 큰 배열에서 이점이 있습니다.'}
+    "id": "algo-binary",
+    "track": "algo",
+    "level": "기초",
+    "title": "복잡도와 선형·이진 탐색의 전제",
+    "minutes": 25,
+    "source": "E01 독자 작성 원고·정적 도식·C 함수형 실습",
+    "summary": "같은 첫 일치 위치를 두 방식으로 찾고 정렬 전제·반열린 구간·탐색 비용을 비교합니다.",
+    "figure": "search-half-open",
+    "sections": [
+      {
+        "heading": "개요·필요성·선수·목표",
+        "text": "배열·반복문·함수와 size_t를 먼저 익히세요. 같은 첫 일치 위치 찾기를 선형·이진 탐색으로 풀어 입력 조건과 비용을 비교합니다. 정렬이 없는 한 번의 검색에는 선형 탐색이 더 알맞을 수도 있습니다."
+      },
+      {
+        "heading": "위치와 미발견 계약",
+        "text": "두 함수는 첫 일치의 인덱스, 없으면 count를 반환합니다. index < count일 때만 발견입니다. 빈 범위의 반환 0도 count와 같으므로 미발견입니다. count개 읽기 가능한 원소를 제공하며 count=0일 때만 NULL을 허용합니다. 입력은 바꾸지 않고 출력·할당·해제를 하지 않습니다."
+      },
+      {
+        "heading": "선형 탐색: 앞에서 하나씩",
+        "text": "0부터 count 미만까지 확인하고 첫 일치에서 반환합니다. 정렬되지 않은 {9,2,9,0}에서 2의 위치는 1입니다. 첫 값이 목표보다 크다고 멈추면 안 됩니다. 아래는 반복 조각이며 완성 프로그램은 뒤에 있습니다.",
+        "code": "for (size_t i = 0; i < count; ++i) {\n    if (values[i] == target) return i;\n}"
+      },
+      {
+        "heading": "복잡도와 방법 선택",
+        "text": "배열 원소 접근과 정수 비교를 상수 비용으로 보는 모델에서 최악 시간은 선형 O(n), 이진 O(log n)입니다. 반복 구현의 추가 공간은 모두 O(1)입니다. O 표기는 초 단위 시간이 아닙니다. 정렬되지 않은 자료라면 이진 탐색에 앞서 필요한 정렬 비용도 고려해야 합니다."
+      },
+      {
+        "heading": "정렬 전제와 반열린 구간",
+        "text": "이진 탐색은 호출자가 비내림차순 정렬을 보장하며 중복도 허용합니다. [left,right)는 left 포함·right 제외이고 처음은 [0,count)입니다. 함수가 매번 정렬을 전체 검사하면 그 검사만 O(n)이므로 여기서는 전제로 둡니다. 정렬되지 않은 입력에서 이진 함수의 결과는 약속하지 않습니다."
+      },
+      {
+        "heading": "정적 도식과 첫 위치 추적",
+        "text": "위 도식의 배열은 {1,3,3,3,9}, 목표는 3입니다. [0,5)→[0,2)→[0,1)→[1,1)로 줄어듭니다. 중간 값이 목표 이상이면 right=mid로 줄여 더 앞쪽 중복 후보를 남기고, 작으면 left=mid+1입니다. 종료 뒤 left<count와 값 일치도 확인합니다."
+      },
+      {
+        "heading": "완성 예제",
+        "text": "main을 포함한 관찰용 완성 프로그램입니다. gcc -std=c11 -Wall -Wextra -Werror -Wpedantic example.c -o example로 컴파일하세요. 제출창에는 main 없이 두 함수와 필요한 헤더만 작성합니다.",
+        "code": "#include <stddef.h>\n#include <stdio.h>\n\nsize_t linear_find_first(const int values[], size_t count, int target) {\n    for (size_t i = 0; i < count; ++i) {\n        if (values[i] == target) return i;\n    }\n    return count;\n}\n\nsize_t binary_find_first(const int values[], size_t count, int target) {\n    size_t left = 0;\n    size_t right = count;\n    while (left < right) {\n        size_t mid = left + (right - left) / 2;\n        if (values[mid] < target) left = mid + 1;\n        else right = mid;\n    }\n    if (left < count && values[left] == target) return left;\n    return count;\n}\n\nint main(void) {\n    int values[] = {1, 3, 3, 3, 9};\n    size_t count = sizeof values / sizeof values[0];\n    printf(\"%zu %zu\\n\", linear_find_first(values, count, 3),\n           binary_find_first(values, count, 3));\n    printf(\"%zu %zu\\n\", linear_find_first(values, count, 4),\n           binary_find_first(values, count, 4));\n    return 0;\n}\n"
+      },
+      {
+        "heading": "실제 출력과 이유",
+        "text": "첫 줄은 목표 3의 첫 위치 1을 두 방식이 찾은 결과입니다. 두 번째 줄은 목표 4가 없어 길이 5를 반환합니다. 같은 중간값을 발견하자마자 반환하면 첫 중복의 위치가 아닐 수 있습니다.",
+        "code": "1 1\n5 5"
+      },
+      {
+        "heading": "흔한 오류와 중간 점검",
+        "text": "right=count인데 values[right]를 읽지 마세요. 미발견 0은 첫 위치와 구별되지 않습니다. values[mid]-target은 정수 넘침이 가능하므로 <와 ==를 직접 쓰고, 중간은 left+(right-left)/2로 구합니다. 빈 범위에서 원소를 읽고 있지 않은지, 같은 값 세 개 중 첫 위치를 고르는지 점검하세요."
+      },
+      {
+        "heading": "개념 확인·핵심 요약",
+        "text": "후보 절반을 제외할 근거는 정렬 전제입니다. 양수인지나 짝수 길이인지는 조건이 아닙니다. 정렬 보장→후보 구간 축소→마지막 값 확인을 구별하세요. 선형 함수에는 정렬이 필요 없으며 두 함수 모두 호출마다 새 지역 상태로 시작합니다. 아래 퀴즈로 확인하세요."
+      },
+      {
+        "heading": "기초·응용·도전과 Mini Project",
+        "text": "기초는 두 함수 완성 후 빈 범위와 한 원소 확인입니다. 응용은 첫·중간·끝·미발견·중복을 추적합니다. 도전은 INT_MIN/INT_MAX 비교와 반복 호출입니다. Mini Project는 완성 예제의 목표를 1·3·4·9로 바꾸고 예상 위치와 실제 출력을 표로 비교하세요."
+      },
+      {
+        "heading": "테스트·개선·복습 연결",
+        "text": "10개 사례에서 결과와 입력 보존을 검사합니다. 선형에는 정렬되지 않은 입력도 주며 이진에는 정렬된 입력만 줍니다. 하네스 출력 1 1 1은 선형 위치·이진 위치·입력 보존 여부이며 함수가 출력하는 것이 아닙니다. 기능 채점은 O(log n)을 증명하지 않으므로 후보 크기가 줄어드는 이유도 설명하세요. 실패 추적→수정→재제출→이전 코드 비교를 반복합니다. 이론·퀴즈·실습·복습 상태는 따로 확인하고, 다음 E02의 정렬 비용으로 연결합니다."
+      }
     ],
-    quiz:{question:'기본 이진 탐색을 적용하기 위한 가장 중요한 배열 조건은?',options:['길이가 짝수여야 한다','중복 값이 없어야 한다','정렬되어 있어야 한다','양수만 있어야 한다'],answer:2,explanation:'정렬되어 있어야 중간값과 비교해 탐색 범위의 절반을 제외할 수 있습니다.'},
-    challenge:{id:'algo-binary',title:'이진 탐색 함수 설계',description:'정렬된 배열을 대상으로 이진 탐색 함수를 직접 구현해 보세요. 자동 채점 과제는 후속 단계에서 추가합니다.',starter:'// TODO: 이진 탐색 함수 설계\n',input:'—',expected:'—'}
+    "quiz": {
+      "question": "기본 이진 탐색을 적용하기 위한 가장 중요한 배열 조건은?",
+      "options": [
+        "길이가 짝수여야 한다",
+        "중복 값이 없어야 한다",
+        "정렬되어 있어야 한다",
+        "양수만 있어야 한다"
+      ],
+      "answer": 2,
+      "explanation": "정렬되어 있어야 중간값과 비교해 탐색 범위의 절반을 제외할 수 있습니다. 중복은 허용하며 첫 위치를 찾으려면 앞쪽 후보를 계속 남깁니다."
+    },
+    "challenge": {
+      "id": "algo-binary",
+      "title": "선형·이진 탐색으로 첫 일치 위치 찾기",
+      "description": "linear_find_first와 binary_find_first를 작성하세요. 첫 일치 인덱스, 미발견이면 count를 반환합니다. count=0일 때만 NULL을 허용하며 입력은 보존합니다. 이진 함수에는 비내림차순 정렬이 보장됩니다. main·printf·정렬·할당·해제를 작성하지 않습니다. 하네스는 두 위치와 입력 보존 여부를 출력합니다.",
+      "starter": "#include <stddef.h>\n\nsize_t linear_find_first(const int values[], size_t count, int target) {\n    /* TODO: 앞에서부터 첫 일치 찾기 */\n    (void)values;\n    (void)target;\n    return count;\n}\n\nsize_t binary_find_first(const int values[], size_t count, int target) {\n    /* TODO: 정렬 전제와 반열린 구간으로 첫 일치 찾기 */\n    (void)values;\n    (void)target;\n    return count;\n}\n",
+      "input": "중복: {1,3,3,3,9}, target=3",
+      "expected": "1 1 1"
+    }
   }
 ];

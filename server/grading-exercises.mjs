@@ -1,8 +1,10 @@
 import { exercises } from '../src/exercises.js';
+import { searchCases, searchHarness } from './search-exercise.mjs';
 import { buildGradingExercises } from './exercise-contract.mjs';
 export { buildGradingExercises } from './exercise-contract.mjs';
 
 const CASES = {
+  'algo-binary': searchCases,
   'ds-list-find': [{"input":"빈 리스트","expected":"1","args":["0"]},{"input":"하나 일치","expected":"1","args":["1"]},{"input":"하나 미발견","expected":"1","args":["2"]},{"input":"첫 노드","expected":"1","args":["3"]},{"input":"중간 노드","expected":"1","args":["4"]},{"input":"마지막 노드","expected":"1","args":["5"]},{"input":"여러 노드 미발견","expected":"1","args":["6"]},{"input":"중복 첫 일치","expected":"1","args":["7"]},{"input":"INT_MIN/INT_MAX","expected":"1","args":["8"]},{"input":"반복 호출","expected":"1","args":["9"]}],
   'c-matrix-row-sums': [
     {"input":"sum_rows3({{1,2,3},{4,5,6}}, 2, out)","expected":"1 6 15 77 77","args":["0"]},
@@ -248,6 +250,7 @@ const CASES = {
 };
 
 const HARNESSES = {
+  'algo-binary': searchHarness,
   // Preserve the independently compiled D01 prototype as a regression oracle.
   'ds-list-find': `#include <stddef.h>
 #include <limits.h>

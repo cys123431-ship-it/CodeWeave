@@ -1,5 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { spawn, spawnSync } from 'node:child_process';
+import { once } from 'node:events';
+import { readFile } from 'node:fs/promises';
+import { parseCodeWeaveBackup } from '../src/backup.js';
+import { lessonLearningStatus } from '../src/mastery.js';
 import { lessons } from '../src/catalog.js';
 import {
   exercises, exerciseById, isGradedExercise, validateExerciseMetadata
@@ -127,7 +132,68 @@ const expected = ['c-array', 'c-array-max-function', 'c-bounded-string-length', 
   assert.match(gradingExercises.get('c-student-vector-push').harness, /int push_student\(struct Student \*\*students, size_t \*length,/);
   assert.match(gradingExercises.get('c-student-vector-push').harness, /int reserve_students\(struct Student \*\*students, size_t length,/);
   assert.deepEqual(gradingExercises.get('c-student-vector-push').linkArgs, []);
-  for (const id of ['rust-mut', 'ds-stack', 'algo-binary']) assert.equal(isGradedExercise(id), false);
+  for (const id of ['rust-mut', 'ds-stack']) assert.equal(isGradedExercise(id), false);
+});
+
+test('E01 exposes its prepared contract through the existing lesson ID and production registry', async () => {
+  const expected = (await import('../server/search-exercise.mjs')).searchExercise;
+  const lesson = lessons.find(item => item.id === 'algo-binary');
+  assert.equal(lesson.track, 'algo');
+  assert.equal(lesson.figure, 'search-half-open');
+  assert.equal(exerciseById(lesson.challenge.id).grader, 'c-function');
+  assert.equal(gradingExercises.get(lesson.challenge.id).harness, expected.harness);
+  assert.deepEqual(gradingExercises.get(lesson.challenge.id).cases, expected.cases);
+  assert.equal(lesson.quiz.answer, 2, 'retain the old sorted-precondition answer position');
+});
+
+test('E01 legacy v1 quiz and draft survive without inventing practice mastery', () => {
+  const id = 'algo-binary';
+  const legacy = { app: 'CodeWeave', version: 1,
+    progress: { completed: [id], results: { [id]: { correct: true, selected: 2 } } },
+    drafts: { [id]: '// my existing algorithm draft' } };
+  const parsed = parseCodeWeaveBackup(legacy, { knownIds: lessons.map(item => item.id) });
+  assert.equal(parsed.drafts[id], legacy.drafts[id]);
+  const status = lessonLearningStatus(id, parsed.progress, {}, exerciseById(id).grader === 'c-function');
+  assert.equal(status.quizPassed, true);
+  assert.equal(status.practiceAvailable, true);
+  assert.equal(status.practicePassed, false);
+  assert.equal(status.mastered, false);
+});
+
+test('E01 live API grades arbitrary-duplicate failure, correction and warning-free starter', { skip: spawnSync('gcc', ['--version']).status !== 0, timeout: 20000 }, async t => {
+  const child = spawn(process.execPath, ['dev-server.mjs'], { env: { ...process.env, PORT: '0' }, stdio: ['ignore', 'pipe', 'pipe'] });
+  t.after(async () => { if (child.exitCode === null) { const exit = once(child, 'exit'); child.kill(); await exit; } });
+  const base = await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(Error('server startup timed out')), 5000);
+    let output = '';
+    child.once('error', error => { clearTimeout(timer); reject(error); });
+    child.stdout.on('data', chunk => {
+      output += chunk;
+      const match = output.match(/http:\/\/127\.0\.0\.1:\d+/);
+      if (match) { clearTimeout(timer); resolve(match[0]); }
+    });
+  });
+  const html = await (await fetch(base)).text();
+  const token = html.match(/name="codeweave-token" content="([0-9a-f]{64})"/)?.[1];
+  const submit = async code => {
+    const response = await fetch(base + '/api/grade', { method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CodeWeave-Token': token },
+      body: JSON.stringify({ exerciseId: 'algo-binary', code }), signal: AbortSignal.timeout(10000) });
+    assert.equal(response.status, 200);
+    return response.json();
+  };
+  const manuscript = await readFile(new URL('../content/algo/01-search.md', import.meta.url), 'utf8');
+  const fence = String.fromCharCode(96).repeat(3);
+  const correct = manuscript.split(fence + 'c\n')[1].split(fence)[0].split('\nint main(void)')[0];
+  const wrong = await submit(correct.replace('if (values[mid] < target)', 'if (values[mid] == target) return mid;\n        if (values[mid] < target)'));
+  assert.equal(wrong.ok, false);
+  assert.equal(wrong.tests[7].passed, false);
+  const good = await submit(correct);
+  assert.equal(good.ok, true);
+  assert.equal(good.message, '10/10개 테스트 통과');
+  const starter = await submit(lessons.find(item => item.id === 'algo-binary').challenge.starter);
+  assert.equal(starter.ok, false);
+  assert.equal(starter.compileOutput, '');
 });
 
 test('metadata rejects duplicate ids and unsupported enum values', () => {
