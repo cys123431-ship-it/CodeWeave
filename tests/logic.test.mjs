@@ -4,7 +4,16 @@ import {tracks,lessons} from '../src/catalog.js';
 import {normalizeProgress,percentDone,scoreChoice,validateImport,escapeHtml} from '../src/logic.js';
 
 test('all four requested study tracks exist',()=>assert.deepEqual(tracks.map(x=>x.id),['c','rust','ds','algo']));
-test('lesson ids are unique and track references valid',()=>{const ids=lessons.map(x=>x.id);assert.equal(ids.length,new Set(ids).size);for(const lesson of lessons){assert.ok(tracks.some(t=>t.id===lesson.track));assert.ok(lesson.sections.length>=2);assert.ok(lesson.quiz.options[lesson.quiz.answer]);assert.ok(lesson.challenge.starter);}});
+test('lesson ids are unique and track references valid', () => {
+  const ids = lessons.map(lesson => lesson.id);
+  assert.equal(ids.length, new Set(ids).size);
+  for (const lesson of lessons) {
+    assert.ok(tracks.some(track => track.id === lesson.track));
+    assert.ok(Array.isArray(lesson.sections) && lesson.sections.length > 0);
+    assert.ok(lesson.quiz.options[lesson.quiz.answer]);
+    assert.ok(lesson.challenge.starter);
+  }
+});
 test('quiz grading uses exact choice index',()=>{const q={options:['one','two'],answer:1,explanation:'because'};assert.deepEqual(scoreChoice(q,1),{correct:true,explanation:'because'});assert.equal(scoreChoice(q,0).correct,false);});
 test('progress never exceeds 100 percent',()=>{assert.equal(percentDone([{id:'a'},{id:'b'}],['a','a','b','unexpected']),100);assert.equal(percentDone([],['a']),0);});
 test('progress parser migrates flags and removes duplicate records',()=>assert.deepEqual(normalizeProgress({completed:['a','a',null,'b'],theoryRead:['a','a'],review:['b',false]}),{completed:['a','b'],results:{},theoryRead:['a'],review:['b']}));

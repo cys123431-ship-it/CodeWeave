@@ -18,6 +18,9 @@ const thirdBatch = ['fgets', 'strtol', 'struct', 'struct-array',
 const thirdManuscripts = ['10-fgets-logical-line', '11-strtol-integer-input',
   '12-struct-student-score', '13-struct-array-search',
   '14-struct-array-sort', '15-struct-array-binary-search'];
+const finalBatch = ['student-registry', 'dynamic-memory', 'realloc', 'student-vector-push'];
+const finalManuscripts = ['16-struct-student-registry', '17-dynamic-student-array',
+  '18-realloc-student-capacity', '19-student-vector-push'];
 
 async function fixture(t) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'codeweave-editorial-'));
@@ -29,11 +32,15 @@ async function fixture(t) {
 }
 
 function verify(directory, selected = names) {
+  return verifyFiles(directory, selected.map(name => 'tests/' + name + '-content.test.mjs'));
+}
+
+function verifyFiles(directory, files) {
   const env = { ...process.env };
   // A nested runner must discover its own tests instead of inheriting child mode.
   delete env.NODE_TEST_CONTEXT;
   return spawnSync(process.execPath, ['--test', '--test-concurrency=1',
-    ...selected.map(name => 'tests/' + name + '-content.test.mjs')], {
+    ...files], {
     cwd: directory, env, encoding: 'utf8', timeout: 60000, maxBuffer: 2 * 1024 * 1024
   });
 }
@@ -86,6 +93,33 @@ test('input and structure content accepts editorial changes without changing sta
   assert.equal(result.status, 0, result.stdout + result.stderr);
 });
 
+test('allocation and registry content plus common integer checks tolerate editorial changes', async t => {
+  const directory = await fixture(t);
+  await rewriteProse(directory, finalManuscripts);
+  const result = verifyFiles(directory, [
+    ...finalBatch.map(name => 'tests/' + name + '-content.test.mjs'),
+    'tests/basic-integer-contracts.test.mjs'
+  ]);
+  assert.match(result.stdout, /tests [1-9]\d*/);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('catalog structure permits one section but still rejects an empty lesson', async t => {
+  const directory = await fixture(t);
+  const catalog = path.join(directory, 'src/catalog.js');
+  await writeFile(catalog, await readFile(catalog, 'utf8') + '\nfor (const lesson of lessons) lesson.sections = lesson.sections.slice(0, 1);\n');
+  const one = verifyFiles(directory, ['tests/logic.test.mjs']);
+  assert.match(one.stdout, /tests [1-9]\d*/);
+  assert.equal(one.status, 0, one.stdout + one.stderr);
+  for (const invalid of [[], null, { length: 1 }, 'section']) {
+    await writeFile(catalog, await readFile(catalog, 'utf8') + '\nlessons[0].sections = ' + JSON.stringify(invalid) + ';\n');
+    const rejected = verifyFiles(directory, ['tests/logic.test.mjs']);
+    assert.equal(rejected.error, undefined);
+    assert.notEqual(rejected.status, 0);
+    assert.match(rejected.stdout + rejected.stderr, /lesson ids are unique and track references valid/);
+  }
+});
+
 test('second content batch still rejects a missing function learning heading', async t => {
   const directory = await fixture(t);
   const file = path.join(directory, 'content/c/06-functions.md');
@@ -121,7 +155,8 @@ lessons.find(item => item.id === 'c-matrix-row-sums').sections
 
 test('required manuscript heading removal is still rejected', async t => {
   const directory = await fixture(t);
-  for (const [name, selected] of [['01-hello', 'hello'], ['12-struct-student-score', 'struct']]) {
+  for (const [name, selected] of [['01-hello', 'hello'], ['12-struct-student-score', 'struct'],
+    ['19-student-vector-push', 'student-vector-push']]) {
     const file = path.join(directory, 'content/c/' + name + '.md');
     await writeFile(file, (await readFile(file, 'utf8')).replace('## 학습 목표', '## 목표 변경'));
     const result = verify(directory, [selected]);

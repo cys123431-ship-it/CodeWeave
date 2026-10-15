@@ -26,12 +26,12 @@
 | struct-array-content.test.mjs | 11 | sizeof students·중복 첫 위치·출력 객체 문장 | 3차 정리 |
 | struct-array-sort-content.test.mjs | 11 | 안정 정렬·구조체 전체·오버플로 문장 | 3차 정리 |
 | struct-array-binary-search-content.test.mjs | 11 | 정렬 전제·right = mid·첫 위치 문장 | 3차 정리 |
-| student-registry-content.test.mjs | 12 | 파일 이름/순서·같은 id 상대 순서 문장 | 미처리 |
-| dynamic-memory-content.test.mjs | 12 | malloc(0)·소유권·할당 실패 주입 문장 | 미처리 |
-| realloc-content.test.mjs | 12 | 임시 포인터·주소 변경·--wrap=realloc 문장 | 미처리 |
-| student-vector-push-content.test.mjs | 12 | 0→4·두 배·길이 공개·격리 설명 문장 | 미처리 |
+| student-registry-content.test.mjs | 12 | 파일 이름/순서·같은 id 상대 순서 문장 | 4차 정리 |
+| dynamic-memory-content.test.mjs | 12 | malloc(0)·소유권·할당 실패 주입 문장 | 4차 정리 |
+| realloc-content.test.mjs | 12 | 임시 포인터·주소 변경·--wrap=realloc 문장 | 4차 정리 |
+| student-vector-push-content.test.mjs | 12 | 0→4·두 배·길이 공개·격리 설명 문장 | 4차 정리 |
 
-처리 범위는 18/22 파일이며 2-4 전체 완료가 아니다. 나머지4개는 student-registry/dynamic-memory/realloc/student-vector-push이며 다음 실행에서 같은 원칙으로 정리한다.
+콘텐츠 검사22/22 파일을 정리했고, 마지막 전체 검색에서 발견한 공통 검사2개도 함께 정리했다. 필수 헤딩·예제 컴파일·실제 동작 검사는 유지한다. 2-4 완료 판정은 결과 SHA의 CI 성공을 확인한 개발 일지로 연결한다.
 
 ## 1차에 삭제한 검사
 
@@ -81,3 +81,26 @@
 - 새 회귀 검사 `input and structure content accepts editorial changes without changing starter interfaces`는 같은 임시 변형 도구로 새6개 파일을 실행한다. 수정 전 실패→수정 후 통과다. 기존 필수 헤딩 누락 거부 검사도 구조체 원고까지 확장했다.
 - 첫 정리 후에도 구조체 배열 원고의 본문에만 있는 “완성 프로그램” 단어 조건 때문에 변형 검사가 실패했다(중간 전체369/370). 단어 존재는 컴파일이나 헤딩 검증이 아니므로 사용자 지시에 따라 이 조건도6개 파일에서 삭제했다. 본문이나 기대값을 맞춰 쓰지 않았으며 필수 헤딩 배열은 그대로다.
 - 신규1개는0/1→1/1, 변형 회귀 전체는6/7→7/7이다. 테스트 함수 추가1·삭제0으로 전체369→370건이다. 나머지4개를 정리하기 전에는 2-4를 완료 처리하지 않는다.
+
+## 4차 — 남은4개와 공통 검사 재검토
+
+기준은 `e98892fd66f5327f71a415b9786329c9b57a99a1`이다. student-registry/dynamic-memory/realloc/student-vector-push 4개에서 최소 절 수·본문 개념/특정 문장·SVG 교육 레이블 조건을 제거했다. 다중 파일 이름/스타터 파싱, 함수 인터페이스, 정적 SVG 이미지 역할/실행 코드 거부, 필수 원고 헤딩은 유지한다. 예제의 실제 컴파일과 API/브라우저 채점 검사는 변경하지 않았다.
+
+전체 검사 파일 검색에서 추가 발견한 목록은 다음과 같다.
+
+| 파일 | 삭제/정리 조건 | 보존한 검증 |
+|---|---|---|
+| basic-integer-contracts.test.mjs | C 정수/포인터 단원의 설명·본문 문장 정규식10개 | 스타터 입력 검사, 개념 메타데이터, 각5개 사례와 합/증가 양끝 기대값 |
+| logic.test.mjs | 모든 단원의 최소2절 조건 | 1절 허용·빈 배열/비배열 거부, ID 유일성·트랙·퀴즈 정답·스타터·저장/백업 로직 |
+| compiler-policy.test.mjs | 삭제 없음: 교육 문장이 아니라 게시된 컴파일 명령의 실제 동작 | 실제 GCC가 같은 경고 소스를 거부하는지 실행 |
+| exercise-audit.test.mjs | 삭제 없음: 교육 문장이 아니라 문제 감사 표의 실행 정의 동기화 | 실제 사례 수·공개 입출력·고유 하네스 인수 |
+| 운영 지침/README/일지 검사 | 삭제 없음: 사용자 명시 운영 계약 | 현재 단계·최근5건·15줄·README150줄·링크/통계 |
+| UI/보안/채점/저장 검사 | 삭제 없음: 학습 설명과 구별되는 실제 UI/데이터/보안 계약 | 오류·재제출·백업·XSS/CSRF 거부·자원 제한 등 |
+
+최소2절을 비어 있지 않은 배열 검사로 바꾼 이유는 교육 분량 강제를 없애면서 빈 단원은 계속 거부하기 위해서다. 본문이나 채점 기대값을 수정해 검사를 맞추지 않았다. 기존 테스트 함수 삭제0개, 새 회귀 검사2개 추가다.
+
+- `allocation and registry content plus common integer checks tolerate editorial changes`: 마지막4개와 공통 정수 검사를 임시 문장 변형으로 실제 실행한다. 수정 전 실패→수정 후 통과.
+- `catalog structure permits one section but still rejects an empty lesson`: 한 절로 축약한 카탈로그는 통과하고 이후 빈 단원을 넣으면 실제 공통 검사가 실패해야 한다. 수정 전 실패→수정 후 통과.
+- 기존 헤딩 누락 거부 검사는 벡터 원고까지 확장했다. GCC 오류 거부와 앞선 세 묶음도 계속 실행한다.
+
+신규2개0/2→2/2, 변형 회귀7/9→9/9, 전체370→372건이다. 네 차례를 통틀어 완전히 삭제한 테스트 함수는1차의 `loop reference solutions use a portable long accumulator and matching output format` 1개뿐이며, 교육 문구/분량 조건은 복합 테스트 안에서 제거했다. 사실성·설명의 충분함은 테스트 정규식이 아니라 다음 단계의 학습자 관점 검토에서 점검한다.
