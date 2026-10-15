@@ -1,16 +1,16 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 1단계 진행 중 확인함
-## 2026-10-15 04:55 시작 / 09:13 재개 — 1-5 컴파일 옵션과 경고 실패 정책
-- 시작/결과 SHA: 시작 f5f83ffa55401912b8b3ebff92aa5c9c528104c2; 결과는 반영 뒤 조회. 제목 fix: enforce one strict C11 compiler policy.
+## 2026-10-15 04:55 시작 / 09:13 재개 / 09:25 KST 검증 — 1-5 컴파일 옵션과 경고 실패 정책
+- 시작/결과 SHA: 시작 f5f83ffa55401912b8b3ebff92aa5c9c528104c2; 검증 결과3504108917b873e03811a2e4a2d66f747c23052c. 후속 제목 docs: confirm strict C11 grading policy(자기 SHA는 반영 뒤 조회).
 - 목표: 채점기와 단원 명령을 C11/Wall/Wextra/Werror/Wpedantic으로 통일하고 활성화된 경고는 실행 전에 컴파일 실패로 처리.
 - 변경 파일 수: 9개(서버·첫 단원 화면/원고·ARCHITECTURE·신규 정책 검사·기존 API/예제/브라우저 검사·일지).
-- 테스트 결과: 신규8건 수정 전1/8·실패7→수정 후8/8; 중간 전체334/337·실패3→수정 후337/337·실패/skip0, 변경6 JS/MJS 문법·diff 성공. 두 화면 경고→수정 재제출의 실제 UI는 CI 대기.
-- CI URL과 결과: 시작 SHA의 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38622667622 success 재확인; 이번 결과 CI는 반영 뒤 조회하며1-5 완료 보류.
-- 발견한 문제: 경고만 있는 전체/함수/다중 파일 제출과 GNU 식 확장이 실습 통과로 저장됨; 구 오답2개 미사용 매개변수가 의도한 링크/출력 검사를 가리는 오류 수정. 시각 도구 TypeError는 OS date로 대체.
+- 테스트 결과: 신규8건 수정 전1/8·실패7→수정 후8/8; 중간 전체334/337·실패3→로컬/CI337/337·macOS 자원11/11·실패/skip0, 변경6 JS/MJS 문법·diff 성공. 실제 Chromium CI에서 두 화면 경고 거부→진단→수정 재제출 및 기존 백업·390px·오프라인 재로드 성공.
+- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38659800557 — 결과3504108의 test/browser/macos-resources 모두 success 확인 후1-5 완료 기록; 원격 HEAD·9개 파일 blob/tree 일치 확인.
+- 발견한 문제: 경고 제출/확장이 통과되고 구 오답2개 부수 경고가 링크/출력 검사를 가림→수정. 시각 도구 TypeError는 OS date로 대체; 업로드 준비 TypeError: Cannot read properties of undefined (reading 'commit')는 원격 HEAD 재조회로 복구(실패 시 ref 변경 없음).
 - 구현: 고정 GCC 옵션에 Werror/Wpedantic 추가, 첫 단원 명령과 예제 컴파일도 같은 정책 적용; 진단 원문·전체 사례 미실행·정상 수정 제출 보존. GCC 공식 Warning Options 원문 확인.
 - 검사 수정 이유: 기대값은 유지; 오답2개의 미사용 인자에만(void)를 추가해 잘못된 반환/디버그 출력/중복 main 의도를 보존. 기존 API 검사에 부수 경고가 논리 검사를 가리지 않는 검증을 추가.
 - 보안 영향: 정적 컴파일 옵션만 강화하고 외부 옵션 입력·실행/파일 범위·인증·자원 제한을 늘리지 않음; 경고 거부 뒤 사례는 실행하지 않음.
-- 단계별 완료율: 0단계3/3, 1단계4/6(1-5 CI 대기), 2단계0/6; 신규 단원·문제·저장 키·백업 형식 변경 없음.
-- 다음 작업: 결과 SHA CI 성공 확인 후1-5 완료 기록, 이어1-6 grade를 parseRequest/writeSources/compile/runCases/buildResult로 동작 보존 분리.
+- 단계별 완료율: 0단계3/3, 1단계5/6(1-1~1-5 완료), 2단계0/6; 신규 단원·문제·저장 키·백업 형식 변경 없음.
+- 다음 작업: 1-6 grade를 parseRequest/writeSources/compile/runCases/buildResult로 동작 보존 분리하고 전후 npm test 일치를 확인.
 
 ---
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 1단계 진행 중 확인함
