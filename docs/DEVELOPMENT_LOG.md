@@ -1,11 +1,11 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 01:04 KST — E01 선형·이진 탐색 계약·원고 준비(1/2)
-- 시작/결과 SHA: 시작 80f4092c4165080c389d7aad3c35060c200c902e; 검증 결과 f3429c1537615ee3af2c825f2e37e28be16c8eb8; 확인 기록 제목 docs: record search contract CI evidence.
+- 시작/결과 SHA: 시작 80f4092c4165080c389d7aad3c35060c200c902e; 검증 결과 dd39c96e6b32ca3cf7cbe102343f9948800f91e6; 확인 기록 제목 docs: record isolated GCC timeout and retry.
 - 목표: 기존algo-binary ID를 유지할 첫 일치 위치 계약, 정렬 전제·반열린 범위·비용 설명,10사례·원고·정적 도식을 준비.
 - 변경 파일 수: 10개(공통생성기·운영재export·검색계약·검사·원고·SVG·로드맵JSON/MD·활성/보관 일지).
 - 테스트 결과: 신규11건0/11→11/11; 정답10사례·오답6종·완성예제GCC출력; 로컬/CI403/403·macOS12/12·실패/취소/skip0; 기존Chromium/D01/390px/백업/오프라인 회귀 성공; JS/MJS5개 문법·roadmap --check·diff 성공.
-- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38767220789 — 검증 결과SHA test/browser/macos-resources 성공; E01 계약·원고 준비만 검증, 화면/API는다음실행.
-- 발견한 문제: 운영registry를가져오는계약모듈은역방향등록시순환의존 위험; buildGradingExercises를그대로분리해기존export참조/동결계약 검사통과. 정렬안된사례는선형에만전달하고두함수입력은별도복사; 기능채점은복잡도증명이아님을명시. 기대값변경/삭제0.
+- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38767581181/attempts/2 — 검증 결과SHA test403/403·macOS12/12·browser 성공; 구현CI38767220789도성공. E01 화면/API는다음실행.
+- 발견한 문제: 기록SHA dd39c96의browser에서기존D01 컴파일spawnSync gcc ETIMEDOUT(4.5초)1회; server/src/tests차이0, 실패작업1회재실행성공·원인미확정·제한/기대값변경0. 생성기분리로순환의존예방; 삭제0.
 - 보안 영향: 기존compile/runCases와GCC제한 재사용; 준비계약만추가하고실행API·정적파일허용목록·사용자저장/백업키 변경없음.
 - 단계별 완료율: 기반0·1·2단계완료; A3/5·B10/11·C4/8·D1/8·E/F/G0/8·H/I0/6 유지; E01진행중·차례E/E01 유지,분모변경0.
 - 다음 작업: E01 2/2로기존catalog/exercises·운영등록·README·브라우저/검색계약검사·로드맵/일지(10파일이내) 연결; 12절·원고102줄·10사례 유지, 기존초안/진도보존; 성공CI 후Rust F01.
