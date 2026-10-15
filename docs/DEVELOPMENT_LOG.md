@@ -1,10 +1,10 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 04:01 KST — F01 Cargo 채점 계약 설계
-- 시작/결과 SHA: 시작 00be75a2edfb5c3b6b80f617dd1dd701bd8d8d01; 결과 SHA는 CI 확인 후 기록; 커밋 제목 feat: specify inactive Rust Cargo grading contract.
+- 시작/결과 SHA: 시작 00be75a2edfb5c3b6b80f617dd1dd701bd8d8d01; 검증 결과 24b9d3cdfba083a6e509f2fb7170ac6c0ac25689; 확인 기록 제목 docs: record Rust contract design verification.
 - 목표: Rust 첫 작업으로 단일 소스·고정 패키지·서버 하네스·8~12사례·Cargo 빌드/열거/실행·진단/재제출 계약 설계.
 - 변경 파일 수: 9개(순수 Rust 계획기·신규 검사·설계/아키텍처·로드맵 생성기/JSON/MD·활성/보관 일지).
-- 테스트 결과: 신규10건0/10(모듈 부재9·과거D01 안내1)→10/10; 로컬416/416·실패/취소/skip0; 변경JS/MJS3개 문법·roadmap --check·diff 성공; 실제 Cargo는 실행기 미구현으로 미실행, 브라우저는 CI 대기.
-- CI URL과 결과: 시작SHA https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38784442404 성공; 결과SHA CI 대기.
+- 테스트 결과: 신규10건0/10(모듈 부재9·과거D01 안내1)→10/10; 로컬/CI416/416·macOS12/12·실패/취소/skip0; Chromium 기존25문제·D01/E01·390px·백업/오프라인 회귀 성공; 변경JS/MJS3개 문법·roadmap --check·diff 성공; 실제 Cargo는 실행기 미구현으로 미실행.
+- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38791520734 — 검증 결과SHA test/browser/macos-resources 모두 성공; F01은 설계 검증만 마쳤으며 진행 중 유지.
 - 발견한 문제: next=F01인데 생성 안내가 D01에 고정된 오류를 먼저 재현하고 선택 단원 제목으로 수정. Cargo JSON과 libtest 결과를 구분; 0건/ignored/가짜 출력·산출물 경로 검증은 후속 구현의 필수 인수 조건. 테스트 함수 삭제0.
 - 보안 영향: 제출 manifest/경로/하네스/인수/환경을 거부하는 순수 계획기만 추가; 파일 쓰기·Cargo 실행·HTTP 등록·저장/백업 키 변경0. build/offline 설정은 격리나 악성 결과 검증이 아님.
 - 단계별 완료율: 기반0·1·2단계 완료; A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지, 분모변경0; F01 설계 착수로 진행 중, next=F-G/F01 유지.
