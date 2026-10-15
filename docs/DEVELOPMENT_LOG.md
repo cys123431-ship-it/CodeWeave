@@ -1,15 +1,15 @@
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 1단계 진행 중 확인함
-## 2026-10-15 10:01 KST 시작 — 1-6 동작 보존 채점 파이프라인 분리
-- 시작/결과 SHA: 시작 e3ccbe2ffe6e36273d12ef5f92c5c7e392d79b31; 결과는 반영 뒤 조회. 제목 refactor: split local grading pipeline without behavior changes.
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 2단계 진행 중 확인함
+## 2026-10-15 10:01 KST 1단계 시작 확인 / 10:09 CI 검증 후2단계 전환 — 1-6 동작 보존 채점 파이프라인 분리
+- 시작/결과 SHA: 시작 e3ccbe2ffe6e36273d12ef5f92c5c7e392d79b31; 검증 결과3b4fffe8fc36484534df200d7e9265588d7195b3. 후속 제목 docs: confirm grading refactor and enter process cleanup(자기 SHA는 반영 뒤 조회).
 - 목표: parseRequest/writeSources/compile/runCases/buildResult로 분리하고 기존337개 검사의 결과·응답·인증/정리 순서·GCC 옵션을 그대로 유지.
-- 변경 파일 수: 이번 커밋5개(서버·신규 비공개 파이프라인·신규 계약 검사·CI 문법 목록·일지); CI 확인 뒤 지침의 현재 단계 갱신 포함 총6개 예정.
-- 테스트 결과: 기존 수정 전후337/337 동일; 신규 상위11건 수정 전0/11(ERR_MODULE_NOT_FOUND)→수정 후11/11(하위4건 포함15/15); 전체352/352·실패/skip0, 변경3 JS/MJS node --check·diff 성공.
-- CI URL과 결과: 시작 e3ccbe2의 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38660003919 success; 이번 결과 CI는 반영 뒤 조회하며1-6 완료/단계 전환 보류.
+- 변경 파일 수: 총6개(서버·신규 비공개 파이프라인·신규 계약 검사·CI 문법 목록·일지·지침의 현재 단계).
+- 테스트 결과: 기존 수정 전후337/337 동일; 신규 상위11건 수정 전0/11(ERR_MODULE_NOT_FOUND)→수정 후11/11(하위4건 포함15/15); 로컬/CI352/352·macOS 자원11/11·실패/skip0, 변경3 JS/MJS 문법·diff 성공. 실제 Chromium CI 제출/재제출·백업·390px·오프라인 재로드 성공.
+- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38663953734 — 결과3b4fffe의 test/browser/macos-resources 모두 success 확인 후1-6 완료와2단계 전환 기록; 원격5개 파일 blob/tree 일치 확인.
 - 발견한 문제: 기존 채점기는 한 함수에 요청·파일·컴파일·실행·응답 조립이 압축돼 있음; 분리 전 계약 검사 실패는 새 모듈 부재이며 기존 동작 오류로 주장하지 않음.
 - 구현/재검토: 인증/동시 채점 슬롯과finally 정리는 HTTP 조정자에 유지; 코드/파일 검증과 고정 옵션·링크 순서·함수 stdin·치명 오류 중단/미실행·진단 길이를 분리 계약으로 검사. 기존 기대값 수정 없음.
 - 보안 영향: 외부 입력·실행/파일 범위·정적 허용 목록 불변; 새 server 모듈은 공개 파일에 추가하지 않고 기존 거부/부작용 추적 검사를 유지.
-- 단계별 완료율: 0단계3/3, 1단계5/6(1-6 CI 대기), 2단계0/6.
-- 다음 작업: 결과 CI 성공 확인 후1단계6/6과2단계 전환을 기록; 다음 실행은2-1 일지 보존 이동·최근5건 축소.
+- 단계별 완료율: 0단계3/3, 1단계6/6, 2단계0/6(현재 단계); 새 단원·문제 추가 없음.
+- 다음 작업: 2-1 일지를 docs/log/2026-10.md에 보존 이동하고 최근5건만 남기기; 2단계 완료 전 새 콘텐츠 추가 금지 유지.
 
 ---
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 1단계 진행 중 확인함
