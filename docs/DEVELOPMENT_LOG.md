@@ -1,14 +1,14 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 03:02 KST — E01 화면·API·기존 기록 연결(2/2)
-- 시작/결과 SHA: 시작 8a56e87c2b50292afdd27b3b515c0f8cc30bc536; 결과 SHA는 CI 확인 뒤 기록; 커밋 제목 feat: connect algorithm search lesson and grading.
-- 목표: 기존algo-binary의12절·퀴즈·함수제출·10사례 채점·오답수정·숙달·백업/오프라인을 연결하고 ID/진도를 보존.
-- 변경 파일 수: 10개(catalog/exercises·운영등록·README·메타데이터/API/호환검사·브라우저·로드맵JSON/MD·활성/보관일지).
-- 테스트 결과: 신규3건0/3(옛도식·미채점상태·API400)→3/3; 중간24/25의과거미채점조건 갱신후통과; 로컬전체406/406·실패/취소/skip0; JS/MJS5개문법·roadmap --check·diff성공; E01실제브라우저는CI대기.
-- CI URL과 결과: 시작SHA CI38768227485성공 확인; 결과SHA CI대기, E01은진행중 유지.
-- 발견한 문제: 이전실행 최종확인은로컬명령승인검토 사용량한도에막혔으나이번정상실행·원격최종CI성공확인. 과거algo-binary미채점assert만신규계약으로대체(기대값편법아님); 테스트함수삭제0. 프로토타입중복없이운영에서같은사례/하네스import.
-- 보안 영향: 기존JSON/Host/Origin/토큰·GCC제한·파일접근경계를유지, 기존ID의c-function만활성화; 사용자저장/백업키 변경없음.
-- 단계별 완료율: 기반0·1·2단계완료; A3/5·B10/11·C4/8·D1/8·E/F/G0/8·H/I0/6 유지; E01완료와F-G/F01전환은실제CI성공뒤에만진행.
-- 다음 작업: 결과SHA E01브라우저의기존초안/퀴즈·오답수정·숙달·390px·백업/오프라인확인후로드맵갱신; 다음개발은Rust F01 cargo test채점기설계.
+- 시작/결과 SHA: 시작 8a56e87c2b50292afdd27b3b515c0f8cc30bc536; 검증 결과 9be9605e54ddd3009628375b8f2c4aa21450fdd4; 확인 기록 제목 docs: confirm E01 and advance to Rust design.
+- 목표: 기존 algo-binary의 12절·25분 설명, 퀴즈·함수 제출·10사례·오답 수정·숙달·백업/오프라인을 기존 ID로 연결.
+- 변경 파일 수: 10개(catalog/exercises·운영 등록·README·메타데이터/API/호환 검사·브라우저·로드맵 JSON/MD·활성/보관 일지).
+- 테스트 결과: 신규 3건 0/3(옛 도식·미채점 상태·API400)→3/3; 로컬/CI 406/406·macOS12/12·실패/취소/skip0; Chromium E01 수정/숙달·390px·백업/오프라인 성공 및 캡처 확인; JS/MJS5개 문법·roadmap --check·diff 성공.
+- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38784082096 — 검증 결과 SHA test/browser/macos-resources 모두 성공; 첫 CI38783682899 browser 실패 이력 보존.
+- 발견한 문제: reload는 저장 퀴즈를 임시 피드백에 재생하지 않아 data-retry 대기가 실패; 저장 correct/selected 직접 검증 후 재선택으로 검사 준비 수정. 과거 algo-binary 미채점 assert만 새 계약으로 교체, 테스트 함수 삭제0. 이전 로컬 승인검토 사용량 한도는 이번 정상 실행/원격 CI 확인.
+- 보안 영향: 기존 JSON/Host/Origin/토큰·GCC 제한·파일 접근 경계를 유지하고 같은 c-function 하네스/사례를 재사용; 사용자 저장/백업 키 변경 없음.
+- 단계별 완료율: 기반0·1·2단계 완료; A3/5=60.0%·B10/11=90.9%·C4/8=50.0%·D1/8=12.5%·E1/8=12.5%·F/G0/8·H/I0/6; 분모 변경0, E01 한정 범위 완료 뒤 F-G/F01로 전환.
+- 다음 작업: Rust F01 cargo test 채점기 설계(스키마·스타터·별도 하네스·진단·실패/재제출·자원/보안 경계)부터 진행; 설계만으로 완료/다음 C 전환 금지. 생성 로드맵의 과거 D01 안내 문구는 다음 작업에서 정리.
 
 ---
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함

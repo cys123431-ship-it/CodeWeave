@@ -10,8 +10,8 @@
     "C"
   ],
   "next": {
-    "track": "E",
-    "unit": "E01"
+    "track": "F-G",
+    "unit": "F01"
   },
   "limits": {
     "screenSections": [
@@ -438,7 +438,7 @@
         {
           "id": "E01",
           "title": "복잡도와 선형·이진 탐색의 전제",
-          "status": "진행 중",
+          "status": "완료",
           "lessonIds": [
             "algo-binary"
           ],
