@@ -1,14 +1,14 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 2단계 진행 중 확인함
 ## 2026-10-15 16:02 KST — 2-4 콘텐츠 검사 품질 정리 1차
-- 시작/결과 SHA: 시작 9d3908d6efa91d52cb142c0ed0fc70782d8b250e; 결과는 반영 후 조회, 제목 test: decouple six content suites from prose.
+- 시작/결과 SHA: 시작 9d3908d6efa91d52cb142c0ed0fc70782d8b250e; 검증 결과ecab6525346e2035cc02e7a63b95b3e3862d3192; 후속 제목 docs: record first content test audit result(자기 SHA는 반영 후 조회).
 - 목표: 전체22개 콘텐츠 검사 파일을 목록화하고6개 파일의 분량·표현 강제를 제거하되 헤딩/컴파일/동작 검증 보존.
 - 변경 파일 수: 10개(기존 검사6·신규 변형 검사·검사 감사 목록·활성 일지·월별 보관).
-- 테스트 결과: 신규3건 수정 전2/3→수정 후3/3; 전체366/366·실패/skip0; 변경MJS7개 문법·diff 성공; 기존364에서 정적 소스 철자 검사1건 삭제·변형 검사3건 추가.
-- CI URL과 결과: 결과 SHA 생성 후 조회 예정; 2-4 전체 완료 처리하지 않음.
+- 테스트 결과: 신규3건 수정 전2/3→수정 후3/3; 로컬/CI366/366·macOS11/11·실패/skip0; MJS7개 문법·diff·CI 실제 Chromium 제출/백업/390px/오프라인 성공; 기존364에서 정적 철자 검사1건 삭제·변형 검사3건 추가.
+- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38696977240 — 결과ecab652의 test/browser/macos-resources 및 전체 success; 6개 파일 정리 검증, 2-4 전체는 미완료.
 - 발견한 문제: 본문/도식 단어와 최소 절 수를 강제하던6개를 정리; 나머지16개는 TEST_QUALITY_AUDIT.md에 보존. 신규 도구의 중첩 runner 환경·완성 예제 선택 오류를 교정한 이유도 감사에 기록; 기대값/본문 변경 없음.
 - 보안 영향: 임시 복사본의 신뢰하는 예제만 실행; 외부 입력·코드 실행 API·파일 접근 범위·진도/초안/제출·백업 형식 변경 없음.
-- 단계별 완료율: 0단계3/3, 1단계6/6, 2단계3/6 유지; 2-4는6/22파일 정리·CI 대기, A~I 분모는2-6에서 확정.
-- 다음 작업: 이 결과 CI 확인 후 2-4 나머지16개 중 arrays/pointers/function-scope/functions/recursion/matrix-rows 우선 정리.
+- 단계별 완료율: 0단계3/3, 1단계6/6, 2단계3/6 유지; 2-4는6/22파일 정리 검증, A~I 분모는2-6에서 확정.
+- 다음 작업: 2-4 나머지16개 중 arrays/pointers/function-scope/functions/recursion/matrix-rows 우선 정리.
 
 ---
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 2단계 진행 중 확인함
