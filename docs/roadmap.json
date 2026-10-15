@@ -442,8 +442,8 @@
           "lessonIds": [
             "algo-binary"
           ],
-          "manuscripts": [],
-          "tests": []
+          "manuscripts": ["content/algo/01-search.md"],
+          "tests": ["tests/algo-search.test.mjs"]
         },
         {
           "id": "E02",

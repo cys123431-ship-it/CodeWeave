@@ -3,6 +3,14 @@ const arrow=(x1,y1,x2,y2)=>`<path d="M${x1} ${y1} L${x2} ${y2}" stroke="#6b8d98"
 const wrap=inner=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 670 190" role="img" aria-label="학습 개념 그림"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 const wrapTall=(label,inner,viewBox='0 0 670 300',style='')=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"${style?` style="${style}"`:''} role="img" aria-label="${label}"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 export function figureFor(kind){
+ if(kind==='search-half-open')return wrapTall('정렬된 1,3,3,3,9에서 목표3의 첫 위치를 찾으며 반열린 후보 구간을 줄이는 정적 도식',
+  '<text x="170" y="24" text-anchor="middle" font-size="16" fill="#28485b">배열 1 · 3 · 3 · 3 · 9 / 목표 3</text>'+
+  box(35,42,270,52,'[0,5) · mid=2 · 값 3')+arrow(170,96,170,122)+
+  box(35,130,270,52,'[0,2) · mid=1 · 값 3')+arrow(170,184,170,210)+
+  box(35,218,270,52,'[0,1) · mid=0 · 값 1')+arrow(170,272,170,298)+
+  box(35,306,270,52,'[1,1) · 후보 위치 1','#d7f4e6')+
+  '<text x="170" y="391" text-anchor="middle" font-size="14" fill="#28485b">마지막에 위치 &lt; count와 값 일치 확인</text>',
+  '0 0 340 415','max-width:340px');
  if(kind==='list-first-match')return wrapTall('head에서 next를 따라 첫 7을 찾는 연결 리스트. 같은 값의 마지막 노드와 주소는 다르다.',
   box(90,20,160,45,'head · 시작')+arrow(170,66,170,92)+
   box(90,100,160,55,'7 · 첫 일치','#d7f4e6')+arrow(170,157,170,183)+
