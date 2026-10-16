@@ -1,10 +1,10 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 19:04 KST — 미반영 D02 준비 작업 인계·원격 검증
-- 시작/결과 SHA: 원격3c5e39f2cab1157ed76392af4ebc63a0f6e9d668; 미반영 로컬ef9c80921a2c00d496abe5a8bce6a4251eca42f1 인계; 커밋 feat: publish verified D02 stack preparation.
+- 시작/결과 SHA: 원격3c5e39f2cab1157ed76392af4ebc63a0f6e9d668; 미반영 로컬ef9c80921a2c00d496abe5a8bce6a4251eca42f1 인계; 구현131350a48d9432335b5373ccff4634f6fc378995; 후속 docs: record verified D02 preparation handoff.
 - 목표: 앞선 D02 준비 계약·원고·도식을 보존하고 최신 main 대조·재검사 뒤 실제 원격 반영 및 결과 SHA CI 확인.
 - 변경 파일 수: 시작 main 대비10개(신규3: 계약·검사·원고; 기존7: 도식·browser·capability검사·로드맵2·일지2).
 - 테스트 결과: 앞선 신규11건 실패→통과 이력 보존, 이번 재실행11/11; 정상10사례·오답6종 거부·스타터/완성 예제 GCC 성공; 전체488건484통과·실패0·skip4(Rust 도구 부재); 문법5개·일지4/4·roadmap/diff 성공; 테스트 삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38865156075 성공 재확인; 준비 작업 원격 CI 미생성 상태 확인 후 업로드 예정.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38865156075 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38885105450 전체488/488·skip0, 기존 macOS회귀·browser성공. D02 도식390px 컴포넌트 QA 성공이며 화면/API E2E 아님; D02 macOS/Windows 미실행. 최종 기록 SHA CI 별도 확인.
 - 발견한 문제: 17:04 로컬 커밋이 아직 원격에 없었음. 덮어쓰지 않고 인계; ds-stack 영구 미채점 기대값 변경 사유·준비/실제 전달 구분은 앞선 기록 유지.
 - 보안 영향: 공개 문제/실행 경로 활성화0, 기존 학습자 키 변경0. 고정 배열 함수 계약만 검증하며 임의 포인터의 유효성을 보장하지 않음.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E1/8·F/G0/8·H/I0/6 유지; D02진행 중·next=D/D02.
