@@ -1,14 +1,14 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 10:02 KST — 신뢰된 Linux Rust 빌드 링커 선택
-- 시작/결과 SHA: 시작 036bce852a755cf21dc58b15b79191163f70cac0; 결과 커밋 제목 test: use system linker for trusted Linux Rust fixtures.
+- 시작/결과 SHA: 시작 036bce852a755cf21dc58b15b79191163f70cac0; 구현 3d7b79446c60c1f76f49a99641bf74c57a382caa; 확인 기록 제목 docs: record verified system-linker fixture results.
 - 목표: 반복 중단에서 관찰된 rust-lld 경로를 공식 시스템 링커 옵션으로 분리해 제한/판정을 유지한 CI 완화 경로 검증.
 - 변경 파일 수: 10개(공통 helper·신규 검사·Rust fixture4·CI·설계·활성/보관 일지).
-- 테스트 결과: 신규2건 0/2→2/2; 전체452건448통과·실패0·skip4(Rust 도구 부재); 변경MJS6개 문법·roadmap/diff 성공; 15초/경고오류/정상·오답·수정 기대값 유지; 테스트 삭제0.
-- CI URL과 결과: 시작 SHA https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38827994592 성공450/450 및 F01 실제 예시/브라우저 성공을 재확인; 새 결과 CI 대기.
+- 테스트 결과: 신규2건 0/2→2/2; CI452/452·skip0·macOS/browser성공; 전체452건448통과·실패0·skip4(Rust 도구 부재); 변경MJS6개 문법·roadmap/diff 성공; 15초/경고오류/정상·오답·수정 기대값 유지; 테스트 삭제0.
+- CI URL과 결과: 시작 SHA https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38827994592 성공450/450 및 F01 실제 예시/브라우저 성공을 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38833451432 전체 성공; GNU ld2.42·실제 -lld 비활성 인수 확인, 준비3빌드179~363ms/결과3빌드198~207ms; 확인 기록 SHA는 후속CI.
 - 발견한 문제: 과거 rust-lld D 상태는 원인 확정 근거가 아님. Rust 공식 -C linker-features=-lld를 신뢰 fixture의 Linux x64에만 적용, 도구체인 버전/실행 제한은 변경하지 않음.
 - 보안 영향: 운영 계획기·API·C 실행기·v1 키 변경0, 부모 컴파일 플래그를 무시하고 -Dwarnings 유지. 외부 입력을 옵션으로 받지 않고 고정 인수만 사용.
 - 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·next=F-G/F01, 새 단원 추가0.
-- 다음 작업: CI 성공 시 시스템 링커 완화와 근본 원인 미확정을 구분해 인계. F01 이론/퀴즈 제공 증거를 재확인하고 C05 차례 전환; Cargo 빌드 자원/도구체인 고정은 후속 Rust 작업.
+- 다음 작업: 시스템 링커 경로 검증 성공·기본 LLD의 근본 원인 미확정을 구분해 인계. F01 이론/퀴즈 제공 증거를 재확인하고 C05 차례 전환; Cargo 빌드 자원/도구체인 고정은 후속 Rust 작업.
 
 ---
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
