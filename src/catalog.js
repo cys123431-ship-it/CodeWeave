@@ -793,6 +793,95 @@ export const lessons = [
     challenge:{id:'c-student-vector-push',title:'기하급수 성장으로 학생 한 명 추가하기',description:'push_student는 정규 상태를 검사하고 빈 슬롯이 있으면 재할당 없이 value를 추가합니다. 가득 찼으면 0→4, 이후 두 배 용량을 계산하되 SIZE_MAX 오버플로를 먼저 거부하고 reserve_students를 호출하세요. reserve 실패 시 모든 상태를 보존하고, 성공 뒤에만 새 레코드와 length를 공개합니다. reserve_students와 main은 작성하지 않습니다.',starter:'#include <stddef.h>\n#include <stdint.h>\n\nstruct Student {\n    int id;\n    int score;\n};\n\nint reserve_students(struct Student **students, size_t length,\n                     size_t *capacity, size_t new_capacity);\n\nint push_student(struct Student **students, size_t *length,\n                 size_t *capacity, struct Student value) {\n    // TODO: 상태 검증 → 필요하면 0→4/두 배 성장 → reserve 재사용 → 레코드와 길이 공개\n    (void)students;\n    (void)length;\n    (void)capacity;\n    (void)value;\n    return 0;\n}',input:'push_student(&students, &length, &capacity, (struct Student){309, 95})',expected:'1 · 길이 3 · 용량 4 · 새 학생 309:95'}
   },
   {
+
+  "id": "rust-cargo",
+  "track": "rust",
+  "level": "시작하기",
+  "title": "Cargo 프로젝트와 실패하는 테스트 읽기",
+  "minutes": 25,
+  "source": "F01 독자 원고(src/catalog.js). 2026-10-16 Cargo 공식 Package Layout·cargo test 명령 의미 확인. 원문 설명·문제는 복제하지 않음.",
+  "summary": "작은 영수증 라이브러리를 만들고 10개 예시 테스트의 실패→수정→재실행을 따라갑니다. 이론·퀴즈 제공 범위이며 사이트 Rust 채점은 준비 중입니다.",
+  "figure": "cargo-test-flow",
+  "sections": [
+    {
+      "heading": "개요·필요성·선수 지식·목표",
+      "text": "C에서 소스·컴파일·함수 반환값을 배웠다면 시작할 수 있습니다. Cargo는 프로젝트 설정과 빌드·테스트를 한 흐름으로 묶는 도구입니다. 이번에는 파일 역할을 구별하고 컴파일 오류와 테스트 실패를 나누어 읽습니다. 함수 문법은 아래 예제에 필요한 만큼만 익히며 소유권·빌림은 다음 단원으로 넘깁니다."
+    },
+    {
+      "heading": "개인 PC에서 시작하기",
+      "text": "Rust 도구가 설치된 개인 PC 터미널에서 rustc --version과 cargo --version을 확인합니다. 없으면 공식 Rust 설치 안내를 따르세요. 다음 명령은 터미널 명령이며 Rust 소스가 아닙니다. cargo new는 한 번만 실행하고 생성된 weave_receipt 폴더 안에서 나머지를 실행합니다.",
+      "code": "cargo new weave_receipt --lib\ncd weave_receipt"
+    },
+    {
+      "heading": "파일 역할과 Cargo.toml 전체",
+      "text": "Cargo.toml은 설정, src/lib.rs는 함수 구현, tests/receipt.rs는 별도 통합 테스트입니다. Cargo.lock은 해석된 패키지 버전을 기록하고 target은 생성 산출물이므로 직접 고치지 않습니다. 그림의 실패 경로는 소스를 고친 뒤 다시 빌드하는 흐름입니다. 다음은 이 예제의 Cargo.toml 전체이며 외부 의존성은 없습니다.",
+      "fileName": "Cargo.toml",
+      "code": "[package]\nname = \"weave_receipt\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\ndoctest = false\n"
+    },
+    {
+      "heading": "src/lib.rs 전체: 작은 계약부터",
+      "text": "기존 src/lib.rs를 아래 전체 코드로 바꿉니다. pub는 다른 크레이트의 테스트에서 호출할 수 있게 공개하고, -> u32는 반환 형입니다. 마지막 items * price는 세미콜론 없는 반환 식입니다. 입력 약속은 items 0~10, price 0~1000입니다. 이 범위에서 최대 10000이며 u32에 들어갑니다. 범위 밖 모든 입력·넘침을 안전하게 처리하는 금액 계산기로 일반화하지 않습니다.",
+      "fileName": "src/lib.rs",
+      "code": "pub fn total(items: u32, price: u32) -> u32 {\n    items * price\n}\n"
+    },
+    {
+      "heading": "tests/receipt.rs 전체: 10개 독립 예시 검사",
+      "text": "tests 폴더를 만들고 receipt.rs에 아래 전체 코드를 저장합니다. #[test]가 붙은 함수가 검사 한 개이며 assert_eq!는 실제 반환값과 기대값을 비교합니다. 0개·0원·1개·여러 개·계약 상한을 구분합니다. 예를 들어 2 × 250은 500이므로 case_04가 통과합니다. 이 10개는 학습용 공개 예시이며 사이트 비공개 자동 채점이 아닙니다.",
+      "fileName": "tests/receipt.rs",
+      "code": "#[test]\nfn case_00() { assert_eq!(weave_receipt::total(0, 0), 0); }\n\n#[test]\nfn case_01() { assert_eq!(weave_receipt::total(0, 250), 0); }\n\n#[test]\nfn case_02() { assert_eq!(weave_receipt::total(1, 0), 0); }\n\n#[test]\nfn case_03() { assert_eq!(weave_receipt::total(1, 250), 250); }\n\n#[test]\nfn case_04() { assert_eq!(weave_receipt::total(2, 250), 500); }\n\n#[test]\nfn case_05() { assert_eq!(weave_receipt::total(3, 70), 210); }\n\n#[test]\nfn case_06() { assert_eq!(weave_receipt::total(4, 125), 500); }\n\n#[test]\nfn case_07() { assert_eq!(weave_receipt::total(5, 99), 495); }\n\n#[test]\nfn case_08() { assert_eq!(weave_receipt::total(10, 1000), 10000); }\n\n#[test]\nfn case_09() { assert_eq!(weave_receipt::total(10, 1), 10); }\n"
+    },
+    {
+      "heading": "빌드하고 실제 테스트하기",
+      "text": "프로젝트 루트에서 실행합니다. 처음에는 의존성 없는 잠금 파일을 준비하고, 그다음 --frozen으로 잠금 변경과 온라인 의존성 해석을 막습니다. --test receipt는 이번 통합 테스트만 고르며 --jobs 1은 빌드 작업 수입니다. -- 뒤의 --test-threads=1은 검사 실행 스레드 수로 서로 다른 옵션입니다. --no-run을 붙이면 빌드만 하므로 통과를 확인한 것이 아닙니다.",
+      "code": "cargo generate-lockfile --offline\ncargo test --test receipt --frozen --jobs 1 -- --test-threads=1"
+    },
+    {
+      "heading": "실제 결과와 이유",
+      "text": "정상 구현은 열 개 검사 모두 통과합니다. 핵심 합계는 아래와 같고 순서·시간·filtered 표시 등 부가 출력은 도구 버전에 따라 다를 수 있습니다. cargo build 성공은 테스트 본문 실행 성공과 다릅니다. 필터로 0개만 실행했을 때도 이번 목표를 달성한 것이 아닙니다.",
+      "code": "test result: ok. 10 passed; 0 failed;"
+    },
+    {
+      "heading": "흔한 오류: 번역 오류와 단언 실패",
+      "text": "반환 식 끝에 세미콜론을 붙이고 값을 반환하지 않으면 u32 반환 형과 맞지 않아 컴파일에서 멈춥니다. 반대로 *를 +로 바꾸면 번역은 되더라도 2 + 250은 252라 case_04의 기대값 500과 다릅니다. 실패 보고의 left가 실제값, right가 기대값입니다. 이 문제에서는 기대값을 252로 바꾸지 말고 구현을 고치세요."
+    },
+    {
+      "heading": "오류 수정·재실행과 중간 점검",
+      "text": "먼저 곱셈을 덧셈으로 바꾸어 실패를 관찰하고 다시 곱셈으로 복구한 뒤 전체 receipt 검사를 재실행합니다. 실패한 한 건만 확인했다면 마지막에는 전체 10건도 다시 실행하세요. 설정 파일이 없는 폴더에서 cargo를 실행한 오류, 컴파일 오류, 실행된 단언 실패를 각각 어느 단계로 분류할지 설명해 봅니다."
+    },
+    {
+      "heading": "사이트 채점 계약과 현재 경계",
+      "text": "이 사이트의 예정 제출은 라이브러리 함수 코드이며 Cargo.toml·테스트·기대값은 서버가 관리합니다. 현재 F01은 이론·퀴즈·초안 저장만 제공합니다. 아래 편집기 저장은 실행도 통과도 아니고, 개념 퀴즈 정답만으로 실습·전체 숙달이 되지 않습니다. 브라우저에 Cargo가 내장되어 있다고 가정하지 마세요."
+    },
+    {
+      "heading": "기초·응용·도전과 작은 프로젝트",
+      "text": "기초: 0개와 1개의 반환값을 실행 전에 예측합니다. 응용: 계약 범위 안의 서로 다른 두 구매를 더하는 로컬 검사를 직접 만듭니다. 도전: 계약 밖 입력은 어떻게 거부할지 별도 명세를 적되 아직 배우지 않은 안전 검증을 구현했다고 주장하지 않습니다. Mini Project는 두 품목 영수증의 입력 약속·예상 합계·실제 검사 결과를 표로 기록하는 것입니다. 사이트 제출 채점은 제공되지 않습니다."
+    },
+    {
+      "heading": "핵심 요약·복습과 다음 단원",
+      "text": "설정→라이브러리→테스트 빌드→검사 본문→실패 원인 수정 순서로 돌아봅니다. Cargo.toml과 Cargo.lock의 차이, --no-run과 실제 실행의 차이, 0건 검사와 10건 통과의 차이를 말할 수 있나요? 다음 Rust 단원은 변수 바인딩과 mut입니다. C와 비교할 때도 함수 계약과 실제 결과를 나눠 기록하세요."
+    }
+  ],
+  "quiz": {
+    "question": "cargo test --no-run이 성공했을 때 확인한 사실은?",
+    "options": [
+      "테스트 실행 파일을 빌드했지만 검사 본문은 실행하지 않았다",
+      "모든 테스트 본문이 통과했다",
+      "사이트 실습 숙달을 완료했다",
+      "필터와 무관하게 반드시 10개가 실행됐다"
+    ],
+    "answer": 0,
+    "explanation": "--no-run은 빌드만 합니다. 실제 실행에서 검사 수와 결과를 확인해야 하며 현재 사이트 Rust 채점은 비활성입니다."
+  },
+  "challenge": {
+    "id": "rust-cargo",
+    "title": "라이브러리 함수 초안 저장",
+    "description": "items 0~10, price 0~1000 약속에서 합계를 반환하는 함수 초안을 적어 저장하세요. 이 편집기는 현재 실행·자동 채점하지 않습니다. 로컬 프로젝트에서 본문의 예시 테스트로 확인할 수 있습니다.",
+    "starter": "pub fn total(items: u32, price: u32) -> u32 {\n    // TODO: 수량과 단가로 합계 반환\n    0\n}",
+    "input": "total(2, 250)",
+    "expected": "500"
+  }
+},
+  {
     id:'rust-mut',track:'rust',level:'시작하기',title:'변수 바인딩과 가변성',minutes:20,source:'기초 Rust 개념 독자 작성 초안 (Rust 교재 미제공)',
     summary:'C의 변수와 비교하여 Rust에서 let과 mut가 어떻게 다른지 배웁니다.',figure:'variables',
     sections:[

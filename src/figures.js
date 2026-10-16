@@ -3,6 +3,7 @@ const arrow=(x1,y1,x2,y2)=>`<path d="M${x1} ${y1} L${x2} ${y2}" stroke="#6b8d98"
 const wrap=inner=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 670 190" role="img" aria-label="학습 개념 그림"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 const wrapTall=(label,inner,viewBox='0 0 670 300',style='')=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"${style?` style="${style}"`:''} role="img" aria-label="${label}"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 export function figureFor(kind){
+ if(kind==='cargo-test-flow')return wrapTall('Cargo 설정과 함수 구현이 테스트 빌드와 실행을 거쳐 실패 시 수정으로 돌아가는 흐름',box(30,20,280,48,'Cargo.toml + src/lib.rs','#e7f1ff')+arrow(170,70,170,94)+box(30,100,280,48,'tests/receipt.rs · 빌드')+arrow(170,150,170,174)+box(30,180,280,48,'10개 본문 실제 실행','#d7f4e6')+arrow(170,230,170,254)+box(30,260,280,48,'실패 → 구현 수정 → 재실행','#ffe7e2'),'0 0 340 330','max-width:340px');
  if(kind==='search-half-open')return wrapTall('정렬된 1,3,3,3,9에서 목표3의 첫 위치를 찾으며 반열린 후보 구간을 줄이는 정적 도식',
   '<text x="170" y="24" text-anchor="middle" font-size="16" fill="#28485b">배열 1 · 3 · 3 · 3 · 9 / 목표 3</text>'+
   box(35,42,270,52,'[0,5) · mid=2 · 값 3')+arrow(170,96,170,122)+

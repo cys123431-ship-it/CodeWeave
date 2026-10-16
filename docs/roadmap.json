@@ -10,8 +10,8 @@
     "C"
   ],
   "next": {
-    "track": "F-G",
-    "unit": "F01"
+    "track": "C",
+    "unit": "C05"
   },
   "limits": {
     "screenSections": [
@@ -511,9 +511,9 @@
           "id": "F01",
           "title": "Cargo 프로젝트·cargo test와 채점 계약",
           "status": "진행 중",
-          "lessonIds": [],
+          "lessonIds": ["rust-cargo"],
           "manuscripts": [],
-          "tests": ["tests/rust-contract.test.mjs", "tests/rust-preparation.test.mjs", "tests/rust-results.test.mjs"]
+          "tests": ["tests/rust-contract.test.mjs", "tests/rust-preparation.test.mjs", "tests/rust-results.test.mjs", "tests/rust-cargo-lesson.test.mjs"]
         },
         {
           "id": "F02",

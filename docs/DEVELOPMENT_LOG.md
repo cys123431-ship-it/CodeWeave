@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-16 08:56 KST — F01 Cargo 이론·퀴즈 학습 경로
+- 시작/결과 SHA: 시작 e911626de341cd00b222fe2eafbc0178876cc305; 결과 커밋 제목 feat: deliver F01 Cargo theory and quiz with practice locked.
+- 목표: F01 Cargo 파일 역할·실패/수정 예시·이론/퀴즈/초안·다음 Rust 단원을 연결하고 실습 숙달 잠금 검증.
+- 변경 파일 수: 10개(catalog 원고·미채점 메타데이터·도식·단원/브라우저 검사·README·로드맵 JSON/MD·활성/보관 일지).
+- 테스트 결과: 신규2건 0/2→2/2; 실제 Cargo 예시 검사는 로컬 도구 부재로 CI 필수; 전체450건446통과·실패0·skip4(Rust 도구 부재); 변경JS/MJS5개 문법·roadmap/diff 성공; 삭제0.
+- CI URL과 결과: 시작 SHA https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38821475519 성공; 결과 SHA CI 대기, 완료 기록 보류.
+- 발견한 문제: --render는 stdout 출력이므로 출력으로 MD를 apply_patch 동기화 후 --check 성공. 기존 테스트 기대값 변경0; 네트워크 우선 SW는 변경 없이 새 catalog/도식을 캐시하며 오프라인은 CI 확인.
+- 보안 영향: 외부 입력/실행 API 추가0·grader:null; 원고는 catalog의 독자12절/88줄·25분, 공개 예시10건은 사이트 채점과 구분. Cargo 공식 배치/명령 의미만 확인, 기존 rust-mut 초안/키 보존.
+- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중, 이론/퀴즈 예외로 next=C/C05(검증 후 확정).
+- 다음 작업: F01 화면/오프라인/실제 예시 CI 성공 확인 후 C05 스트림 수명·오류·EOF의 좁은 단원. Cargo 빌드 한도·도구체인 고정·운영 API는 후속 Rust 차례.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 07:59 KST — 신뢰된 Rust 바이너리 실행 자원 검증
 - 시작/결과 SHA: 시작 b7441345c0542db88952de11557264e6c2ece08d; 구현 847ed6f7302990163d1771544d305065df416ab8; 확인 기록 제목 docs: record verified Rust execution budgets.
 - 목표: 운영 API를 열지 않고 Rust 실행 예산·그룹·초과 실패를 실제 Linux/macOS CI에서 검증.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 고정 파일을 새 전용 디렉터리에만 쓰며 운영 Cargo 실행·HTTP 등록·저장/백업 키 변경0; CI만 신뢰된 합성 코드를 빌드/열거하고 함수 본문은 실행하지 않음. 경로 검사는 격리가 아님.
 - 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지, 분모변경0; F01 진행 중·next=F-G/F01 유지.
 - 다음 작업: 사례 실행 결과·진단/미실행·자원/자식 정리 회귀를 별도 구현하고 도구체인 고정/상한 실측; 운영 Rust API와 숙달은 계속 잠금, F01 완료/C 전환 금지.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-16 04:01 KST — F01 Cargo 채점 계약 설계
-- 시작/결과 SHA: 시작 00be75a2edfb5c3b6b80f617dd1dd701bd8d8d01; 검증 결과 24b9d3cdfba083a6e509f2fb7170ac6c0ac25689; 확인 기록 제목 docs: record Rust contract design verification.
-- 목표: Rust 첫 작업으로 단일 소스·고정 패키지·서버 하네스·8~12사례·Cargo 빌드/열거/실행·진단/재제출 계약 설계.
-- 변경 파일 수: 9개(순수 Rust 계획기·신규 검사·설계/아키텍처·로드맵 생성기/JSON/MD·활성/보관 일지).
-- 테스트 결과: 신규10건0/10(모듈 부재9·과거D01 안내1)→10/10; 로컬/CI416/416·macOS12/12·실패/취소/skip0; Chromium 기존25문제·D01/E01·390px·백업/오프라인 회귀 성공; 변경JS/MJS3개 문법·roadmap --check·diff 성공; 실제 Cargo는 실행기 미구현으로 미실행.
-- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38791520734 — 검증 결과SHA test/browser/macos-resources 모두 성공; F01은 설계 검증만 마쳤으며 진행 중 유지.
-- 발견한 문제: next=F01인데 생성 안내가 D01에 고정된 오류를 먼저 재현하고 선택 단원 제목으로 수정. Cargo JSON과 libtest 결과를 구분; 0건/ignored/가짜 출력·산출물 경로 검증은 후속 구현의 필수 인수 조건. 테스트 함수 삭제0.
-- 보안 영향: 제출 manifest/경로/하네스/인수/환경을 거부하는 순수 계획기만 추가; 파일 쓰기·Cargo 실행·HTTP 등록·저장/백업 키 변경0. build/offline 설정은 격리나 악성 결과 검증이 아님.
-- 단계별 완료율: 기반0·1·2단계 완료; A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지, 분모변경0; F01 설계 착수로 진행 중, next=F-G/F01 유지.
-- 다음 작업: Rust 전용 비활성 어댑터의 작업 파일·도구 탐지·Cargo JSON 산출물·테스트 열거부터 실제 도구 회귀로 구현; UI/API는 계속 잠금. 설계만으로 단원 완료/C 차례 전환 금지.
