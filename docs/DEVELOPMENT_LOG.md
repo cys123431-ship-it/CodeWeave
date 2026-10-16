@@ -1,10 +1,10 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-17 00:59 KST — 미반영 E02 안정 삽입 정렬 준비 인계(1/2)
-- 시작/결과 SHA: 시작a76831f13e420d9058b5fe477a93829b1e7b2dfa; 커밋 feat: prepare stable insertion sorting and operation counts.
+- 시작/결과 SHA: 시작a76831f13e420d9058b5fe477a93829b1e7b2dfa; 구현2f1af034cc674c12e6bac7bfecb15f98db593b31; 후속 docs: record verified E02 preparation handoff.
 - 목표: 10-16 20:59의 미커밋 E02 계약·검사·원고·도식을 보존·재검증하고 원격 반영; 화면/API 전달은 별도 검증.
 - 변경 파일 수: 시작 main 대비10개(신규3: 계약·13검사·81줄 원고; 기존7: 도식·browser준비검사·CI macOS·로드맵2·활성/보관 일지).
 - 테스트 결과: 앞선 신규13건0/13→13/13 이력, 이번13/13 재확인; 정상10사례·오답8종 거부·스타터/완성 예제 GCC 성공. 앞선 전체503건499통과·실패0·skip4(Rust 부재), 이번도503건499통과·실패0·skip4; JS/MJS4개 문법·일지4/4·roadmap/diff 성공·삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38891766406 성공 재확인; 구현 결과 SHA CI 대기. macOS E02 실제13건과 준비 도식390px 검사를 추가했으며 아직 성공으로 주장하지 않음.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38891766406 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38928796801 전체503/503·skip0·macOS E02 13/13·browser 준비도식390px 성공. E02 화면/API E2E는 아님; 후속 기록 SHA CI 별도 확인.
 - 발견한 문제: 미커밋 작업과 미반영 상태를 확인해 인계. 앞선 파일/도식 부재로 실패 재현 후 구현; 이번 상대경로 읽기 ENOENT는 정확한 workdir 지정 후 성공. 기대값/기존 본문 변경0.
 - 보안 영향: 새 사용자 입력/API·공개 실행·키 변경0. 신뢰된 C 함수형 검사만 실행; 길이0..8·NULL·실패 출력 보존과 호출자 객체 수명/비중첩 전제, 구조체 멤버 비교를 명시.
 - 단계별 완료율: A3/5·B10/11·C5/8·D2/8·E1/8·F/G0/8·H/I0/6 유지; E02진행 중·next=E/E02; 단원/공개 문제 추가0.
