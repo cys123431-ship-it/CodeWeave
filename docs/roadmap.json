@@ -10,8 +10,8 @@
     "C"
   ],
   "next": {
-    "track": "E",
-    "unit": "E02"
+    "track": "F-G",
+    "unit": "F01"
   },
   "limits": {
     "screenSections": [
@@ -476,7 +476,7 @@
         {
           "id": "E02",
           "title": "안정 정렬과 비교·이동 횟수",
-          "status": "진행 중",
+          "status": "완료",
           "lessonIds": [
             "algo-stable-insertion"
           ],

@@ -1,14 +1,14 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-17 01:55 KST — E02 안정 삽입 정렬 화면·실제 채점 연결(2/2, CI 대기)
-- 시작/결과 SHA: 시작b90d57b2a635b67c317eb8c1d0f974fdbc375b72; 커밋 feat: deliver stable insertion sorting practice.
+## 2026-10-17 01:55 KST — E02 안정 삽입 정렬 화면·실제 채점 연결(2/2, 구현 CI 인수)
+- 시작/결과 SHA: 시작b90d57b2a635b67c317eb8c1d0f974fdbc375b72; 구현bbf3b8a2e5d2ca0a6e8df808f8d369fc7e809fb6; 후속 docs: accept verified E02 delivery and resume F01.
 - 목표: 준비된 안정성·비교/이동 계수 계약을 화면13절·퀴즈·실제API·재제출·백업/오프라인·숙달에 연결.
 - 변경 파일 수: 총10개(화면·메타데이터·registry·roadmap검사·browser·README·로드맵JSON/MD·활성/보관 일지).
 - 테스트 결과: 신규2건0/2→2/2·관련32/32; 전체505건501통과·실패0·skip4(Rust 도구 부재); 변경JS/MJS5개 문법·일지4/4·roadmap/diff 성공; 삭제0. 브라우저는 CI에서만 검증.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38929059706 성공 재확인; 구현 결과 SHA의 전체·browser·macOS E02 CI 검증 대기.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38929059706 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38936449869 전체505/505·skip0, browser실제28문제 API·E01→E02/퀴즈재시도/오답→수정/숙달/백업/오프라인/390px/트랙복귀 성공, macOS E02 13/13 성공. 후속 기록 SHA CI 별도 확인.
 - 발견한 문제: 화면 부재/API400을 먼저 재현. 카탈로그를 tracks에 잘못 삽입한 오류와 E02 로드맵 매핑 누락을 검사로 발견 후 실제 구현 수정·관련32건 재통과; 기대값 변경0. E02는 마지막 공개 단원이라 후속 미제공을 명시하고 E01→E02 이동·트랙 복귀를 검사.
 - 보안 영향: 기존 토큰·자원 제한·C 함수형 실행 경로만 사용하며 신규 파일/API 경로0. 준비10사례·출력 비중첩/객체 수명 전제 유지, 기존 v1 키/기록 보존.
-- 단계별 완료율: A3/5·B10/11·C5/8·D2/8·E1/8·F/G0/8·H/I0/6 유지; E02진행 중·next=E/E02; 화면30단원·실제C채점28문제.
-- 다음 작업: 결과 SHA CI로 E02 실제 오답→수정/퀴즈재시도/백업/오프라인/390px를 확인한 뒤에만 완료·Rust F01 차례 전환. F01의 기존 이론 인수로 건너뛰지 말고 남은 Cargo 채점 작업을 이어감.
+- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8(25%)·F/G0/8·H/I0/6; E02 제한 범위 완료·next=F-G/F01; 화면30단원·실제C채점28문제.
+- 다음 작업: 후속 결과 SHA CI 성공 확인 후 Rust F01의 남은 Cargo 채점 경로를 이어감. 기존 이론 인수로 차례를 다시 건너뛰지 말 것. E02 Windows 네이티브/실기기 PWA는 미검증이며 후속 알고리즘 단원은 아직 미제공.
 
 ---
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
