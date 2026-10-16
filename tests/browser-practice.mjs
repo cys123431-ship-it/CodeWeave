@@ -956,6 +956,30 @@ try {
   await expect(page.locator('.detail-head h1')).toHaveText('변수 바인딩과 가변성');
   await expect(page.locator('#code-input')).toHaveValue('keep rust draft');
   console.log('PASS: F01 quiz correction, separate mastery, preserved Rust drafts, offline 390px and next lesson');
+  // Prepared component only: C05 is not a learner-facing lesson or API yet.
+  await page.evaluate(async () => {
+    const { figureFor } = await import('/src/figures.js');
+    const preview = document.createElement('div');
+    preview.id = 'qa-stream-diagram';
+    preview.style.width = '340px';
+    preview.style.maxWidth = '100%';
+    preview.innerHTML = figureFor('stream-eof-error');
+    document.body.append(preview);
+    const svg = preview.querySelector('svg');
+    svg.style.width = '100%';
+    svg.style.height = 'auto';
+  });
+  await expect(page.locator('#qa-stream-diagram svg')).toHaveAttribute('role', 'img');
+  assert.equal(await page.evaluate(() => {
+    const svg = document.querySelector('#qa-stream-diagram svg');
+    const view = svg.viewBox.baseVal;
+    return [...svg.querySelectorAll('text')].every(text => {
+      const box = text.getBBox();
+      return box.x >= 0 && box.y >= 0 && box.x + box.width <= view.width && box.y + box.height <= view.height;
+    }) && document.documentElement.scrollWidth <= innerWidth;
+  }), true, 'prepared stream diagram text must fit its mobile viewBox');
+  if (qaDir) await page.locator('#qa-stream-diagram').screenshot({ path: path.join(qaDir, 'stream-contract-mobile.png') });
+  console.log('PASS: prepared C05 static diagram text fits 390px; no C05 lesson/API activation claimed');
   assert.deepEqual(errors, []);
   console.log('PASS: 390px mobile layout and offline reload of drafts/history; no browser exceptions');
 } catch (error) {

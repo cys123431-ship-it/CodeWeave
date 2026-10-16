@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-16 14:03 KST — C05 스트림 채점 계약·원고 준비(1/2)
+- 시작/결과 SHA: 시작 dbbcf6b1028ea65b363aa8b6db1a627405474c8f; 결과는 제목 feat: prepare bounded stream counting contract and C05 manuscript로 추적.
+- 목표: 현재 위치부터 최대4096바이트를 세고 EOF/오류·실패 출력 보존·빌린 스트림 수명을 구별하는 준비 계약 검증.
+- 변경 파일 수: 10개(서버 계약·신규 검사·81줄 원고·정적 도식·브라우저 검사·CI·로드맵 JSON/MD·활성/보관 일지).
+- 테스트 결과: 신규13건 0/13→13/13; 정상10사례·오답8종 거부·스타터/완성 예제 GCC 성공; 전체476건472통과·실패0·skip4(Rust 부재); 변경JS/MJS4개 문법·roadmap/diff 성공; 삭제0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38848984664 전체463/463·macOS/browser성공 재확인; 결과 CI 대기. 새 macOS 계약 검사·390px 준비 도식 검사 추가, C05 화면 E2E와 구분.
+- 발견한 문제: 준비 파일/도식 부재를 먼저 재현 후 구현. 로컬 SVG 렌더는 cairosvg ModuleNotFoundError·파생 EPIPE로 미실행, 추가 설치 없음. OpenGroup 원문403/GNU 조회timeout 뒤 POSIX 공식 표준 재현본에서 의미 확인; 본문/코드 독자 작성.
+- 보안 영향: 신규 사용자 경로 입력0·프로덕션 등록0. 하네스는 익명 tmpfile와 고정 pipe만 사용하며 Linux/macOS POSIX 오류/소유권 검증용; Windows 네이티브 검증 아님. 닫힌 스트림은 디스크립터 확인 후 재사용하지 않아 검사 오답의 이중 fclose를 피함.
+- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; C05 진행 중·next=C/C05, 사용자 화면/신규 공개 문제0.
+- 다음 작업: C05 2/2회차에 catalog·exercises·registry·browser·README·audit·로드맵2·일지2(총10파일)로 화면/실제 API·오답→수정·백업·오프라인·숙달 검증. 준비 검사 파일은 등록 뒤에도 같은 계약 검증에 재사용하며 Windows 네이티브 제한은 명시.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 12:57 KST — F01 제한 범위 인수와 C 차례 전환
 - 시작/결과 SHA: 시작 d92dd760fcdcae96f11a8f0f14e42df59e2bff5c; 구현 dd5e89f5d1384c89c1f447f1fe4b1b318d519ade; 검증 기록 제목 docs: record verified F01 theory handoff to C05.
 - 목표: 검증된 이론/퀴즈 전달과 전체 완료를 구분하고 F01 진행 중을 보존하며 다음 차례를 C/C05로 이동.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 운영 계획기·API·C 실행기·v1 키 변경0, 부모 컴파일 플래그를 무시하고 -Dwarnings 유지. 외부 입력을 옵션으로 받지 않고 고정 인수만 사용.
 - 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·next=F-G/F01, 새 단원 추가0.
 - 다음 작업: 최우선 CI Cargo 중단 복구. 첫 rustc의 스레드 대기/파일 I/O·초기화 구간을 실제 관찰하고 구분; 15초/기대값 유지, 무작정 재실행 금지. 해결 전 C 차례 전환 보류.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-16 08:56 KST — F01 Cargo 이론·퀴즈 학습 경로
-- 시작/결과 SHA: 시작 e911626de341cd00b222fe2eafbc0178876cc305; 구현 a7b55a5cc3dab909cf8216da956f322c01285c2c; 브라우저 수정450b83cb5ab332f553a087dd22dcbbaa7dd779a7; 보존 기록 제목 docs: preserve F01 delivery and repeated Cargo failure evidence.
-- 목표: F01 Cargo 파일 역할·실패/수정 예시·이론/퀴즈/초안·다음 Rust 단원을 연결하고 실습 숙달 잠금 검증.
-- 변경 파일 수: 10개(catalog 원고·미채점 메타데이터·도식·단원/브라우저 검사·README·로드맵 JSON/MD·활성/보관 일지).
-- 테스트 결과: 신규2건 0/2→2/2; 수정 CI browser F01 오답/정답·초안·잠금·390px/오프라인·다음 이동 성공; 실제 Cargo 예시 검사는 로컬 도구 부재로 CI 필수; 전체450건446통과·실패0·skip4(Rust 도구 부재); 변경JS/MJS5개 문법·roadmap/diff 성공; 삭제0.
-- CI URL과 결과: 시작 SHA https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38821475519 성공; https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38827299943 첫 구현 test449/450·browser 실패, macOS 성공; https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38827645141 수정 CI test448/450 실패·macOS17/17/browser성공. 완료 기록 보류.
-- 발견한 문제: --render는 stdout 출력이므로 출력으로 MD를 apply_patch 동기화 후 --check 성공. Cargo 예시15초 중단2회, 수정CI 기존 준비 검사도15초 중단·Cargo/rustc/cc/collect2 S·rust-lld D 관찰(원인 미확정·제한 유지). 첫 browser CI는 앞선 legacy 복원으로 사라진 Rust 초안을 가정한 준비 오류로 실패; F01 직전 기존 Rust 편집기로 초안 저장하도록 수정, 기대값 유지; 네트워크 우선 SW는 변경 없이 새 catalog/도식을 캐시하며 오프라인은 CI 확인.
-- 보안 영향: 외부 입력/실행 API 추가0·grader:null; 원고는 catalog의 독자12절/88줄·25분, 공개 예시10건은 사이트 채점과 구분. Cargo 공식 배치/명령 의미만 확인, 기존 rust-mut 초안/키 보존.
-- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중, next=F-G/F01 유지(필수 예시 검증 실패로 C 전환 보류).
-- 다음 작업: 최우선 Cargo 빌드 중단 복구: rust-lld/도구체인 초기화·파일 I/O를 구분하고 재현/검증. 제한·기대값 완화나 반복 재실행으로 숨기지 않음. 성공 후 F01 예시를 재검증하고 C05로 이동.

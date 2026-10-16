@@ -51,6 +51,8 @@ jobs:
           node --check tests/rust-toolchain-inputs.test.mjs
           node --check scripts/roadmap.mjs
           node --check tests/theory-handoff.test.mjs
+          node --check server/stream-exercise.mjs
+          node --check tests/stream-exercise.test.mjs
           node --check sw.js
       - name: Verify local grading test compiler
         run: gcc --version
@@ -83,6 +85,8 @@ jobs:
           gcc --version
       - name: POSIX resource and descendant regressions
         run: node --test tests/submission-resources.test.mjs
+      - name: POSIX stream contract and read-error probes
+        run: node --test tests/stream-exercise.test.mjs
       - name: Trusted Rust execution resource probes
         run: |
           rustc --version
