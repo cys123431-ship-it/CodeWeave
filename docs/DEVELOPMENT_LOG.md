@@ -1,14 +1,14 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-16 19:57 KST — D02 스택 화면·실제 채점 연결(2/2, CI 검증 대기)
-- 시작/결과 SHA: 시작ccd51b4d75630f7e359023bbce33940cc845ebf4; 커밋 feat: deliver bounded stack practice through existing learner flow.
+## 2026-10-16 19:57 KST — D02 스택 화면·실제 채점 연결(2/2, 구현 CI 인수)
+- 시작/결과 SHA: 시작ccd51b4d75630f7e359023bbce33940cc845ebf4; 구현e9df2b113a7955a9d2d60c2b70adcec3644b7ecb; 후속 docs: accept verified D02 delivery and rotate to E02.
 - 목표: 준비된 용량4 push/pop을 기존 ds-stack ID로 전달하고 오답→수정·재제출·백업/오프라인·숙달 연결을 검증.
-- 변경 파일 수: 이번 구현8개(화면·메타데이터·registry·roadmap검사·browser·README·일지2); 인수 시 로드맵2 포함 총10개 이내.
+- 변경 파일 수: 총10개(화면·메타데이터·registry·roadmap검사·browser·README·일지2·로드맵JSON/MD).
 - 테스트 결과: 신규2건0/2→2/2; 관련20/20·전체490건486통과·실패0·skip4(Rust 부재); JS/MJS5개 문법·roadmap/diff 성공; 삭제0. 브라우저는 CI에서만 실행.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38885443590 성공 재확인; 구현 결과 SHA의 전체/브라우저 CI 검증 대기.
-- 발견한 문제: 실제 API가 ds-stack에400을 반환하고 옛 도식만 노출함을 먼저 재현. 미채점 fixture는 실제 미채점 Rust로 옮기고 순환 fixture를 명시적 상태로 구성; 신규 메타데이터 기대값은 기존 정규화 requiredFiles:[] 누락을 수정(계약 완화 아님).
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38885443590 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38891469378 전체490/490·skip0, browser실제27문제 API·D02초안/퀴즈/오답→수정/숙달/백업/오프라인/390px/다음 이동 성공, 기존 macOS회귀 성공. 후속 기록 SHA CI 별도 확인.
+- 발견한 문제: 실제 API가 ds-stack에400을 반환하고 옛 도식만 노출함을 먼저 재현. 미채점 fixture는 실제 미채점 Rust로 옮기고 순환 fixture를 명시적 상태로 구성; 신규 메타데이터 기대값은 기존 정규화 requiredFiles:[] 누락을 수정(계약 완화 아님). render는 출력 전용이므로 MD 반영 전 동기화 검사 실패 후 생성 출력을 apply_patch로 반영·재검사 성공.
 - 보안 영향: 신규 실행/파일 API 없이 기존 토큰·제한·GCC 함수형 경로 사용. 준비 하네스/10사례/호출자 비중첩 전제 불변; 사용자 v1 키와 기존 퀴즈 선택2 유지.
-- 단계별 완료율: A3/5·B10/11·C5/8·D/E1/8·F/G0/8·H/I0/6 유지; D02는 CI 인수 전까지 진행 중·next=D/D02.
-- 다음 작업: 결과 SHA CI의 실제 D02 오답/정답·백업·오프라인·390px·다음 이동을 확인 후에만 D02 인수 및 E 차례 전환. D02 macOS/Windows 네이티브 실행은 이번 범위에서 검증하지 않음.
+- 단계별 완료율: A3/5·B10/11·C5/8·D2/8(25%)·E1/8·F/G0/8·H/I0/6; D02 제한 범위 완료·next=E/E02.
+- 다음 작업: 후속 결과 SHA CI 성공 확인 후 E02 안정 정렬과 비교·이동 횟수를 8~12사례의 좁은 C 함수형 계약으로 진행. 다음 Rust 차례는 F01 남은 채점 구현; D02 macOS/Windows 네이티브는 미검증.
 
 ---
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
