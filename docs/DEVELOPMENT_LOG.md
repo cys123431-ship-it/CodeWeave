@@ -1,4 +1,30 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-16 19:04 KST — 미반영 D02 준비 작업 인계·원격 검증
+- 시작/결과 SHA: 원격3c5e39f2cab1157ed76392af4ebc63a0f6e9d668; 미반영 로컬ef9c80921a2c00d496abe5a8bce6a4251eca42f1 인계; 커밋 feat: publish verified D02 stack preparation.
+- 목표: 앞선 D02 준비 계약·원고·도식을 보존하고 최신 main 대조·재검사 뒤 실제 원격 반영 및 결과 SHA CI 확인.
+- 변경 파일 수: 시작 main 대비10개(신규3: 계약·검사·원고; 기존7: 도식·browser·capability검사·로드맵2·일지2).
+- 테스트 결과: 앞선 신규11건 실패→통과 이력 보존, 이번 재실행11/11; 정상10사례·오답6종 거부·스타터/완성 예제 GCC 성공; 전체488건484통과·실패0·skip4(Rust 도구 부재); 문법5개·일지4/4·roadmap/diff 성공; 테스트 삭제0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38865156075 성공 재확인; 준비 작업 원격 CI 미생성 상태 확인 후 업로드 예정.
+- 발견한 문제: 17:04 로컬 커밋이 아직 원격에 없었음. 덮어쓰지 않고 인계; ds-stack 영구 미채점 기대값 변경 사유·준비/실제 전달 구분은 앞선 기록 유지.
+- 보안 영향: 공개 문제/실행 경로 활성화0, 기존 학습자 키 변경0. 고정 배열 함수 계약만 검증하며 임의 포인터의 유효성을 보장하지 않음.
+- 단계별 완료율: A3/5·B10/11·C5/8·D/E1/8·F/G0/8·H/I0/6 유지; D02진행 중·next=D/D02.
+- 다음 작업: 준비 CI 확인 뒤 2/2 화면/API 연결. catalog·exercises·registry·browser·README·roadmap검사·로드맵2·일지2 총10파일로 제한; 현재 D02는 미채점 샘플 유지.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-16 17:04 KST — D02 고정 용량 스택 계약 준비(1/2)
+- 시작/결과 SHA: 시작3c5e39f2cab1157ed76392af4ebc63a0f6e9d668; 커밋 feat: prepare bounded D02 stack contract and learning manuscript.
+- 목표: 용량4 정수 스택 push/pop의 LIFO·경계·실패 보존·독립 상태를 기존 GCC 함수형 경로로 검증; 이번은 준비 범위.
+- 변경 파일 수: 10개(계약·신규 검사·72줄 원고·도식·browser준비검사·기존 capability검사·로드맵JSON/MD·활성/보관 일지).
+- 테스트 결과: 신규11건0/11→11/11; 정상10사례·안전한 오답6종 거부·스타터/완성 예제 GCC 성공; 전체488건484통과·실패0·skip4(Rust 부재); 관련26/26·일지4/4·변경JS/MJS5개 문법·roadmap/diff 성공; 삭제0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38865156075 477/477·browser/macOS성공 확인; 구현 SHA CI 대기. D02 macOS·Windows 실행은 미실행.
+- 발견한 문제: 계약/원고 부재·도식 미정의로11건 실패 재현 후 구현. 기존 ds-stack 영구 미채점 기대값은 실제 서버 등록 일치로 변경(향후 전달 오탐 방지); 준비 import가 샘플을 활성화하지 않음도 별도 검사.
+- 보안 영향: 신규 사용자 경로·할당·해제·프로덕션 등록0; 호출자 제공 객체와 비중첩 출력만 처리. NULL/잘못된 길이는 원소 접근 전 거부하며 구조체 패딩 비교를 피함.
+- 단계별 완료율: A3/5·B10/11·C5/8·D/E1/8·F/G0/8·H/I0/6 유지; D02진행 중·next=D/D02; 기존 ds-stack ID/초안/퀴즈/진도 키 유지.
+- 다음 작업: 2/2에서 catalog·exercises·registry·browser·README·roadmap검사·로드맵2·일지2(10파일)로 실제 채점/재제출·백업/오프라인·숙달 연결. roadmap검사의 ds-stack 미채점 고정 fixture와 D02 고정 선택 기대도 실제 인수 상태에 맞게 교차 검증.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 15:57 KST — C05 PR CI 복구·인수
 - 시작/결과 SHA: main3791b101b1006c7515a6cfb9c3a3009f048771dc; PR2 bf53a936682bfdb272f012d02dd5685214586297; 복구87022eb771bb3343125494f337a581255403d01d; 후속 docs: accept verified C05 delivery and rotate to D02.
 - 목표: PR2 유일한 Node 실패 복구와 C05 제한 범위 인수; 최종 PR/main CI 확인 뒤 반영 확정.
@@ -35,29 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 개발 로드맵의 선택 차례·제한 범위 근거만 처리; 외부 실행/파일 경로/API/학습자 v1 키 변경0. 원격 CI 성공은 함수가 인증하지 않으며 실제 조회한 SHA/CI만 기록.
 - 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·이론/퀴즈 인수 기록, next=C/C05. 새 단원0.
 - 다음 작업: 결과 SHA CI 성공 후 C05 파일 입출력을 좁은 스트림 수명/EOF/오류 범위로 설계·구현. 다음 Rust 차례는 F01 미완료 채점을 이어가며 같은 이론 인수로 재차 건너뛰기 금지.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-16 11:56 KST — 신뢰된 Rust 도구 파일 준비
-- 시작/결과 SHA: 시작 250f67362f7186aa0259a342873ab7779be275e6; 구현 9518dd0d2c82e5d679e28128e24386c036de174d; 검증 기록 제목 docs: record bounded Rust readiness recovery evidence.
-- 목표: 파일 페이지 대기 가설을 읽기 전용 준비 단계로 검증하며 실제 Cargo 15초·필수 실행·판정을 보존.
-- 변경 파일 수: 6개(준비 script·신규 검사·CI·설계·활성/보관 일지).
-- 테스트 결과: 신규5건 각각 실패→5/5 성공; 전체459건455통과·실패0·skip4(로컬 Rust 부재); 준비 CLI도 ENOENT/종료1로 거부 확인, 실제 도구 읽기는 CI 필요; MJS2개 문법·roadmap/diff 성공; 삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38838992098 test452/454 실패 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38843603660 전체459/459·skip0 및 macOS/browser성공. 최종 기록 SHA의 CI는 별도 확인.
-- 발견한 문제: 별칭 이중 읽기·버전 접미사 .so 누락을 재현 후 중복 제거·선택 패턴 수정, 기대값 변경0. 초기 전체 검사 중 fixture 보강으로2실패한 뒤 최종 성공. 실제 준비32파일406487746바이트/6396ms, Cargo 준비150~227ms·결과164~174ms, F01 정상/오답/수정 합계4038ms. 콜드 파일 페이지 가설과 일치하나 호스트 근본 원인은 미확정.
-- 보안 영향: 선택된 sysroot 내부의 일반 도구 파일만 최대256개/1GiB/60초 읽기, 외부 링크·예산/읽기 오류 거부. 빌드/재시도/산출물 캐시/파일 수정/네트워크/운영 API 추가0.
-- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·next=F-G/F01, 새 단원0.
-- 다음 작업: 최종 SHA CI까지 성공하면 F01 이론/퀴즈 전달 범위의 인수 근거를 정리하고 C05 차례로 전환 검토; F01 전체 완료·Rust API 잠금은 유지. 실패 시 CI 복구 우선. 도구체인 고정·Cargo 빌드 자원 한도는 미완료.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-16 10:58 KST — Cargo 중단의 스레드·입출력 관찰
-- 시작/결과 SHA: 시작 f12f147a7c56eeb4f3b536c9e3d6851fe52b562b; 구현 bc8e43e26d58305479865e01708130a34116b228; 근거 보존 제목 docs: retain Cargo page-wait evidence without claiming recovery.
-- 목표: 반복되는 F01 첫 빌드 중단의 대기/CPU/입출력 진행을 두 시점으로 구분하며 기존 15초·판정을 유지.
-- 변경 파일 수: 8개(관찰 helper2·검사2·CI·설계·활성/보관 일지).
-- 테스트 결과: 신규2건·기존 timeout 확장1건 수정 전3실패→관련8/8 성공(실제 Linux 관찰 포함 CI도 성공); 전체 로컬454건450통과·실패0·skip4(Rust 도구 부재); CI452통과/454·실패2·skip0; MJS4개 문법·roadmap/diff 성공; 삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38833927876 실패 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38838684764 test452/454 실패·macOS/browser성공, 완료 보류.
-- 발견한 문제: F01-project15007ms·prepare-normal15010ms/ETIMEDOUT. F01 rustc 스레드가 두 표본 모두 D/folio_wait_bit_common, read_bytes16584704→36069376·CPU system1→3ticks; 준비도 rustc D 뒤 ld D/같은 wchan. 파일 페이지 대기와 일치하는 관찰이나 저장장치/도구체인 원인 미확정; 결과3빌드214~477ms 성공.
-- 보안 영향: 테스트 전용 읽기 관찰이며 인수·환경·파일 내용·fd는 수집하지 않음. 운영 API·C 실행기·Rust 활성화·v1 키 변경0.
-- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·next=F-G/F01, 새 단원0.
-- 다음 작업: 최우선 첫 빌드의 파일 페이지 대기 원인 분리: 고정 도구체인·CI 저장 경로/사전 읽기 조건을 재현 검사로 비교, 15초·필수 실행·기대값 유지. 해결 전 C 차례 전환 금지.

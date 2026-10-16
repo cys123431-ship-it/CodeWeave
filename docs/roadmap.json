@@ -386,8 +386,8 @@
           "lessonIds": [
             "ds-stack"
           ],
-          "manuscripts": [],
-          "tests": []
+          "manuscripts": ["content/ds/02-stack.md"],
+          "tests": ["tests/stack-exercise.test.mjs"]
         },
         {
           "id": "D03",

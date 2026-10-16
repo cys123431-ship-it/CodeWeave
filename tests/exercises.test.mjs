@@ -137,7 +137,11 @@ test('only implemented C exercises advertise their explicit grading strategy', (
   assert.match(gradingExercises.get('c-student-vector-push').harness, /int push_student\(struct Student \*\*students, size_t \*length,/);
   assert.match(gradingExercises.get('c-student-vector-push').harness, /int reserve_students\(struct Student \*\*students, size_t length,/);
   assert.deepEqual(gradingExercises.get('c-student-vector-push').linkArgs, []);
-  for (const id of ['rust-mut', 'ds-stack']) assert.equal(isGradedExercise(id), false);
+  // Capability must follow actual registration; a sample may gain a grader later.
+  // The complete registry equality and executable cases are checked above.
+  for (const id of ['rust-mut', 'ds-stack']) {
+    assert.equal(isGradedExercise(id), gradingExercises.has(id), id);
+  }
 });
 
 test('E01 exposes its prepared contract through the existing lesson ID and production registry', async () => {

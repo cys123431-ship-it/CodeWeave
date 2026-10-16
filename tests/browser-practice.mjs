@@ -1014,6 +1014,27 @@ try {
   await expect(page.locator('.detail-head h1')).toHaveText('Cargo 프로젝트와 실패하는 테스트 읽기');
   await expect(page.locator('#code-input')).toHaveValue(rustDraft);
   console.log('PASS: C05 quiz correction, real 10-case GCC API failure/retry, mastery, backup, offline attempts, 390px and next lesson');
+  // Component QA only: ds-stack remains the existing ungraded sample this run.
+  await page.evaluate(async () => {
+    const { figureFor } = await import('/src/figures.js');
+    const preview = document.createElement('div');
+    preview.id = 'qa-stack-diagram';
+    preview.style.width = '340px';
+    preview.style.maxWidth = '100%';
+    preview.innerHTML = figureFor('stack-bounded-lifo');
+    document.body.append(preview);
+  });
+  await expect(page.locator('#qa-stack-diagram svg')).toHaveAttribute('role', 'img');
+  assert.equal(await page.evaluate(() => {
+    const svg = document.querySelector('#qa-stack-diagram svg');
+    const view = svg.viewBox.baseVal;
+    return [...svg.querySelectorAll('text')].every(text => {
+      const box = text.getBBox();
+      return box.x >= 0 && box.y >= 0 && box.x + box.width <= view.width && box.y + box.height <= view.height;
+    }) && document.documentElement.scrollWidth <= innerWidth;
+  }), true, 'prepared stack diagram must fit 390px');
+  if (qaDir) await page.locator('#qa-stack-diagram').screenshot({ path: path.join(qaDir, 'stack-contract-mobile.png') });
+  console.log('PASS: prepared D02 LIFO/capacity diagram fits 390px; no new ds-stack API or lesson delivery claimed');
   assert.deepEqual(errors, []);
   console.log('PASS: 390px mobile layout and offline reload of drafts/history; no browser exceptions');
 } catch (error) {

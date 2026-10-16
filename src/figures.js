@@ -3,6 +3,14 @@ const arrow=(x1,y1,x2,y2)=>`<path d="M${x1} ${y1} L${x2} ${y2}" stroke="#6b8d98"
 const wrap=inner=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 670 190" role="img" aria-label="학습 개념 그림"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 const wrapTall=(label,inner,viewBox='0 0 670 300',style='')=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"${style?` style="${style}"`:''} role="img" aria-label="${label}"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 export function figureFor(kind){
+ if(kind==='stack-bounded-lifo')return wrapTall('용량4 배열 스택의 LIFO와 길이 변화, 실패 상태 보존',
+  `<text x="170" y="25" text-anchor="middle" font-size="15" fill="#28485b">용량4 · length는 원소 수</text>`+
+  box(35,48,270,44,'push 2 → push 5','#e7f1ff')+arrow(170,98,170,125)+
+  box(35,132,270,44,'{2,5,93,94} · length 2')+arrow(170,182,170,209)+
+  box(35,216,270,44,'pop → out 5 · length 1','#d7f4e6')+arrow(170,266,170,293)+
+  box(35,300,270,44,'옛 5 유지 · 유효 원소는 2','#fff3d8')+
+  `<text x="170" y="371" text-anchor="middle" font-size="14" fill="#9d4f40">빈/가득 참 실패 → 상태 보존</text>`,
+  '0 0 340 390','max-width:340px');
  if(kind==='stream-eof-error')return wrapTall('호출자가 연 스트림을 빌려 읽고 정상 EOF와 오류를 구별한 뒤 호출자가 닫는 흐름',
   box(35,18,270,44,'호출자 · 열기와 NULL 검사','#e7f1ff')+arrow(170,64,170,83)+
   box(35,89,270,44,'빌린 함수 · 현재 위치부터 읽기')+arrow(170,135,170,154)+
