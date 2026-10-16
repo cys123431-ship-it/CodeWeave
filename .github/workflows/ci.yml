@@ -43,6 +43,8 @@ jobs:
           node --check tests/rust-observer.test.mjs
           node --check tests/helpers/rust-budget.mjs
           node --check tests/rust-resources.test.mjs
+          node --check tests/helpers/rust-fixture-linker.mjs
+          node --check tests/rust-fixture-linker.test.mjs
           node --check sw.js
       - name: Verify local grading test compiler
         run: gcc --version
@@ -50,6 +52,9 @@ jobs:
         run: |
           cargo --version
           rustc --version
+          cc --version
+          ld --version
+          node --input-type=module -e "import {rustFixtureFlags} from './tests/helpers/rust-fixture-linker.mjs'; console.log('Trusted fixture flags:', rustFixtureFlags())"
       - name: Unit tests
         run: npm test
         env:

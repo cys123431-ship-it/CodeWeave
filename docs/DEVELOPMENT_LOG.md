@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-16 10:02 KST — 신뢰된 Linux Rust 빌드 링커 선택
+- 시작/결과 SHA: 시작 036bce852a755cf21dc58b15b79191163f70cac0; 결과 커밋 제목 test: use system linker for trusted Linux Rust fixtures.
+- 목표: 반복 중단에서 관찰된 rust-lld 경로를 공식 시스템 링커 옵션으로 분리해 제한/판정을 유지한 CI 완화 경로 검증.
+- 변경 파일 수: 10개(공통 helper·신규 검사·Rust fixture4·CI·설계·활성/보관 일지).
+- 테스트 결과: 신규2건 0/2→2/2; 전체452건448통과·실패0·skip4(Rust 도구 부재); 변경MJS6개 문법·roadmap/diff 성공; 15초/경고오류/정상·오답·수정 기대값 유지; 테스트 삭제0.
+- CI URL과 결과: 시작 SHA https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38827994592 성공450/450 및 F01 실제 예시/브라우저 성공을 재확인; 새 결과 CI 대기.
+- 발견한 문제: 과거 rust-lld D 상태는 원인 확정 근거가 아님. Rust 공식 -C linker-features=-lld를 신뢰 fixture의 Linux x64에만 적용, 도구체인 버전/실행 제한은 변경하지 않음.
+- 보안 영향: 운영 계획기·API·C 실행기·v1 키 변경0, 부모 컴파일 플래그를 무시하고 -Dwarnings 유지. 외부 입력을 옵션으로 받지 않고 고정 인수만 사용.
+- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·next=F-G/F01, 새 단원 추가0.
+- 다음 작업: CI 성공 시 시스템 링커 완화와 근본 원인 미확정을 구분해 인계. F01 이론/퀴즈 제공 증거를 재확인하고 C05 차례 전환; Cargo 빌드 자원/도구체인 고정은 후속 Rust 작업.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 08:56 KST — F01 Cargo 이론·퀴즈 학습 경로
 - 시작/결과 SHA: 시작 e911626de341cd00b222fe2eafbc0178876cc305; 구현 a7b55a5cc3dab909cf8216da956f322c01285c2c; 브라우저 수정450b83cb5ab332f553a087dd22dcbbaa7dd779a7; 보존 기록 제목 docs: preserve F01 delivery and repeated Cargo failure evidence.
 - 목표: F01 Cargo 파일 역할·실패/수정 예시·이론/퀴즈/초안·다음 Rust 단원을 연결하고 실습 숙달 잠금 검증.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 기본 실행기/프로세스 import/HTTP 등록 없음; CI만 신뢰된 합성 Rust 실행. v1/저장키 변경0, 출력 판정은 악성 결과 진위 증명이 아님; 진단은 제한된 프로세스 출력만 보존.
 - 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지, 분모변경0; F01 진행 중·next=F-G/F01 유지.
 - 다음 작업: 반복 Cargo 준비 빌드 중단 진단(error/signal/stdout·컴파일 자식 상태) 최우선. 해결 후 실제 자원 상한·그룹/자식 정리·문법/경고·도구체인 고정 검증; 운영 API/숙달 잠금.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-16 05:02 KST — Rust 파일·산출물·테스트 열거 준비
-- 시작/결과 SHA: 시작 4c9fb921e889dfd373948a86f3ad41b2e5609b4e; 검증 결과 9dcfeec2afa8429d398a50d1fb0b418728a987b0; 확인 기록 제목 docs: preserve Cargo build timeout and retry evidence.
-- 목표: F01 비활성 준비 어댑터로 고정 파일 생성·도구 상태·Cargo 산출물·일반/ignored 목록 대조를 검증.
-- 변경 파일 수: 10개(준비 어댑터·검사·계획기·CI·설계/아키텍처·로드맵 JSON/MD·활성/보관 일지).
-- 테스트 결과: 신규8건0/8→8/8; kind 객체 거부도 실패→통과; 로컬425건 중424통과·skip1(Cargo/rustc 부재), CI425/425·macOS12/12·실패/취소/skip0; Cargo/rustc1.99.0에서 정상8건 목록·ignored/빈 목록 거부 성공; Chromium25문제·390px·백업/오프라인 및 변경MJS3개 문법·roadmap --check·diff 성공.
-- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38799931119/attempts/2 — 검증 결과SHA test425/425·macOS12/12·browser 성공; 구현CI38799626586도 성공, F01 진행 중 유지.
-- 발견한 문제: 기록SHA 첫CI에서 합성 Cargo 빌드15초 경계/status=null로424/425 실패; 코드/CI/검사 차이0, 실패 작업1회 재실행 성공·원인 미확정·제한/기대값 변경0. 일반 목록의 ignored 식별 불가를 별도 --list --ignored로 해결; kind 배열 흉내 거부·테스트 함수 삭제0.
-- 보안 영향: 고정 파일을 새 전용 디렉터리에만 쓰며 운영 Cargo 실행·HTTP 등록·저장/백업 키 변경0; CI만 신뢰된 합성 코드를 빌드/열거하고 함수 본문은 실행하지 않음. 경로 검사는 격리가 아님.
-- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지, 분모변경0; F01 진행 중·next=F-G/F01 유지.
-- 다음 작업: 사례 실행 결과·진단/미실행·자원/자식 정리 회귀를 별도 구현하고 도구체인 고정/상한 실측; 운영 Rust API와 숙달은 계속 잠금, F01 완료/C 전환 금지.

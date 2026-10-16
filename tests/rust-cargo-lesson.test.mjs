@@ -11,6 +11,7 @@ import { lessonLearningStatus } from '../src/mastery.js';
 import { scoreChoice } from '../src/logic.js';
 import { figureFor } from '../src/figures.js';
 import { observeProcess } from './helpers/observe-process.mjs';
+import { withRustFixtureLinker } from './helpers/rust-fixture-linker.mjs';
 
 const lesson = () => lessons.find(item => item.id === 'rust-cargo');
 test('F01 exposes a Rust lesson with complete project files and an accessible static figure', () => {
@@ -52,9 +53,9 @@ test('F01 displayed Cargo project runs ten assertions, rejects a wrong operator 
     await fs.writeFile(path.join(dir, section.fileName), section.code);
   }
   await fs.writeFile(path.join(dir, 'Cargo.lock'), 'version = 3\n\n[[package]]\nname = "weave_receipt"\nversion = "0.1.0"\n');
-  const env = { PATH: process.env.PATH, HOME: process.env.HOME, RUSTUP_HOME: process.env.RUSTUP_HOME,
+  const env = withRustFixtureLinker({ PATH: process.env.PATH, HOME: process.env.HOME, RUSTUP_HOME: process.env.RUSTUP_HOME,
     CARGO_HOME: path.join(dir, 'cargo-home'), CARGO_TARGET_DIR: path.join(dir, 'target'),
-    RUSTFLAGS: '-Dwarnings', CARGO_NET_OFFLINE: 'true', CARGO_INCREMENTAL: '0', CARGO_TERM_COLOR: 'never' };
+    CARGO_NET_OFFLINE: 'true', CARGO_INCREMENTAL: '0', CARGO_TERM_COLOR: 'never' });
   const run = () => observeProcess('cargo', ['test', '--test', 'receipt', '--frozen', '--jobs', '1', '--color', 'never'], { cwd: dir, env, timeout: 15000, stage: 'F01-project' });
   const library = l.sections.find(s => s.fileName === 'src/lib.rs').code;
   const first = await run();

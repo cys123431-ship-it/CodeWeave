@@ -108,6 +108,14 @@ grader가 null인 동안 Rust 이론/퀴즈가 통과해도 practiceAvailable/pr
 
 ## 7. 다음 구현 순서와 완료 문턱
 
+### Linux 신뢰 빌드의 시스템 링커 선택 (2026-10-16)
+
+과거 CI는 15초 중단 시 cargo/rustc/cc/collect2의 S 상태와 rust-lld의 D 상태를 기록했다. 이는 관찰이며 디스크·LLD·도구체인 초기화 중 어느 것이 근본 원인인지는 확정하지 않는다.
+Rust 1.90부터 x86_64 Linux GNU 대상의 기본 LLD를 끄는 공식 옵션 `-C linker-features=-lld`를 테스트 전용 공통 helper에 적용한다. macOS·다른 아키텍처에는 적용하지 않는다.
+Cargo 준비·사례 결과·F01 예시·직접 rustc 자원 fixture가 같은 정책을 사용한다. `-Dwarnings`, 기존15초, 성공/실패 기대값과 실제 검사 본문은 유지한다. CI는 cc/ld 버전과 실제 선택 인수를 기록한다.
+운영 계획기의 RUSTFLAGS나 API는 변경하지 않는다. 이 경로의 CI 성공을 기본 LLD의 근본 원인 해결·도구체인 고정·운영 Rust 채점 완료로 확대하지 않는다.
+근거: [Rust 공식 1.90 LLD 안내](https://blog.rust-lang.org/2025/09/01/rust-lld-on-1.90.0-stable/), 2026-10-16 확인. 설정 의미만 참고했다.
+
 ### 신뢰된 CI 테스트 바이너리의 실행 예산 (2026-10-16)
 
 테스트 전용 `tests/helpers/rust-budget.mjs`가 고정 Bash 스크립트와 argv를 분리하며 PATH/LANG/LC_ALL/TMPDIR만 전달한다. 운영 코드·API에서는 사용하지 않는다.

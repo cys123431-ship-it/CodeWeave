@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { observeProcess } from './helpers/observe-process.mjs';
+import { rustFixtureFlags } from './helpers/rust-fixture-linker.mjs';
 
 const api = () => import('./helpers/rust-budget.mjs');
 const posix = process.platform !== 'win32';
@@ -100,7 +101,7 @@ test('Real Rust inherits execution budgets and fails bounded memory, file, CPU a
   t.after(() => fs.rm(dir, { recursive: true, force: true }));
   await fs.writeFile(path.join(dir, 'probe.rs'), source);
   const binary = path.join(dir, 'probe');
-  const compiled = await observeProcess('rustc', ['--edition=2021', '-Dwarnings', path.join(dir, 'probe.rs'), '-o', binary], { timeout: 15000, stage: 'resource-probe-build' });
+  const compiled = await observeProcess('rustc', ['--edition=2021', ...rustFixtureFlags(), path.join(dir, 'probe.rs'), '-o', binary], { timeout: 15000, stage: 'resource-probe-build' });
   assert.equal(compiled.status, 0, JSON.stringify(compiled));
   async function run(mode, timeout = 2000) {
     const invocation = rustBudget(binary, [mode]);

@@ -6,6 +6,7 @@ import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { formatRustProcessFailure } from '../server/rust-results.mjs';
 import { observeProcess } from './helpers/observe-process.mjs';
+import { withRustFixtureLinker } from './helpers/rust-fixture-linker.mjs';
 
 const api = () => import('../server/rust-preparation.mjs');
 const cases = Array.from({ length: 8 }, (_, i) => ({ id: `case_0${i}`, label: `fixture ${i}` }));
@@ -133,9 +134,9 @@ test('Real Cargo builds the fixed package and lists eight nonexecuted tests, rej
   const parent = await temporary(t);
   for (const [source, valid] of [[harness, true], [harness.replace('#[test]', '#[test]\n#[ignore]'), false], ['// no tests\n', false]]) {
     const workspace = await prepareRustWorkspace(request, registry(source), parent);
-    const env = { PATH: process.env.PATH, HOME: process.env.HOME, ...workspace.plan.environment,
+    const env = withRustFixtureLinker({ PATH: process.env.PATH, HOME: process.env.HOME, ...workspace.plan.environment,
       CARGO_HOME: path.join(parent, 'cargo-home'), RUSTUP_HOME: process.env.RUSTUP_HOME,
-      CARGO_TARGET_DIR: workspace.targetDir };
+      CARGO_TARGET_DIR: workspace.targetDir });
     const compiled = await observeProcess(workspace.plan.compile.command, workspace.plan.compile.args, {
       cwd: workspace.dir, env, timeout: 15000, maxBuffer: 80000,
       stage: source === harness ? 'prepare-normal' : source.includes('#[ignore]') ? 'prepare-ignored' : 'prepare-empty'

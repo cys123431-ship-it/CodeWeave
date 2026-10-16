@@ -5,6 +5,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { observeProcess } from './helpers/observe-process.mjs';
+import { withRustFixtureLinker } from './helpers/rust-fixture-linker.mjs';
 import { rustBudget } from './helpers/rust-budget.mjs';
 import { createRustPlan } from '../server/rust-contract.mjs';
 import { prepareRustWorkspace, selectRustArtifact, validateRustListing, checkRustToolchain } from '../server/rust-preparation.mjs';
@@ -141,8 +142,8 @@ test('Real Rust case bodies distinguish all-pass, assertion failure and early ex
   const early = harness.replace('assert_eq!(codeweave_submission::value(), 2)', 'std::process::exit(0)');
   for (const [text, expected] of [[harness, 8], [bad, 7], [early, 0]]) {
     const workspace = await prepareRustWorkspace(request, registry(text), parent);
-    const env = { PATH: process.env.PATH, HOME: process.env.HOME, RUSTUP_HOME: process.env.RUSTUP_HOME,
-      CARGO_HOME: path.join(parent, 'cargo-home'), CARGO_TARGET_DIR: workspace.targetDir, ...workspace.plan.environment };
+    const env = withRustFixtureLinker({ PATH: process.env.PATH, HOME: process.env.HOME, RUSTUP_HOME: process.env.RUSTUP_HOME,
+      CARGO_HOME: path.join(parent, 'cargo-home'), CARGO_TARGET_DIR: workspace.targetDir, ...workspace.plan.environment });
     const options = { cwd: workspace.dir, env, encoding: 'utf8', timeout: 2000, maxBuffer: 80000 };
     const compiled = await observeProcess('cargo', workspace.plan.compile.args, {
       ...options, timeout: 15000, stage: expected === 8 ? 'result-pass' : expected === 7 ? 'result-assert' : 'result-exit'
