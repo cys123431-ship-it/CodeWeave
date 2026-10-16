@@ -10,8 +10,8 @@
     "C"
   ],
   "next": {
-    "track": "C",
-    "unit": "C05"
+    "track": "D",
+    "unit": "D02"
   },
   "limits": {
     "screenSections": [
@@ -328,7 +328,7 @@
         {
           "id": "C05",
           "title": "파일 입출력: 스트림 수명·오류·EOF",
-          "status": "진행 중",
+          "status": "완료",
           "lessonIds": [
             "c-file-stream-count"
           ],

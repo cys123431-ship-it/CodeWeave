@@ -1,4 +1,4 @@
-// C05 preparation only: not in the production registry until the lesson handoff.
+// Shared C05 contract reused by the production registry and independent tests.
 // Error/ownership probes use POSIX pipe/fcntl on Linux/macOS, not ISO C guarantees.
 import { buildGradingExercises } from './exercise-contract.mjs';
 
