@@ -64,6 +64,7 @@ Rustup 다운로드나 crates.io 접근, 사용자 toolchain override를 실행 
 `server/rust-preparation.mjs`의 `RUST_TOOLCHAIN_VERSION=1.99.0`이 단일 설정이다. 직전 Linux/macOS CI38945914201에서 실제 빌드·자원·결과 검사를 통과한 릴리스를 선택했으며 이동하는 stable/nightly를 사용하지 않는다. `checkRustToolchain`은 Cargo와 rustc 모두 정확한 stable 릴리스, 성공 종료·무신호·무오류 및 1024바이트 이하 단일 버전 출력을 요구한다. 다른 패치/마이너·혼합 버전·nightly/beta·추가 줄은 운영 오류로 거부한다. 버전 문자열은 도구 진위나 바이너리 해시의 인증이 아니다.
 Ubuntu/macOS CI는 제출 실행 전에 이 설정을 읽어 `rustup toolchain install --profile minimal --no-self-update`로 준비하고 해당 버전을 CI runner의 기본값으로 선택한 뒤 실제 두 도구를 검사한다. 준비 실패는 이후 빌드 전에 실패하며 자동 stable 대체나 재시도는 없다. 설치·기본값 변경은 일회용 CI 호스트에서만 수행한다. 내부 준비/채점 함수는 설치·다운로드·설정 변경을 하지 않는다.
 새 검사는 버전 일치·다른/혼합 버전·프리릴리스·잘못된/과대 출력·실패 도구를 검증한다. 기존 준비 검사에서 임의의 정상 버전으로 쓰던 1.90.0 fixture는 새 고정 계약의 정상 입력인 1.99.0으로 바꿨다. 기존 도구 실패·산출물·열거·실제 실행 기대값은 유지한다.
+구현 `fd5d7acd34c22d0af2aaa339e27aea0cd0e44b14`의 [CI38952261425](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38952261425)에서 두 OS의 실제 Cargo/rustc 1.99.0 선택, Ubuntu 전체515/515·skip0, macOS Cargo 준비/결과/빌드예산25/25·skip0 및 browser 회귀 성공을 재조회했다. 고정된 CI 환경의 인수 근거이며 운영 도구 경로·호스트/override 검증 완료는 아니다.
 후속 운영 실행기는 이 버전의 실제 절대 Cargo/rustc 경로·호스트 대상·환경 override를 검증해 고정해야 한다. CI 기본값 선택만으로 작업 공간 밖 임의 Rustup override나 악성 도구를 격리했다고 주장하지 않는다. Rust API·실습·숙달은 계속 비활성이다.
 명령과 override 우선순위는 [Rustup 도구체인](https://rust-lang.github.io/rustup/concepts/toolchains.html), [기본 사용법](https://rust-lang.github.io/rustup/basics.html), [override](https://rust-lang.github.io/rustup/overrides.html) 원문을 확인했다. 문서 본문은 복제하지 않았다.
 

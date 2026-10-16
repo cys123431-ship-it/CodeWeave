@@ -1,14 +1,14 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-17 04:00 KST — F01 검증된 Rust 도구체인 고정
-- 시작/결과 SHA: 시작53d662221feb363622263596def5ab2507683b60; 커밋 fix: pin verified Rust toolchain in trusted CI.
+- 시작/결과 SHA: 시작53d662221feb363622263596def5ab2507683b60; 구현fd5d7acd34c22d0af2aaa339e27aea0cd0e44b14; 후속 docs: record verified fixed Rust toolchain CI.
 - 목표: 직전 성공 CI의 1.99.0을 고정하고 다른/혼합/프리릴리스 도구를 빌드 전에 거부; 운영 Rust 연결 전 재현성 경계 보강.
 - 변경 파일 수: 총7개(준비 어댑터·신규 버전검사·기존 준비검사·CI·Rust설계·활성/보관 일지).
 - 테스트 결과: 신규5건 수정 전2통과·3실패→5/5; 관련14건13통과·실패0·skip1(Cargo 부재); 전체515건511통과·실패0·skip4(Rust 부재), 변경MJS3개 문법·일지4/4·roadmap/diff 성공; 삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38945914201 성공 재확인; 구현 결과 SHA CI 대기.
+- CI URL과 결과: 시작38945914201 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38952261425 전체515/515·실패0·skip0, Linux/macOS 실제1.99.0·Cargo6빌드·macOS25/25·browser 회귀 성공; 후속 기록 SHA CI 별도 확인.
 - 발견한 문제: 기존 버전 검사가 숫자 접두부만 검사해 다른 버전/nightly/추가 줄을 허용. 새 거부 기대값 유지; 기존 정상 fixture 1.90.0→1.99.0은 고정 계약 변경에 따른 정상 입력 갱신이며 실패 기대값은 유지.
 - 보안 영향: 새 API/사용자 입력0; 순수 버전검사는 설치/실행0. CI 준비만 명시 버전 설치·기본값 선택하며 실패 시 중단, 운영 실행기 경로/override 고정은 아직 미구현.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01·Rust 실습/숙달 비활성.
-- 다음 작업: 결과 SHA의 두 OS CI를 확인하고 실제 절대 도구 경로·호스트 대상·환경 고정, 빌드/열거/실행 통합과 취소/정리·문법/경고/자원 초과 분류를 검증한다.
+- 다음 작업: 후속 결과 SHA CI를 확인하고 실제 절대 도구 경로·호스트 대상·환경 고정, 빌드/열거/실행 통합과 취소/정리·문법/경고/자원 초과 분류를 검증한다.
 
 ---
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
