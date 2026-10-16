@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-17 03:10 KST — F01 Cargo 빌드 예산 미반영 커밋 인계
+- 시작/결과 SHA: 시작b87e3c76c3695445a8f8d14c3220f0e2d8929c3b; 보존한 로컬ba33d8ae0bfc6f3c3d1102dde0cf8c41a4e0d670와 원격 구현5eded9deb2db5007473bf30c3db06828634d0bf5는 동일 tree; 후속 docs: record Cargo build budget CI evidence.
+- 목표: 03:03의 검증된 로컬 커밋을 원격에 반영하고 실제 Linux/macOS Cargo 빌드 제한 CI를 인수; 새 기능·단원 추가0.
+- 변경 파일 수: 시작 main 대비8개 유지; 이번 인계 후속은 설계·활성/보관 일지3개.
+- 테스트 결과: 신규5건 실패→통과 이력 보존·이번5/5; 로컬 전체510건506통과·실패0·skip4(Rust 도구 부재) 재확인; 일지4/4·roadmap/diff 성공; 삭제0·기대값 변경0.
+- CI URL과 결과: 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38945563049 전체510/510·실패0·skip0, macOS 신규5/5·준비/결과25/25·실제Cargo6빌드, browser 회귀 모두 성공; 후속 기록 SHA CI 별도 확인.
+- 발견한 문제: 이전 실행의 구현은 로컬 커밋만 있고 원격 미반영이었음. 8개 blob과 전체 tree 일치 확인 후 최신 main expected SHA로 비강제 갱신.
+- 보안 영향: 신뢰된 CI 전용 빌드 한도 검증이며 운영 API·사용자 입력 경로 변경0; 운영 Rust 실습/숙달 잠금 유지.
+- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
+- 다음 작업: 후속 결과 SHA CI를 확인하고 고정 도구체인·빌드/열거/실행 통합·취소/정리 및 문법/경고/빌드 자원 초과 경로 검증을 이어감; F01 이론 인수 재사용으로 차례 건너뛰기 금지.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-17 03:03 KST — F01 신뢰된 CI Cargo 빌드 자원 예산
 - 시작/결과 SHA: 시작b87e3c76c3695445a8f8d14c3220f0e2d8929c3b; 커밋 test: enforce resource budgets for trusted Cargo builds.
 - 목표: 운영 Rust 연결 전 누락된 빌드 자원 한도를 준비/결과 합성 Cargo6빌드에 적용하고 Linux/macOS 필수 CI로 검증.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 신규 실행/파일 API 없이 기존 토큰·제한·GCC 함수형 경로 사용. 준비 하네스/10사례/호출자 비중첩 전제 불변; 사용자 v1 키와 기존 퀴즈 선택2 유지.
 - 단계별 완료율: A3/5·B10/11·C5/8·D2/8(25%)·E1/8·F/G0/8·H/I0/6; D02 제한 범위 완료·next=E/E02.
 - 다음 작업: 후속 결과 SHA CI 성공 확인 후 E02 안정 정렬과 비교·이동 횟수를 8~12사례의 좁은 C 함수형 계약으로 진행. 다음 Rust 차례는 F01 남은 채점 구현; D02 macOS/Windows 네이티브는 미검증.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-16 19:04 KST — 미반영 D02 준비 작업 인계·원격 검증
-- 시작/결과 SHA: 원격3c5e39f2cab1157ed76392af4ebc63a0f6e9d668; 미반영 로컬ef9c80921a2c00d496abe5a8bce6a4251eca42f1 인계; 구현131350a48d9432335b5373ccff4634f6fc378995; 후속 docs: record verified D02 preparation handoff.
-- 목표: 앞선 D02 준비 계약·원고·도식을 보존하고 최신 main 대조·재검사 뒤 실제 원격 반영 및 결과 SHA CI 확인.
-- 변경 파일 수: 시작 main 대비10개(신규3: 계약·검사·원고; 기존7: 도식·browser·capability검사·로드맵2·일지2).
-- 테스트 결과: 앞선 신규11건 실패→통과 이력 보존, 이번 재실행11/11; 정상10사례·오답6종 거부·스타터/완성 예제 GCC 성공; 전체488건484통과·실패0·skip4(Rust 도구 부재); 문법5개·일지4/4·roadmap/diff 성공; 테스트 삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38865156075 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38885105450 전체488/488·skip0, 기존 macOS회귀·browser성공. D02 도식390px 컴포넌트 QA 성공이며 화면/API E2E 아님; D02 macOS/Windows 미실행. 최종 기록 SHA CI 별도 확인.
-- 발견한 문제: 17:04 로컬 커밋이 아직 원격에 없었음. 덮어쓰지 않고 인계; ds-stack 영구 미채점 기대값 변경 사유·준비/실제 전달 구분은 앞선 기록 유지.
-- 보안 영향: 공개 문제/실행 경로 활성화0, 기존 학습자 키 변경0. 고정 배열 함수 계약만 검증하며 임의 포인터의 유효성을 보장하지 않음.
-- 단계별 완료율: A3/5·B10/11·C5/8·D/E1/8·F/G0/8·H/I0/6 유지; D02진행 중·next=D/D02.
-- 다음 작업: 준비 CI 확인 뒤 2/2 화면/API 연결. catalog·exercises·registry·browser·README·roadmap검사·로드맵2·일지2 총10파일로 제한; 현재 D02는 미채점 샘플 유지.
