@@ -39,6 +39,41 @@ function evidenceFile(file, prefix) {
       file.includes('\\') || !existsSync(path.join(root, file))) fail('invalid evidence / 근거: ' + file);
 }
 
+const theoryChecks = ['theory', 'quiz-retry', 'drafts', 'offline', 'example-tests'];
+function validateTheoryDelivery(stage, unit) {
+  const delivery = unit.theoryDelivery;
+  if (!['F', 'G'].includes(stage.id) || unit.status !== '진행 중' || !unit.lessonIds.length || !unit.tests.length ||
+      !delivery || delivery.scope !== 'theory-quiz' || typeof delivery.commit !== 'string' || typeof delivery.ci !== 'string' ||
+      !/^[0-9a-f]{40}$/.test(delivery.commit) ||
+      !/^https:\/\/github\.com\/cys123431-ship-it\/CodeWeave\/actions\/runs\/\d+$/.test(delivery.ci) ||
+      !Array.isArray(delivery.checks) || delivery.checks.length !== theoryChecks.length ||
+      new Set(delivery.checks).size !== theoryChecks.length || delivery.checks.some(check => !theoryChecks.includes(check)) ||
+      unit.lessonIds.some(id => {
+        const lesson = lessons.find(lesson => lesson.id === id);
+        return !lesson?.quiz || exercises.find(exercise => exercise.id === lesson.challenge.id)?.grader !== null || gradingExercises.has(lesson.challenge.id);
+      })) fail('invalid theory handoff / 이론 인수');
+}
+
+// Call only after independently checking the supplied commit's CI and logs.
+// This validates the recorded contract, not the remote CI's authenticity/state.
+export function recordTheoryDelivery(data, { unitId, commit, ci, checks }) {
+  validateRoadmap(data);
+  const selected = selectUnit(data, data.next.track);
+  if (data.next.track !== 'F-G' || selected?.id !== unitId) fail('handoff requires selected Rust turn / 선택 차례');
+  if (selected.theoryDelivery !== undefined) fail('theory delivery already recorded / 이미 인수함');
+  const result = structuredClone(data);
+  const stage = result.stages.find(stage => stage.units.some(unit => unit.id === unitId));
+  const unit = stage.units.find(unit => unit.id === unitId);
+  unit.theoryDelivery = { scope: 'theory-quiz', commit, ci, checks: Array.isArray(checks) ? [...checks] : checks };
+  validateTheoryDelivery(stage, unit);
+  const track = nextTurn(result.next.track);
+  const next = selectUnit(result, track);
+  if (!next) fail('no next unit / 다음 단원 없음');
+  result.next = { track, unit: next.id };
+  validateRoadmap(result);
+  return result;
+}
+
 export function validateRoadmap(data) {
   if (data.version !== 1 || JSON.stringify(data.stages?.map(stage => stage.id)) !== JSON.stringify([...'ABCDEFGHI'])) fail('stages A-I required');
   if (JSON.stringify(data.rotation) !== JSON.stringify(order)) fail('rotation / 순환');
@@ -65,6 +100,7 @@ export function validateRoadmap(data) {
       if (unit.status === '미착수' && unit.lessonIds.length) fail('existing sample must be in progress');
       unit.tests.forEach(file => evidenceFile(file, 'tests/'));
       unit.manuscripts.forEach(file => evidenceFile(file, 'content/'));
+      if (unit.theoryDelivery !== undefined) validateTheoryDelivery(stage, unit);
     }
   }
   if (lessons.some(lesson => !seen.has(lesson.id))) fail('unmapped catalog');
@@ -82,6 +118,7 @@ export function renderRoadmap(data) {
     '## 상태와 분모의 의미', '',
     '- 완료는 아래에 이름 붙인 제한된 학습 범위의 원고·화면·예제·퀴즈·실제 C 채점 검증이 연결됐다는 뜻이다. C 전체 교과서나 플랫폼 완성이 아니다.',
     '- 진행 중은 기존 샘플이나 일부 경로만 있다는 뜻이다. 채점 없는 Rust·자료구조·알고리즘 샘플은 완료로 세지 않는다.',
+    '- 이론·퀴즈 인수 CI는 실제 전달한 제한 범위의 근거이며 단원 전체 완료나 학습자 숙달이 아니다. Rust의 같은 인수 기록으로 차례를 반복 건너뛸 수 없고 다음 Rust 차례는 미완료 실습 작업을 이어간다.',
     '- 미착수는 이 제목의 독립 학습 단원/실습이 없다는 뜻이다. 관련 개념이 다른 원고에 잠깐 등장해도 완료로 올리지 않는다.',
     '- 단원은 같은 크기의 작업량이 아니다. 단계별 완료율을 플랫폼 전체 완료율로 평균내지 않는다. H·I와 기기 인수 검사를 생략할 수 없다.',
     '- 기존 C 23개와 타 트랙 샘플 3개를 한 번씩만 기본 매핑한다. 여러 실습을 포함한 기존 범위는 한 로드맵 단원으로 묶었으며 교차 참고로 중복 집계하지 않는다.',
@@ -92,7 +129,8 @@ export function renderRoadmap(data) {
     for (const unit of stage.units) {
       const evidence = [...unit.lessonIds.map(id => '`' + id + '`'),
         ...unit.manuscripts.map(file => `[원고](../${file})`),
-        ...unit.tests.map(file => `[검사](../${file})`)].join(' · ') || '—';
+        ...unit.tests.map(file => `[검사](../${file})`),
+        ...(unit.theoryDelivery ? [`[이론·퀴즈 인수 CI](${unit.theoryDelivery.ci})`] : [])].join(' · ') || '—';
       out.push(`| ${unit.id} | ${unit.title} | ${unit.status} | ${evidence} |`);
     }
     out.push('');

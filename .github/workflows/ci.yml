@@ -49,6 +49,8 @@ jobs:
           node --check tests/rust-fixture-linker.test.mjs
           node --check scripts/prepare-rust-inputs.mjs
           node --check tests/rust-toolchain-inputs.test.mjs
+          node --check scripts/roadmap.mjs
+          node --check tests/theory-handoff.test.mjs
           node --check sw.js
       - name: Verify local grading test compiler
         run: gcc --version

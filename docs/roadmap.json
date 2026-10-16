@@ -10,8 +10,8 @@
     "C"
   ],
   "next": {
-    "track": "F-G",
-    "unit": "F01"
+    "track": "C",
+    "unit": "C05"
   },
   "limits": {
     "screenSections": [
@@ -513,7 +513,13 @@
           "status": "진행 중",
           "lessonIds": ["rust-cargo"],
           "manuscripts": [],
-          "tests": ["tests/rust-contract.test.mjs", "tests/rust-preparation.test.mjs", "tests/rust-results.test.mjs", "tests/rust-cargo-lesson.test.mjs"]
+          "tests": ["tests/rust-contract.test.mjs", "tests/rust-preparation.test.mjs", "tests/rust-results.test.mjs", "tests/rust-cargo-lesson.test.mjs", "tests/theory-handoff.test.mjs"],
+          "theoryDelivery": {
+            "scope": "theory-quiz",
+            "commit": "d92dd760fcdcae96f11a8f0f14e42df59e2bff5c",
+            "ci": "https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38843874384",
+            "checks": ["theory", "quiz-retry", "drafts", "offline", "example-tests"]
+          }
         },
         {
           "id": "F02",

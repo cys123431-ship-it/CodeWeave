@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-16 12:57 KST — F01 제한 범위 인수와 C 차례 전환
+- 시작/결과 SHA: 시작 d92dd760fcdcae96f11a8f0f14e42df59e2bff5c; 결과는 제목 feat: record theory-only Rust delivery without completing practice로 추적.
+- 목표: 검증된 이론/퀴즈 전달과 전체 완료를 구분하고 F01 진행 중을 보존하며 다음 차례를 C/C05로 이동.
+- 변경 파일 수: 8개(로드맵 함수·신규 검사·JSON/MD·Rust 설계·CI·활성/보관 일지).
+- 테스트 결과: 신규4건 0/4→4/4; 관련11/11 성공; 전체463건459통과·실패0·skip4(로컬 Rust 도구 부재); MJS2개 문법·roadmap/diff 성공; 삭제0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38843874384 459/459·skip0 및 macOS/browser성공 재확인; 실제 F01 예시·퀴즈 재시도/초안/오프라인 로그 확인; 결과 CI 대기.
+- 발견한 문제: 인수 함수 부재·미기록 상태를 먼저 재현. 문자열 대신 배열인 SHA/CI가 정규식 형변환을 통과하는 사례도 재현 후 엄격 형 검사. 신규 검사 fixture 선언 순서 수정, C05 고정 대신 실제 첫 미완료 C 선택과 비교해 후속 단원에도 적용; 기존 기대값 변경0.
+- 보안 영향: 개발 로드맵의 선택 차례·제한 범위 근거만 처리; 외부 실행/파일 경로/API/학습자 v1 키 변경0. 원격 CI 성공은 함수가 인증하지 않으며 실제 조회한 SHA/CI만 기록.
+- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·이론/퀴즈 인수 기록, next=C/C05. 새 단원0.
+- 다음 작업: 결과 SHA CI 성공 후 C05 파일 입출력을 좁은 스트림 수명/EOF/오류 범위로 설계·구현. 다음 Rust 차례는 F01 미완료 채점을 이어가며 같은 이론 인수로 재차 건너뛰기 금지.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 11:56 KST — 신뢰된 Rust 도구 파일 준비
 - 시작/결과 SHA: 시작 250f67362f7186aa0259a342873ab7779be275e6; 구현 9518dd0d2c82e5d679e28128e24386c036de174d; 검증 기록 제목 docs: record bounded Rust readiness recovery evidence.
 - 목표: 파일 페이지 대기 가설을 읽기 전용 준비 단계로 검증하며 실제 Cargo 15초·필수 실행·판정을 보존.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 외부 입력/실행 API 추가0·grader:null; 원고는 catalog의 독자12절/88줄·25분, 공개 예시10건은 사이트 채점과 구분. Cargo 공식 배치/명령 의미만 확인, 기존 rust-mut 초안/키 보존.
 - 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중, next=F-G/F01 유지(필수 예시 검증 실패로 C 전환 보류).
 - 다음 작업: 최우선 Cargo 빌드 중단 복구: rust-lld/도구체인 초기화·파일 I/O를 구분하고 재현/검증. 제한·기대값 완화나 반복 재실행으로 숨기지 않음. 성공 후 F01 예시를 재검증하고 C05로 이동.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-16 07:59 KST — 신뢰된 Rust 바이너리 실행 자원 검증
-- 시작/결과 SHA: 시작 b7441345c0542db88952de11557264e6c2ece08d; 구현 847ed6f7302990163d1771544d305065df416ab8; 확인 기록 제목 docs: record verified Rust execution budgets.
-- 목표: 운영 API를 열지 않고 Rust 실행 예산·그룹·초과 실패를 실제 Linux/macOS CI에서 검증.
-- 변경 파일 수: 7개(테스트 전용 예산기·신규 검사·기존 Rust 결과 검사·CI·설계·활성/보관 일지).
-- 테스트 결과: 신규4건 0/4→4/4; CI447/447·skip0·macOS C12/12+Rust5/5·browser 성공; 전체447건444통과·실패0·skip3(Cargo/rustc 부재); 변경MJS3개 문법·roadmap/diff 성공; 테스트 삭제0·기대값 완화0.
-- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38821274668 구현 전체 성공; Linux rustc1.99.0/macOS1.98.1에서 실제 자원 검사 성공; 확인 기록 SHA는 후속 CI 검증.
-- 발견한 문제: 과거 Cargo15초 중단 원인은 미확정; 이번에는 빌드 한도를 변경하지 않고 실행 후보 CPU2초·주소공간256MiB·파일2MiB·NPROC128/512·벽시계2초를 분리 검증.
-- 보안 영향: 외부 입력/API 추가0; 고정 셸 argv·환경허용목록, Windows 사전 거부. 신뢰된 합성 Rust만 실행하며 기존 C 실행기·v1 저장키는 변경하지 않음.
-- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·next=F-G/F01.
-- 다음 작업: F01 이론/퀴즈만의 좁은 단원을 전달·검증한 뒤 C 차례 전환 검토. Cargo 빌드 한도·문법/경고·도구체인 고정은 후속 Rust 작업; API/실습 숙달 잠금 유지.
