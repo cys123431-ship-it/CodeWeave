@@ -1,12 +1,12 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 14:03 KST — C05 스트림 채점 계약·원고 준비(1/2)
-- 시작/결과 SHA: 시작 dbbcf6b1028ea65b363aa8b6db1a627405474c8f; 결과는 제목 feat: prepare bounded stream counting contract and C05 manuscript로 추적.
+- 시작/결과 SHA: 시작 dbbcf6b1028ea65b363aa8b6db1a627405474c8f; 구현 1a305e9ff824c287e1e61aab7e2d662af83dd59a; 검증 기록 제목 docs: record verified C05 stream preparation and clarify byte semantics.
 - 목표: 현재 위치부터 최대4096바이트를 세고 EOF/오류·실패 출력 보존·빌린 스트림 수명을 구별하는 준비 계약 검증.
 - 변경 파일 수: 10개(서버 계약·신규 검사·81줄 원고·정적 도식·브라우저 검사·CI·로드맵 JSON/MD·활성/보관 일지).
 - 테스트 결과: 신규13건 0/13→13/13; 정상10사례·오답8종 거부·스타터/완성 예제 GCC 성공; 전체476건472통과·실패0·skip4(Rust 부재); 변경JS/MJS4개 문법·roadmap/diff 성공; 삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38848984664 전체463/463·macOS/browser성공 재확인; 결과 CI 대기. 새 macOS 계약 검사·390px 준비 도식 검사 추가, C05 화면 E2E와 구분.
-- 발견한 문제: 준비 파일/도식 부재를 먼저 재현 후 구현. 로컬 SVG 렌더는 cairosvg ModuleNotFoundError·파생 EPIPE로 미실행, 추가 설치 없음. OpenGroup 원문403/GNU 조회timeout 뒤 POSIX 공식 표준 재현본에서 의미 확인; 본문/코드 독자 작성.
-- 보안 영향: 신규 사용자 경로 입력0·프로덕션 등록0. 하네스는 익명 tmpfile와 고정 pipe만 사용하며 Linux/macOS POSIX 오류/소유권 검증용; Windows 네이티브 검증 아님. 닫힌 스트림은 디스크립터 확인 후 재사용하지 않아 검사 오답의 이중 fclose를 피함.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38848984664 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38854900529 전체476/476·skip0·macOS C0513/13 및 browser성공. 390px 도식 문자 범위/오버플로 검증, C05 화면 E2E 아님. 최종 기록 SHA CI 별도 확인.
+- 발견한 문제: 파일/도식 부재 재현 후 구현. 로컬 렌더 cairosvg ModuleNotFoundError·파생 EPIPE로 불가; OpenGroup403/GNU timeout 뒤 POSIX 표준 재현본 확인. 재검토로 0A/42의 문자 인코딩 일반화·tmpfile 익명성 보장 표현 제거; 기대값 변경0.
+- 보안 영향: 신규 사용자 경로 입력0·프로덕션 등록0. 하네스는 tmpfile 임시 스트림과 고정 pipe만 사용하며 Linux/macOS POSIX 오류/소유권 검증용; Windows 네이티브 검증 아님. 닫힌 스트림은 디스크립터 확인 후 재사용하지 않아 검사 오답의 이중 fclose를 피함.
 - 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; C05 진행 중·next=C/C05, 사용자 화면/신규 공개 문제0.
 - 다음 작업: C05 2/2회차에 catalog·exercises·registry·browser·README·audit·로드맵2·일지2(총10파일)로 화면/실제 API·오답→수정·백업·오프라인·숙달 검증. 준비 검사 파일은 등록 뒤에도 같은 계약 검증에 재사용하며 Windows 네이티브 제한은 명시.
 
