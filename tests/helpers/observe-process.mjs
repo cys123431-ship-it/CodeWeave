@@ -2,6 +2,7 @@
 import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import { performance } from 'node:perf_hooks';
+import { readProcessDetails } from './process-details.mjs';
 
 async function processSnapshot(root) {
   if (process.platform !== 'linux') return { available: false, reason: 'Linux /proc only', rows: [] };
@@ -29,7 +30,9 @@ async function processSnapshot(root) {
       }
       if (!changed) break;
     }
-    return { available: true, rows: processes.filter(p => owned.has(p.pid)).slice(0, 32) };
+    const rows = processes.filter(p => owned.has(p.pid)).slice(0, 32);
+    for (const p of rows.slice(0, 6)) p.details = await readProcessDetails(p.pid);
+    return { available: true, rows };
   } catch (error) {
     return { available: false, reason: error.code || 'snapshot failure', rows: [] };
   }
@@ -49,17 +52,18 @@ export function observeProcess(command, args, {
     const child = spawn(command, args, { cwd, env, detached: posix, stdio: ['ignore', 'pipe', 'pipe'] });
     const stdout = [], stderr = [];
     let bytes = 0, status = null, signal = null, failure, finished = false;
-    let timer, snapshotTimer, cleanupTimer;
+    let timer, cleanupTimer;
+    const snapshotTimers = [], snapshots = [];
     let processes = { available: false, reason: 'deadline not approached', rows: [] };
     function finish() {
       if (finished) return;
       finished = true;
       clearTimeout(timer);
-      clearTimeout(snapshotTimer);
+      snapshotTimers.forEach(clearTimeout);
       clearTimeout(cleanupTimer);
       resolve({ status, signal, error: failure,
         stdout: Buffer.concat(stdout).toString('utf8'), stderr: Buffer.concat(stderr).toString('utf8'),
-        observation: { stage, durationMs: Math.round(performance.now() - start), pid: child.pid ?? null, processes }
+        observation: { stage, durationMs: Math.round(performance.now() - start), pid: child.pid ?? null, processes, snapshots }
       });
     }
     function stop() {
@@ -90,10 +94,16 @@ export function observeProcess(command, args, {
     child.once('error', error => { failure ??= error; stop(); });
     child.once('exit', (code, reason) => { status = code; signal = reason; stop(); });
     child.once('close', finish);
-    snapshotTimer = setTimeout(async () => {
-      const snapshot = await processSnapshot(child.pid);
-      if (!finished) processes = snapshot;
-    }, Math.max(1, Math.floor(timeout * 0.75)));
+    for (const fraction of [0.5, 0.85]) {
+      snapshotTimers.push(setTimeout(async () => {
+        const atMs = Math.round(performance.now() - start);
+        const snapshot = await processSnapshot(child.pid);
+        if (!finished) {
+          processes = snapshot;
+          snapshots.push({ atMs, processes: snapshot });
+        }
+      }, Math.max(1, Math.floor(timeout * fraction))));
+    }
     timer = setTimeout(() => {
       failure ??= Object.assign(new Error('Trusted tool deadline exceeded'), { code: 'ETIMEDOUT' });
       stop();

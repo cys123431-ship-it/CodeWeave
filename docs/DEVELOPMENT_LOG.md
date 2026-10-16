@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-16 10:58 KST — Cargo 중단의 스레드·입출력 관찰
+- 시작/결과 SHA: 시작 f12f147a7c56eeb4f3b536c9e3d6851fe52b562b; 결과는 커밋 제목 test: sample bounded thread and IO evidence before trusted build timeout으로 추적.
+- 목표: 반복되는 F01 첫 빌드 중단의 대기/CPU/입출력 진행을 두 시점으로 구분하며 기존 15초·판정을 유지.
+- 변경 파일 수: 8개(관찰 helper2·검사2·CI·설계·활성/보관 일지).
+- 테스트 결과: 신규2건·기존 timeout 확장1건 수정 전3실패→관련8/8 성공; 전체454건450통과·실패0·skip4(로컬 Rust 도구 부재); MJS4개 문법·roadmap/diff 성공; 삭제0.
+- CI URL과 결과: 시작 SHA https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38833927876 test451/452 실패·macOS/browser성공 재확인; 결과 SHA CI 대기, 완료 보류.
+- 발견한 문제: Cargo/rustc S·15009ms/ETIMEDOUT만으로 원인 확정 불가. 50%·85% 시점에 소유 프로세스6개·스레드16개까지 wchan/CPU tick/메모리/입출력 수집; 관찰 불가를 0으로 대체하지 않음.
+- 보안 영향: 테스트 전용 읽기 관찰이며 인수·환경·파일 내용·fd는 수집하지 않음. 운영 API·C 실행기·Rust 활성화·v1 키 변경0.
+- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·next=F-G/F01, 새 단원0.
+- 다음 작업: 실제 CI의 두 표본 차이로 첫 rustc 중단 구간을 확인하고 재현 가능한 원인 수정; 제한 완화·성공 재실행으로 덮지 않음.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 10:02 KST — 신뢰된 Linux Rust 빌드 링커 선택
 - 시작/결과 SHA: 시작 036bce852a755cf21dc58b15b79191163f70cac0; 구현 3d7b79446c60c1f76f49a99641bf74c57a382caa; 확인 dc9af001f375f6bb24b33ba6cf22f7d4bab7a130; 실패 보존 제목 docs: retain repeated timeout despite system linker opt-out.
 - 목표: 반복 중단에서 관찰된 rust-lld 경로를 공식 시스템 링커 옵션으로 분리해 제한/판정을 유지한 CI 완화 경로 검증.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 테스트 전용 신뢰 도구만 spawn; 운영 API 연결0. 인수/환경 수집 없이 제한된 상태/출력만 기록하며 POSIX 그룹 정리, 자원 격리 주장은 하지 않음.
 - 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·next=F-G/F01.
 - 다음 작업: 중단 재발 시 관찰된 오류/자식 상태로 원인을 좁히고 Rust 빌드/실행 자원 상한·문법/경고·도구체인 고정 검증. 운영 API/숙달 잠금 유지.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-16 06:04 KST — Rust 사례 결과·미실행 판정
-- 시작/결과 SHA: 시작 fa91de5dacb4a39c32d867aa641ebde088a0c76e; 판정 검증 8e767f7182c281350c0d1360398271e95ac8ade9; 중간12645c086ffee753c3b5dc0f838132f561e51c6d CI실패; 진단 커밋 제목 test: retain Cargo timeout metadata for diagnosis.
-- 목표: F01 관찰 기반 결과 수집·전체 분모·Cargo 진단·v1 호환 구현 및 반복 Cargo 중단의 진단 정보 보존.
-- 변경 파일 수: 10개(결과 어댑터·신규 검사·기존 준비 검사 진단·CI·설계/아키텍처·로드맵 JSON/MD·활성/보관 일지).
-- 테스트 결과: 신규 순수10건 실패→통과; 헤더/추가 보고·컴파일 운영 오류도 재현→수정; 초기 로컬435건433통과/skip2, 초기CI435/435·실제Rust8/8·단언실패7/8·조기exit0 거부; 진단 보강 후 로컬436건434통과·실패0·skip2(Cargo/rustc 부재); 변경MJS3개 문법·diff 성공.
-- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38807911255 구현 성공; https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38808196130/attempts/2 중간기록 test434/435 실패·macOS12/12/browser성공. 후속 진단 CI 대기, 완료 기록 보류.
-- 발견한 문제: 기존 Cargo 준비 빌드15초/status=null 중단이 1회 재실행에도 반복, 원인 미확정. stderr가 오류 코드를 가려 metadata/출력 꼬리 보존 함수를 검사 후 추가; 제한/기대값 변경0·테스트 함수 삭제0.
-- 보안 영향: 기본 실행기/프로세스 import/HTTP 등록 없음; CI만 신뢰된 합성 Rust 실행. v1/저장키 변경0, 출력 판정은 악성 결과 진위 증명이 아님; 진단은 제한된 프로세스 출력만 보존.
-- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지, 분모변경0; F01 진행 중·next=F-G/F01 유지.
-- 다음 작업: 반복 Cargo 준비 빌드 중단 진단(error/signal/stdout·컴파일 자식 상태) 최우선. 해결 후 실제 자원 상한·그룹/자식 정리·문법/경고·도구체인 고정 검증; 운영 API/숙달 잠금.

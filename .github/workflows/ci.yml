@@ -40,6 +40,8 @@ jobs:
           node --check server/rust-preparation.mjs
           node --check server/rust-results.mjs
           node --check tests/helpers/observe-process.mjs
+          node --check tests/helpers/process-details.mjs
+          node --check tests/process-details.test.mjs
           node --check tests/rust-observer.test.mjs
           node --check tests/helpers/rust-budget.mjs
           node --check tests/rust-resources.test.mjs

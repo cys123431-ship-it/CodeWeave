@@ -51,11 +51,19 @@ test('trusted process timeout snapshots and kills the whole descendant group', {
   assert.ok(Number.isInteger(pid) && pid > 1);
   t.after(() => { try { process.kill(pid, 'SIGKILL'); } catch {} });
   assert.equal(result.error.code, 'ETIMEDOUT');
+  assert.equal(result.observation.snapshots.length, 2);
+  assert.ok(result.observation.snapshots[0].atMs < result.observation.snapshots[1].atMs);
   assert.equal(await waitForExit(pid), true);
   if (process.platform === 'linux') {
     const namespaceMatches = Number((await fs.readFile('/proc/self/stat', 'utf8')).split(' ')[0]) === process.pid;
     assert.equal(result.observation.processes.available, namespaceMatches);
-    if (namespaceMatches) assert.ok(result.observation.processes.rows.some(row => row.pid === pid));
+    if (namespaceMatches) {
+      const child = result.observation.processes.rows.find(row => row.pid === pid);
+      assert.ok(child);
+      assert.ok(child.details.threads.length > 0);
+      assert.match(child.details.threads[0].userTicks, /^\d+$/);
+      assert.equal(typeof child.details.threads[0].wchan, 'string');
+    }
     else assert.equal(result.observation.processes.reason, 'PID namespace mismatch');
     assert.ok(result.observation.processes.rows.every(row => !('args' in row) && !('env' in row)));
   }
