@@ -142,6 +142,12 @@ Cargo 빌드 자원 한도와 도구체인 고정은 여전히 미완료다. 이
 - 정상·비정상·도구 부재·강제 중단·출력 초과·부모 종료 후 자식 정리는 Node 합성 프로세스로 검사한다. 실제 Cargo 6개 빌드 단계의 시간은 CI에서 확인한다. 반복된 과거 중단의 근본 원인은 아직 확정하지 않았다.
 - CI38838684764에서는 F01-project15007ms·prepare-normal15010ms 중단을 포착했다. F01 rustc 작업 스레드는 7505/12756ms 모두 D·folio_wait_bit_common, read_bytes16584704→36069376·system tick1→3이었다. 준비 빌드도 rustc의 같은 대기 뒤 시스템 ld가 D·같은 대기로 관찰됐다. 파일 페이지 대기와 일치하지만 저장장치·이미지·도구체인 중 원인은 확정하지 않는다. 결과3빌드214~477ms는 성공했다. LLD만의 문제·CPU 연산 소진·완전한 무진행으로 단정할 근거가 없다.
 
+### 신뢰된 Linux CI 도구 파일 준비 실험 (2026-10-16)
+
+`scripts/prepare-rust-inputs.mjs`를 Ubuntu CI의 도구 확인 뒤, 전체 검사 전에 한 번 실행한다. rustc의 `--print sysroot`/`--print target-libdir`로 선택된 설치본의 bin/rustc·lib 공유 라이브러리·현재 대상의 rlib/so/o만 1MiB 버퍼로 순차 읽는다. 파일/바이트/시간을 출력해 콜드 파일 페이지 대기 가설을 비교하며, 빌드·테스트 실행·재시도·산출물 캐시는 하지 않는다.
+파일256개·합계1GiB·60초 제한이며 CLI 전체에도 별도60초 종료 타이머를 둔다. 각 경로는 실제 sysroot 안의 일반 파일이어야 하고 외부 링크·예산 초과·읽기 실패는 준비 단계 실패로 처리한다. 같은 실경로의 라이브러리 별칭은 한 번만 읽고 파일을 수정하지 않는다. 제한은 검사 준비용이지 제출 실행 예산이 아니다.
+모든 실제 Cargo 검사는 새 작업 공간에서 계속 빌드하며 기존15초·필수 Rust CI·경고 오류·정상/오답/수정 판정을 유지한다. 준비 성공 자체는 컴파일 성공이 아니다. 전체 CI와 반복 중단의 재현 여부로 효과를 판단하고, 성공하더라도 호스트 저장장치의 근본 원인·도구체인 고정·운영 Rust 실행 검증을 완료 처리하지 않는다.
+
 2026-10-16 KST에 다음 Cargo 원문을 확인했다. 설정/명령 의미만 참조하고 본문·교육 문제는 복제하지 않았다.
 - [cargo test](https://doc.rust-lang.org/cargo/commands/cargo-test.html): no-run·target 선택·frozen·libtest 인수.
 - [Cargo targets](https://doc.rust-lang.org/cargo/reference/cargo-targets.html): integration test·자동 탐색·doctest.

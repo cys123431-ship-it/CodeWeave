@@ -47,6 +47,8 @@ jobs:
           node --check tests/rust-resources.test.mjs
           node --check tests/helpers/rust-fixture-linker.mjs
           node --check tests/rust-fixture-linker.test.mjs
+          node --check scripts/prepare-rust-inputs.mjs
+          node --check tests/rust-toolchain-inputs.test.mjs
           node --check sw.js
       - name: Verify local grading test compiler
         run: gcc --version
@@ -57,6 +59,9 @@ jobs:
           cc --version
           ld --version
           node --input-type=module -e "import {rustFixtureFlags} from './tests/helpers/rust-fixture-linker.mjs'; console.log('Trusted fixture flags:', rustFixtureFlags())"
+      - name: Prepare trusted Rust toolchain input pages
+        timeout-minutes: 2
+        run: node scripts/prepare-rust-inputs.mjs
       - name: Unit tests
         run: npm test
         env:

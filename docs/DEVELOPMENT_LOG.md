@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-16 11:56 KST — 신뢰된 Rust 도구 파일 준비
+- 시작/결과 SHA: 시작 250f67362f7186aa0259a342873ab7779be275e6; 구현은 제목 ci: prepare trusted Rust input pages before bounded fixture builds로 추적.
+- 목표: 파일 페이지 대기 가설을 읽기 전용 준비 단계로 검증하며 실제 Cargo 15초·필수 실행·판정을 보존.
+- 변경 파일 수: 6개(준비 script·신규 검사·CI·설계·활성/보관 일지).
+- 테스트 결과: 신규5건 각각 실패→5/5 성공; 전체459건455통과·실패0·skip4(로컬 Rust 부재); 준비 CLI도 ENOENT/종료1로 거부 확인, 실제 도구 읽기는 CI 필요; MJS2개 문법·roadmap/diff 성공; 삭제0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38838992098 test452/454 실패·macOS/browser성공 재확인; 결과 CI 대기, 완료 보류.
+- 발견한 문제: 별칭 이중 읽기·문자 접미사가 있는 LLVM .so 누락을 재현 후 실경로 중복 제거·선택 패턴 수정. 테스트 기대값 변경0. 초기 전체 검사 중 fixture 보강으로2실패한 뒤 최종 재검사.
+- 보안 영향: 선택된 sysroot 내부의 일반 도구 파일만 최대256개/1GiB/60초 읽기, 외부 링크·예산/읽기 오류 거부. 빌드/재시도/산출물 캐시/파일 수정/네트워크/운영 API 추가0.
+- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·next=F-G/F01, 새 단원0.
+- 다음 작업: 실제 CI의 준비 시간·바이트와 Cargo 빌드 시간을 비교하고 최종 SHA CI 확인; 실패 시 해당 원인부터 수정. 도구체인 고정·Rust API와 F01 완료는 별도 미완료.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 10:58 KST — Cargo 중단의 스레드·입출력 관찰
 - 시작/결과 SHA: 시작 f12f147a7c56eeb4f3b536c9e3d6851fe52b562b; 구현 bc8e43e26d58305479865e01708130a34116b228; 근거 보존 제목 docs: retain Cargo page-wait evidence without claiming recovery.
 - 목표: 반복되는 F01 첫 빌드 중단의 대기/CPU/입출력 진행을 두 시점으로 구분하며 기존 15초·판정을 유지.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 외부 입력/API 추가0; 고정 셸 argv·환경허용목록, Windows 사전 거부. 신뢰된 합성 Rust만 실행하며 기존 C 실행기·v1 저장키는 변경하지 않음.
 - 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·next=F-G/F01.
 - 다음 작업: F01 이론/퀴즈만의 좁은 단원을 전달·검증한 뒤 C 차례 전환 검토. Cargo 빌드 한도·문법/경고·도구체인 고정은 후속 Rust 작업; API/실습 숙달 잠금 유지.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-16 07:02 KST — 신뢰된 Cargo 빌드 관찰·자식 정리
-- 시작/결과 SHA: 시작 1d19c74295154a44249d00644fc2090ea3d47b14; 구현 4e0df1f4fb181e1321c109656a86035af72caad2; 확인 기록 제목 docs: record verified Cargo observation results.
-- 목표: 반복된 Cargo 15초 중단의 단계/시간/자식 상태를 보존하고 테스트 도구의 잔류 프로세스를 정리.
-- 변경 파일 수: 9개(신뢰 테스트 관찰기·검사·기존 Rust 검사2·진단 formatter·CI·설계·활성/보관 일지).
-- 테스트 결과: 신규6건 0/6→6/6; CI442/442·skip0·macOS12/12·Chromium 백업/오프라인 성공; 전체 로컬442건440통과·실패0·skip2; 변경MJS5개 문법·roadmap/diff 성공; Rust 실제 빌드는 Cargo/rustc 부재로 CI 필수; 15초 제한/성공 기대값 유지, 삭제0.
-- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38815502098 — 구현 SHA 전체 성공 확인; Cargo 정상 빌드9754ms, 나머지5개142~217ms. 확인 기록 SHA는 후속 CI로 검증.
-- 발견한 문제: 로컬 Node PID와 /proc PID 공간 불일치. snapshot 기대값을 관찰 가능 여부에 따라 분리한 이유이며 실제 자식 종료 검사는 유지; CI PID 일치 시 정확한 자식 행 필수. 종료 신호 직후 관찰 경쟁을 발견해 최대500ms 종료 대조로 변경(생존 시 실패 유지). 과거 Cargo 중단 근본 원인은 미확정.
-- 보안 영향: 테스트 전용 신뢰 도구만 spawn; 운영 API 연결0. 인수/환경 수집 없이 제한된 상태/출력만 기록하며 POSIX 그룹 정리, 자원 격리 주장은 하지 않음.
-- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·next=F-G/F01.
-- 다음 작업: 중단 재발 시 관찰된 오류/자식 상태로 원인을 좁히고 Rust 빌드/실행 자원 상한·문법/경고·도구체인 고정 검증. 운영 API/숙달 잠금 유지.
