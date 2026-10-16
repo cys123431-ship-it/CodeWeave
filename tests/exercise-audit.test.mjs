@@ -13,12 +13,34 @@ test('C exercise audit table stays synchronized with executable grading definiti
   // This table audits the C track; C-implemented DS/algorithm tracks are separate.
   const gradedC = exercises.filter(exercise => exercise.id.startsWith('c-') && exercise.grader !== null);
 
-  assert.equal(rows.length, 23);
+  assert.equal(rows.length, gradedC.length);
   assert.deepEqual(rows.map(row => row.id), gradedC.map(exercise => exercise.id));
   for (const row of rows) {
     assert.equal(row.grader, gradedC.find(exercise => exercise.id === row.id).grader, row.id);
     assert.equal(row.count, gradingExercises.get(row.id).cases.length, row.id);
   }
+});
+
+test('C05 learner contract is registered without changing its prepared cases', async () => {
+  const { lessons } = await import('../src/catalog.js');
+  const { streamExercise, streamStarter } = await import('../server/stream-exercise.mjs');
+  const lesson = lessons.find(lesson => lesson.id === streamExercise.id);
+  assert.ok(lesson, 'C05 must be reachable from the learner catalog');
+  const registered = gradingExercises.get(streamExercise.id);
+  assert.ok(registered, 'C05 must be accepted by the real grading API');
+  const { requiredFiles, ...metadata } = exercises.find(exercise => exercise.id === streamExercise.id);
+  const { streamMetadata } = await import('../server/stream-exercise.mjs');
+  assert.deepEqual(requiredFiles, []);
+  assert.deepEqual(metadata, streamMetadata);
+  assert.deepEqual(registered.cases, streamExercise.cases);
+  assert.equal(registered.harness, streamExercise.harness);
+  assert.equal(lesson.challenge.starter, streamStarter);
+  assert.equal(lesson.challenge.input, registered.publicExample.input);
+  assert.equal(lesson.challenge.expected, registered.publicExample.output);
+  const manuscript = await readFile(new URL('../content/c/22-file-streams.md', import.meta.url), 'utf8');
+  const completeProgram = manuscript.match(/```c\n([\s\S]*?)\n```/)[1];
+  assert.equal(lesson.sections.find(section => section.code?.includes('int main(void)')).code.trim(), completeProgram.trim(),
+    'The actual screen must use the independently compiled complete example');
 });
 
 test('every graded C exercise has a mirrored public example and unique private cases', () => {
