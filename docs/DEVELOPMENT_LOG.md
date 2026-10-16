@@ -4,8 +4,8 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 목표: F01 Cargo 파일 역할·실패/수정 예시·이론/퀴즈/초안·다음 Rust 단원을 연결하고 실습 숙달 잠금 검증.
 - 변경 파일 수: 10개(catalog 원고·미채점 메타데이터·도식·단원/브라우저 검사·README·로드맵 JSON/MD·활성/보관 일지).
 - 테스트 결과: 신규2건 0/2→2/2; 실제 Cargo 예시 검사는 로컬 도구 부재로 CI 필수; 전체450건446통과·실패0·skip4(Rust 도구 부재); 변경JS/MJS5개 문법·roadmap/diff 성공; 삭제0.
-- CI URL과 결과: 시작 SHA https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38821475519 성공; 결과 SHA CI 대기, 완료 기록 보류.
-- 발견한 문제: --render는 stdout 출력이므로 출력으로 MD를 apply_patch 동기화 후 --check 성공. 기존 테스트 기대값 변경0; 네트워크 우선 SW는 변경 없이 새 catalog/도식을 캐시하며 오프라인은 CI 확인.
+- CI URL과 결과: 시작 SHA https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38821475519 성공; https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38827299943 첫 구현 test449/450·browser 실패, macOS 성공; 수정 CI 대기, 완료 기록 보류.
+- 발견한 문제: --render는 stdout 출력이므로 출력으로 MD를 apply_patch 동기화 후 --check 성공. 첫 Cargo 예시 빌드15009ms/ETIMEDOUT·Cargo/rustc 대기 상태 관찰(원인 미확정·제한 유지). 첫 browser CI는 앞선 legacy 복원으로 사라진 Rust 초안을 가정한 준비 오류로 실패; F01 직전 기존 Rust 편집기로 초안 저장하도록 수정, 기대값 유지; 네트워크 우선 SW는 변경 없이 새 catalog/도식을 캐시하며 오프라인은 CI 확인.
 - 보안 영향: 외부 입력/실행 API 추가0·grader:null; 원고는 catalog의 독자12절/88줄·25분, 공개 예시10건은 사이트 채점과 구분. Cargo 공식 배치/명령 의미만 확인, 기존 rust-mut 초안/키 보존.
 - 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중, 이론/퀴즈 예외로 next=C/C05(검증 후 확정).
 - 다음 작업: F01 화면/오프라인/실제 예시 CI 성공 확인 후 C05 스트림 수명·오류·EOF의 좁은 단원. Cargo 빌드 한도·도구체인 고정·운영 API는 후속 Rust 차례.

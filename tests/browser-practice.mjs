@@ -920,6 +920,11 @@ try {
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'offline E01 mobile overflow');
   await context.setOffline(false);
   console.log('PASS: E01 backup and offline attempt restoration retain the original exercise ID');
+  // The preceding legacy restore intentionally replaced drafts. Establish the
+  // existing Rust draft through the editor before testing F01 preservation.
+  await page.goto(base + '/#lesson:rust-mut');
+  await page.locator('#code-input').fill('keep rust draft');
+  await page.locator('#save-code').click();
   await page.goto(base + '/#lesson:rust-cargo');
   await expect(page.locator('.detail-head h1')).toHaveText('Cargo 프로젝트와 실패하는 테스트 읽기');
   await expect(page.locator('.figure-box svg')).toHaveAttribute('role', 'img');
@@ -949,6 +954,7 @@ try {
   await context.setOffline(false);
   await page.locator('.next-action [data-route="lesson:rust-mut"]').click();
   await expect(page.locator('.detail-head h1')).toHaveText('변수 바인딩과 가변성');
+  await expect(page.locator('#code-input')).toHaveValue('keep rust draft');
   console.log('PASS: F01 quiz correction, separate mastery, preserved Rust drafts, offline 390px and next lesson');
   assert.deepEqual(errors, []);
   console.log('PASS: 390px mobile layout and offline reload of drafts/history; no browser exceptions');
