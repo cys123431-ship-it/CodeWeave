@@ -959,6 +959,9 @@ try {
   await expect(page.locator('#code-input')).toHaveValue('keep rust draft');
   console.log('PASS: F01 quiz correction, separate mastery, preserved Rust drafts, offline 390px and next lesson');
   await page.goto(base + '/#lesson:c-file-stream-count');
+  // The preceding offline shell deliberately has no execution capability.
+  // Reload online to receive this server's token; never inject or cache one.
+  await page.reload();
   await expect(page.locator('.detail-head h1')).toHaveText('파일 스트림: 읽기·EOF·오류와 소유권');
   await expect(page.locator('.figure-box svg')).toHaveAttribute('role', 'img');
   await expect(page.locator('#code-input')).toHaveValue(/count_stream_bytes/);
