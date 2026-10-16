@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { observeProcess } from './helpers/observe-process.mjs';
 import { withRustFixtureLinker } from './helpers/rust-fixture-linker.mjs';
 import { rustBudget } from './helpers/rust-budget.mjs';
+import { rustBuildBudget } from './helpers/rust-build-budget.mjs';
 import { createRustPlan } from '../server/rust-contract.mjs';
 import { prepareRustWorkspace, selectRustArtifact, validateRustListing, checkRustToolchain } from '../server/rust-preparation.mjs';
 import { recordIteration, normalizeIterations } from '../src/iterations.js';
@@ -120,6 +121,7 @@ test('Rust-shaped results round-trip existing v1 attempts without activating Rus
 
 const cargo = spawnSync('cargo', ['--version'], { encoding: 'utf8', timeout: 3000 });
 const rustc = spawnSync('rustc', ['--version'], { encoding: 'utf8', timeout: 3000 });
+const cargoPath = spawnSync('/bin/sh', ['-c', 'command -v cargo'], { encoding: 'utf8', timeout: 3000 }).stdout?.trim();
 test('Rust process diagnostic retains timeout metadata even when stderr is nonempty', async () => {
   const { formatRustProcessFailure } = await api();
   const diagnostic = JSON.parse(formatRustProcessFailure({ status: null, signal: 'SIGTERM',
@@ -145,8 +147,10 @@ test('Real Rust case bodies distinguish all-pass, assertion failure and early ex
     const env = withRustFixtureLinker({ PATH: process.env.PATH, HOME: process.env.HOME, RUSTUP_HOME: process.env.RUSTUP_HOME,
       CARGO_HOME: path.join(parent, 'cargo-home'), CARGO_TARGET_DIR: workspace.targetDir, ...workspace.plan.environment });
     const options = { cwd: workspace.dir, env, encoding: 'utf8', timeout: 2000, maxBuffer: 80000 };
-    const compiled = await observeProcess('cargo', workspace.plan.compile.args, {
-      ...options, timeout: 15000, stage: expected === 8 ? 'result-pass' : expected === 7 ? 'result-assert' : 'result-exit'
+    const build = rustBuildBudget(cargoPath, workspace.plan.compile.args, { env });
+    const compiled = await observeProcess(build.command, build.args, {
+      ...options, env: build.env, timeout: build.timeout, maxBuffer: build.maxBuffer,
+      stage: expected === 8 ? 'result-pass' : expected === 7 ? 'result-assert' : 'result-exit'
     });
     console.log('Cargo observation:', JSON.stringify(compiled.observation));
     assert.equal(compiled.status, 0, formatRustProcessFailure(compiled));

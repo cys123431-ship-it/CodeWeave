@@ -123,7 +123,17 @@ Cargo 준비·사례 결과·F01 예시·직접 rustc 자원 fixture가 같은 �
 실행 후보는 CPU2초, 가상 메모리256MiB, 파일2MiB, 사용자 프로세스 Linux128/macOS512, 코어0, 벽시계2초, 합산 출력80KB다. macOS는 공유 영역을 위해 Bash 초기 VSZ에256MiB를 더한 주소 공간 예산이며 RSS 상한이 아니다.
 기존의 더 낮은 soft/hard 한도를 높이지 않고 설정 실패 시 바이너리 실행 전125로 멈춘다. 사용자별 프로세스 한도는 제출별 격리가 아니며 root에서는 집행되지 않을 수 있다.
 CI는 실제 Rust의 getrlimit·그룹 ID·384MiB 예약 거부·4MiB 파일/SIGXFSZ·CPU 소진·정상/시간 초과 뒤 fork 자식 정리를 Linux/macOS에서 검증한다. 기존 Cargo 결과 fixture의 정상/단언 실패/조기 exit도 제한된 실행기를 거친다.
-Cargo 빌드 자원 한도와 도구체인 고정은 여전히 미완료다. 이 실행 예산 검증은 기존 C 한도를 변경하지 않고 Rust API/실습/숙달을 활성화하지 않는다. Windows Rust 실행은 지원하지 않는다.
+운영 Cargo 빌드 실행기와 도구체인 고정은 여전히 미완료다. 아래 CI 빌드 예산 실험과 이 실행 예산 검증은 기존 C 한도를 변경하지 않고 Rust API/실습/숙달을 활성화하지 않는다. Windows Rust 실행은 지원하지 않는다.
+
+### 신뢰된 CI Cargo 빌드 예산 (2026-10-17)
+
+`tests/helpers/rust-build-budget.mjs`를 준비/결과 합성 fixture의 `cargo test --no-run`에 적용한다. 별도 운영 실행기나 HTTP 라우트가 아니며 실제 Cargo 도구 경로는 신뢰된 PATH에서 선택한 절대 경로다. 고정 Bash 스크립트와 argv를 분리하고 셸 문자를 보간하지 않는다.
+CPU는 프로세스별10초, 가상 메모리1GiB, 파일32MiB, 사용자 프로세스 Linux128/macOS512, 코어0을 설정한다. Cargo와 자식 rustc/링커가 한도를 상속하지만 CPU/메모리는 그룹 전체 합산 예산이 아니고 사용자 프로세스 한도는 제출별 격리가 아니다. root 등 권한 예외도 남는다. macOS의 주소 공간 한도는 시작 Bash VSZ+1GiB이며 RSS1GiB 보장이 아니다.
+기존 더 낮은 soft/hard 한도는 올리지 않는다. 설정 실패125에서는 도구를 실행하지 않는다. 기존 observeProcess의 detached 그룹 정리·벽시계15초·합산 출력80KB·실패 관찰은 그대로 사용하며 재시도하지 않는다. CPU/가상메모리/파일/프로세스 제한은 파일·네트워크 격리가 아니다.
+환경은 PATH/HOME/LANG/LC_ALL/TMPDIR/RUSTUP_HOME, 전용 CARGO_HOME/CARGO_TARGET_DIR와 명시한 Rust 경고·오프라인·출력 설정만 전달한다. 부모 환경 전체·RUSTC_WRAPPER·BASH_ENV·SHELLOPTS·POSIXLY_CORRECT·임의 기밀값은 전달하지 않는다. 이 helper의 env/도구 인수는 서버가 검증한 입력이 아니라 신뢰된 CI 코드만 제공하므로 운영 사용자 입력에 재사용하지 않는다.
+신규 Node/GCC 검사는 인수 문자 보존·설정 실패 전 실행 방지·실제 rlimit·프로세스 그룹·2GiB 예약 실패·32MiB 파일 한도·더 낮은 상속 한도를 검사한다. 새 테스트 기대값은 유지한다. 실제 Cargo 준비3빌드와 결과3빌드는 Ubuntu/macOS에서 필수이며 새 임시 작업 공간을 쓰고 정상/ignored/빈 목록·단언 실패/조기 exit 판정을 그대로 검사한다. 결과 SHA CI 전까지 통과로 기록하지 않는다.
+F01 공개 예제의 `cargo test` 전체 호출은 이번 helper 대상이 아니다. 다음에는 고정 도구체인·빌드/열거/실행 연결과 취소/정리 실패, 실제 문법·경고/빌드 자원 초과 경로를 검증한 뒤에만 운영 Rust 연결을 검토한다. F01은 진행 중이며 차례를 C로 넘기지 않는다.
+한도 단위와 soft/hard 의미는 [GNU Bash 공식 ulimit 문서](https://www.gnu.org/software/bash/manual/html_node/Bash-Builtins.html#index-ulimit)를 2026-10-17에 확인했다. POSIX 모드에서는 파일 블록 단위가 달라지므로 해당 환경 변수를 상속하지 않는다. 기존 자원 runner와의 의미 일관성을 확인한 독립 구현이며 문서 본문은 복제하지 않았다.
 
 1. 준비 어댑터와 합성 fixture의 파일 생성/도구 상태/JSON 산출물/열거 검사를 추가했다. 실제 Cargo 확인은 결과 SHA의 필수 CI 근거로 판단하며 UI/API는 계속 잠근다.
 2. 실제 Cargo 합성 코드의 정상/틀린 assert/보고 없는 조기 exit와 순수 관찰값의 컴파일 진단/치명적 중단/v1 호환 검사를 추가했다. 실제 문법/경고/시간/메모리/자식 정리는 후속 실측·회귀가 남아 있다.

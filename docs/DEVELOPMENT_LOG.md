@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-17 03:03 KST — F01 신뢰된 CI Cargo 빌드 자원 예산
+- 시작/결과 SHA: 시작b87e3c76c3695445a8f8d14c3220f0e2d8929c3b; 커밋 test: enforce resource budgets for trusted Cargo builds.
+- 목표: 운영 Rust 연결 전 누락된 빌드 자원 한도를 준비/결과 합성 Cargo6빌드에 적용하고 Linux/macOS 필수 CI로 검증.
+- 변경 파일 수: 총8개(신규 빌드예산helper·신규5검사·준비/결과검사2·CI·Rust설계·활성/보관 일지).
+- 테스트 결과: 신규5건0/5→5/5; 관련25건23통과·실패0·skip2(Cargo 부재); 전체510건506통과·실패0·skip4(Rust 도구 부재); 변경MJS4개 문법·일지4/4·roadmap/diff 성공; 삭제0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38936753914 성공 재확인; 구현 결과 SHA CI 대기. 실제 Cargo6빌드는 로컬 도구 부재로 미실행이며 두 OS CI를 통과해야 검증으로 인정.
+- 발견한 문제: Cargo 준비/결과 빌드는 기존 벽시계/출력/그룹 정리만 있고 CPU/메모리/파일/프로세스 한도 미적용. helper 부재5건 실패 재현 후 구현; 기대값 변경0. GNU Bash 원문의 한도 단위·POSIX 차이를 확인해 설계에 출처 기록.
+- 보안 영향: 새 운영 API/사용자 입력0, CI의 신뢰된 도구만 고정argv·환경허용목록으로 실행. CPU10초·AS1GiB(macOS Bash VSZ+1GiB)·파일32MiB·NPROC128/512·core0, 기존15초/80KB·낮은 상속한도 유지; 설정실패125는 도구 미실행.
+- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01; Rust API/실습/숙달 비활성 유지.
+- 다음 작업: 결과 SHA CI의 실제 빌드 성공/결과 판정을 먼저 확인. 도구체인 고정·빌드/열거/실행 어댑터 통합·취소/정리 및 문법/경고/자원초과 경로를 검증해 F01 채점 연결을 이어감; 기존 이론 인수로 차례 건너뛰기 금지.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-17 01:55 KST — E02 안정 삽입 정렬 화면·실제 채점 연결(2/2, 구현 CI 인수)
 - 시작/결과 SHA: 시작b90d57b2a635b67c317eb8c1d0f974fdbc375b72; 구현bbf3b8a2e5d2ca0a6e8df808f8d369fc7e809fb6; 후속 docs: accept verified E02 delivery and resume F01.
 - 목표: 준비된 안정성·비교/이동 계수 계약을 화면13절·퀴즈·실제API·재제출·백업/오프라인·숙달에 연결.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 공개 문제/실행 경로 활성화0, 기존 학습자 키 변경0. 고정 배열 함수 계약만 검증하며 임의 포인터의 유효성을 보장하지 않음.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E1/8·F/G0/8·H/I0/6 유지; D02진행 중·next=D/D02.
 - 다음 작업: 준비 CI 확인 뒤 2/2 화면/API 연결. catalog·exercises·registry·browser·README·roadmap검사·로드맵2·일지2 총10파일로 제한; 현재 D02는 미채점 샘플 유지.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-16 17:04 KST — D02 고정 용량 스택 계약 준비(1/2)
-- 시작/결과 SHA: 시작3c5e39f2cab1157ed76392af4ebc63a0f6e9d668; 커밋 feat: prepare bounded D02 stack contract and learning manuscript.
-- 목표: 용량4 정수 스택 push/pop의 LIFO·경계·실패 보존·독립 상태를 기존 GCC 함수형 경로로 검증; 이번은 준비 범위.
-- 변경 파일 수: 10개(계약·신규 검사·72줄 원고·도식·browser준비검사·기존 capability검사·로드맵JSON/MD·활성/보관 일지).
-- 테스트 결과: 신규11건0/11→11/11; 정상10사례·안전한 오답6종 거부·스타터/완성 예제 GCC 성공; 전체488건484통과·실패0·skip4(Rust 부재); 관련26/26·일지4/4·변경JS/MJS5개 문법·roadmap/diff 성공; 삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38865156075 477/477·browser/macOS성공 확인; 구현 SHA CI 대기. D02 macOS·Windows 실행은 미실행.
-- 발견한 문제: 계약/원고 부재·도식 미정의로11건 실패 재현 후 구현. 기존 ds-stack 영구 미채점 기대값은 실제 서버 등록 일치로 변경(향후 전달 오탐 방지); 준비 import가 샘플을 활성화하지 않음도 별도 검사.
-- 보안 영향: 신규 사용자 경로·할당·해제·프로덕션 등록0; 호출자 제공 객체와 비중첩 출력만 처리. NULL/잘못된 길이는 원소 접근 전 거부하며 구조체 패딩 비교를 피함.
-- 단계별 완료율: A3/5·B10/11·C5/8·D/E1/8·F/G0/8·H/I0/6 유지; D02진행 중·next=D/D02; 기존 ds-stack ID/초안/퀴즈/진도 키 유지.
-- 다음 작업: 2/2에서 catalog·exercises·registry·browser·README·roadmap검사·로드맵2·일지2(10파일)로 실제 채점/재제출·백업/오프라인·숙달 연결. roadmap검사의 ds-stack 미채점 고정 fixture와 D02 고정 선택 기대도 실제 인수 상태에 맞게 교차 검증.
