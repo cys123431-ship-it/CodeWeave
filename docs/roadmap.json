@@ -477,12 +477,16 @@
           "id": "E02",
           "title": "안정 정렬과 비교·이동 횟수",
           "status": "진행 중",
-          "lessonIds": [],
+          "lessonIds": [
+            "algo-stable-insertion"
+          ],
           "manuscripts": [
             "content/algo/02-stable-insertion.md"
           ],
           "tests": [
-            "tests/sort-exercise.test.mjs"
+            "tests/sort-exercise.test.mjs",
+            "tests/roadmap.test.mjs",
+            "tests/browser-practice.mjs"
           ]
         },
         {

@@ -137,6 +137,65 @@ test('D01 live API rejects last-match code then accepts corrected code and the p
   assert.equal(starter.ok, false);
   assert.equal(starter.compileOutput, '', 'starter must be valid C11, not a compiler-error puzzle');
 });
+
+test('E02 exposes the prepared sorting contract and compiled example through the learner catalog', async () => {
+  const { sortExercise, sortMetadata, sortStarter } = await import('../server/sort-exercise.mjs');
+  const lesson = lessons.find(item => item.id === sortExercise.id);
+  assert.ok(lesson, 'E02 needs a learner-facing lesson');
+  assert.equal(lesson.track, 'algo');
+  assert.equal(lesson.figure, 'stable-insertion-counts');
+  assert.deepEqual(exerciseById(lesson.id), { ...sortMetadata, requiredFiles: [] });
+  assert.deepEqual(gradingExercises.get(lesson.id).cases, sortExercise.cases);
+  assert.equal(gradingExercises.get(lesson.id).harness, sortExercise.harness);
+  assert.equal(lesson.challenge.starter, sortStarter);
+  assert.equal(lesson.challenge.input, sortMetadata.publicExample.input);
+  assert.equal(lesson.challenge.expected, sortMetadata.publicExample.output);
+  assert.equal(lesson.quiz.answer, 2);
+  assert.equal(lessons[lessons.findIndex(item => item.id === 'algo-binary') + 1].id, lesson.id);
+  const markdown = await readFile(new URL('../content/algo/02-stable-insertion.md', import.meta.url), 'utf8');
+  const program = markdown.match(/```c\n([\s\S]*?)```/)[1].trim();
+  assert.ok(lesson.sections.some(section => section.code?.trim() === program));
+});
+
+test('E02 live API rejects unstable code then accepts corrected code and the published starter compiles', {
+  skip: spawnSync('gcc', ['--version']).status !== 0, timeout: 20000
+}, async t => {
+  const child = spawn(process.execPath, ['dev-server.mjs'], { env: { ...process.env, PORT: '0' }, stdio: ['ignore', 'pipe', 'pipe'] });
+  t.after(async () => {
+    if (child.exitCode === null) { const ended = once(child, 'exit'); child.kill(); await ended; }
+  });
+  const base = await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(Error('E02 server startup timed out')), 5000);
+    let text = '';
+    child.once('error', reject);
+    child.stdout.on('data', chunk => {
+      text += chunk;
+      const match = text.match(/http:\/\/127\.0\.0\.1:\d+/);
+      if (match) { clearTimeout(timer); resolve(match[0]); }
+    });
+  });
+  const html = await (await fetch(base)).text();
+  const token = html.match(/name="codeweave-token" content="([0-9a-f]{64})"/)?.[1];
+  const submit = async code => {
+    const response = await fetch(base + '/api/grade', { method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CodeWeave-Token': token },
+      body: JSON.stringify({ exerciseId: 'algo-stable-insertion', code }), signal: AbortSignal.timeout(10000) });
+    assert.equal(response.status, 200);
+    return response.json();
+  };
+  const correct = "#include <stddef.h>\nstruct SortItem { int key; int tag; };\nint stable_sort_counted(struct SortItem items[], size_t count,\n                        size_t *out_comparisons, size_t *out_moves) {\n    if (out_comparisons == NULL || out_moves == NULL || count > 8\n        || (count > 0 && items == NULL)) return 0;\n    size_t comparisons = 0;\n    size_t moves = 0;\n    for (size_t i = 1; i < count; ++i) {\n        struct SortItem key = items[i];\n        size_t j = i;\n        while (j > 0) {\n            ++comparisons;\n            if (!(items[j - 1].key > key.key)) break;\n            items[j] = items[j - 1];\n            ++moves;\n            --j;\n        }\n        items[j] = key;\n        ++moves;\n    }\n    *out_comparisons = comparisons;\n    *out_moves = moves;\n    return 1;\n}\n";
+  const wrong = correct.replace('items[j - 1].key > key.key', 'items[j - 1].key >= key.key');
+  const bad = await submit(wrong);
+  assert.equal(bad.ok, false);
+  assert.equal(bad.tests[5].passed, false, 'equal keys must keep original tag order and comparison counts');
+  assert.equal(bad.tests.length, 10);
+  const good = await submit(correct);
+  assert.equal(good.ok, true);
+  assert.equal(good.message, '10/10개 테스트 통과');
+  const starter = await submit(lessons.find(lesson => lesson.id === 'algo-stable-insertion').challenge.starter);
+  assert.equal(starter.ok, false);
+  assert.equal(starter.compileOutput, '', 'starter must be valid C11, not a compiler-error puzzle');
+});
 test('D02 live API rejects FIFO code then accepts corrected code and the published starter compiles', {
   skip: spawnSync('gcc', ['--version']).status !== 0, timeout: 20000
 }, async t => {

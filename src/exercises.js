@@ -83,6 +83,7 @@ export function validateExerciseMetadata(definitions) {
 }
 
 export const exercises = Object.freeze(validateExerciseMetadata([
+  {"id":"algo-stable-insertion","kind":"practice","language":"c","grader":"c-function","concepts":["stable-sort","insertion-sort","operation-counts","prefix-boundary"],"prerequisites":["c-array","c-functions","c-struct-array-sort"],"publicExample":{"input":"{2:20,1:10,2:21}","output":"1 2 3 1:10 2:20 2:21"}},
   { id:'c-file-stream-count', kind:'concept', language:'c', grader:'c-function', concepts:['file-stream','fgetc-int','eof-versus-error','borrowed-resource','failure-preservation'], prerequisites:['c-functions','c-fgets-logical-line'], publicExample:{input:'현재 위치부터 {00, FF, 0A, 42} 네 바이트',output:'1 4 1'} },
   {"id":"ds-list-find","kind":"concept","language":"c","grader":"c-function","concepts":["linked-list","pointer-traversal","first-match"],"prerequisites":["c-pointer","c-struct-array-search"],"publicExample":{"input":"첫 노드","output":"1"}},
   { id:'c-hello', kind:'concept', language:'c', grader:'stdin-output', concepts:['program-structure','standard-output'], prerequisites:[], publicExample:{input:'입력 없음',output:'Hello, CodeWeave!'} },

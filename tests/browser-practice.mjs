@@ -29,6 +29,8 @@ let browser, context, page;
 const errors = [];
 const qaDir = process.env.CODEWEAVE_QA_DIR;
 const correct = '#include <stdio.h>\nint main(void){int a,b;if(scanf("%d %d",&a,&b)!=2)return 1;printf("%d\\n",a+b);return 0;}';
+const sortCounted = "#include <stddef.h>\nstruct SortItem { int key; int tag; };\nint stable_sort_counted(struct SortItem items[], size_t count,\n                        size_t *out_comparisons, size_t *out_moves) {\n    if (out_comparisons == NULL || out_moves == NULL || count > 8\n        || (count > 0 && items == NULL)) return 0;\n    size_t comparisons = 0;\n    size_t moves = 0;\n    for (size_t i = 1; i < count; ++i) {\n        struct SortItem key = items[i];\n        size_t j = i;\n        while (j > 0) {\n            ++comparisons;\n            if (!(items[j - 1].key > key.key)) break;\n            items[j] = items[j - 1];\n            ++moves;\n            --j;\n        }\n        items[j] = key;\n        ++moves;\n    }\n    *out_comparisons = comparisons;\n    *out_moves = moves;\n    return 1;\n}\n";
+const sortUnstable = sortCounted.replace('items[j - 1].key > key.key', 'items[j - 1].key >= key.key');
 const failed = '#include <stdio.h>\nint main(void){puts("0");return 0;}';
 const streamCount = '#include <stdio.h>\n#include <stddef.h>\nint count_stream_bytes(FILE *stream, size_t *out_count) {\n    if (stream == NULL || out_count == NULL || ferror(stream)) return 0;\n    size_t count = 0;\n    int ch;\n    while ((ch = fgetc(stream)) != EOF) {\n        if (count == 4096) return 0;\n        ++count;\n    }\n    if (ferror(stream)) return 0;\n    *out_count = count;\n    return 1;\n}\n';
 const searchFunctions = "#include <stddef.h>\n#include <stdio.h>\n\nsize_t linear_find_first(const int values[], size_t count, int target) {\n    for (size_t i = 0; i < count; ++i) {\n        if (values[i] == target) return i;\n    }\n    return count;\n}\n\nsize_t binary_find_first(const int values[], size_t count, int target) {\n    size_t left = 0;\n    size_t right = count;\n    while (left < right) {\n        size_t mid = left + (right - left) / 2;\n        if (values[mid] < target) left = mid + 1;\n        else right = mid;\n    }\n    if (left < count && values[left] == target) return left;\n    return count;\n}\n";
@@ -99,6 +101,7 @@ try {
   assert.match(output, /CodeWeave local learning app:/);
   // Compile our own reference solutions through the actual local API.
   const solutions = {
+    'algo-stable-insertion': sortCounted,
     'ds-stack': stackFunctions,
     'c-file-stream-count': streamCount,
     'algo-binary': searchFunctions,
@@ -1080,27 +1083,63 @@ try {
   await page.locator('.next-action [data-route="lesson:algo-binary"]').click();
   await expect(page.locator('.detail-head h1')).toHaveText('복잡도와 선형·이진 탐색의 전제');
   console.log('PASS: D02 legacy draft/quiz preserved, real FIFO failure/correction 10/10, mastery, backup, offline attempts, 390px and next lesson');
-  // Preparation-only component QA; no E02 learner route or grading API is enabled.
-  await page.evaluate(async () => {
-    const { figureFor } = await import('/src/figures.js');
-    const preview = document.createElement('div');
-    preview.id = 'qa-sort-diagram';
-    preview.style.width = '340px';
-    preview.style.maxWidth = '100%';
-    preview.innerHTML = figureFor('stable-insertion-counts');
-    document.body.append(preview);
-  });
-  await expect(page.locator('#qa-sort-diagram svg')).toHaveAttribute('role', 'img');
+  // Enter E02 through E01's actual next-unit action.
+  await page.locator('.next-action [data-route="lesson:algo-stable-insertion"]').click();
+  await page.reload(); // Reacquire the live token after the preceding offline reloads.
+  await expect(page.locator('.detail-head h1')).toHaveText('안정 삽입 정렬: 비교와 이동을 따로 세기');
+  await expect(page.locator('.practice-zone')).toContainText('함수 직접 호출형');
+  await expect(page.locator('#code-input')).toHaveValue(/stable_sort_counted/);
+  await expect(page.locator('#code-input')).not.toHaveValue(/int main\s*\(/);
+  await page.locator('[data-quiz="algo-stable-insertion"][data-choice="0"]').click();
+  await expect(page.locator('.feedback.bad')).toBeVisible();
+  await page.locator('[data-retry="algo-stable-insertion"]').click();
+  await page.locator('[data-quiz="algo-stable-insertion"][data-choice="2"]').click();
+  await page.locator('#mark-theory').click();
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, sortUnstable);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, sortCounted);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('10/10');
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  const sortBackupEvent = bench.waitForEvent('download');
+  await bench.locator('#export-history').click();
+  const sortDownload = await sortBackupEvent;
+  const sortChunks = [];
+  for await (const chunk of await sortDownload.createReadStream()) sortChunks.push(chunk);
+  const sortBackup = Buffer.concat(sortChunks);
+  const sortData = JSON.parse(sortBackup);
+  assert.equal(sortData.drafts['algo-stable-insertion'], sortCounted);
+  assert.equal(sortData.iterations['algo-stable-insertion'].length, 2);
+  assert.equal(sortData.drafts['ds-stack'], stackFunctions);
+  assert.equal(sortData.drafts['rust-cargo'], rustDraft);
+  await bench.locator('#import-file').setInputFiles({ name: 'sort-backup.json', mimeType: 'application/json', buffer: sortBackup });
+  await expect(bench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.locator('#code-input')).toHaveValue(sortCounted);
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('[data-restore-attempt="1"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(sortUnstable);
+  await page.locator('[data-restore-attempt="0"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(sortCounted);
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('.figure-box svg')).toHaveAttribute('role', 'img');
   assert.equal(await page.evaluate(() => {
-    const svg = document.querySelector('#qa-sort-diagram svg');
+    const svg = document.querySelector('.figure-box svg');
     const view = svg.viewBox.baseVal;
     return [...svg.querySelectorAll('text')].every(text => {
       const box = text.getBBox();
       return box.x >= 0 && box.y >= 0 && box.x + box.width <= view.width && box.y + box.height <= view.height;
     }) && document.documentElement.scrollWidth <= innerWidth;
-  }), true, 'prepared E02 stability and counts diagram must fit 390px');
-  if (qaDir) await page.locator('#qa-sort-diagram').screenshot({ path: path.join(qaDir, 'sort-contract-mobile.png') });
-  console.log('PASS: prepared E02 stable insertion diagram fits 390px; learner route and API delivery remain pending');
+  }), true, 'E02 actual lesson and diagram must fit 390px');
+  if (qaDir) await page.screenshot({ path: path.join(qaDir, 'stable-insertion-mobile.png'), fullPage: true });
+  await context.setOffline(false);
+  await page.locator('[data-route="track:algo"]').first().click();
+  await expect(page.locator('[data-route="lesson:algo-binary"]')).toHaveCount(1);
+  await expect(page.locator('[data-route="lesson:algo-stable-insertion"]')).toHaveCount(1);
+  console.log('PASS: E01 next-unit enters E02; quiz correction, real unstable failure/retry 10/10, mastery, backup, offline attempts, 390px and track return');
   assert.deepEqual(errors, []);
   console.log('PASS: 390px mobile layout and offline reload of drafts/history; no browser exceptions');
 } catch (error) {
