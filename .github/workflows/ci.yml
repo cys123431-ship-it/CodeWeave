@@ -53,6 +53,8 @@ jobs:
           node --check tests/theory-handoff.test.mjs
           node --check server/stream-exercise.mjs
           node --check tests/stream-exercise.test.mjs
+          node --check server/sort-exercise.mjs
+          node --check tests/sort-exercise.test.mjs
           node --check sw.js
       - name: Verify local grading test compiler
         run: gcc --version
@@ -87,6 +89,8 @@ jobs:
         run: node --test tests/submission-resources.test.mjs
       - name: POSIX stream contract and read-error probes
         run: node --test tests/stream-exercise.test.mjs
+      - name: E02 stable insertion contract and complete example
+        run: node --test tests/sort-exercise.test.mjs
       - name: Trusted Rust execution resource probes
         run: |
           rustc --version

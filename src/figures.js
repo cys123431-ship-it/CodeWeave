@@ -3,6 +3,16 @@ const arrow=(x1,y1,x2,y2)=>`<path d="M${x1} ${y1} L${x2} ${y2}" stroke="#6b8d98"
 const wrap=inner=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 670 190" role="img" aria-label="학습 개념 그림"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 const wrapTall=(label,inner,viewBox='0 0 670 300',style='')=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"${style?` style="${style}"`:''} role="img" aria-label="${label}"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 export function figureFor(kind){
+ if(kind==='stable-insertion-counts')return wrapTall('안정 삽입 정렬의 키 비교2회와 배열 쓰기3회, 같은 키 태그 순서 보존',
+  `<text x="170" y="25" text-anchor="middle" font-size="15" fill="#28485b">입력 2:20 · 1:10 · 2:21</text>`+
+  box(35,46,270,46,'i=1 · 2 &gt; 1 → 참','#e7f1ff')+arrow(170,98,170,121)+
+  box(35,128,270,46,'1:10 · 2:20 · 2:21')+
+  `<text x="170" y="200" text-anchor="middle" font-size="14" fill="#28485b">비교1 · 밀기1 + 삽입1</text>`+arrow(170,211,170,234)+
+  box(35,241,270,46,'i=2 · 2 &gt; 2 → 거짓','#fff3d8')+
+  `<text x="170" y="315" text-anchor="middle" font-size="14" fill="#28485b">비교1 · 제자리 쓰기1</text>`+
+  box(35,337,270,46,'합계 비교2 · 이동3','#d7f4e6')+
+  `<text x="170" y="412" text-anchor="middle" font-size="14" fill="#28485b">같은 키의 태그 20 → 21 유지</text>`,
+  '0 0 340 435','max-width:340px');
  if(kind==='stack-bounded-lifo')return wrapTall('용량4 배열 스택의 LIFO와 길이 변화, 실패 상태 보존',
   `<text x="170" y="25" text-anchor="middle" font-size="15" fill="#28485b">용량4 · length는 원소 수</text>`+
   box(35,48,270,44,'push 2 → push 5','#e7f1ff')+arrow(170,98,170,125)+

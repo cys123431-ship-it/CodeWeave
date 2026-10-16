@@ -1080,6 +1080,27 @@ try {
   await page.locator('.next-action [data-route="lesson:algo-binary"]').click();
   await expect(page.locator('.detail-head h1')).toHaveText('복잡도와 선형·이진 탐색의 전제');
   console.log('PASS: D02 legacy draft/quiz preserved, real FIFO failure/correction 10/10, mastery, backup, offline attempts, 390px and next lesson');
+  // Preparation-only component QA; no E02 learner route or grading API is enabled.
+  await page.evaluate(async () => {
+    const { figureFor } = await import('/src/figures.js');
+    const preview = document.createElement('div');
+    preview.id = 'qa-sort-diagram';
+    preview.style.width = '340px';
+    preview.style.maxWidth = '100%';
+    preview.innerHTML = figureFor('stable-insertion-counts');
+    document.body.append(preview);
+  });
+  await expect(page.locator('#qa-sort-diagram svg')).toHaveAttribute('role', 'img');
+  assert.equal(await page.evaluate(() => {
+    const svg = document.querySelector('#qa-sort-diagram svg');
+    const view = svg.viewBox.baseVal;
+    return [...svg.querySelectorAll('text')].every(text => {
+      const box = text.getBBox();
+      return box.x >= 0 && box.y >= 0 && box.x + box.width <= view.width && box.y + box.height <= view.height;
+    }) && document.documentElement.scrollWidth <= innerWidth;
+  }), true, 'prepared E02 stability and counts diagram must fit 390px');
+  if (qaDir) await page.locator('#qa-sort-diagram').screenshot({ path: path.join(qaDir, 'sort-contract-mobile.png') });
+  console.log('PASS: prepared E02 stable insertion diagram fits 390px; learner route and API delivery remain pending');
   assert.deepEqual(errors, []);
   console.log('PASS: 390px mobile layout and offline reload of drafts/history; no browser exceptions');
 } catch (error) {
