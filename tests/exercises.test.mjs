@@ -37,7 +37,12 @@ test('every lesson challenge has one validated public exercise definition', () =
 });
 
 test('only implemented C exercises advertise their explicit grading strategy', () => {
-const expected = ['c-array', 'c-array-max-function', 'c-bounded-string-length', 'c-clamp-function', 'c-dynamic-student-array', 'c-fgets-logical-line', 'c-functions', 'c-hello', 'c-loops', 'c-matrix-row-sums', 'c-multi-file', 'c-pointer', 'c-realloc-student-capacity', 'c-recursion-factorial', 'c-string-count-function', 'c-strtol-integer-input', 'c-struct-array-binary-search', 'c-struct-array-search', 'c-struct-array-sort', 'c-struct-student-registry', 'c-struct-student-score', 'c-student-vector-push', 'c-types'];
+  // Derive learner-visible C contracts from the catalog, not a dated whitelist.
+  // The independent registry comparison and executable case checks below remain.
+  const expected = lessons
+    .filter(lesson => lesson.track === 'c' && isGradedExercise(lesson.challenge.id))
+    .map(lesson => lesson.challenge.id)
+    .sort();
   const implemented = exercises.filter(exercise => isGradedExercise(exercise.id));
   assert.deepEqual(implemented.filter(exercise => exercise.id.startsWith('c-')).map(exercise => exercise.id).sort(), expected);
   assert.deepEqual([...gradingExercises.keys()].sort(), implemented.map(exercise => exercise.id).sort());

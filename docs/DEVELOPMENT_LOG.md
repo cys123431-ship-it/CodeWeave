@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-16 15:57 KST — C05 PR CI 복구·인수
+- 시작/결과 SHA: main3791b101b1006c7515a6cfb9c3a3009f048771dc; PR2 bf53a936682bfdb272f012d02dd5685214586297; 커밋 test: compare graded C contracts against learner catalog.
+- 목표: PR2의 유일한 Node 실패를 복구하고 C05 전달 근거·최종 CI 확인 후에만 인수·차례 전환.
+- 변경 파일 수: 현재3개(문제 계약 검사·활성 일지·보관 일지); 후속 인수 문서 포함10개 이하.
+- 테스트 결과: 기존 only implemented C exercises 검사 0/1→1/1; C05/GCC 관련16/16; 전체477건473통과·실패0·skip4(로컬 Rust 도구 부재); 테스트 추가0·삭제0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38860476819 476/477·실패1·skip0, browser/macOS성공; 수정 SHA CI 대기.
+- 발견한 문제: 고정23개 기대 ID가 검증된 신규 C05를 거부함. 정당한 기대값 변경 이유는 오래된 허용 목록 제거이며 화면 카탈로그·공개 메타데이터·독립 서버 등록·실행 사례 대조를 유지한다.
+- 보안 영향: 실행기·외부 입력·파일 접근·인증·학습자 v1 저장 변경0; C05 기존 제한/계약을 축소하지 않는다.
+- 단계별 완료율: 검증 대기 A3/5·B10/11·C4/8·D/E1/8·F/G0/8·H/I0/6; C05진행 중·next=C/C05.
+- 다음 작업: 수정 PR 전체 CI·실제 C05 브라우저 로그 확인 후 C05 인수·D/D02 차례 갱신, 최종 main CI까지 확인. 새 단원 추가0.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 15:01 KST — C05 스트림 전달 후보(2/2; 미완료·14:03 준비 근거 포함)
 - 시작/결과 SHA: 시작 dbbcf6b1028ea65b363aa8b6db1a627405474c8f; 구현 1a305e9ff824c287e1e61aab7e2d662af83dd59a; 검증 기록 제목 docs: record verified C05 stream preparation and clarify byte semantics. 후속 시작3791b101b1006c7515a6cfb9c3a3009f048771dc; 구현 c19d2f77d6314f3dce820154d97080e75c24f800; 후속 커밋 test: refresh online document before C05 grading.
 - 목표: 현재 위치부터 최대4096바이트를 세고 EOF/오류·실패 출력 보존·빌린 스트림 수명을 구별하는 준비 계약 검증. 15:01 후속은 화면12절·퀴즈·API·오답 수정·백업/오프라인·숙달 연결.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 테스트 전용 읽기 관찰이며 인수·환경·파일 내용·fd는 수집하지 않음. 운영 API·C 실행기·Rust 활성화·v1 키 변경0.
 - 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·next=F-G/F01, 새 단원0.
 - 다음 작업: 최우선 첫 빌드의 파일 페이지 대기 원인 분리: 고정 도구체인·CI 저장 경로/사전 읽기 조건을 재현 검사로 비교, 15초·필수 실행·기대값 유지. 해결 전 C 차례 전환 금지.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-16 10:02 KST — 신뢰된 Linux Rust 빌드 링커 선택
-- 시작/결과 SHA: 시작 036bce852a755cf21dc58b15b79191163f70cac0; 구현 3d7b79446c60c1f76f49a99641bf74c57a382caa; 확인 dc9af001f375f6bb24b33ba6cf22f7d4bab7a130; 실패 보존 제목 docs: retain repeated timeout despite system linker opt-out.
-- 목표: 반복 중단에서 관찰된 rust-lld 경로를 공식 시스템 링커 옵션으로 분리해 제한/판정을 유지한 CI 완화 경로 검증.
-- 변경 파일 수: 10개(공통 helper·신규 검사·Rust fixture4·CI·설계·활성/보관 일지).
-- 테스트 결과: 신규2건 0/2→2/2; 구현CI452/452였으나 후속CI451/452 실패·skip0·macOS/browser성공; 전체452건448통과·실패0·skip4(Rust 도구 부재); 변경MJS6개 문법·roadmap/diff 성공; 15초/경고오류/정상·오답·수정 기대값 유지; 테스트 삭제0.
-- CI URL과 결과: 시작 SHA https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38827994592 성공450/450 및 F01 실제 예시/브라우저 성공을 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38833451432 전체 성공; GNU ld2.42·실제 -lld 비활성 인수 확인, 준비3빌드179~363ms/결과3빌드198~207ms; 후속 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38833653960 test451/452 실패(F01 첫 빌드15초), 완료 보류.
-- 발견한 문제: LLD opt-out 뒤에도 F01 첫 빌드15007ms/ETIMEDOUT·cargo/rustc S가 재현됨: LLD만의 문제라는 가설 불충분. Rust 공식 -C linker-features=-lld를 신뢰 fixture의 Linux x64에만 적용, 도구체인 버전/실행 제한은 변경하지 않음.
-- 보안 영향: 운영 계획기·API·C 실행기·v1 키 변경0, 부모 컴파일 플래그를 무시하고 -Dwarnings 유지. 외부 입력을 옵션으로 받지 않고 고정 인수만 사용.
-- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·next=F-G/F01, 새 단원 추가0.
-- 다음 작업: 최우선 CI Cargo 중단 복구. 첫 rustc의 스레드 대기/파일 I/O·초기화 구간을 실제 관찰하고 구분; 15초/기대값 유지, 무작정 재실행 금지. 해결 전 C 차례 전환 보류.
