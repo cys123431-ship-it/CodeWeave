@@ -114,6 +114,7 @@ grader가 null인 동안 Rust 이론/퀴즈가 통과해도 practiceAvailable/pr
 Rust 1.90부터 x86_64 Linux GNU 대상의 기본 LLD를 끄는 공식 옵션 `-C linker-features=-lld`를 테스트 전용 공통 helper에 적용한다. macOS·다른 아키텍처에는 적용하지 않는다.
 Cargo 준비·사례 결과·F01 예시·직접 rustc 자원 fixture가 같은 정책을 사용한다. `-Dwarnings`, 기존15초, 성공/실패 기대값과 실제 검사 본문은 유지한다. CI는 cc/ld 버전과 실제 선택 인수를 기록한다.
 운영 계획기의 RUSTFLAGS나 API는 변경하지 않는다. 이 경로의 CI 성공을 기본 LLD의 근본 원인 해결·도구체인 고정·운영 Rust 채점 완료로 확대하지 않는다.
+후속 CI38833653960에서도 F01 첫 빌드15007ms/ETIMEDOUT·cargo/rustc S 상태가 재현됐다. 준비/결과6빌드는199~490ms였으므로 LLD opt-out만으로 전체 중단이 해결된 것은 아니다. 다음에는 첫 rustc의 스레드 대기/파일 I/O·초기화 구간을 구분하며 제한 완화·성공 재실행으로 덮지 않는다.
 근거: [Rust 공식 1.90 LLD 안내](https://blog.rust-lang.org/2025/09/01/rust-lld-on-1.90.0-stable/), 2026-10-16 확인. 설정 의미만 참고했다.
 
 ### 신뢰된 CI 테스트 바이너리의 실행 예산 (2026-10-16)
