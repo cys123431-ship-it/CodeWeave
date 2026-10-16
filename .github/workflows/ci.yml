@@ -46,6 +46,7 @@ jobs:
           node --check tests/helpers/rust-budget.mjs
           node --check tests/helpers/rust-build-budget.mjs
           node --check tests/rust-build-budget.test.mjs
+          node --check tests/rust-toolchain.test.mjs
           node --check tests/rust-resources.test.mjs
           node --check tests/helpers/rust-fixture-linker.mjs
           node --check tests/rust-fixture-linker.test.mjs
@@ -60,6 +61,12 @@ jobs:
           node --check sw.js
       - name: Verify local grading test compiler
         run: gcc --version
+      - name: Select and verify the fixed trusted Rust toolchain
+        run: |
+          toolchain=$(node --input-type=module -e "import {RUST_TOOLCHAIN_VERSION} from './server/rust-preparation.mjs'; console.log(RUST_TOOLCHAIN_VERSION)")
+          rustup toolchain install "$toolchain" --profile minimal --no-self-update
+          rustup default "$toolchain"
+          node --input-type=module -e "import {spawnSync} from 'node:child_process'; import {checkRustToolchain} from './server/rust-preparation.mjs'; console.log(checkRustToolchain(spawnSync('cargo',['--version'],{encoding:'utf8',timeout:5000}),spawnSync('rustc',['--version'],{encoding:'utf8',timeout:5000})))"
       - name: Verify trusted Rust fixture tools
         run: |
           cargo --version
@@ -83,6 +90,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Select and verify the fixed trusted Rust toolchain
+        run: |
+          toolchain=$(node --input-type=module -e "import {RUST_TOOLCHAIN_VERSION} from './server/rust-preparation.mjs'; console.log(RUST_TOOLCHAIN_VERSION)")
+          rustup toolchain install "$toolchain" --profile minimal --no-self-update
+          rustup default "$toolchain"
+          node --input-type=module -e "import {spawnSync} from 'node:child_process'; import {checkRustToolchain} from './server/rust-preparation.mjs'; console.log(checkRustToolchain(spawnSync('cargo',['--version'],{encoding:'utf8',timeout:5000}),spawnSync('rustc',['--version'],{encoding:'utf8',timeout:5000})))"
       - name: Verify resource runner syntax and compiler
         run: |
           node --check server/run-submission.mjs

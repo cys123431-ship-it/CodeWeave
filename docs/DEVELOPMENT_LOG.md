@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-17 04:00 KST — F01 검증된 Rust 도구체인 고정
+- 시작/결과 SHA: 시작53d662221feb363622263596def5ab2507683b60; 커밋 fix: pin verified Rust toolchain in trusted CI.
+- 목표: 직전 성공 CI의 1.99.0을 고정하고 다른/혼합/프리릴리스 도구를 빌드 전에 거부; 운영 Rust 연결 전 재현성 경계 보강.
+- 변경 파일 수: 총7개(준비 어댑터·신규 버전검사·기존 준비검사·CI·Rust설계·활성/보관 일지).
+- 테스트 결과: 신규5건 수정 전2통과·3실패→5/5; 관련14건13통과·실패0·skip1(Cargo 부재); 전체515건511통과·실패0·skip4(Rust 부재), 변경MJS3개 문법·일지4/4·roadmap/diff 성공; 삭제0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38945914201 성공 재확인; 구현 결과 SHA CI 대기.
+- 발견한 문제: 기존 버전 검사가 숫자 접두부만 검사해 다른 버전/nightly/추가 줄을 허용. 새 거부 기대값 유지; 기존 정상 fixture 1.90.0→1.99.0은 고정 계약 변경에 따른 정상 입력 갱신이며 실패 기대값은 유지.
+- 보안 영향: 새 API/사용자 입력0; 순수 버전검사는 설치/실행0. CI 준비만 명시 버전 설치·기본값 선택하며 실패 시 중단, 운영 실행기 경로/override 고정은 아직 미구현.
+- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01·Rust 실습/숙달 비활성.
+- 다음 작업: 결과 SHA의 두 OS CI를 확인하고 실제 절대 도구 경로·호스트 대상·환경 고정, 빌드/열거/실행 통합과 취소/정리·문법/경고/자원 초과 분류를 검증한다.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-17 03:10 KST — F01 Cargo 빌드 예산 미반영 커밋 인계
 - 시작/결과 SHA: 시작b87e3c76c3695445a8f8d14c3220f0e2d8929c3b; 보존한 로컬ba33d8ae0bfc6f3c3d1102dde0cf8c41a4e0d670와 원격 구현5eded9deb2db5007473bf30c3db06828634d0bf5는 동일 tree; 후속 docs: record Cargo build budget CI evidence.
 - 목표: 03:03의 검증된 로컬 커밋을 원격에 반영하고 실제 Linux/macOS Cargo 빌드 제한 CI를 인수; 새 기능·단원 추가0.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 새 사용자 입력/API·공개 실행·키 변경0. 신뢰된 C 함수형 검사만 실행; 길이0..8·NULL·실패 출력 보존과 호출자 객체 수명/비중첩 전제, 구조체 멤버 비교를 명시.
 - 단계별 완료율: A3/5·B10/11·C5/8·D2/8·E1/8·F/G0/8·H/I0/6 유지; E02진행 중·next=E/E02; 단원/공개 문제 추가0.
 - 다음 작업: 준비 결과 SHA CI 확인 뒤 catalog·exercises·registry·browser·README·roadmap검사·로드맵2·일지2(총10파일)로 E02 화면/실제API·오답 수정·숙달·백업/오프라인 연결. 미반영 인계로 전달이 지연됐으며 새 단원 추가 없이 같은 범위만 마무리.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-16 19:57 KST — D02 스택 화면·실제 채점 연결(2/2, 구현 CI 인수)
-- 시작/결과 SHA: 시작ccd51b4d75630f7e359023bbce33940cc845ebf4; 구현e9df2b113a7955a9d2d60c2b70adcec3644b7ecb; 후속 docs: accept verified D02 delivery and rotate to E02.
-- 목표: 준비된 용량4 push/pop을 기존 ds-stack ID로 전달하고 오답→수정·재제출·백업/오프라인·숙달 연결을 검증.
-- 변경 파일 수: 총10개(화면·메타데이터·registry·roadmap검사·browser·README·일지2·로드맵JSON/MD).
-- 테스트 결과: 신규2건0/2→2/2; 관련20/20·전체490건486통과·실패0·skip4(Rust 부재); JS/MJS5개 문법·roadmap/diff 성공; 삭제0. 브라우저는 CI에서만 실행.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38885443590 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38891469378 전체490/490·skip0, browser실제27문제 API·D02초안/퀴즈/오답→수정/숙달/백업/오프라인/390px/다음 이동 성공, 기존 macOS회귀 성공. 후속 기록 SHA CI 별도 확인.
-- 발견한 문제: 실제 API가 ds-stack에400을 반환하고 옛 도식만 노출함을 먼저 재현. 미채점 fixture는 실제 미채점 Rust로 옮기고 순환 fixture를 명시적 상태로 구성; 신규 메타데이터 기대값은 기존 정규화 requiredFiles:[] 누락을 수정(계약 완화 아님). render는 출력 전용이므로 MD 반영 전 동기화 검사 실패 후 생성 출력을 apply_patch로 반영·재검사 성공.
-- 보안 영향: 신규 실행/파일 API 없이 기존 토큰·제한·GCC 함수형 경로 사용. 준비 하네스/10사례/호출자 비중첩 전제 불변; 사용자 v1 키와 기존 퀴즈 선택2 유지.
-- 단계별 완료율: A3/5·B10/11·C5/8·D2/8(25%)·E1/8·F/G0/8·H/I0/6; D02 제한 범위 완료·next=E/E02.
-- 다음 작업: 후속 결과 SHA CI 성공 확인 후 E02 안정 정렬과 비교·이동 횟수를 8~12사례의 좁은 C 함수형 계약으로 진행. 다음 Rust 차례는 F01 남은 채점 구현; D02 macOS/Windows 네이티브는 미검증.

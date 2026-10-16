@@ -10,7 +10,7 @@
 산출물은 한 개의 성공한 build-finished와 현재 manifest/test profile/codeweave target을 요구하고 target 밖·비일반 파일·심볼릭 링크를 거부한다.
 이는 신뢰된 작업 디렉터리의 준비 검사이며 악성 동시 파일 교체나 하드 링크까지 격리하는 경계가 아니다.
 신뢰된 합성 Cargo 검사는 CI에서 필수다. 로컬 Cargo/rustc가 없으면 이 1건만 이유를 표시해 skip하고 도구를 자동 설치하지 않는다.
-CI는 설치된 cargo/rustc 버전을 출력하며 이 준비 검증만으로 도구체인 고정·자원 제한·Rust 채점 완료를 주장하지 않는다.
+CI는 고정한 Cargo/rustc 버전을 검사한다. 준비 검증과 CI 버전 선택만으로 운영 실행기의 도구 경로 고정·Rust 채점 완료를 주장하지 않는다.
 
 `server/rust-results.mjs`는 별도 사례의 종료/출력 관찰값을 판정하고 전체 결과를 만든다. 프로세스 모듈이나 기본 실행기는 없다.
 runRustCases(plan, observe)는 명시적으로 주입한 관찰 함수만 호출한다. 현재 운영 API/등록부에서 호출하지 않는다.
@@ -54,10 +54,18 @@ lib의 unit test/doctest를 끄고 [[test]] codeweave 하나를 명시한다. [w
 
 `--frozen`은 locked+offline이다. Cargo만 네트워크를 사용하지 않는다는 뜻이며 제출 프로그램의 네트워크 격리가 아니다.
 기본 환경 오버라이드는 RUSTFLAGS=-Dwarnings, CARGO_NET_OFFLINE=true, CARGO_INCREMENTAL=0, CARGO_TERM_COLOR=never, RUST_BACKTRACE=0이다.
-경고는 기본 실패로 처리한다. 버전별 경고 차이가 있으므로 후속 CI에서 cargo/rustc 버전을 기록하고 검증된 도구체인을 고정한다.
+경고는 기본 실패로 처리한다. 버전별 경고 차이가 있으므로 CI는 아래 검증된 고정 버전을 선택하고 Cargo/rustc가 모두 일치하는지 검사한다.
 현재 생성기는 환경 오버라이드만 기술한다. 실행 구현은 부모 환경 전체를 상속하지 않고 검증된 도구 경로와 필요한 시스템 값만 허용한다.
 작업 디렉터리는 저장소 밖·부모 .cargo 설정이 없는 경로, 전용 CARGO_HOME/target을 사용해야 한다. 인증/사용자 캐시·RUSTC_WRAPPER·runner 설정은 전달하지 않는다.
 Rustup 다운로드나 crates.io 접근, 사용자 toolchain override를 실행 중 활성화하지 않는다. 도구 부재는 운영 오류다.
+
+### 고정 도구체인 선택 (2026-10-17)
+
+`server/rust-preparation.mjs`의 `RUST_TOOLCHAIN_VERSION=1.99.0`이 단일 설정이다. 직전 Linux/macOS CI38945914201에서 실제 빌드·자원·결과 검사를 통과한 릴리스를 선택했으며 이동하는 stable/nightly를 사용하지 않는다. `checkRustToolchain`은 Cargo와 rustc 모두 정확한 stable 릴리스, 성공 종료·무신호·무오류 및 1024바이트 이하 단일 버전 출력을 요구한다. 다른 패치/마이너·혼합 버전·nightly/beta·추가 줄은 운영 오류로 거부한다. 버전 문자열은 도구 진위나 바이너리 해시의 인증이 아니다.
+Ubuntu/macOS CI는 제출 실행 전에 이 설정을 읽어 `rustup toolchain install --profile minimal --no-self-update`로 준비하고 해당 버전을 CI runner의 기본값으로 선택한 뒤 실제 두 도구를 검사한다. 준비 실패는 이후 빌드 전에 실패하며 자동 stable 대체나 재시도는 없다. 설치·기본값 변경은 일회용 CI 호스트에서만 수행한다. 내부 준비/채점 함수는 설치·다운로드·설정 변경을 하지 않는다.
+새 검사는 버전 일치·다른/혼합 버전·프리릴리스·잘못된/과대 출력·실패 도구를 검증한다. 기존 준비 검사에서 임의의 정상 버전으로 쓰던 1.90.0 fixture는 새 고정 계약의 정상 입력인 1.99.0으로 바꿨다. 기존 도구 실패·산출물·열거·실제 실행 기대값은 유지한다.
+후속 운영 실행기는 이 버전의 실제 절대 Cargo/rustc 경로·호스트 대상·환경 override를 검증해 고정해야 한다. CI 기본값 선택만으로 작업 공간 밖 임의 Rustup override나 악성 도구를 격리했다고 주장하지 않는다. Rust API·실습·숙달은 계속 비활성이다.
+명령과 override 우선순위는 [Rustup 도구체인](https://rust-lang.github.io/rustup/concepts/toolchains.html), [기본 사용법](https://rust-lang.github.io/rustup/basics.html), [override](https://rust-lang.github.io/rustup/overrides.html) 원문을 확인했다. 문서 본문은 복제하지 않았다.
 
 ## 4. 테스트 식별과 사례 실행
 

@@ -24,13 +24,19 @@ export async function prepareRustWorkspace(request, definitions, parent = os.tmp
   }
 }
 
+// Verified with trusted Linux/macOS fixtures; never select moving stable/nightly.
+export const RUST_TOOLCHAIN_VERSION = '1.99.0';
+
 export function checkRustToolchain(cargo, rustc) {
   const versions = {};
   for (const [name, output] of [['cargo', cargo], ['rustc', rustc]]) {
-    const first = output?.stdout?.trim().split('\n')[0];
+    const text = output?.stdout;
+    const first = typeof text === 'string' ? text.trim() : '';
+    const pattern = new RegExp('^' + name + ' ' + RUST_TOOLCHAIN_VERSION.replaceAll('.', '\\.')
+      + '(?: \\([^\\r\\n\\x00-\\x1f()]+\\))?$');
     if (output?.status !== 0 || output.error || output.signal
-        || typeof first !== 'string' || !new RegExp('^' + name + ' \\d+\\.\\d+\\.\\d+(?:[ -]|$)').test(first)) {
-      throw new Error('Rust 도구를 사용할 수 없습니다: ' + name);
+        || typeof text !== 'string' || Buffer.byteLength(text, 'utf8') > 1024 || !pattern.test(first)) {
+      throw new Error('Rust 도구를 사용할 수 없거나 고정 버전과 다릅니다: ' + name + ' ' + RUST_TOOLCHAIN_VERSION);
     }
     versions[name] = first;
   }

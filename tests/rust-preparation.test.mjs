@@ -53,8 +53,8 @@ test('Rust preparation reports missing and failed tools without trusting printed
   for (const bad of [{ error: { code: 'ENOENT' } }, { ...result('cargo 1.90.0'), status: 1 }, result('not cargo')]) {
     assert.throws(() => checkRustToolchain(bad, result('rustc 1.90.0')), /Rust 도구/);
   }
-  assert.deepEqual(checkRustToolchain(result('cargo 1.90.0 (fixture)\n'), result('rustc 1.90.0 (fixture)\n')), {
-    cargo: 'cargo 1.90.0 (fixture)', rustc: 'rustc 1.90.0 (fixture)'
+  assert.deepEqual(checkRustToolchain(result('cargo 1.99.0 (fixture)\n'), result('rustc 1.99.0 (fixture)\n')), {
+    cargo: 'cargo 1.99.0 (fixture)', rustc: 'rustc 1.99.0 (fixture)'
   });
 });
 
