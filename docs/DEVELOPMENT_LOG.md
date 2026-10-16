@@ -1,10 +1,10 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 12:57 KST — F01 제한 범위 인수와 C 차례 전환
-- 시작/결과 SHA: 시작 d92dd760fcdcae96f11a8f0f14e42df59e2bff5c; 결과는 제목 feat: record theory-only Rust delivery without completing practice로 추적.
+- 시작/결과 SHA: 시작 d92dd760fcdcae96f11a8f0f14e42df59e2bff5c; 구현 dd5e89f5d1384c89c1f447f1fe4b1b318d519ade; 검증 기록 제목 docs: record verified F01 theory handoff to C05.
 - 목표: 검증된 이론/퀴즈 전달과 전체 완료를 구분하고 F01 진행 중을 보존하며 다음 차례를 C/C05로 이동.
 - 변경 파일 수: 8개(로드맵 함수·신규 검사·JSON/MD·Rust 설계·CI·활성/보관 일지).
 - 테스트 결과: 신규4건 0/4→4/4; 관련11/11 성공; 전체463건459통과·실패0·skip4(로컬 Rust 도구 부재); MJS2개 문법·roadmap/diff 성공; 삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38843874384 459/459·skip0 및 macOS/browser성공 재확인; 실제 F01 예시·퀴즈 재시도/초안/오프라인 로그 확인; 결과 CI 대기.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38843874384 459/459·skip0·실제 F01 예시/브라우저 로그 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38848794857 전체463/463·skip0 및 macOS/browser성공. 최종 기록 SHA의 CI는 별도 확인.
 - 발견한 문제: 인수 함수 부재·미기록 상태를 먼저 재현. 문자열 대신 배열인 SHA/CI가 정규식 형변환을 통과하는 사례도 재현 후 엄격 형 검사. 신규 검사 fixture 선언 순서 수정, C05 고정 대신 실제 첫 미완료 C 선택과 비교해 후속 단원에도 적용; 기존 기대값 변경0.
 - 보안 영향: 개발 로드맵의 선택 차례·제한 범위 근거만 처리; 외부 실행/파일 경로/API/학습자 v1 키 변경0. 원격 CI 성공은 함수가 인증하지 않으며 실제 조회한 SHA/CI만 기록.
 - 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·이론/퀴즈 인수 기록, next=C/C05. 새 단원0.
