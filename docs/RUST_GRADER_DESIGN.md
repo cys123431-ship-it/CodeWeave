@@ -65,8 +65,16 @@ Rustup 다운로드나 crates.io 접근, 사용자 toolchain override를 실행 
 Ubuntu/macOS CI는 제출 실행 전에 이 설정을 읽어 `rustup toolchain install --profile minimal --no-self-update`로 준비하고 해당 버전을 CI runner의 기본값으로 선택한 뒤 실제 두 도구를 검사한다. 준비 실패는 이후 빌드 전에 실패하며 자동 stable 대체나 재시도는 없다. 설치·기본값 변경은 일회용 CI 호스트에서만 수행한다. 내부 준비/채점 함수는 설치·다운로드·설정 변경을 하지 않는다.
 새 검사는 버전 일치·다른/혼합 버전·프리릴리스·잘못된/과대 출력·실패 도구를 검증한다. 기존 준비 검사에서 임의의 정상 버전으로 쓰던 1.90.0 fixture는 새 고정 계약의 정상 입력인 1.99.0으로 바꿨다. 기존 도구 실패·산출물·열거·실제 실행 기대값은 유지한다.
 구현 `fd5d7acd34c22d0af2aaa339e27aea0cd0e44b14`의 [CI38952261425](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38952261425)에서 두 OS의 실제 Cargo/rustc 1.99.0 선택, Ubuntu 전체515/515·skip0, macOS Cargo 준비/결과/빌드예산25/25·skip0 및 browser 회귀 성공을 재조회했다. 고정된 CI 환경의 인수 근거이며 운영 도구 경로·호스트/override 검증 완료는 아니다.
-후속 운영 실행기는 이 버전의 실제 절대 Cargo/rustc 경로·호스트 대상·환경 override를 검증해 고정해야 한다. CI 기본값 선택만으로 작업 공간 밖 임의 Rustup override나 악성 도구를 격리했다고 주장하지 않는다. Rust API·실습·숙달은 계속 비활성이다.
+후속 운영 실행기는 아래 검증된 경로 선택을 빌드/열거/실행 생명주기에 통합해야 한다. CI 기본값 선택만으로 작업 공간 밖 임의 Rustup override나 악성 도구를 격리했다고 주장하지 않는다. Rust API·실습·숙달은 계속 비활성이다.
 명령과 override 우선순위는 [Rustup 도구체인](https://rust-lang.github.io/rustup/concepts/toolchains.html), [기본 사용법](https://rust-lang.github.io/rustup/basics.html), [override](https://rust-lang.github.io/rustup/overrides.html) 원문을 확인했다. 문서 본문은 복제하지 않았다.
+
+### 실제 도구 경로와 호스트 확인 (2026-10-17)
+
+`server/rust-tools.mjs`는 프로세스를 실행하지 않고 sysroot를 canonical 경로로 해석한다. 파일시스템 루트·상대 경로·지원하지 않는 플랫폼/아키텍처를 거부하며 bin 디렉터리와 cargo/rustc 모두 링크가 아닌 일반 실행 파일이어야 한다. 두 도구는 같은 sysroot/bin의 고정 이름만 선택한다. 지원 계약은 Linux GNU x64/arm64와 macOS x64/arm64이며 다른 대상은 실패 처리한다. 경로 검사만으로 바이너리 진위·서명·동시 파일 교체를 방지하지 않는다.
+CI 전용 `tests/helpers/rust-tools.mjs`는 제한된 환경과 고정 인수로 rustc sysroot를 발견하고, 선택한 실제 Cargo/rustc의 정확한 1.99.0 버전을 다시 검사한다. 해당 rustc의 -vV 보고는 성공 종료·출력4KiB 이내·단일 host/release가 현재 Node 플랫폼/아키텍처와 일치해야 한다. probe는 각5초/4KiB이며 설치·다운로드·사용자 명령 실행은 없다.
+준비/결과 합성 fixture의 Cargo6빌드는 Rustup proxy가 아닌 확인된 절대 Cargo 경로를 호출하고 RUSTC에 같은 sysroot의 실제 rustc를 지정한다. 기존 빌드 자원 예산·15초 제한·경고 실패·정상/ignored/빈 목록·단언 실패/조기 exit 판정은 유지한다. 허용 환경에 신뢰된 RUSTC만 추가하고 RUSTUP_TOOLCHAIN·wrapper·target override·임의 부모 환경은 전달하지 않는다. env/도구 설정은 CI 코드만 제공하며 제출 입력이 아니다.
+새 검사는 고정 경로·불가 호스트/루트·링크·파일/실행 권한·host/release 오류·환경 보존을 검사하고 실제 도구 확인은 두 OS CI에서 필수다. F01 공개 예제의 cargo test 전체 호출은 아직 이 경로에 연결하지 않았다. 운영 API·통합 실행기·전체 취소/정리·빌드 실패 분류는 별도 미완료다.
+RUSTC와 wrapper 의미 및 sysroot/verbose 옵션은 [Cargo 환경 변수](https://doc.rust-lang.org/cargo/reference/environment-variables.html), [rustc 명령 인수](https://doc.rust-lang.org/rustc/command-line-arguments.html) 원문으로 확인했다. 문서 본문은 복제하지 않았다.
 
 ## 4. 테스트 식별과 사례 실행
 

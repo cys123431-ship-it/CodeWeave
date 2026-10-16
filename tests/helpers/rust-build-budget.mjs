@@ -11,7 +11,7 @@ export function rustBuildBudget(binary, args, { platform = process.platform, env
   const environment = {};
   for (const name of ['PATH', 'HOME', 'LANG', 'LC_ALL', 'TMPDIR', 'RUSTUP_HOME',
     'CARGO_HOME', 'CARGO_TARGET_DIR', 'RUSTFLAGS', 'CARGO_NET_OFFLINE',
-    'CARGO_INCREMENTAL', 'CARGO_TERM_COLOR', 'RUST_BACKTRACE']) {
+    'CARGO_INCREMENTAL', 'CARGO_TERM_COLOR', 'RUST_BACKTRACE', 'RUSTC']) {
     if (typeof env[name] === 'string') environment[name] = env[name];
   }
   const script = [

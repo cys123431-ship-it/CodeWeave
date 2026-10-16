@@ -8,6 +8,7 @@ import { formatRustProcessFailure } from '../server/rust-results.mjs';
 import { observeProcess } from './helpers/observe-process.mjs';
 import { withRustFixtureLinker } from './helpers/rust-fixture-linker.mjs';
 import { rustBuildBudget } from './helpers/rust-build-budget.mjs';
+import { trustedRustTools } from './helpers/rust-tools.mjs';
 
 const api = () => import('../server/rust-preparation.mjs');
 const cases = Array.from({ length: 8 }, (_, i) => ({ id: `case_0${i}`, label: `fixture ${i}` }));
@@ -123,7 +124,6 @@ test('Rust listing rejects failed or signalled enumeration even with valid-looki
 
 const cargo = spawnSync('cargo', ['--version'], { encoding: 'utf8', timeout: 3000 });
 const rustc = spawnSync('rustc', ['--version'], { encoding: 'utf8', timeout: 3000 });
-const cargoPath = spawnSync('/bin/sh', ['-c', 'command -v cargo'], { encoding: 'utf8', timeout: 3000 }).stdout?.trim();
 const toolsAvailable = cargo.status === 0 && rustc.status === 0;
 
 test('Real Cargo builds the fixed package and lists eight nonexecuted tests, rejecting ignored and empty fixtures', {
@@ -133,13 +133,14 @@ test('Real Cargo builds the fixed package and lists eight nonexecuted tests, rej
   const { prepareRustWorkspace, selectRustArtifact, validateRustListing, checkRustToolchain } = await api();
   const versions = checkRustToolchain(cargo, rustc);
   console.log('Rust fixture toolchain:', versions);
+  const tools = await trustedRustTools();
   const parent = await temporary(t);
   for (const [source, valid] of [[harness, true], [harness.replace('#[test]', '#[test]\n#[ignore]'), false], ['// no tests\n', false]]) {
     const workspace = await prepareRustWorkspace(request, registry(source), parent);
     const env = withRustFixtureLinker({ PATH: process.env.PATH, HOME: process.env.HOME, ...workspace.plan.environment,
       CARGO_HOME: path.join(parent, 'cargo-home'), RUSTUP_HOME: process.env.RUSTUP_HOME,
-      CARGO_TARGET_DIR: workspace.targetDir });
-    const build = rustBuildBudget(cargoPath, workspace.plan.compile.args, { env });
+      CARGO_TARGET_DIR: workspace.targetDir, RUSTC: tools.rustc });
+    const build = rustBuildBudget(tools.cargo, workspace.plan.compile.args, { env });
     const compiled = await observeProcess(build.command, build.args, {
       cwd: workspace.dir, env: build.env, timeout: build.timeout, maxBuffer: build.maxBuffer,
       stage: source === harness ? 'prepare-normal' : source.includes('#[ignore]') ? 'prepare-ignored' : 'prepare-empty'

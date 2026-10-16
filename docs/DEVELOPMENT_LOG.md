@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-17 05:02 KST — F01 실제 Rust 도구 경로·호스트 고정
+- 시작/결과 SHA: 시작87b370beaeaf8b43f2aab185076cc812c60e057e; 커밋 fix: resolve trusted Cargo and rustc paths before fixture builds.
+- 목표: 동일 sysroot의 실제 실행 도구·고정 버전·호스트를 확인해 기존 준비/결과6빌드에 연결; Rust 운영 API는 활성화하지 않음.
+- 변경 파일 수: 총10개(신규 경로검증·CI탐색helper·7검사, 빌드예산helper·준비/결과검사2·CI·설계·활성/보관 일지).
+- 테스트 결과: 신규7건 수정 전6실패·skip1→6통과·skip1(Rust 부재); 관련32건29통과·실패0·skip3; 전체522건517통과·실패0·skip5(Rust 부재); 변경MJS6개 문법·일지4/4·roadmap/diff 성공; 삭제0·기대값 변경0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38952572234 성공 재확인; 구현 결과 SHA CI 대기.
+- 발견한 문제: 기존 Cargo 경로는 PATH의 Rustup proxy이고 RUSTC를 명시하지 않았음. 링크/실행불가/호스트 불일치 거부 및 RUSTC 허용목록 누락을 먼저 검사로 재현 후 구현.
+- 보안 영향: 서버 모듈은 파일 메타데이터만 읽고 프로세스0·API0. 신뢰된 CI helper만 5초/4KiB 고정 probe를 실행하며 실제 Cargo/rustc 버전/host 재확인; 경로 진위/동시교체 격리 보장은 아님.
+- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01·실습/숙달 비활성.
+- 다음 작업: 결과 SHA의 두 OS CI 실제 경로·Cargo6빌드 검증 후 빌드/열거/사례 실행을 한 생명주기로 통합하고 취소/정리·문법/경고/자원 초과 분류를 검증한다.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-17 04:00 KST — F01 검증된 Rust 도구체인 고정
 - 시작/결과 SHA: 시작53d662221feb363622263596def5ab2507683b60; 구현fd5d7acd34c22d0af2aaa339e27aea0cd0e44b14; 후속 docs: record verified fixed Rust toolchain CI.
 - 목표: 직전 성공 CI의 1.99.0을 고정하고 다른/혼합/프리릴리스 도구를 빌드 전에 거부; 운영 Rust 연결 전 재현성 경계 보강.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 기존 토큰·자원 제한·C 함수형 실행 경로만 사용하며 신규 파일/API 경로0. 준비10사례·출력 비중첩/객체 수명 전제 유지, 기존 v1 키/기록 보존.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8(25%)·F/G0/8·H/I0/6; E02 제한 범위 완료·next=F-G/F01; 화면30단원·실제C채점28문제.
 - 다음 작업: 후속 결과 SHA CI 성공 확인 후 Rust F01의 남은 Cargo 채점 경로를 이어감. 기존 이론 인수로 차례를 다시 건너뛰지 말 것. E02 Windows 네이티브/실기기 PWA는 미검증이며 후속 알고리즘 단원은 아직 미제공.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-17 00:59 KST — 미반영 E02 안정 삽입 정렬 준비 인계(1/2)
-- 시작/결과 SHA: 시작a76831f13e420d9058b5fe477a93829b1e7b2dfa; 구현2f1af034cc674c12e6bac7bfecb15f98db593b31; 후속 docs: record verified E02 preparation handoff.
-- 목표: 10-16 20:59의 미커밋 E02 계약·검사·원고·도식을 보존·재검증하고 원격 반영; 화면/API 전달은 별도 검증.
-- 변경 파일 수: 시작 main 대비10개(신규3: 계약·13검사·81줄 원고; 기존7: 도식·browser준비검사·CI macOS·로드맵2·활성/보관 일지).
-- 테스트 결과: 앞선 신규13건0/13→13/13 이력, 이번13/13 재확인; 정상10사례·오답8종 거부·스타터/완성 예제 GCC 성공. 앞선 전체503건499통과·실패0·skip4(Rust 부재), 이번도503건499통과·실패0·skip4; JS/MJS4개 문법·일지4/4·roadmap/diff 성공·삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38891766406 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38928796801 전체503/503·skip0·macOS E02 13/13·browser 준비도식390px 성공. E02 화면/API E2E는 아님; 후속 기록 SHA CI 별도 확인.
-- 발견한 문제: 미커밋 작업과 미반영 상태를 확인해 인계. 앞선 파일/도식 부재로 실패 재현 후 구현; 이번 상대경로 읽기 ENOENT는 정확한 workdir 지정 후 성공. 기대값/기존 본문 변경0.
-- 보안 영향: 새 사용자 입력/API·공개 실행·키 변경0. 신뢰된 C 함수형 검사만 실행; 길이0..8·NULL·실패 출력 보존과 호출자 객체 수명/비중첩 전제, 구조체 멤버 비교를 명시.
-- 단계별 완료율: A3/5·B10/11·C5/8·D2/8·E1/8·F/G0/8·H/I0/6 유지; E02진행 중·next=E/E02; 단원/공개 문제 추가0.
-- 다음 작업: 준비 결과 SHA CI 확인 뒤 catalog·exercises·registry·browser·README·roadmap검사·로드맵2·일지2(총10파일)로 E02 화면/실제API·오답 수정·숙달·백업/오프라인 연결. 미반영 인계로 전달이 지연됐으며 새 단원 추가 없이 같은 범위만 마무리.
