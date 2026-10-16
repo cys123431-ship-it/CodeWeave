@@ -1,14 +1,14 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 10:58 KST — Cargo 중단의 스레드·입출력 관찰
-- 시작/결과 SHA: 시작 f12f147a7c56eeb4f3b536c9e3d6851fe52b562b; 결과는 커밋 제목 test: sample bounded thread and IO evidence before trusted build timeout으로 추적.
+- 시작/결과 SHA: 시작 f12f147a7c56eeb4f3b536c9e3d6851fe52b562b; 구현 bc8e43e26d58305479865e01708130a34116b228; 근거 보존 제목 docs: retain Cargo page-wait evidence without claiming recovery.
 - 목표: 반복되는 F01 첫 빌드 중단의 대기/CPU/입출력 진행을 두 시점으로 구분하며 기존 15초·판정을 유지.
 - 변경 파일 수: 8개(관찰 helper2·검사2·CI·설계·활성/보관 일지).
-- 테스트 결과: 신규2건·기존 timeout 확장1건 수정 전3실패→관련8/8 성공; 전체454건450통과·실패0·skip4(로컬 Rust 도구 부재); MJS4개 문법·roadmap/diff 성공; 삭제0.
-- CI URL과 결과: 시작 SHA https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38833927876 test451/452 실패·macOS/browser성공 재확인; 결과 SHA CI 대기, 완료 보류.
-- 발견한 문제: Cargo/rustc S·15009ms/ETIMEDOUT만으로 원인 확정 불가. 50%·85% 시점에 소유 프로세스6개·스레드16개까지 wchan/CPU tick/메모리/입출력 수집; 관찰 불가를 0으로 대체하지 않음.
+- 테스트 결과: 신규2건·기존 timeout 확장1건 수정 전3실패→관련8/8 성공(실제 Linux 관찰 포함 CI도 성공); 전체 로컬454건450통과·실패0·skip4(Rust 도구 부재); CI452통과/454·실패2·skip0; MJS4개 문법·roadmap/diff 성공; 삭제0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38833927876 실패 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38838684764 test452/454 실패·macOS/browser성공, 완료 보류.
+- 발견한 문제: F01-project15007ms·prepare-normal15010ms/ETIMEDOUT. F01 rustc 스레드가 두 표본 모두 D/folio_wait_bit_common, read_bytes16584704→36069376·CPU system1→3ticks; 준비도 rustc D 뒤 ld D/같은 wchan. 파일 페이지 대기와 일치하는 관찰이나 저장장치/도구체인 원인 미확정; 결과3빌드214~477ms 성공.
 - 보안 영향: 테스트 전용 읽기 관찰이며 인수·환경·파일 내용·fd는 수집하지 않음. 운영 API·C 실행기·Rust 활성화·v1 키 변경0.
 - 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·next=F-G/F01, 새 단원0.
-- 다음 작업: 실제 CI의 두 표본 차이로 첫 rustc 중단 구간을 확인하고 재현 가능한 원인 수정; 제한 완화·성공 재실행으로 덮지 않음.
+- 다음 작업: 최우선 첫 빌드의 파일 페이지 대기 원인 분리: 고정 도구체인·CI 저장 경로/사전 읽기 조건을 재현 검사로 비교, 15초·필수 실행·기대값 유지. 해결 전 C 차례 전환 금지.
 
 ---
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함

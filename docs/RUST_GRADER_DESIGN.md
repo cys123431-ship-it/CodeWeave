@@ -140,6 +140,7 @@ Cargo 빌드 자원 한도와 도구체인 고정은 여전히 미완료다. 이
 - Linux에서는 제한 시간의 50%·85%에 자식 PID/부모/그룹/상태/명령 이름 최대32개를 관찰한다. 그중 최대6개 프로세스에서 스레드 최대16개의 이름·상태·wchan·CPU 누적 tick, VmRSS/VmSize와 누적 rchar/read_bytes/write_bytes를 읽는다. 두 표본의 차이로 진행 여부를 살피되 비원자적 관찰·누락 스레드가 있으므로 원인을 단정하지 않는다.
 - 인수·환경·파일 내용·fd·maps는 수집하지 않는다. /proc와 Node의 PID 공간 불일치, 권한 부족·종료 경쟁은 관찰 불가로 명시하며 0으로 대체하지 않는다. 기존 빌드 제한과 판정은 바꾸지 않는다.
 - 정상·비정상·도구 부재·강제 중단·출력 초과·부모 종료 후 자식 정리는 Node 합성 프로세스로 검사한다. 실제 Cargo 6개 빌드 단계의 시간은 CI에서 확인한다. 반복된 과거 중단의 근본 원인은 아직 확정하지 않았다.
+- CI38838684764에서는 F01-project15007ms·prepare-normal15010ms 중단을 포착했다. F01 rustc 작업 스레드는 7505/12756ms 모두 D·folio_wait_bit_common, read_bytes16584704→36069376·system tick1→3이었다. 준비 빌드도 rustc의 같은 대기 뒤 시스템 ld가 D·같은 대기로 관찰됐다. 파일 페이지 대기와 일치하지만 저장장치·이미지·도구체인 중 원인은 확정하지 않는다. 결과3빌드214~477ms는 성공했다. LLD만의 문제·CPU 연산 소진·완전한 무진행으로 단정할 근거가 없다.
 
 2026-10-16 KST에 다음 Cargo 원문을 확인했다. 설정/명령 의미만 참조하고 본문·교육 문제는 복제하지 않았다.
 - [cargo test](https://doc.rust-lang.org/cargo/commands/cargo-test.html): no-run·target 선택·frozen·libtest 인수.
