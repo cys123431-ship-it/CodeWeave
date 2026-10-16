@@ -30,6 +30,7 @@ const errors = [];
 const qaDir = process.env.CODEWEAVE_QA_DIR;
 const correct = '#include <stdio.h>\nint main(void){int a,b;if(scanf("%d %d",&a,&b)!=2)return 1;printf("%d\\n",a+b);return 0;}';
 const failed = '#include <stdio.h>\nint main(void){puts("0");return 0;}';
+const streamCount = '#include <stdio.h>\n#include <stddef.h>\nint count_stream_bytes(FILE *stream, size_t *out_count) {\n    if (stream == NULL || out_count == NULL || ferror(stream)) return 0;\n    size_t count = 0;\n    int ch;\n    while ((ch = fgetc(stream)) != EOF) {\n        if (count == 4096) return 0;\n        ++count;\n    }\n    if (ferror(stream)) return 0;\n    *out_count = count;\n    return 1;\n}\n';
 const searchFunctions = "#include <stddef.h>\n#include <stdio.h>\n\nsize_t linear_find_first(const int values[], size_t count, int target) {\n    for (size_t i = 0; i < count; ++i) {\n        if (values[i] == target) return i;\n    }\n    return count;\n}\n\nsize_t binary_find_first(const int values[], size_t count, int target) {\n    size_t left = 0;\n    size_t right = count;\n    while (left < right) {\n        size_t mid = left + (right - left) / 2;\n        if (values[mid] < target) left = mid + 1;\n        else right = mid;\n    }\n    if (left < count && values[left] == target) return left;\n    return count;\n}\n";
 const searchWrong = searchFunctions.replace('if (values[mid] < target)', 'if (values[mid] == target) return mid;\n        if (values[mid] < target)');
 const listFind = '#include <stddef.h>\nstruct Node { int value; const struct Node *next; };\nconst struct Node *list_find(const struct Node *head, int target) { for (const struct Node *p = head; p != NULL; p = p->next) { if (p->value == target) return p; } return NULL; }';
@@ -96,6 +97,7 @@ try {
   assert.match(output, /CodeWeave local learning app:/);
   // Compile our own reference solutions through the actual local API.
   const solutions = {
+    'c-file-stream-count': streamCount,
     'algo-binary': searchFunctions,
     'ds-list-find': listFind,
     'c-matrix-row-sums': "#include <stddef.h>\n#include <stdio.h>\n\nint sum_rows3(const int matrix[][3], size_t rows, long *out_sums) {\n    if (rows == 0) {\n        return 1;\n    }\n    if (rows > 4 || matrix == NULL || out_sums == NULL) {\n        return 0;\n    }\n    long totals[4];\n    for (size_t r = 0; r < rows; ++r) {\n        long sum = 0;\n        for (size_t c = 0; c < 3; ++c) {\n            if (matrix[r][c] < -10000 || matrix[r][c] > 10000) {\n                return 0;\n            }\n            sum += (long)matrix[r][c];\n        }\n        totals[r] = sum;\n    }\n    for (size_t r = 0; r < rows; ++r) {\n        out_sums[r] = totals[r];\n    }\n    return 1;\n}\n",
@@ -956,30 +958,59 @@ try {
   await expect(page.locator('.detail-head h1')).toHaveText('변수 바인딩과 가변성');
   await expect(page.locator('#code-input')).toHaveValue('keep rust draft');
   console.log('PASS: F01 quiz correction, separate mastery, preserved Rust drafts, offline 390px and next lesson');
-  // Prepared component only: C05 is not a learner-facing lesson or API yet.
-  await page.evaluate(async () => {
-    const { figureFor } = await import('/src/figures.js');
-    const preview = document.createElement('div');
-    preview.id = 'qa-stream-diagram';
-    preview.style.width = '340px';
-    preview.style.maxWidth = '100%';
-    preview.innerHTML = figureFor('stream-eof-error');
-    document.body.append(preview);
-    const svg = preview.querySelector('svg');
-    svg.style.width = '100%';
-    svg.style.height = 'auto';
-  });
-  await expect(page.locator('#qa-stream-diagram svg')).toHaveAttribute('role', 'img');
+  await page.goto(base + '/#lesson:c-file-stream-count');
+  await expect(page.locator('.detail-head h1')).toHaveText('파일 스트림: 읽기·EOF·오류와 소유권');
+  await expect(page.locator('.figure-box svg')).toHaveAttribute('role', 'img');
+  await expect(page.locator('#code-input')).toHaveValue(/count_stream_bytes/);
+  await page.locator('[data-quiz="c-file-stream-count"][data-choice="0"]').click();
+  await expect(page.locator('.feedback.bad')).toBeVisible();
+  await page.locator('[data-retry="c-file-stream-count"]').click();
+  await page.locator('[data-quiz="c-file-stream-count"][data-choice="1"]').click();
+  await page.locator('#mark-theory').click();
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, streamCount.replace('!= EOF)', '!= EOF && ch != 0)'));
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, streamCount);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('10/10');
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  const streamBackupEvent = bench.waitForEvent('download');
+  await bench.locator('#export-history').click();
+  const streamDownload = await streamBackupEvent;
+  const streamChunks = [];
+  for await (const chunk of await streamDownload.createReadStream()) streamChunks.push(chunk);
+  const streamBackup = Buffer.concat(streamChunks);
+  const streamData = JSON.parse(streamBackup);
+  assert.equal(streamData.drafts['c-file-stream-count'], streamCount);
+  assert.equal(streamData.iterations['c-file-stream-count'].length, 2);
+  assert.equal(streamData.drafts['rust-cargo'], rustDraft);
+  await bench.locator('#import-file').setInputFiles({ name: 'stream-backup.json', mimeType: 'application/json', buffer: streamBackup });
+  await expect(bench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.locator('#code-input')).toHaveValue(streamCount);
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('[data-restore-attempt="1"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(streamCount.replace('!= EOF)', '!= EOF && ch != 0)'));
+  await page.locator('[data-restore-attempt="0"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(streamCount);
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('.article')).toContainText('Windows 네이티브');
   assert.equal(await page.evaluate(() => {
-    const svg = document.querySelector('#qa-stream-diagram svg');
+    const svg = document.querySelector('.figure-box svg');
     const view = svg.viewBox.baseVal;
     return [...svg.querySelectorAll('text')].every(text => {
       const box = text.getBBox();
       return box.x >= 0 && box.y >= 0 && box.x + box.width <= view.width && box.y + box.height <= view.height;
     }) && document.documentElement.scrollWidth <= innerWidth;
-  }), true, 'prepared stream diagram text must fit its mobile viewBox');
-  if (qaDir) await page.locator('#qa-stream-diagram').screenshot({ path: path.join(qaDir, 'stream-contract-mobile.png') });
-  console.log('PASS: prepared C05 static diagram text fits 390px; no C05 lesson/API activation claimed');
+  }), true, 'C05 stream diagram and document must fit 390px');
+  if (qaDir) await page.screenshot({ path: path.join(qaDir, 'file-stream-mobile.png'), fullPage: true });
+  await context.setOffline(false);
+  await page.locator('.next-action [data-route="lesson:rust-cargo"]').click();
+  await expect(page.locator('.detail-head h1')).toHaveText('Cargo 프로젝트와 실패하는 테스트 읽기');
+  await expect(page.locator('#code-input')).toHaveValue(rustDraft);
+  console.log('PASS: C05 quiz correction, real 10-case GCC API failure/retry, mastery, backup, offline attempts, 390px and next lesson');
   assert.deepEqual(errors, []);
   console.log('PASS: 390px mobile layout and offline reload of drafts/history; no browser exceptions');
 } catch (error) {

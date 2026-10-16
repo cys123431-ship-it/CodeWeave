@@ -1,14 +1,14 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-16 14:03 KST — C05 스트림 채점 계약·원고 준비(1/2)
-- 시작/결과 SHA: 시작 dbbcf6b1028ea65b363aa8b6db1a627405474c8f; 구현 1a305e9ff824c287e1e61aab7e2d662af83dd59a; 검증 기록 제목 docs: record verified C05 stream preparation and clarify byte semantics.
-- 목표: 현재 위치부터 최대4096바이트를 세고 EOF/오류·실패 출력 보존·빌린 스트림 수명을 구별하는 준비 계약 검증.
-- 변경 파일 수: 10개(서버 계약·신규 검사·81줄 원고·정적 도식·브라우저 검사·CI·로드맵 JSON/MD·활성/보관 일지).
-- 테스트 결과: 신규13건 0/13→13/13; 정상10사례·오답8종 거부·스타터/완성 예제 GCC 성공; 전체476건472통과·실패0·skip4(Rust 부재); 변경JS/MJS4개 문법·roadmap/diff 성공; 삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38848984664 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38854900529 전체476/476·skip0·macOS C0513/13 및 browser성공. 390px 도식 문자 범위/오버플로 검증, C05 화면 E2E 아님. 최종 기록 SHA CI 별도 확인.
-- 발견한 문제: 파일/도식 부재 재현 후 구현. 로컬 렌더 cairosvg ModuleNotFoundError·파생 EPIPE로 불가; OpenGroup403/GNU timeout 뒤 POSIX 표준 재현본 확인. 재검토로 0A/42의 문자 인코딩 일반화·tmpfile 익명성 보장 표현 제거; 기대값 변경0.
-- 보안 영향: 신규 사용자 경로 입력0·프로덕션 등록0. 하네스는 tmpfile 임시 스트림과 고정 pipe만 사용하며 Linux/macOS POSIX 오류/소유권 검증용; Windows 네이티브 검증 아님. 닫힌 스트림은 디스크립터 확인 후 재사용하지 않아 검사 오답의 이중 fclose를 피함.
-- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; C05 진행 중·next=C/C05, 사용자 화면/신규 공개 문제0.
-- 다음 작업: C05 2/2회차에 catalog·exercises·registry·browser·README·audit·로드맵2·일지2(총10파일)로 화면/실제 API·오답→수정·백업·오프라인·숙달 검증. 준비 검사 파일은 등록 뒤에도 같은 계약 검증에 재사용하며 Windows 네이티브 제한은 명시.
+## 2026-10-16 15:01 KST — C05 스트림 전달 후보(2/2; 미완료·14:03 준비 근거 포함)
+- 시작/결과 SHA: 시작 dbbcf6b1028ea65b363aa8b6db1a627405474c8f; 구현 1a305e9ff824c287e1e61aab7e2d662af83dd59a; 검증 기록 제목 docs: record verified C05 stream preparation and clarify byte semantics. 후속 시작3791b101b1006c7515a6cfb9c3a3009f048771dc; 이번 커밋 feat: deliver C05 stream lesson and real grading flow.
+- 목표: 현재 위치부터 최대4096바이트를 세고 EOF/오류·실패 출력 보존·빌린 스트림 수명을 구별하는 준비 계약 검증. 15:01 후속은 화면12절·퀴즈·API·오답 수정·백업/오프라인·숙달 연결.
+- 변경 파일 수: 10개(서버 계약·신규 검사·81줄 원고·정적 도식·브라우저 검사·CI·로드맵 JSON/MD·활성/보관 일지). 후속10개(catalog·exercises·registry·browser·audit검사·audit문서·README·로드맵2·이 일지). 10파일 한도에 맞춰 동일 C05 기록에 후속 근거를 합치고 이전 기록 근거/다른4건/보관 원문을 유지.
+- 테스트 결과: 신규13건 0/13→13/13; 정상10사례·오답8종 거부·스타터/완성 예제 GCC 성공; 전체476건472통과·실패0·skip4(Rust 부재); 변경JS/MJS4개 문법·roadmap/diff 성공; 삭제0. 후속 신규 C05 learner contract 등록 검사 실패→성공; 관련16/16; 실제HTTP 오답9/10→정답10/10; 전체477건472통과·실패1·skip4(Rust 부재); JS/MJS5개 문법·roadmap/diff·일지4/4 통과.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38848984664 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38854900529 전체476/476·skip0·macOS C0513/13 및 browser성공. 390px 도식 문자 범위/오버플로 검증, C05 화면 E2E 아님. 최종 기록 SHA CI 별도 확인. 후속 시작38855148799 성공; 전달 후보는 codex/c05-stream-delivery-20261016 draft PR에 보존; CI 대기.
+- 발견한 문제: 파일/도식 부재 재현 후 구현. 로컬 렌더 cairosvg ModuleNotFoundError·파생 EPIPE로 불가; OpenGroup403/GNU timeout 뒤 POSIX 표준 재현본 확인. 재검토로 0A/42의 문자 인코딩 일반화·tmpfile 익명성 보장 표현 제거; 기대값 변경0. 후속 감사표 고정23 기대값을 실제 등록 수 비교로 바꿈(문제 증가에 숫자만 고치는 검사 방지); README 단원29/C24 동기화. 추가로 tests/exercises.test.mjs:39의 고정23개 ID 목록이 신규 C05를 거부함을 재현; 수정하면11번째 파일이므로 이번10파일 한도에서 중단하고 main은 유지. 화면 예제는 기존 컴파일 원고와 동일함을 검사.
+- 보안 영향: 신규 사용자 경로 입력0·프로덕션 등록0. 하네스는 tmpfile 임시 스트림과 고정 pipe만 사용하며 Linux/macOS POSIX 오류/소유권 검증용; Windows 네이티브 검증 아님. 닫힌 스트림은 디스크립터 확인 후 재사용하지 않아 검사 오답의 이중 fclose를 피함. 후속 사용자 경로 입력 없이 기존 인증/GCC 함수형 경로만 연결; Windows 네이티브 미지원은 화면·README에 명시.
+- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; C05 진행 중·next=C/C05, 사용자 화면/신규 공개 문제0. 후속 C05 전달 검증 대기이므로 상태/차례는 아직 유지.
+- 다음 작업: C05 2/2회차에 catalog·exercises·registry·browser·README·audit·로드맵2·일지2(총10파일)로 화면/실제 API·오답→수정·백업·오프라인·숙달 검증. 준비 검사 파일은 등록 뒤에도 같은 계약 검증에 재사용하며 Windows 네이티브 제한은 명시. 다음 실행 첫 작업은 열린 C05 draft PR의 tests/exercises.test.mjs 고정목록을 실제 등록/실행 계약 검사로 수정(기대값 변경 사유 기록), CI/브라우저를 검증한 뒤에만 C05 완료·D/D02 전환. 2회 내 완료 목표는 검사 부채로 미달, 새 단원 추가 금지.
 
 ---
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함

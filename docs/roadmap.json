@@ -329,9 +329,17 @@
           "id": "C05",
           "title": "파일 입출력: 스트림 수명·오류·EOF",
           "status": "진행 중",
-          "lessonIds": [],
-          "manuscripts": ["content/c/22-file-streams.md"],
-          "tests": ["tests/stream-exercise.test.mjs"]
+          "lessonIds": [
+            "c-file-stream-count"
+          ],
+          "manuscripts": [
+            "content/c/22-file-streams.md"
+          ],
+          "tests": [
+            "tests/stream-exercise.test.mjs",
+            "tests/browser-practice.mjs",
+            "tests/exercise-audit.test.mjs"
+          ]
         },
         {
           "id": "C06",

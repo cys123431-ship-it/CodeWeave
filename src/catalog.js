@@ -793,6 +793,34 @@ export const lessons = [
     challenge:{id:'c-student-vector-push',title:'기하급수 성장으로 학생 한 명 추가하기',description:'push_student는 정규 상태를 검사하고 빈 슬롯이 있으면 재할당 없이 value를 추가합니다. 가득 찼으면 0→4, 이후 두 배 용량을 계산하되 SIZE_MAX 오버플로를 먼저 거부하고 reserve_students를 호출하세요. reserve 실패 시 모든 상태를 보존하고, 성공 뒤에만 새 레코드와 length를 공개합니다. reserve_students와 main은 작성하지 않습니다.',starter:'#include <stddef.h>\n#include <stdint.h>\n\nstruct Student {\n    int id;\n    int score;\n};\n\nint reserve_students(struct Student **students, size_t length,\n                     size_t *capacity, size_t new_capacity);\n\nint push_student(struct Student **students, size_t *length,\n                 size_t *capacity, struct Student value) {\n    // TODO: 상태 검증 → 필요하면 0→4/두 배 성장 → reserve 재사용 → 레코드와 길이 공개\n    (void)students;\n    (void)length;\n    (void)capacity;\n    (void)value;\n    return 0;\n}',input:'push_student(&students, &length, &capacity, (struct Student){309, 95})',expected:'1 · 길이 3 · 용량 4 · 새 학생 309:95'}
   },
   {
+    id: 'c-file-stream-count', track: 'c', level: '응용',
+    title: '파일 스트림: 읽기·EOF·오류와 소유권', minutes: 25,
+    source: 'C05 독자 원고 content/c/22-file-streams.md · 화면/API 전달판',
+    summary: '현재 위치부터 바이트를 읽고 정상 EOF와 오류를 구별하며 빌린 스트림을 보존합니다.',
+    figure: 'stream-eof-error',
+    sections: [
+      {heading: '개요·필요성·선수·목표', text: '함수·포인터·반복문과 fgets 단원을 먼저 익히세요. 파일의 끝은 정상 종료일 수 있지만 읽기 오류를 성공으로 숨기면 안 됩니다. 이번 25분 범위는 바이트 입력과 빌린 스트림입니다. 문자열 해석·임의 경로 탐색·범용 파일 복사는 다루지 않습니다.'},
+      {heading: 'FILE 포인터와 수명', text: 'FILE은 스트림 상태를 관리합니다. NULL은 열린 스트림이 아닙니다. 연 쪽이 닫을 책임을 가지며 FILE 포인터를 함수 인수로 받았다고 소유권까지 넘겨받지는 않습니다. 이 과제의 함수는 스트림을 빌리므로 fclose·freopen을 호출하지 않습니다.'},
+      {heading: '열기와 닫기', text: 'fopen("data.bin", "rb")의 반환값을 먼저 검사합니다. "wb"는 기존 내용을 잃을 수 있는 쓰기 모드입니다. 아래 예제는 사용자 파일 대신 tmpfile로 이름을 직접 지정하지 않는 임시 스트림을 사용합니다. fclose 뒤 포인터를 다시 쓰지 않으며 닫기 실패도 검사합니다.'},
+      {heading: 'fgetc의 int 결과와 EOF', text: 'fgetc 결과는 int로 받습니다. EOF는 파일에 저장된 특별한 바이트가 아니라 읽기 결과입니다. char에 먼저 담으면 바이트와 종료 신호를 잘못 구분할 수 있습니다. 반복 종료 뒤 ferror로 오류를 확인합니다. feof를 미리 확인하는 것만으로 다음 읽기의 성공을 알 수 없습니다.'},
+      {heading: '정적 도식과 책임 경계', text: '호출자가 열기→빌린 함수가 현재 위치부터 읽기→EOF에서 오류 판정→성공 때만 결과 기록→호출자가 닫기입니다. 정상 EOF와 오류를 분리하고, 함수가 닫기 책임을 가져가지 않는 이유를 도식에서 따라가세요.'},
+      {heading: '단계별 예제: 완성 프로그램', text: 'main이 있는 관찰용 완성 프로그램입니다. 고정 네 바이트만 셉니다. gcc -std=c11 -Wall -Wextra -Wpedantic -Werror example.c -o example로 컴파일하세요. 제출창에는 이 main이 아니라 뒤의 함수만 작성합니다.', code: '#include <stdio.h>\n#include <stddef.h>\n\nint main(void) {\n    const unsigned char sample[] = {0x00, 0xff, 0x0a, 0x42};\n    FILE *stream = tmpfile();\n    if (stream == NULL) return 1;\n    if (fwrite(sample, 1, sizeof sample, stream) != sizeof sample\n        || fflush(stream) != 0 || fseek(stream, 0, SEEK_SET) != 0) {\n        fclose(stream);\n        return 1;\n    }\n    size_t count = 0;\n    int ch;\n    while ((ch = fgetc(stream)) != EOF) {\n        ++count;\n    }\n    int ok = !ferror(stream);\n    if (fclose(stream) != 0) return 1;\n    if (!ok) return 1;\n    printf("1 %zu\\n", count);\n    return 0;\n}\n'},
+      {heading: '실제 출력과 이유', text: '출력은 1 4 다음 줄바꿈입니다. 00→1, FF→2, 0A→3, 42→4로 세고 EOF는 세지 않습니다. 0A/42는 여기서 지정한 수치 데이터이지 모든 C 환경의 문자 인코딩 보장이 아닙니다. 쓰기 뒤 fflush·fseek로 읽기로 전환했습니다. 바이너리 바이트 수와 한글 글자 수는 다릅니다.', code: '1 4'},
+      {heading: '흔한 오류와 중간 점검', text: 'NUL에서 멈추기, EOF를 한 번 더 세기, 함수 안에서 rewind하기, 읽기 오류인데 누적값 공개하기가 흔한 오류입니다. NULL 검사 없이 ferror를 호출하지 마세요. 빈 정상 스트림은 성공과 0바이트입니다. 기존 오류를 지우지 않고 즉시 실패해야 합니다.'},
+      {heading: '심화: 오류 재현과 실행 환경', advanced: true, text: 'clearerr는 잃어버린 데이터를 복구하지 않습니다. 채점 하네스는 POSIX pipe/EAGAIN으로 실제 읽기 오류를 재현하고 디스크립터로 닫기 여부를 검사합니다. 이 과제의 로컬 채점은 Linux/macOS 또는 WSL용이며 Windows 네이티브 GCC에서는 지원하지 않습니다. 학습자 함수·완성 예제 자체에는 POSIX 호출이 필요 없습니다. Windows에서도 이론·퀴즈·초안 저장은 가능합니다.'},
+      {heading: '개념 확인·핵심 요약', text: 'EOF가 나오면 ferror를 확인합니다. 열기·읽기·판정·결과 공개·닫기를 구별하세요. 정상 EOF에서만 결과를 공개하고 오류에서는 기존 결과 객체를 보존합니다. 아래 퀴즈는 EOF와 읽기 오류의 차이를 확인합니다.'},
+      {heading: '직접 풀기: 함수 계약', text: '현재 위치부터 정상 EOF까지 최대4096바이트를 세어 성공1과 결과를 기록합니다. 빈 스트림·이미 정상 EOF면 성공과0입니다. NULL 인수·기존 오류는 읽기 전에 거부합니다. 도중 오류·4097번째 바이트도 실패0이며 유효한 out_count의 기존 값을 보존합니다. 실패 시 위치를 되돌리지는 않습니다. rewind·clearerr·fclose·freopen·출력·main을 작성하지 마세요. 선언 조각은 아래와 같습니다.', code: 'int count_stream_bytes(FILE *stream, size_t *out_count);'},
+      {heading: '기초·응용·도전과 Mini Project·복습', text: '기초는 빈 스트림·한 바이트입니다. 응용은 앞 두 바이트를 이미 읽은 현재 위치부터 남은 길이 계산입니다. 도전은4096/4097·오류에서777 보존입니다. Mini Project는 tmpfile로 만든 세 자료의 예상/실제 바이트 수를 표로 비교하세요. 10사례는 NUL/FF·개행·현재 위치·경계·NULL·읽기 오류·반복 호출을 구별합니다. 하네스 출력은 성공/바이트 수/빌린 스트림 유지 여부이며 일부 오류 상태도 표시합니다. 실패→수정→재제출 후 이전 코드를 비교하세요. 이론·퀴즈·실습·복습을 따로 확인하고 fgets의 문자열 길이, C07의 오류 정리 경로로 연결합니다.'}
+    ],
+    quiz: {question: 'fgetc가 EOF를 반환한 뒤 정상 종료와 읽기 오류를 구별하려면?', options: ['파일 이름을 비교한다', 'ferror를 확인한다', 'char 변수의 부호를 확인한다', '항상 한 바이트 더 센다'], answer: 1, explanation: 'EOF만으로는 정상 끝과 읽기 오류를 구별할 수 없습니다. ferror가 설정되었으면 실패로 처리하고 결과 객체를 보존합니다.'},
+    challenge: {
+      id: 'c-file-stream-count', title: '빌린 스트림의 남은 바이트 세기',
+      description: 'count_stream_bytes(FILE *, size_t *)를 main 없이 작성하세요. 현재 위치부터 최대4096바이트, 정상 EOF에서 성공1/결과 기록. NULL·기존 오류는 읽기 전에 거부하고 도중 오류·길이 초과는0/기존 결과 보존. 스트림을 닫거나 되감거나 오류를 지우거나 출력하지 않습니다. 로컬 채점은 Linux/macOS·WSL 전용(Windows 네이티브 미지원)입니다.',
+      starter: '#include <stdio.h>\n#include <stddef.h>\nint count_stream_bytes(FILE *stream, size_t *out_count) {\n    (void)stream;\n    (void)out_count;\n    /* TODO: int로 읽고 EOF 뒤 오류를 확인한 다음에만 결과 기록 */\n    return 0;\n}\n',
+      input: '현재 위치부터 {00, FF, 0A, 42} 네 바이트', expected: '1 4 1'
+    }
+  },
+  {
 
   "id": "rust-cargo",
   "track": "rust",

@@ -1,5 +1,6 @@
 import { exercises } from '../src/exercises.js';
 import { searchCases, searchHarness } from './search-exercise.mjs';
+import { streamExercise } from './stream-exercise.mjs';
 import { buildGradingExercises } from './exercise-contract.mjs';
 export { buildGradingExercises } from './exercise-contract.mjs';
 
@@ -1196,4 +1197,8 @@ const LINK_ARGS = {
 };
 
 
-export const gradingExercises = buildGradingExercises(exercises, CASES, HARNESSES, LINK_ARGS);
+// Reuse C05's independently compiled contract rather than duplicating its cases.
+export const gradingExercises = buildGradingExercises(
+  exercises.filter(exercise => exercise.id !== streamExercise.id), CASES, HARNESSES, LINK_ARGS
+);
+gradingExercises.set(streamExercise.id, streamExercise);
