@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-16 19:57 KST — D02 스택 화면·실제 채점 연결(2/2, CI 검증 대기)
+- 시작/결과 SHA: 시작ccd51b4d75630f7e359023bbce33940cc845ebf4; 커밋 feat: deliver bounded stack practice through existing learner flow.
+- 목표: 준비된 용량4 push/pop을 기존 ds-stack ID로 전달하고 오답→수정·재제출·백업/오프라인·숙달 연결을 검증.
+- 변경 파일 수: 이번 구현8개(화면·메타데이터·registry·roadmap검사·browser·README·일지2); 인수 시 로드맵2 포함 총10개 이내.
+- 테스트 결과: 신규2건0/2→2/2; 관련20/20·전체490건486통과·실패0·skip4(Rust 부재); JS/MJS5개 문법·roadmap/diff 성공; 삭제0. 브라우저는 CI에서만 실행.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38885443590 성공 재확인; 구현 결과 SHA의 전체/브라우저 CI 검증 대기.
+- 발견한 문제: 실제 API가 ds-stack에400을 반환하고 옛 도식만 노출함을 먼저 재현. 미채점 fixture는 실제 미채점 Rust로 옮기고 순환 fixture를 명시적 상태로 구성; 신규 메타데이터 기대값은 기존 정규화 requiredFiles:[] 누락을 수정(계약 완화 아님).
+- 보안 영향: 신규 실행/파일 API 없이 기존 토큰·제한·GCC 함수형 경로 사용. 준비 하네스/10사례/호출자 비중첩 전제 불변; 사용자 v1 키와 기존 퀴즈 선택2 유지.
+- 단계별 완료율: A3/5·B10/11·C5/8·D/E1/8·F/G0/8·H/I0/6 유지; D02는 CI 인수 전까지 진행 중·next=D/D02.
+- 다음 작업: 결과 SHA CI의 실제 D02 오답/정답·백업·오프라인·390px·다음 이동을 확인 후에만 D02 인수 및 E 차례 전환. D02 macOS/Windows 네이티브 실행은 이번 범위에서 검증하지 않음.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-16 19:04 KST — 미반영 D02 준비 작업 인계·원격 검증
 - 시작/결과 SHA: 원격3c5e39f2cab1157ed76392af4ebc63a0f6e9d668; 미반영 로컬ef9c80921a2c00d496abe5a8bce6a4251eca42f1 인계; 구현131350a48d9432335b5373ccff4634f6fc378995; 후속 docs: record verified D02 preparation handoff.
 - 목표: 앞선 D02 준비 계약·원고·도식을 보존하고 최신 main 대조·재검사 뒤 실제 원격 반영 및 결과 SHA CI 확인.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 신규 사용자 경로 입력0·프로덕션 등록0. 하네스는 tmpfile 임시 스트림과 고정 pipe만 사용하며 Linux/macOS POSIX 오류/소유권 검증용; Windows 네이티브 검증 아님. 닫힌 스트림은 디스크립터 확인 후 재사용하지 않아 검사 오답의 이중 fclose를 피함. 후속 사용자 경로 입력 없이 기존 인증/GCC 함수형 경로만 연결; Windows 네이티브 미지원은 화면·README에 명시.
 - 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; C05 진행 중·next=C/C05, 사용자 화면/신규 공개 문제0. 후속 C05 전달 검증 대기이므로 상태/차례는 아직 유지.
 - 다음 작업: C05 2/2회차에 catalog·exercises·registry·browser·README·audit·로드맵2·일지2(총10파일)로 화면/실제 API·오답→수정·백업·오프라인·숙달 검증. 준비 검사 파일은 등록 뒤에도 같은 계약 검증에 재사용하며 Windows 네이티브 제한은 명시. 다음 실행 첫 작업은 열린 C05 draft PR의 tests/exercises.test.mjs 고정목록을 실제 등록/실행 계약 검사로 수정(기대값 변경 사유 기록), CI/브라우저를 검증한 뒤에만 C05 완료·D/D02 전환. 2회 내 완료 목표는 검사 부채로 미달, 새 단원 추가 금지.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-16 12:57 KST — F01 제한 범위 인수와 C 차례 전환
-- 시작/결과 SHA: 시작 d92dd760fcdcae96f11a8f0f14e42df59e2bff5c; 구현 dd5e89f5d1384c89c1f447f1fe4b1b318d519ade; 검증 기록 제목 docs: record verified F01 theory handoff to C05.
-- 목표: 검증된 이론/퀴즈 전달과 전체 완료를 구분하고 F01 진행 중을 보존하며 다음 차례를 C/C05로 이동.
-- 변경 파일 수: 8개(로드맵 함수·신규 검사·JSON/MD·Rust 설계·CI·활성/보관 일지).
-- 테스트 결과: 신규4건 0/4→4/4; 관련11/11 성공; 전체463건459통과·실패0·skip4(로컬 Rust 도구 부재); MJS2개 문법·roadmap/diff 성공; 삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38843874384 459/459·skip0·실제 F01 예시/브라우저 로그 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38848794857 전체463/463·skip0 및 macOS/browser성공. 최종 기록 SHA의 CI는 별도 확인.
-- 발견한 문제: 인수 함수 부재·미기록 상태를 먼저 재현. 문자열 대신 배열인 SHA/CI가 정규식 형변환을 통과하는 사례도 재현 후 엄격 형 검사. 신규 검사 fixture 선언 순서 수정, C05 고정 대신 실제 첫 미완료 C 선택과 비교해 후속 단원에도 적용; 기존 기대값 변경0.
-- 보안 영향: 개발 로드맵의 선택 차례·제한 범위 근거만 처리; 외부 실행/파일 경로/API/학습자 v1 키 변경0. 원격 CI 성공은 함수가 인증하지 않으며 실제 조회한 SHA/CI만 기록.
-- 단계별 완료율: A3/5·B10/11·C4/8·D1/8·E1/8·F/G0/8·H/I0/6 유지; F01 진행 중·이론/퀴즈 인수 기록, next=C/C05. 새 단원0.
-- 다음 작업: 결과 SHA CI 성공 후 C05 파일 입출력을 좁은 스트림 수명/EOF/오류 범위로 설계·구현. 다음 Rust 차례는 F01 미완료 채점을 이어가며 같은 이론 인수로 재차 건너뛰기 금지.

@@ -5,6 +5,7 @@ import { lessons } from '../src/catalog.js';
 import { exerciseById } from '../src/exercises.js';
 import { gradingExercises } from '../server/grading-exercises.mjs';
 import { listExercise } from '../server/ds-list-exercise.mjs';
+import { stackExercise, stackMetadata, stackStarter } from '../server/stack-exercise.mjs';
 import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
 
@@ -26,7 +27,10 @@ test('confirmed roadmap validates all nine stages and counts only evidenced comp
 test('ungraded samples cannot be promoted to completed and catalog entries cannot be double counted', async () => {
   const { data, api } = await load();
   const sample = structuredClone(data);
-  sample.stages.find(stage => stage.id === 'D').units.find(unit => unit.lessonIds.includes('ds-stack')).status = '완료';
+  const ungraded = sample.stages.flatMap(stage => stage.units).find(unit => unit.lessonIds.includes('rust-cargo'));
+  ungraded.status = '완료';
+  ungraded.manuscripts = ['content/ds/02-stack.md'];
+  ungraded.tests = ['tests/roadmap.test.mjs'];
   assert.throws(() => api.validateRoadmap(sample), /graded|채점/);
   const duplicate = structuredClone(data);
   duplicate.stages[0].units[0].lessonIds = ['c-hello'];
@@ -59,7 +63,26 @@ test('rotation keeps D E Rust C order and skips already completed units within a
   assert.equal(api.selectUnit(data, data.next.track).id, data.next.unit);
   const changed = structuredClone(data);
   changed.stages.find(stage => stage.id === 'D').units[0].status = '완료';
+  changed.stages.find(stage => stage.id === 'D').units[1].status = '진행 중';
   assert.equal(api.selectUnit(changed, 'D').id, 'D02');
+  changed.stages.find(stage => stage.id === 'D').units[1].status = '완료';
+  assert.equal(api.selectUnit(changed, 'D').id, 'D03');
+});
+
+test('D02 publishes the prepared stack contract without changing legacy quiz meaning', async () => {
+  const lesson = lessons.find(item => item.id === 'ds-stack');
+  assert.equal(lesson.figure, 'stack-bounded-lifo');
+  assert.deepEqual(exerciseById('ds-stack'), { ...stackMetadata, requiredFiles: [] });
+  assert.deepEqual(gradingExercises.get('ds-stack').cases, stackExercise.cases);
+  assert.equal(gradingExercises.get('ds-stack').harness, stackExercise.harness);
+  assert.equal(lesson.challenge.starter, stackStarter);
+  assert.equal(lesson.challenge.input, stackMetadata.publicExample.input);
+  assert.equal(lesson.challenge.expected, stackMetadata.publicExample.output);
+  assert.deepEqual(lesson.quiz.options, ['2', '5', '7', '알 수 없다']);
+  assert.equal(lesson.quiz.answer, 2);
+  const manuscript = await readFile(new URL('../content/ds/02-stack.md', import.meta.url), 'utf8');
+  const program = manuscript.match(/```c\n([\s\S]*?)```/)[1].trim();
+  assert.ok(lesson.sections.some(section => section.code?.trim() === program), 'screen example must be the compiled complete program');
 });
 
 test('D01 exposes the prepared first-match contract through the DS lesson and production grader', () => {
@@ -111,6 +134,45 @@ test('D01 live API rejects last-match code then accepts corrected code and the p
   assert.equal(good.ok, true);
   assert.equal(good.message, '10/10개 테스트 통과');
   const starter = await submit(lessons.find(lesson => lesson.id === 'ds-list-find').challenge.starter);
+  assert.equal(starter.ok, false);
+  assert.equal(starter.compileOutput, '', 'starter must be valid C11, not a compiler-error puzzle');
+});
+test('D02 live API rejects FIFO code then accepts corrected code and the published starter compiles', {
+  skip: spawnSync('gcc', ['--version']).status !== 0, timeout: 20000
+}, async t => {
+  const child = spawn(process.execPath, ['dev-server.mjs'], { env: { ...process.env, PORT: '0' }, stdio: ['ignore', 'pipe', 'pipe'] });
+  t.after(async () => {
+    if (child.exitCode === null) { const ended = once(child, 'exit'); child.kill(); await ended; }
+  });
+  const base = await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(Error('D02 server startup timed out')), 5000);
+    let text = '';
+    child.once('error', reject);
+    child.stdout.on('data', chunk => {
+      text += chunk;
+      const match = text.match(/http:\/\/127\.0\.0\.1:\d+/);
+      if (match) { clearTimeout(timer); resolve(match[0]); }
+    });
+  });
+  const html = await (await fetch(base)).text();
+  const token = html.match(/name="codeweave-token" content="([0-9a-f]{64})"/)?.[1];
+  const submit = async code => {
+    const response = await fetch(base + '/api/grade', { method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CodeWeave-Token': token },
+      body: JSON.stringify({ exerciseId: 'ds-stack', code }), signal: AbortSignal.timeout(10000) });
+    assert.equal(response.status, 200);
+    return response.json();
+  };
+  const correct = "#include <stddef.h>\nstruct IntStack { int values[4]; size_t length; };\nint stack_push(struct IntStack *stack, int value) { if (stack == NULL || stack->length >= 4) return 0; stack->values[stack->length] = value; ++stack->length; return 1; }\nint stack_pop(struct IntStack *stack, int *out_value) { if (stack == NULL || out_value == NULL || stack->length == 0 || stack->length > 4) return 0; int value = stack->values[stack->length - 1]; --stack->length; *out_value = value; return 1; }\n";
+  const wrong = correct.replace('stack->values[stack->length - 1]', 'stack->values[0]');
+  const bad = await submit(wrong);
+  assert.equal(bad.ok, false);
+  assert.equal(bad.tests[2].passed, false, 'public two-element case must reject FIFO');
+  assert.equal(bad.tests.length, 10);
+  const good = await submit(correct);
+  assert.equal(good.ok, true);
+  assert.equal(good.message, '10/10개 테스트 통과');
+  const starter = await submit(lessons.find(lesson => lesson.id === 'ds-stack').challenge.starter);
   assert.equal(starter.ok, false);
   assert.equal(starter.compileOutput, '', 'starter must be valid C11, not a compiler-error puzzle');
 });

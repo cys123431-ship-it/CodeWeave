@@ -35,6 +35,8 @@ const searchFunctions = "#include <stddef.h>\n#include <stdio.h>\n\nsize_t linea
 const searchWrong = searchFunctions.replace('if (values[mid] < target)', 'if (values[mid] == target) return mid;\n        if (values[mid] < target)');
 const listFind = '#include <stddef.h>\nstruct Node { int value; const struct Node *next; };\nconst struct Node *list_find(const struct Node *head, int target) { for (const struct Node *p = head; p != NULL; p = p->next) { if (p->value == target) return p; } return NULL; }';
 const listLast = listFind.replace('for (const struct', 'const struct Node *found = NULL; for (const struct').replace('return p;', 'found = p;').replace('return NULL;', 'return found;');
+const stackFunctions = "#include <stddef.h>\nstruct IntStack { int values[4]; size_t length; };\nint stack_push(struct IntStack *stack, int value) { if (stack == NULL || stack->length >= 4) return 0; stack->values[stack->length] = value; ++stack->length; return 1; }\nint stack_pop(struct IntStack *stack, int *out_value) { if (stack == NULL || out_value == NULL || stack->length == 0 || stack->length > 4) return 0; int value = stack->values[stack->length - 1]; --stack->length; *out_value = value; return 1; }\n";
+const stackFIFO = stackFunctions.replace('stack->values[stack->length - 1]', 'stack->values[0]');
 const functionOnly = 'int clamp(int value,int low,int high){if(value<low)return low;if(value>high)return high;return value;}';
 const arrayMaxFunction = '#include <stddef.h>\nint find_max(const int values[],size_t length,int *out_max){if(!values||length==0||!out_max)return 0;int maximum=values[0];for(size_t i=1;i<length;i++)if(values[i]>maximum)maximum=values[i];*out_max=maximum;return 1;}';
 const arrayMaxWrong = '#include <stddef.h>\nint find_max(const int values[],size_t length,int *out_max){if(!values||length==0||!out_max)return 0;int maximum=0;for(size_t i=0;i<length;i++)if(values[i]>maximum)maximum=values[i];*out_max=maximum;return 1;}';
@@ -97,6 +99,7 @@ try {
   assert.match(output, /CodeWeave local learning app:/);
   // Compile our own reference solutions through the actual local API.
   const solutions = {
+    'ds-stack': stackFunctions,
     'c-file-stream-count': streamCount,
     'algo-binary': searchFunctions,
     'ds-list-find': listFind,
@@ -1014,27 +1017,69 @@ try {
   await expect(page.locator('.detail-head h1')).toHaveText('Cargo 프로젝트와 실패하는 테스트 읽기');
   await expect(page.locator('#code-input')).toHaveValue(rustDraft);
   console.log('PASS: C05 quiz correction, real 10-case GCC API failure/retry, mastery, backup, offline attempts, 390px and next lesson');
-  // Component QA only: ds-stack remains the existing ungraded sample this run.
-  await page.evaluate(async () => {
-    const { figureFor } = await import('/src/figures.js');
-    const preview = document.createElement('div');
-    preview.id = 'qa-stack-diagram';
-    preview.style.width = '340px';
-    preview.style.maxWidth = '100%';
-    preview.innerHTML = figureFor('stack-bounded-lifo');
-    document.body.append(preview);
+  // Upgrade the existing sample without losing its original ID, draft or quiz choice.
+  await page.evaluate(() => {
+    const id = 'ds-stack';
+    const drafts = JSON.parse(localStorage.getItem('codeweave.drafts.v1') || '{}');
+    drafts[id] = '// prior stack sample draft';
+    localStorage.setItem('codeweave.drafts.v1', JSON.stringify(drafts));
+    const progress = JSON.parse(localStorage.getItem('codeweave.progress.v1') || '{}');
+    progress.completed = [...new Set([...(progress.completed || []), id])];
+    progress.results = { ...progress.results, [id]: { correct: true, selected: 2 } };
+    localStorage.setItem('codeweave.progress.v1', JSON.stringify(progress));
   });
-  await expect(page.locator('#qa-stack-diagram svg')).toHaveAttribute('role', 'img');
+  await page.goto(base + '/#lesson:ds-stack');
+  await page.reload(); // Offline shell tokens are deliberately stripped; fetch an online document.
+  await expect(page.locator('.detail-head h1')).toHaveText('스택: 나중에 넣은 것이 먼저 나온다');
+  await expect(page.locator('#code-input')).toHaveValue('// prior stack sample draft');
+  await expect(page.locator('.practice-zone')).toContainText('함수 직접 호출형');
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  const savedStackQuiz = await page.evaluate(() => JSON.parse(localStorage.getItem('codeweave.progress.v1')).results['ds-stack']);
+  assert.deepEqual(savedStackQuiz, { correct: true, selected: 2 });
+  await page.locator('[data-quiz="ds-stack"][data-choice="2"]').click();
+  await page.locator('#mark-theory').click();
+  await submit(page, stackFIFO);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, stackFunctions);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('10/10');
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  const stackBackupEvent = bench.waitForEvent('download');
+  await bench.locator('#export-history').click();
+  const stackDownload = await stackBackupEvent;
+  const stackChunks = [];
+  for await (const chunk of await stackDownload.createReadStream()) stackChunks.push(chunk);
+  const stackBackup = Buffer.concat(stackChunks);
+  const stackData = JSON.parse(stackBackup);
+  assert.equal(stackData.drafts['ds-stack'], stackFunctions);
+  assert.equal(stackData.iterations['ds-stack'].length, 2);
+  assert.equal(stackData.drafts['rust-cargo'], rustDraft);
+  await bench.locator('#import-file').setInputFiles({ name: 'stack-backup.json', mimeType: 'application/json', buffer: stackBackup });
+  await expect(bench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.locator('#code-input')).toHaveValue(stackFunctions);
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('[data-restore-attempt="1"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(stackFIFO);
+  await page.locator('[data-restore-attempt="0"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(stackFunctions);
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('.figure-box svg')).toHaveAttribute('role', 'img');
   assert.equal(await page.evaluate(() => {
-    const svg = document.querySelector('#qa-stack-diagram svg');
+    const svg = document.querySelector('.figure-box svg');
     const view = svg.viewBox.baseVal;
     return [...svg.querySelectorAll('text')].every(text => {
       const box = text.getBBox();
       return box.x >= 0 && box.y >= 0 && box.x + box.width <= view.width && box.y + box.height <= view.height;
     }) && document.documentElement.scrollWidth <= innerWidth;
-  }), true, 'prepared stack diagram must fit 390px');
-  if (qaDir) await page.locator('#qa-stack-diagram').screenshot({ path: path.join(qaDir, 'stack-contract-mobile.png') });
-  console.log('PASS: prepared D02 LIFO/capacity diagram fits 390px; no new ds-stack API or lesson delivery claimed');
+  }), true, 'D02 live stack diagram and document must fit 390px');
+  if (qaDir) await page.screenshot({ path: path.join(qaDir, 'stack-mobile.png'), fullPage: true });
+  await context.setOffline(false);
+  await page.locator('.next-action [data-route="lesson:algo-binary"]').click();
+  await expect(page.locator('.detail-head h1')).toHaveText('복잡도와 선형·이진 탐색의 전제');
+  console.log('PASS: D02 legacy draft/quiz preserved, real FIFO failure/correction 10/10, mastery, backup, offline attempts, 390px and next lesson');
   assert.deepEqual(errors, []);
   console.log('PASS: 390px mobile layout and offline reload of drafts/history; no browser exceptions');
 } catch (error) {

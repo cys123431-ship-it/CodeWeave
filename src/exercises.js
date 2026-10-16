@@ -110,7 +110,7 @@ export const exercises = Object.freeze(validateExerciseMetadata([
   { id:'c-student-vector-push', kind:'practice', language:'c', grader:'c-function', concepts:['dynamic-array','push-operation','geometric-growth','amortized-cost','capacity-overflow','failure-preservation','function-composition'], prerequisites:['c-realloc-student-capacity'], publicExample:{input:'push_student(&students, &length, &capacity, (struct Student){309, 95})',output:'1 · 길이 3 · 용량 4 · 새 학생 309:95'} },
   { id:'rust-cargo', kind:'concept', language:'rust', grader:null, concepts:['cargo-project','integration-test','assertion','compile-versus-execute'], prerequisites:[], publicExample:{input:'total(2, 250)',output:'500'} },
   { id:'rust-mut', kind:'concept', language:'rust', grader:null, concepts:['binding','mutability'], prerequisites:[], publicExample:{input:'입력 없음',output:'4'} },
-  { id:'ds-stack', kind:'practice', language:'c', grader:null, concepts:['stack','lifo','array-implementation'], prerequisites:['c-array','c-functions'], publicExample:{input:'—',output:'—'} },
+  { id:'ds-stack', kind:'practice', language:'c', grader:'c-function', concepts:['stack','lifo','array-implementation','capacity','failure-preservation'], prerequisites:['c-array','c-functions'], publicExample:{input:'push(2), push(5), pop',output:'1 5 1'} },
   {"id":"algo-binary","kind":"practice","language":"c","grader":"c-function","concepts":["linear-search","binary-search","sorted-precondition","half-open-range","first-match","complexity"],"prerequisites":["c-array","c-loops","c-array-max-function"],"publicExample":{"input":"중복: {1,3,3,3,9}, target=3","output":"1 1 1"}}
 ]));
 
