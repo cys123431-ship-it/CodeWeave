@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-18 06:58 KST — F01 내부 Cargo 단계 생명주기 연결
+- 시작/결과 SHA: 시작160ef9894d1b0b417658b417c26dd277a07afc03; 커밋 feat: compose internal Rust grading lifecycle with owned cleanup.
+- 목표: 준비→빌드→산출물/양쪽 목록→사례별 실행→결과를 내부 관찰 함수로 연결하고 모든 경로에서 생성 공간 정리; 운영 API는 비활성.
+- 변경 파일 수: 총7개(신규 내부pipeline·9검사·CI관찰helper, CI·Rust설계·활성/보관 일지).
+- 테스트 결과: 신규9건 중 합성8건 실패→통과·실제1건skip(Cargo 부재); 전체531건525통과·실패0·skip6(Rust 부재); 변경MJS3개 문법·diff 성공; 삭제0·기대값 변경0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39069198371 성공 재확인; 구현 결과 SHA CI 대기. 실제 정상/오답/문법/경고4제출은 두 OS CI 필수.
+- 발견한 문제: 분리 어댑터에 통합/소유 공간 정리 경로 부재를 먼저7검사로 재현. 초기 구현의 첫 목록 실패 뒤 불필요한 ignored 열거를 추가1검사로 재현·수정; 빈 CI step도 검토 중 제거.
+- 보안 영향: 서버 기본 호스트 실행기·HTTP 등록0, 관찰 함수 없으면 파일 생성 전 거부. CI만 기존 실제 도구·빌드/실행 예산 사용, 생성한 정확한 디렉터리만 finally 정리; 취소는 경계 검사이며 실행 중 즉시 그룹 취소는 미구현.
+- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01·Rust 실습/숙달 잠금 유지.
+- 다음 작업: 결과 SHA CI 확인 후 실행 중 취소·정리 실패 주입·실제 빌드 자원 초과 통합과 오류 분류를 검증하고 F01 실제 문제/UI/API 연결을 검토; 단원 완료나 차례 전환 아님.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-18 05:59 KST — F01 도구 경로 변경의 미완료 CI 인수
 - 시작/결과 SHA: 시작/인수 구현c069624bb820c5c86255f1f1dd2948a6db203668; 후속 docs: accept verified Rust tool path and host checks.
 - 목표: 앞선 10파일 구현의 대기 중 CI를 실제 조회·재검증하고 검증 근거를 보존; 새 기능/단원 추가0.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 신뢰된 CI 전용 빌드 한도 검증이며 운영 API·사용자 입력 경로 변경0; 운영 Rust 실습/숙달 잠금 유지.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
 - 다음 작업: 후속 결과 SHA CI를 확인하고 고정 도구체인·빌드/열거/실행 통합·취소/정리 및 문법/경고/빌드 자원 초과 경로 검증을 이어감; F01 이론 인수 재사용으로 차례 건너뛰기 금지.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-17 03:03 KST — F01 신뢰된 CI Cargo 빌드 자원 예산
-- 시작/결과 SHA: 시작b87e3c76c3695445a8f8d14c3220f0e2d8929c3b; 커밋 test: enforce resource budgets for trusted Cargo builds.
-- 목표: 운영 Rust 연결 전 누락된 빌드 자원 한도를 준비/결과 합성 Cargo6빌드에 적용하고 Linux/macOS 필수 CI로 검증.
-- 변경 파일 수: 총8개(신규 빌드예산helper·신규5검사·준비/결과검사2·CI·Rust설계·활성/보관 일지).
-- 테스트 결과: 신규5건0/5→5/5; 관련25건23통과·실패0·skip2(Cargo 부재); 전체510건506통과·실패0·skip4(Rust 도구 부재); 변경MJS4개 문법·일지4/4·roadmap/diff 성공; 삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38936753914 성공 재확인; 구현 결과 SHA CI 대기. 실제 Cargo6빌드는 로컬 도구 부재로 미실행이며 두 OS CI를 통과해야 검증으로 인정.
-- 발견한 문제: Cargo 준비/결과 빌드는 기존 벽시계/출력/그룹 정리만 있고 CPU/메모리/파일/프로세스 한도 미적용. helper 부재5건 실패 재현 후 구현; 기대값 변경0. GNU Bash 원문의 한도 단위·POSIX 차이를 확인해 설계에 출처 기록.
-- 보안 영향: 새 운영 API/사용자 입력0, CI의 신뢰된 도구만 고정argv·환경허용목록으로 실행. CPU10초·AS1GiB(macOS Bash VSZ+1GiB)·파일32MiB·NPROC128/512·core0, 기존15초/80KB·낮은 상속한도 유지; 설정실패125는 도구 미실행.
-- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01; Rust API/실습/숙달 비활성 유지.
-- 다음 작업: 결과 SHA CI의 실제 빌드 성공/결과 판정을 먼저 확인. 도구체인 고정·빌드/열거/실행 어댑터 통합·취소/정리 및 문법/경고/자원초과 경로를 검증해 F01 채점 연결을 이어감; 기존 이론 인수로 차례 건너뛰기 금지.

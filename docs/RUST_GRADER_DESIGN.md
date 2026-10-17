@@ -1,6 +1,7 @@
 # Rust Cargo 채점 계약 — F01 설계
 
 검토일: 2026-10-16 KST. 상태: **내부 준비와 결과 판정 어댑터**. 운영 Cargo 실행기·API·새 Rust 단원은 아직 없다.
+2026-10-18 추가: 내부 단계 생명주기 연결과 CI 전용 관찰 함수를 구현했다. 이는 운영 실행기/API 활성화가 아니다.
 `server/rust-contract.mjs`는 문자열/인수 배열만 반환하며 디렉터리 생성, 파일 쓰기, 프로세스 실행을 하지 않는다.
 `executionEnabled: false`는 이 상태를 표시한다. 이를 제거하는 것만으로 실행 허용 조건을 충족하지 않는다.
 이번 설계는 F01 착수 근거이지 단원 완료가 아니며 next는 F-G/F01에 남긴다.
@@ -76,6 +77,14 @@ CI 전용 `tests/helpers/rust-tools.mjs`는 제한된 환경과 고정 인수로
 새 검사는 고정 경로·불가 호스트/루트·링크·파일/실행 권한·host/release 오류·환경 보존을 검사하고 실제 도구 확인은 두 OS CI에서 필수다. F01 공개 예제의 cargo test 전체 호출은 아직 이 경로에 연결하지 않았다. 운영 API·통합 실행기·전체 취소/정리·빌드 실패 분류는 별도 미완료다.
 구현 `c069624bb820c5c86255f1f1dd2948a6db203668`의 [CI38959868646](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38959868646)를 2026-10-18 KST에 실제 재조회했다. Ubuntu 전체522/522·skip0, macOS 경로/준비/결과/빌드예산32/32·skip0 및 browser 회귀가 성공했다. Linux는 `1.99.0-x86_64-unknown-linux-gnu/bin`, macOS는 `1.99.0-aarch64-apple-darwin/bin`의 실제 cargo/rustc와 해당 host를 기록했다. Cargo6빌드는 Linux188~212ms·macOS226~462ms였으며 정상·ignored/빈 목록 거부·단언 실패/조기 exit 결과 기대값을 유지했다. Windows·Linux arm64·macOS x64 실행은 이 CI의 검증 대상이 아니다.
 RUSTC와 wrapper 의미 및 sysroot/verbose 옵션은 [Cargo 환경 변수](https://doc.rust-lang.org/cargo/reference/environment-variables.html), [rustc 명령 인수](https://doc.rust-lang.org/rustc/command-line-arguments.html) 원문으로 확인했다. 문서 본문은 복제하지 않았다.
+
+### 내부 통합 생명주기 (2026-10-18)
+
+`server/rust-pipeline.mjs`의 `gradeRustInternal(request, definitions, {observe,parent,signal})`은 관찰 함수가 없으면 실패한다. 기본 호스트 실행기·child_process·HTTP 등록은 없으며 기존 정의/계획의 executionEnabled:false도 유지한다. 요청 검증과 사전 취소를 통과한 뒤에만 전용 작업 공간을 생성한다.
+단계는 compile→현재 manifest의 단일 산출물 검증→list→list-ignored→독립 사례별 case→전체 결과다. 첫 열거 실패/불일치는 추가 열거 전 중단한다. 성공한 일반 목록만으로 ignored 검사를 생략하지 않는다. 컴파일 실패는 진단·전체 미실행을 반환하고, 단언 실패는 계속하며 치명적 사례 실패는 남은 사례를 미실행으로 채운다. 잘못된 관찰 응답·산출물/목록 불일치·관찰 함수 예외·ENOENT/ELIMIT는 운영 오류로 전파한다.
+finally에서 이 호출이 생성한 정확한 디렉터리만 정리한다. 관찰 함수가 정리 경로를 지정할 수 없고 부모의 다른 파일은 보존한다. 정리 실패는 성공 결과로 숨기지 않으며 앞선 오류와 함께 발생하면 AggregateError로 보존한다. 현재 취소는 단계 전후 경계에서만 검사한다. 실행 중 즉시 프로세스 그룹 취소는 아직 미구현이며 관찰 함수가 반환할 때까지 기존 시간/출력 예산을 따른다.
+`tests/helpers/rust-pipeline.mjs`는 신뢰된 CI 코드만 실행한다. 검증한 실제 Cargo/rustc·명시 RUSTC·전용 Cargo home/target·기존 빌드/실행 자원 예산과 detached 그룹 관찰을 사용한다. 제한 설정125/프로세스 정리 오류는 CI 운영 오류로 전파한다. 이 코드/오류 구분은 임의 악성 제출용 운영 실행 계약이 아니며 파일·네트워크 격리도 아니다.
+신규 합성 검사는 단계 순서·실패 중단·전체 분모·남의 파일 보존·예외/경계 취소 뒤 디렉터리 정리를 확인한다. 실제 CI는 정상·오답·문법 오류·경고 제출4개를 각각 새 공간에서 빌드하고 결과와 공간 삭제를 검사한다. 실제 실행 중 취소·정리 실패 주입·빌드 자원 초과 통합·UI/API/기록 연결은 후속 인수 조건이다. F01 단원 상태·순환 차례·실습/숙달 잠금은 바꾸지 않는다.
 
 ## 4. 테스트 식별과 사례 실행
 
