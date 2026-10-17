@@ -92,6 +92,7 @@ finally에서 이 호출이 생성한 정확한 디렉터리만 정리한다. �
 테스트 전용 observeProcess의 선택적 abortSignal은 실제 AbortSignal만 허용한다. 이미 취소됐으면 spawn하지 않고 pid:null·ABORT_ERR/AbortError를 반환한다. 사유 문자열을 진단으로 복사하지 않는다. 실행 중 abort 이벤트는 즉시 stop을 호출해 POSIX의 해당 프로세스 그룹 전체에 SIGKILL을 요청한다. 원래 시간 제한을 기다리지 않으며 기존 close/500ms 파이프 정리와 시간/출력 상한은 유지한다. 이벤트 리스너는 성공·도구 오류·중단 뒤 제거한다. Windows는 기존 부모 kill 경로일 뿐 자손 종료 보장이 아니고 Rust 실행 지원 대상으로 확대하지 않는다.
 CI Rust 관찰자는 pipeline의 signal을 abortSignal로 전달한다. 관찰자가 종료/파이프 정리를 마친 뒤 pipeline의 취소 검사가 AbortError를 전파하고 finally가 소유 작업 공간을 지운다. 취소를 오답 iteration이나 성공 응답으로 기록하지 않는다. 취소·시간·출력 오류가 겹치면 observeProcess는 최초 관찰 오류를 보존하고 pipeline은 자신의 signal 상태도 확인한다.
 신규 검사는 잘못된 signal·사전 취소의 실행/파일 생성0·진행 중 부모/자식 종료·원래3초 제한 전 반환·리스너 제거·내부 pipeline 공간 정리를 검증한다. 실제 Rust 사례는 marker를 기록한 뒤10초 대기하도록 독립 작성하고, CI에서 실행 중 취소→다음 사례 미실행→프로세스 종료·작업 공간 삭제를 필수 검사한다. 프로세스 생존 상태를 확인할 수 없으면 종료 증거로 간주하지 않는다. CI 결과 전까지 실제 Rust 취소 성공을 주장하지 않는다.
+구현 `5bba6d599e43d2c114ce9026cf9d534549efd954`의 [CI39077323304](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39077323304)에서 Ubuntu 전체537/537·skip0, macOS 통합/취소15/15·skip0 및 browser 회귀 성공을 확인했다. 두 OS에서 실제 Rust 첫 사례의 실행 중 취소가 AbortError로 전파되고 남은 사례가 실행되지 않으며 프로세스·소유 공간이 정리됐다. POSIX Node 부모/자식 그룹 종료와 리스너 제거도 통과했다. Windows 자손 종료·정리 실패 주입·악성 제출 격리·운영 API 검증으로 확대하지 않는다.
 
 ## 4. 테스트 식별과 사례 실행
 
