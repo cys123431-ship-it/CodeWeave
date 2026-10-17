@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-18 07:56 KST — F01 실행 중 취소와 프로세스 그룹 정리
+- 시작/결과 SHA: 시작e42d217d9bab3d727368432edf3df69873505033; 커밋 fix: cancel trusted Rust process groups before stage cleanup.
+- 목표: CI 관찰자의 실행 중 취소를 연결해 원래 제한 전 그룹 종료·pipeline 취소 전파·소유 공간 정리를 검증; 운영 API는 비활성.
+- 변경 파일 수: 총7개(신규 취소6검사·관찰helper·Rust CI관찰자·CI·설계·활성/보관 일지).
+- 테스트 결과: 신규6건 수정 전4실패·1통과·skip1→5통과·skip1(Rust 부재); 관련21건19통과·실패0·skip2; 전체537건530통과·실패0·skip7(Rust 부재); MJS3개 문법·일지4/4·roadmap/diff 성공; 삭제0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39073571591 성공 재확인; 구현 결과 SHA CI 대기. 실제 Rust 사례 취소는 Linux/macOS 필수.
+- 발견한 문제: 사전 취소도 spawn하고 실행 중 취소는 원래3초 제한을 기다렸음. 수정 전 거부/사전/실행중 실패 재현; 초기 pipeline 검사가 단순 경계 취소도 통과해 시간 기준을 먼저 추가·실패 재현 후 수정. 기존 기대값 변경0.
+- 보안 영향: 새 외부 입력/API0·운영 실행기0. 선택적 AbortSignal만 CI helper에 전달, 생성한 프로세스 그룹만 SIGKILL 요청·리스너 제거; 임의 PID/명령 입력 추가0·취소 사유 진단 복제0.
+- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01·실습/숙달 잠금 유지.
+- 다음 작업: 결과 SHA CI를 확인하고 정리 실패 주입·빌드 자원 초과/오류 분류를 통합 검증한 뒤 F01 실제 문제/UI/API 연결을 검토; 전체 단원 완료나 차례 전환 아님.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-18 06:58 KST — F01 내부 Cargo 단계 생명주기 연결
 - 시작/결과 SHA: 시작160ef9894d1b0b417658b417c26dd277a07afc03; 구현f44965c788f584b5a9e35dcffdda4a5f74e0e090; 후속 docs: record verified internal Rust lifecycle CI.
 - 목표: 준비→빌드→산출물/양쪽 목록→사례별 실행→결과를 내부 관찰 함수로 연결하고 모든 경로에서 생성 공간 정리; 운영 API는 비활성.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 새 API/사용자 입력0; 순수 버전검사는 설치/실행0. CI 준비만 명시 버전 설치·기본값 선택하며 실패 시 중단, 운영 실행기 경로/override 고정은 아직 미구현.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01·Rust 실습/숙달 비활성.
 - 다음 작업: 후속 결과 SHA CI를 확인하고 실제 절대 도구 경로·호스트 대상·환경 고정, 빌드/열거/실행 통합과 취소/정리·문법/경고/자원 초과 분류를 검증한다.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-17 03:10 KST — F01 Cargo 빌드 예산 미반영 커밋 인계
-- 시작/결과 SHA: 시작b87e3c76c3695445a8f8d14c3220f0e2d8929c3b; 보존한 로컬ba33d8ae0bfc6f3c3d1102dde0cf8c41a4e0d670와 원격 구현5eded9deb2db5007473bf30c3db06828634d0bf5는 동일 tree; 후속 docs: record Cargo build budget CI evidence.
-- 목표: 03:03의 검증된 로컬 커밋을 원격에 반영하고 실제 Linux/macOS Cargo 빌드 제한 CI를 인수; 새 기능·단원 추가0.
-- 변경 파일 수: 시작 main 대비8개 유지; 이번 인계 후속은 설계·활성/보관 일지3개.
-- 테스트 결과: 신규5건 실패→통과 이력 보존·이번5/5; 로컬 전체510건506통과·실패0·skip4(Rust 도구 부재) 재확인; 일지4/4·roadmap/diff 성공; 삭제0·기대값 변경0.
-- CI URL과 결과: 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38945563049 전체510/510·실패0·skip0, macOS 신규5/5·준비/결과25/25·실제Cargo6빌드, browser 회귀 모두 성공; 후속 기록 SHA CI 별도 확인.
-- 발견한 문제: 이전 실행의 구현은 로컬 커밋만 있고 원격 미반영이었음. 8개 blob과 전체 tree 일치 확인 후 최신 main expected SHA로 비강제 갱신.
-- 보안 영향: 신뢰된 CI 전용 빌드 한도 검증이며 운영 API·사용자 입력 경로 변경0; 운영 Rust 실습/숙달 잠금 유지.
-- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
-- 다음 작업: 후속 결과 SHA CI를 확인하고 고정 도구체인·빌드/열거/실행 통합·취소/정리 및 문법/경고/빌드 자원 초과 경로 검증을 이어감; F01 이론 인수 재사용으로 차례 건너뛰기 금지.

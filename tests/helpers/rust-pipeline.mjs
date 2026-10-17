@@ -26,7 +26,8 @@ export async function trustedRustObserver() {
       timeout = 2000;
     }
     const output = await observeProcess(invocation.command, invocation.args, {
-      cwd: workspace.dir, env: invocation.env, timeout, maxBuffer: 80000, stage: 'pipeline-' + stage
+      cwd: workspace.dir, env: invocation.env, timeout, maxBuffer: 80000,
+      stage: 'pipeline-' + stage, abortSignal: signal
     });
     console.log('Rust pipeline observation:', JSON.stringify(output.observation));
     if (output.status === 125 || output.error?.code === 'ECLEANUP') {

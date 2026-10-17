@@ -39,12 +39,21 @@ async function processSnapshot(root) {
 }
 
 export function observeProcess(command, args, {
-  cwd, env, timeout = 2000, maxBuffer = 80000, stage = 'trusted-tool'
+  cwd, env, timeout = 2000, maxBuffer = 80000, stage = 'trusted-tool', abortSignal
 } = {}) {
   if (typeof command !== 'string' || !Array.isArray(args) || args.some(a => typeof a !== 'string')
       || !Number.isInteger(timeout) || timeout < 1 || timeout > 60000
       || !Number.isInteger(maxBuffer) || maxBuffer < 1 || maxBuffer > 80000) {
     throw new TypeError('Invalid trusted process observation options');
+  }
+  if (abortSignal !== undefined && !(abortSignal instanceof AbortSignal)) {
+    throw new TypeError('Invalid trusted process cancellation signal');
+  }
+  const abortError = () => Object.assign(new Error('Trusted tool cancelled'), { name: 'AbortError', code: 'ABORT_ERR' });
+  if (abortSignal?.aborted) {
+    return Promise.resolve({ status: null, signal: null, error: abortError(), stdout: '', stderr: '',
+      observation: { stage, durationMs: 0, pid: null,
+        processes: { available: false, reason: 'cancelled before spawn', rows: [] }, snapshots: [] } });
   }
   const start = performance.now();
   const posix = process.platform !== 'win32';
@@ -61,6 +70,7 @@ export function observeProcess(command, args, {
       clearTimeout(timer);
       snapshotTimers.forEach(clearTimeout);
       clearTimeout(cleanupTimer);
+      abortSignal?.removeEventListener('abort', cancel);
       resolve({ status, signal, error: failure,
         stdout: Buffer.concat(stdout).toString('utf8'), stderr: Buffer.concat(stderr).toString('utf8'),
         observation: { stage, durationMs: Math.round(performance.now() - start), pid: child.pid ?? null, processes, snapshots }
@@ -89,6 +99,11 @@ export function observeProcess(command, args, {
         stop();
       }
     }
+    function cancel() {
+      if (finished) return;
+      failure ??= abortError();
+      stop();
+    }
     child.stdout.on('data', chunk => collect(chunk, stdout));
     child.stderr.on('data', chunk => collect(chunk, stderr));
     child.once('error', error => { failure ??= error; stop(); });
@@ -108,5 +123,7 @@ export function observeProcess(command, args, {
       failure ??= Object.assign(new Error('Trusted tool deadline exceeded'), { code: 'ETIMEDOUT' });
       stop();
     }, timeout);
+    abortSignal?.addEventListener('abort', cancel, { once: true });
+    if (abortSignal?.aborted) cancel();
   });
 }
