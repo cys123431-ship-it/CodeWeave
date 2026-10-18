@@ -1,10 +1,10 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-18 18:00 KST — F01 기본 비활성 Rust HTTP 계약
-- 시작/결과 SHA: 시작05f220fd152d2147c1418baeece7b5edc91c314f; 구현 커밋 제목 feat: add authenticated opt-in Rust HTTP adapter; 실제 SHA/CI 후속 기록.
+- 시작/결과 SHA: 시작05f220fd152d2147c1418baeece7b5edc91c314f; 구현43952d642459d82b9514fb3e1f978b7bc22f75b9; 후속 docs: record verified Rust HTTP adapter CI.
 - 목표: 공유 loopback 인증·명시적 활성화·본문 제한·취소/정리·안전 오류 계약을 실제 HTTP 요청으로 검증, dev-server Rust 등록0.
 - 변경 파일 수: 총8개(공유 인증·기존 C 인증 재사용·Rust HTTP·신규7검사·CI·설계·활성/보관 일지).
 - 테스트 결과: 신규6건 수정 전 모듈 부재6실패→6통과·실제1skip(Rust 부재); 전체601건586통과·실패0·skip15(Rust 부재); 관련36건34통과·skip2·MJS4개·일지4/4·보관 원문/roadmap/diff 확인; 삭제0·기존 기대값 변경0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39111186394 성공 재확인; 결과 SHA CI 대기(성공 전 완료 아님).
+- CI URL과 결과: 시작39111186394 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39114005911 전체601/601·실패0·skip0·macOS 관련77/77·browser 성공; 양 OS 실제 HTTP 오답8/수정8통과·정리 실패503/후속429·수동 복구 통과, 후속 기록 SHA CI 별도 확인.
 - 발견한 문제: Rust HTTP의 인증/본문/수명/비공개 응답 연결 부재를 먼저6검사로 재현. C 인증은 공용 factory로 옮기고 기존 헤더·토큰/PWA 회귀 검사를 유지.
 - 보안 영향: 외부 HTTP 입력을 받는 어댑터를 추가하되 일반 서버 등록/환경 활성화0; 인증 선검사·바이트 상한·공유 슬롯·취소·정리 실패 차단 유지, 운영 경로/예외 응답0·진도/v1/실습 잠금 변경0.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.

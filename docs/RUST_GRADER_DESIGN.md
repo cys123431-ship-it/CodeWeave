@@ -146,6 +146,8 @@ Cargo JSON은 컴파일/산출물 메시지이지 libtest 사례별 안정 JSON 
 
 ### 기본 비활성 Rust HTTP 어댑터 (2026-10-18)
 
+검증 SHA `43952d642459d82b9514fb3e1f978b7bc22f75b9`의 [CI39114005911](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39114005911)는 Ubuntu 전체601/601·skip0, macOS 관련77/77·skip0, browser 회귀를 통과했다. 양 OS에서 실제 로컬 HTTP 제출의 오답8사례·수정8통과·정리 실패503·후속429·운영자 수동 복구를 확인했다. 일반 서버의 Rust 라우트 등록이나 학습자 UI/실습 인수까지 완료한 것은 아니다.
+
 server/rust-http.mjs의 createRustHttpHandler는 기본 비활성이며 신뢰된 서버 코드가 enabled:true·service·auth를 직접 제공해야 한다. 서비스는 정리 실패 감독이 연결된 createLocalRustGradingService를 사용한다. 환경 변수·클라이언트 필드로 활성화하지 않는다. 이번 구현은 로컬 HTTP fixture에서 연결을 검증하며 dev-server의 Rust 라우트·학습자 UI·실습/숙달은 아직 등록/활성화하지 않는다. HTTP 경로와 실제 문제/v1 기록의 최종 연결은 다음 인수 범위다.
 
 server/local-auth.mjs는 기존 C 인증을 동작 변경 없이 공유한 것이다. 실제 서버 포트를 제공하는 함수마다 새32바이트 토큰을 만들고 페이지용 meta만 제공한다. Content-Type 정확히 application/json, 단일 Host의 127.0.0.1/localhost:실제PORT, 존재하는 단일 Origin의 동일 loopback HTTP 출처, 단일 X-CodeWeave-Token을 검사한다. 헤더 중복·외부/다른 포트·토큰 누락/이전 토큰은 실행 전에 거부하며 C 페이지/PWA의 기존 토큰 주입/캐시 제거 계약을 유지한다.
