@@ -7,7 +7,7 @@
 | C | C 심화 | 5/8 | 0 | 3 | 62.5% |
 | D | 자료구조 — C | 2/8 | 0 | 6 | 25.0% |
 | E | 알고리즘 — C | 2/8 | 0 | 6 | 25.0% |
-| F | Rust 기초 | 0/8 | 2 | 6 | 0.0% |
+| F | Rust 기초 | 1/8 | 1 | 6 | 12.5% |
 | G | Rust 응용 | 0/8 | 0 | 8 | 0.0% |
 | H | C와 Rust 연결 학습·재구현 | 0/6 | 0 | 6 | 0.0% |
 | I | 종합 프로젝트·플랫폼 마무리 | 0/6 | 0 | 6 | 0.0% |
@@ -17,7 +17,7 @@
 
 ## 상태와 분모의 의미
 
-- 완료는 아래에 이름 붙인 제한된 학습 범위의 원고·화면·예제·퀴즈·실제 C 채점 검증이 연결됐다는 뜻이다. C 전체 교과서나 플랫폼 완성이 아니다.
+- 완료는 이름 붙인 제한 범위의 원고·화면·예제·퀴즈·실제 채점·수정/재제출 경로를 검증했다는 뜻이다. F01은 Linux/macOS의 명시적 신뢰 로컬 Cargo 환경에 한정한다. 트랙 전체나 플랫폼 완성이 아니다.
 - 진행 중은 기존 샘플이나 일부 경로만 있다는 뜻이다. 채점 없는 Rust·자료구조·알고리즘 샘플은 완료로 세지 않는다.
 - 이론·퀴즈 인수 CI는 실제 전달한 제한 범위의 근거이며 단원 전체 완료나 학습자 숙달이 아니다. Rust의 같은 인수 기록으로 차례를 반복 건너뛸 수 없고 다음 Rust 차례는 미완료 실습 작업을 이어간다.
 - 미착수는 이 제목의 독립 학습 단원/실습이 없다는 뜻이다. 관련 개념이 다른 원고에 잠깐 등장해도 완료로 올리지 않는다.
@@ -95,7 +95,7 @@
 
 | ID | 단원 | 상태 | 기존 단원·검증 근거 |
 |---|---|---|---|
-| F01 | Cargo 프로젝트·cargo test와 채점 계약 | 진행 중 | `rust-cargo` · [원고](../content/rust/01-cargo.md) · [검사](../tests/f01-manuscript.test.mjs) · [검사](../tests/rust-contract.test.mjs) · [검사](../tests/rust-preparation.test.mjs) · [검사](../tests/rust-results.test.mjs) · [검사](../tests/rust-cargo-lesson.test.mjs) · [검사](../tests/theory-handoff.test.mjs) · [이론·퀴즈 인수 CI](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38843874384) |
+| F01 | Cargo 프로젝트·cargo test와 채점 계약 | 완료 | `rust-cargo` · [원고](../content/rust/01-cargo.md) · [검사](../tests/f01-manuscript.test.mjs) · [검사](../tests/rust-delivery.test.mjs) · [검사](../tests/rust-exercises.test.mjs) · [검사](../tests/rust-http.test.mjs) · [검사](../tests/rust-executor.test.mjs) · [검사](../tests/rust-client.test.mjs) · [검사](../tests/rust-workbench.test.mjs) · [검사](../tests/start-rust.test.mjs) · [검사](../tests/browser-practice.mjs) · [검사](../tests/rust-contract.test.mjs) · [검사](../tests/rust-preparation.test.mjs) · [검사](../tests/rust-results.test.mjs) · [검사](../tests/rust-cargo-lesson.test.mjs) · [검사](../tests/theory-handoff.test.mjs) · [이론·퀴즈 인수 CI](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38843874384) · [로컬 Cargo 인수](F01_ACCEPTANCE.md) · [실제 채점 CI](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39157149118) |
 | F02 | 변수 바인딩·가변성과 스칼라 형 | 진행 중 | `rust-mut` |
 | F03 | 조건·반복·식과 범위 | 미착수 | — |
 | F04 | 함수·반환값과 단위 테스트 | 미착수 | — |
@@ -141,9 +141,9 @@
 
 ## v0.x 지원 결정과 다음 실행
 
-- C·자료구조·알고리즘·Rust 모두 v0.x의 지원 목표로 유지한다. 현재 실행 가능한 채점은 C뿐이며 Rust 지원 완료를 뜻하지 않는다.
+- C·자료구조·알고리즘·Rust 모두 v0.x 지원 목표다. 기본 서버는 C 전용이며 F01만 명시적 Linux/macOS 개인 Cargo 서버에서 선택적으로 채점한다. 다른 Rust 샘플과 Windows Rust 실행·Rust 트랙 전체는 미완료다.
 - 기반 정리 0~2단계 종료 후 새 단원은 **D → E → Rust(F~G) → C**로 순환한다. 기반 CI 실패·보안·데이터 손실 회귀 수정은 먼저 처리하되 순환 차례를 소비하지 않는다.
-- 다음 차례는 **F-G / F01**: Cargo 프로젝트·cargo test와 채점 계약다. 해당 단원의 기존 근거와 최근 일지를 읽고 가장 앞선 미완료 인수 조건 하나를 진행한다.
+- 다음 차례는 **C / C06**: 전처리 매크로·조건부 컴파일과 중복 평가다. 해당 단원의 기존 근거와 최근 일지를 읽고 가장 앞선 미완료 인수 조건 하나를 진행한다.
 - E 차례는 E01을 확장한다. C 구조체 정렬·이진 탐색 실습은 선수 예제로 연결하되 알고리즘 트랙 완성으로 중복 집계하지 않는다.
 - Rust 첫 작업은 cargo test 채점기 설계다. 입력 스키마·스타터·별도 테스트 하네스·종료 상태·출력·실패/재제출 기록·보안 경계를 먼저 명세한다. 설계만으로 실제 Rust 채점 성공을 표시하지 않는다.
 - Rust 채점기 구현 전에는 이론·퀴즈만 있는 단원을 허용하되 실습 통과/전체 숙달은 잠근다. 설계 문서만 작성한 경우 차례를 넘기지 않는다. 이론·퀴즈 범위를 실제 전달·검증한 경우는 그 제한을 일지에 명시하고 C 차례로 갈 수 있지만 로드맵 상태는 진행 중으로 유지한다.

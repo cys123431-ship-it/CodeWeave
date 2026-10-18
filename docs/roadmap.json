@@ -10,8 +10,8 @@
     "C"
   ],
   "next": {
-    "track": "F-G",
-    "unit": "F01"
+    "track": "C",
+    "unit": "C06"
   },
   "limits": {
     "screenSections": [
@@ -546,7 +546,7 @@
         {
           "id": "F01",
           "title": "Cargo 프로젝트·cargo test와 채점 계약",
-          "status": "진행 중",
+          "status": "완료",
           "lessonIds": [
             "rust-cargo"
           ],
@@ -555,12 +555,42 @@
           ],
           "tests": [
             "tests/f01-manuscript.test.mjs",
+            "tests/rust-delivery.test.mjs",
+            "tests/rust-exercises.test.mjs",
+            "tests/rust-http.test.mjs",
+            "tests/rust-executor.test.mjs",
+            "tests/rust-client.test.mjs",
+            "tests/rust-workbench.test.mjs",
+            "tests/start-rust.test.mjs",
+            "tests/browser-practice.mjs",
             "tests/rust-contract.test.mjs",
             "tests/rust-preparation.test.mjs",
             "tests/rust-results.test.mjs",
             "tests/rust-cargo-lesson.test.mjs",
             "tests/theory-handoff.test.mjs"
           ],
+          "practiceDelivery": {
+            "scope": "trusted-local-cargo",
+            "exerciseId": "rust-cargo",
+            "commit": "f91a931d3214e8038c8e889b5295790f29e02d50",
+            "ci": "https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39157149118",
+            "checks": [
+              "theory",
+              "example-tests",
+              "quiz-retry",
+              "actual-grading",
+              "correction-retry",
+              "backup",
+              "mastery-next",
+              "explicit-start",
+              "offline"
+            ],
+            "platforms": [
+              "linux",
+              "darwin"
+            ],
+            "review": "docs/F01_ACCEPTANCE.md"
+          },
           "theoryDelivery": {
             "scope": "theory-quiz",
             "commit": "d92dd760fcdcae96f11a8f0f14e42df59e2bff5c",

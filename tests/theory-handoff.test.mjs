@@ -14,6 +14,9 @@ const evidence = {
 const find = data => data.stages.find(s => s.id === 'F').units.find(u => u.id === 'F01');
 async function pending() {
   const data = await load();
+  // Reconstruct the historical theory-only state independently of later acceptance.
+  find(data).status = '진행 중';
+  delete find(data).practiceDelivery;
   data.next = { track: 'F-G', unit: 'F01' };
   delete find(data).theoryDelivery;
   return data;
@@ -62,9 +65,9 @@ test('a recorded theory delivery cannot be reused to skip unfinished Rust work o
   assert.throws(() => validateRoadmap(completed), /graded|채점|handoff|인수/);
 });
 
-test('published F01 handoff keeps its tested limited scope and unchanged completion counts', async () => {
-  const { validateRoadmap, renderRoadmap, summarize } = await api();
-  const data = await load();
+test('historical F01 theory handoff keeps its limited scope and cannot count completed practice', async () => {
+  const { recordTheoryDelivery, validateRoadmap, renderRoadmap, summarize } = await api();
+  const data = recordTheoryDelivery(await pending(), evidence);
   assert.equal(validateRoadmap(data), true);
   assert.equal(find(data).theoryDelivery?.scope, 'theory-quiz');
   assert.equal(find(data).status, '진행 중');

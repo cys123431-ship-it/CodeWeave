@@ -4,6 +4,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { lessons } from '../src/catalog.js';
 import { exercises } from '../src/exercises.js';
 import { gradingExercises } from '../server/grading-exercises.mjs';
+import { createRustGradingDefinitions } from '../server/rust-exercises.mjs';
+import { gradingRequestFor } from '../src/practice.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const order = ['D', 'E', 'F-G', 'C'];
@@ -40,9 +42,42 @@ function evidenceFile(file, prefix) {
 }
 
 const theoryChecks = ['theory', 'quiz-retry', 'drafts', 'offline', 'example-tests'];
+const rustChecks = ['theory', 'example-tests', 'quiz-retry', 'actual-grading',
+  'correction-retry', 'backup', 'mastery-next', 'explicit-start', 'offline'];
+const rustEvidenceTests = ['tests/f01-manuscript.test.mjs', 'tests/rust-cargo-lesson.test.mjs',
+  'tests/rust-exercises.test.mjs', 'tests/rust-http.test.mjs', 'tests/rust-executor.test.mjs',
+  'tests/rust-client.test.mjs', 'tests/rust-workbench.test.mjs', 'tests/start-rust.test.mjs',
+  'tests/browser-practice.mjs'];
+
+function validateRustDelivery(stage, unit) {
+  const delivery = unit.practiceDelivery;
+  const definition = createRustGradingDefinitions().get('rust-cargo');
+  const lesson = lessons.find(lesson => lesson.id === 'rust-cargo');
+  if (stage.id !== 'F' || unit.id !== 'F01' || unit.status !== '완료' ||
+      JSON.stringify(unit.lessonIds) !== JSON.stringify(['rust-cargo']) ||
+      !delivery || delivery.scope !== 'trusted-local-cargo' || delivery.exerciseId !== 'rust-cargo' ||
+      typeof delivery.commit !== 'string' || !/^[0-9a-f]{40}$/.test(delivery.commit) ||
+      typeof delivery.ci !== 'string' ||
+      !/^https:\/\/github\.com\/cys123431-ship-it\/CodeWeave\/actions\/runs\/\d+$/.test(delivery.ci) ||
+      !Array.isArray(delivery.checks) || delivery.checks.length !== rustChecks.length ||
+      new Set(delivery.checks).size !== rustChecks.length || Array.from(delivery.checks).some(check => !rustChecks.includes(check)) ||
+      !Array.isArray(delivery.platforms) || delivery.platforms.length !== 2 ||
+      !delivery.platforms.includes('linux') || !delivery.platforms.includes('darwin') ||
+      delivery.review !== 'docs/F01_ACCEPTANCE.md' ||
+      !unit.manuscripts.includes('content/rust/01-cargo.md') ||
+      rustEvidenceTests.some(file => !unit.tests.includes(file)) ||
+      !definition || definition.grader !== 'cargo-test' || definition.cases.length !== 10 ||
+      !lesson?.quiz || definition.starter !== lesson.challenge.starter ||
+      gradingRequestFor('rust-cargo', true).expectedTests !== definition.cases.length ||
+      exercises.find(exercise => exercise.id === 'rust-cargo')?.grader !== null ||
+      gradingExercises.has('rust-cargo')) fail('invalid local Rust graded handoff / 채점 인수');
+  evidenceFile(delivery.review, 'docs/');
+}
+
 function validateTheoryDelivery(stage, unit) {
   const delivery = unit.theoryDelivery;
-  if (!['F', 'G'].includes(stage.id) || unit.status !== '진행 중' || !unit.lessonIds.length || !unit.tests.length ||
+  const historical = unit.status === '완료' && unit.practiceDelivery !== undefined;
+  if (!['F', 'G'].includes(stage.id) || (unit.status !== '진행 중' && !historical) || !unit.lessonIds.length || !unit.tests.length ||
       !delivery || delivery.scope !== 'theory-quiz' || typeof delivery.commit !== 'string' || typeof delivery.ci !== 'string' ||
       !/^[0-9a-f]{40}$/.test(delivery.commit) ||
       !/^https:\/\/github\.com\/cys123431-ship-it\/CodeWeave\/actions\/runs\/\d+$/.test(delivery.ci) ||
@@ -74,6 +109,30 @@ export function recordTheoryDelivery(data, { unitId, commit, ci, checks }) {
   return result;
 }
 
+// Only records independently reviewed CI evidence. Metadata validation is not a
+// network CI check, execution capability, learner mastery flag or public sandbox.
+export function recordRustPracticeDelivery(data, evidence) {
+  validateRoadmap(data);
+  const selected = selectUnit(data, data.next.track);
+  if (data.next.track !== 'F-G' || selected?.id !== 'F01' || evidence?.unitId !== 'F01') {
+    fail('local Rust handoff requires selected F01 / 선택 차례');
+  }
+  if (selected.practiceDelivery !== undefined) fail('local Rust handoff already recorded / 이미 인수함');
+  const result = structuredClone(data);
+  const stage = result.stages.find(stage => stage.id === 'F');
+  const unit = stage.units.find(unit => unit.id === 'F01');
+  unit.practiceDelivery = structuredClone({ scope: evidence.scope, exerciseId: evidence.exerciseId,
+    commit: evidence.commit, ci: evidence.ci, checks: evidence.checks,
+    platforms: evidence.platforms, review: evidence.review });
+  unit.status = '완료';
+  validateRustDelivery(stage, unit);
+  const next = selectUnit(result, 'C');
+  if (!next) fail('no next C unit / 다음 단원 없음');
+  result.next = { track: 'C', unit: next.id };
+  validateRoadmap(result);
+  return result;
+}
+
 export function validateRoadmap(data) {
   if (data.version !== 1 || JSON.stringify(data.stages?.map(stage => stage.id)) !== JSON.stringify([...'ABCDEFGHI'])) fail('stages A-I required');
   if (JSON.stringify(data.rotation) !== JSON.stringify(order)) fail('rotation / 순환');
@@ -88,13 +147,17 @@ export function validateRoadmap(data) {
       if (!new RegExp('^' + stage.id + '\\d{2}$').test(unit.id) || ids.has(unit.id) || !unit.title?.trim()) fail('invalid unit');
       ids.add(unit.id);
       if (!statuses.has(unit.status) || !Array.isArray(unit.lessonIds) || !Array.isArray(unit.tests) || !Array.isArray(unit.manuscripts)) fail('invalid state');
+      if (unit.practiceDelivery !== undefined) validateRustDelivery(stage, unit);
       for (const id of unit.lessonIds) {
         if (seen.has(id)) fail('duplicate catalog / 중복: ' + id);
         seen.add(id);
         const lesson = lessons.find(lesson => lesson.id === id);
         const expectedTrack = 'ABC'.includes(stage.id) ? 'c' : stage.id === 'D' ? 'ds' : stage.id === 'E' ? 'algo' : 'FG'.includes(stage.id) ? 'rust' : null;
         if (!lesson || (expectedTrack && lesson.track !== expectedTrack)) fail('catalog mapping: ' + id);
-        if (unit.status === '완료' && (!exercises.find(exercise => exercise.id === lesson.challenge.id)?.grader || !gradingExercises.has(lesson.challenge.id))) fail('completed units require graded practice / 채점: ' + id);
+        if (unit.status === '완료' && unit.practiceDelivery === undefined &&
+            (!exercises.find(exercise => exercise.id === lesson.challenge.id)?.grader || !gradingExercises.has(lesson.challenge.id))) {
+          fail('completed units require graded practice / 채점: ' + id);
+        }
       }
       if (unit.status === '완료' && (!unit.lessonIds.length || !unit.tests.length || !unit.manuscripts.length)) fail('completion evidence / 근거');
       if (unit.status === '미착수' && unit.lessonIds.length) fail('existing sample must be in progress');
@@ -116,7 +179,7 @@ export function renderRoadmap(data) {
   out.push('', `확정일: ${data.confirmedOn}. 상태 원본은 [roadmap.json](roadmap.json)이며 표는 계산 결과다.`,
     `기존 구현 검증 기준: [${data.baseline.slice(0, 7)}](https://github.com/cys123431-ship-it/CodeWeave/commit/${data.baseline}) · [CI](${data.evidenceCI}).`, '',
     '## 상태와 분모의 의미', '',
-    '- 완료는 아래에 이름 붙인 제한된 학습 범위의 원고·화면·예제·퀴즈·실제 C 채점 검증이 연결됐다는 뜻이다. C 전체 교과서나 플랫폼 완성이 아니다.',
+    '- 완료는 이름 붙인 제한 범위의 원고·화면·예제·퀴즈·실제 채점·수정/재제출 경로를 검증했다는 뜻이다. F01은 Linux/macOS의 명시적 신뢰 로컬 Cargo 환경에 한정한다. 트랙 전체나 플랫폼 완성이 아니다.',
     '- 진행 중은 기존 샘플이나 일부 경로만 있다는 뜻이다. 채점 없는 Rust·자료구조·알고리즘 샘플은 완료로 세지 않는다.',
     '- 이론·퀴즈 인수 CI는 실제 전달한 제한 범위의 근거이며 단원 전체 완료나 학습자 숙달이 아니다. Rust의 같은 인수 기록으로 차례를 반복 건너뛸 수 없고 다음 Rust 차례는 미완료 실습 작업을 이어간다.',
     '- 미착수는 이 제목의 독립 학습 단원/실습이 없다는 뜻이다. 관련 개념이 다른 원고에 잠깐 등장해도 완료로 올리지 않는다.',
@@ -130,13 +193,14 @@ export function renderRoadmap(data) {
       const evidence = [...unit.lessonIds.map(id => '`' + id + '`'),
         ...unit.manuscripts.map(file => `[원고](../${file})`),
         ...unit.tests.map(file => `[검사](../${file})`),
-        ...(unit.theoryDelivery ? [`[이론·퀴즈 인수 CI](${unit.theoryDelivery.ci})`] : [])].join(' · ') || '—';
+        ...(unit.theoryDelivery ? [`[이론·퀴즈 인수 CI](${unit.theoryDelivery.ci})`] : []),
+        ...(unit.practiceDelivery ? [`[로컬 Cargo 인수](F01_ACCEPTANCE.md)`, `[실제 채점 CI](${unit.practiceDelivery.ci})`] : [])].join(' · ') || '—';
       out.push(`| ${unit.id} | ${unit.title} | ${unit.status} | ${evidence} |`);
     }
     out.push('');
   }
   out.push('## v0.x 지원 결정과 다음 실행', '',
-    '- C·자료구조·알고리즘·Rust 모두 v0.x의 지원 목표로 유지한다. 현재 실행 가능한 채점은 C뿐이며 Rust 지원 완료를 뜻하지 않는다.',
+    '- C·자료구조·알고리즘·Rust 모두 v0.x 지원 목표다. 기본 서버는 C 전용이며 F01만 명시적 Linux/macOS 개인 Cargo 서버에서 선택적으로 채점한다. 다른 Rust 샘플과 Windows Rust 실행·Rust 트랙 전체는 미완료다.',
     '- 기반 정리 0~2단계 종료 후 새 단원은 **D → E → Rust(F~G) → C**로 순환한다. 기반 CI 실패·보안·데이터 손실 회귀 수정은 먼저 처리하되 순환 차례를 소비하지 않는다.',
     `- 다음 차례는 **${data.next.track} / ${data.next.unit}**: ${selectUnit(data, data.next.track).title}다. 해당 단원의 기존 근거와 최근 일지를 읽고 가장 앞선 미완료 인수 조건 하나를 진행한다.`,
     '- E 차례는 E01을 확장한다. C 구조체 정렬·이진 탐색 실습은 선수 예제로 연결하되 알고리즘 트랙 완성으로 중복 집계하지 않는다.',
