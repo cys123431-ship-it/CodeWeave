@@ -148,6 +148,8 @@ Cargo JSON은 컴파일/산출물 메시지이지 libtest 사례별 안정 JSON 
 
 ### 내부 요청 서비스 — 기본 비활성 (2026-10-18)
 
+연결 수명 검증 SHA `27db37fe4823be3d1bf395be8a3ca657ad852a5f`의 [CI39102784378](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39102784378)는 Ubuntu 전체576/576·skip0, macOS 관련52/52·skip0, browser 회귀를 통과했다. C 실제 HTTP 연결 해제→부모/자식 종료→삭제 대기 중429→삭제 완료 뒤 정상 재제출, Rust response close 이벤트→실제 사례 취소→후속 차단/소유 공간 정리/공유 슬롯 해제를 양 OS에서 확인했다. 첫 macOS 검사의 시스템 실행 파일 제어군126은 자체 GCC C 제어군으로 수정했으며 성공0 기대값과 자원 한도는 유지했다.
+
 연결 수명은 server/request-cancellation.mjs의 createRequestCancellation(req,res)로 AbortSignal에 연결한다. 요청 aborted 또는 아직 writableFinished가 아닌 응답 close만 취소하며, 정상 본문 수신의 request close는 취소가 아니다. 기존 C HTTP 경로에 실제 적용했고 C runCases→runSubmission으로 전달한다. 완료/오류/취소 후 dispose가 자기 리스너만 제거하며, 실행 그룹 종료·소유 공간 삭제가 settle하기 전 공유 슬롯을 해제하지 않는다. 닫힌 연결에 성공/오답 결과나500을 쓰지 않는다. C의 동기 GCC 컴파일 자체는 도중 취소할 수 없고 기존4.5초 한도와 다음 비동기 경계 검사에 의존한다. 파일 쓰기/삭제도 진행 중 I/O를 강제 중단하지 않는다.
 Rust 서비스에는 동일 signal을 submit의 옵션으로 전달할 수 있다. CI는 response close 이벤트를 주입해 실제 Cargo→테스트 열거→첫 사례 실행을 취소하고 나머지 사례 차단·공간 삭제·슬롯 해제 순서를 확인한다. 실제 Rust HTTP 경로/인증/실행 어댑터 연결이나 활성화는 아직 아니다. 운영 관측·정리 실패 복구는 별도 남은 작업이며 종료 신호/자원 제한을 격리 보장으로 확대하지 않는다.
 
