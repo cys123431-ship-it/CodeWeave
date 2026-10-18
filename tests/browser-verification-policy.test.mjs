@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, access } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 const root = new URL('../', import.meta.url);
 
@@ -21,5 +23,14 @@ test('local browser guidance routes to the real CI job without routine installat
   await access(new URL('.github/workflows/ci.yml', root));
   const workflow = await readFile(new URL('.github/workflows/ci.yml', root), 'utf8');
   assert.match(workflow, /\n  browser:\n/);
-  assert.match(workflow, /run: npm run test:browser/);
+  // The non-root QA job runs the same entry directly to avoid npm's extra UID
+  // threads. Check the executable source, not one spelling of the shell command.
+  const manifest = JSON.parse(await readFile(new URL('package.json', root), 'utf8'));
+  const [command, entry, ...extra] = manifest.scripts['test:browser'].split(' ');
+  assert.equal(command, 'node');
+  assert.deepEqual(extra, []);
+  await access(new URL(entry, root));
+  assert.ok(workflow.includes('"$qa_root/' + entry + '"'), 'CI executes the package browser entry from its tracked snapshot');
+  const checked = spawnSync(process.execPath, ['--check', fileURLToPath(new URL(entry, root))], { encoding: 'utf8' });
+  assert.equal(checked.status, 0, checked.stderr);
 });
