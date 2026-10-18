@@ -39,11 +39,13 @@ async function verifyC06Contract() {
   const program = manuscript.match(/```c\n([\s\S]*?)\n```/)[1];
   assert.ok(lesson.sections.some(section => section.code?.trim() === program.trim()));
   console.log('PASS: C06 catalog, starter, public example, prepared registry and compiled manuscript remain identical');
-  const app = createLearningServer();
+  const app = createLearningServer({ root: fileURLToPath(new URL('../', import.meta.url)) });
   try {
     const address = await app.listen(0);
     const url = 'http://127.0.0.1:' + address.port;
-    const html = await (await fetch(url)).text();
+    const response = await fetch(url);
+    assert.equal(response.status, 200);
+    const html = await response.text();
     const token = html.match(/name="codeweave-token" content="([a-f0-9]{64})"/)?.[1];
     assert.match(token, /^[a-f0-9]{64}$/);
     for (const [code, ok] of [[c06Wrong, false], [c06Correct, true]]) {
