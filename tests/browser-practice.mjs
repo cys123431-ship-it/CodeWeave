@@ -331,6 +331,11 @@ try {
     await actualPage.locator('#mark-theory').click();
     await actualPage.locator('[data-quiz="rust-cargo"][data-choice="0"]').click();
     await expect(actualPage.locator('.mastery-state')).toContainText('전체 숙달');
+    await actualPage.locator('.next-action [data-route="lesson:rust-mut"]').click();
+    await expect(actualPage.locator('.detail-head h1')).toHaveText('변수 바인딩과 가변성');
+    assert.equal(new URL(actualPage.url()).hash, '#lesson:rust-mut');
+    await actualPage.goto(actualBase + '/#lesson:rust-cargo');
+    await expect(actualPage.locator('.mastery-state')).toContainText('전체 숙달');
     await actualBench.locator('#attempt-list li').nth(1).getByRole('button').click();
     await expect(actualBench.locator('#code-input')).toHaveValue(rustWrong);
     assert.equal((await history(actualBench))['rust-cargo'].length, 3);
@@ -373,7 +378,7 @@ try {
     await actualBench.reload();
     await actualBench.locator('#lesson-select').selectOption('rust-cargo');
     await expect(actualBench.locator('#grade-code')).toBeEnabled();
-    console.log('PASS: REAL Cargo F01 browser: starter compile failure → workbench assertion failure → correction 10/10; shared lesson history, separate mastery, v1/C legacy restore, offline read-only and 390px');
+    console.log('PASS: REAL Cargo F01 browser: starter compile failure → workbench assertion failure → correction 10/10; shared lesson history, separate mastery, next Rust lesson and return, v1/C legacy restore, offline read-only and 390px');
   } finally {
     await actualContext?.close();
     await actualApp.close();

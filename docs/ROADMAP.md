@@ -95,7 +95,7 @@
 
 | ID | 단원 | 상태 | 기존 단원·검증 근거 |
 |---|---|---|---|
-| F01 | Cargo 프로젝트·cargo test와 채점 계약 | 진행 중 | `rust-cargo` · [검사](../tests/rust-contract.test.mjs) · [검사](../tests/rust-preparation.test.mjs) · [검사](../tests/rust-results.test.mjs) · [검사](../tests/rust-cargo-lesson.test.mjs) · [검사](../tests/theory-handoff.test.mjs) · [이론·퀴즈 인수 CI](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38843874384) |
+| F01 | Cargo 프로젝트·cargo test와 채점 계약 | 진행 중 | `rust-cargo` · [원고](../content/rust/01-cargo.md) · [검사](../tests/f01-manuscript.test.mjs) · [검사](../tests/rust-contract.test.mjs) · [검사](../tests/rust-preparation.test.mjs) · [검사](../tests/rust-results.test.mjs) · [검사](../tests/rust-cargo-lesson.test.mjs) · [검사](../tests/theory-handoff.test.mjs) · [이론·퀴즈 인수 CI](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38843874384) |
 | F02 | 변수 바인딩·가변성과 스칼라 형 | 진행 중 | `rust-mut` |
 | F03 | 조건·반복·식과 범위 | 미착수 | — |
 | F04 | 함수·반환값과 단위 테스트 | 미착수 | — |

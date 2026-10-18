@@ -827,7 +827,7 @@ export const lessons = [
   "level": "시작하기",
   "title": "Cargo 프로젝트와 실패하는 테스트 읽기",
   "minutes": 25,
-  "source": "F01 독자 원고(src/catalog.js). 2026-10-16 Cargo 공식 Package Layout·cargo test 명령 의미 확인. 원문 설명·문제는 복제하지 않음.",
+  "source": "F01 독자 원고(content/rust/01-cargo.md). 2026-10-16 Cargo 공식 Package Layout·cargo test 명령 의미 확인. 원문 설명·문제는 복제하지 않음.",
   "summary": "작은 영수증 라이브러리를 만들고 테스트의 실패→수정→재실행을 따라갑니다. 명시적으로 구성한 개인 PC Cargo 서버에서는 F01 함수도 실제 채점할 수 있습니다.",
   "figure": "cargo-test-flow",
   "sections": [

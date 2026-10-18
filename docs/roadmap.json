@@ -550,8 +550,11 @@
           "lessonIds": [
             "rust-cargo"
           ],
-          "manuscripts": [],
+          "manuscripts": [
+            "content/rust/01-cargo.md"
+          ],
           "tests": [
+            "tests/f01-manuscript.test.mjs",
             "tests/rust-contract.test.mjs",
             "tests/rust-preparation.test.mjs",
             "tests/rust-results.test.mjs",
