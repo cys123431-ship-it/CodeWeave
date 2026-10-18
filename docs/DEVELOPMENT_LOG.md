@@ -1,12 +1,12 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 00:00 KST — Rust 프로세스 그룹 종료 확인
-- 시작/결과 SHA: 시작234f8f6d36b89d9b606afa2441b9a35fee82fa85; 구현 fix: await owned Rust group termination before releasing admission (결과 SHA는 후속 CI 확인 기록).
+- 시작/결과 SHA: 시작234f8f6d36b89d9b606afa2441b9a35fee82fa85; 구현b98e8b7bd83a939df24a0fc71178e92111450506·진단6c68096b4d273f31d59deea9cc3717caea5aba09·수정79c2ee1893d9a89e863d24e25afe5287d9e82875; 후속 docs: record verified Rust group settlement and observation CI.
 - 목표: 부모/파이프 종료와 자식 종료를 구분하고 살아 있는 소유 그룹이 남으면 정리/슬롯 해제를 보류; 관측 불가/기한 초과는 격리.
 - 변경 파일 수: 총9개(새 그룹 관측 모듈·실행기·신규 관측 검사·기존 실행기/복구 검사 확장·CI·로컬 안내·활성/보관 일지).
-- 테스트 결과: 신규7건 중6건 실패→통과·전체641건623통과/실패0/skip18(Rust 부재); 관련32건30통과/2skip·집중3검사20회60/60·MJS5개/roadmap/diff 확인; 삭제0.
-- CI URL과 결과: 시작39137310067 성공 확인; 구현/결과 SHA CI 대기, 아직 완료로 기록하지 않음.
-- 발견한 문제: 지연된 SIGKILL 자식이 파이프 EOF 뒤에도 생존하는 회귀 재현. 초기 ps 의존 구현은 관련21건12실패/1skip(조회 실패 격리 연쇄)→ESRCH 보수 대기 및 Linux Node/proc PID 불일치 검사로 수정; 이전 두 관측의 정확한 원인은 단정하지 않음. 기존 계측1건 변경 사유: signal0은 종료 신호가 아니므로 조회만 제외하고 실제 종료1회 기대는 유지.
-- 보안 영향: 고정 ps·2MiB/200ms 관측·소유 그룹 signal0만 조회·SIGKILL 재전달0·기존500ms 정리 기한 유지; 권한 거부/관측 실패 기한 초과는503·공유 격리·복구 불가 유지, HTTP/진도/v1 변경0.
+- 테스트 결과: 신규8건 중7건 실패→통과; 첫 전체641건623통과/18skip→수정642건624통과/실패0/skip18(Rust 부재); 관련37건35통과/2skip·집중3검사20회60/60·MJS5개/roadmap/diff·보관 원문 확인; 삭제0.
+- CI URL과 결과: 초기39139240766·진단39139462872 macOS 취소 반복 실패; 수정 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39139797206 전체642/642·실패0·skip0·macOS103건102통과/1skip(Linux namespace 전용)·집중120/120·browser 실제Cargo 실패/수정10/10·v1·오프라인/390px 성공; 그룹 종료 확인 항목 인수, 후속 기록 SHA CI 별도 확인.
+- 발견한 문제: 지연된 SIGKILL 자식이 파이프 EOF 뒤에도 생존하는 회귀 재현. 초기 ps 의존 구현은 관련21건12실패/1skip(조회 실패 격리 연쇄)→ESRCH 보수 대기 및 Linux Node/proc PID 불일치 검사로 수정; macOS 실제 반복에서 signal0 EPERM을 확인하고 별도 유효한 종료/좀비 관측으로 정상 ready 재개; 앞선 두 로컬 관측의 정확한 원인은 단정하지 않음. 기존 계측1건 변경 사유: signal0은 종료 신호가 아니므로 조회만 제외하고 실제 종료1회 기대는 유지.
+- 보안 영향: 고정 ps·2MiB/200ms 관측·소유 그룹 signal0만 조회·SIGKILL 재전달0·기존500ms 정리 기한 유지; EPERM만으로 종료 추정0·별도 종료 증거가 없거나 기한 초과면503·공유 격리·복구 불가 유지, HTTP/진도/v1 변경0.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
 - 다음 작업: 결과 SHA CI 확인 후 운영자가 실행 가능한 명시적 Rust 시작 경로 인수; Cargo 내부 자원 부족 세부 분류/실기기 인수는 남음, 새 단원/차례 전환 아님.
 
