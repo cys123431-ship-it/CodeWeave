@@ -20,7 +20,7 @@ npm test
 
 일반 `npm start`는 C 채점만 활성화한다. 같은 서버의 `/api/grade/rust`는 인증 후503을 반환하며 `CODEWEAVE_RUST_ENABLED` 같은 환경 변수로는 활성화되지 않는다. Windows Rust 실행은 지원하지 않는다.
 
-신뢰된 운영 코드에서는 `server/learning-server.mjs`의 `createLearningServer({root, rustService})`로 명시적 구성을 만들 수 있다. `rustService`는 `createLocalRustGradingService({enabled:true, definitions, sysroot, parent})`로 생성한다. definitions는 서버 전용으로 검토한 Map, sysroot는 고정 버전/호스트의 실제 도구 설치 경로, parent는 조상 Cargo 설정이 없는 신뢰된 작업 공간 부모여야 한다. 다운로드나 임의 경로를 HTTP 입력으로 받지 않는다. 아직 배포된 F01 교육 문제 registry/클라이언트 제출 경로는 없으므로 이 구성만으로 F01 실습이 열리지는 않는다.
+신뢰된 운영 코드에서는 `server/learning-server.mjs`의 `createLearningServer({root, rustService})`로 명시적 구성을 만들 수 있다. `rustService`는 `createLocalRustGradingService({enabled:true, definitions, sysroot, parent})`로 생성한다. 기존 F01은 `server/rust-exercises.mjs`의 `createRustGradingDefinitions()`가 반환하는 서버 전용 Map으로 제공한다. sysroot는 고정 버전/호스트의 실제 도구 설치 경로, parent는 조상 Cargo 설정이 없는 신뢰된 작업 공간 부모여야 한다. 다운로드나 임의 경로를 HTTP 입력으로 받지 않는다. 아직 F01 클라이언트 제출/기록 경로는 연결하지 않았으므로 이 구성만으로 화면의 F01 실습이 열리지는 않는다.
 
 factory 생성/import는 서버를 시작하지 않는다. 반환 객체의 `await app.listen(4173)`으로 열고 `app.address()`로 실제 포트를 확인하며 `await app.close()`로 닫는다. 포트0은 테스트용 임의 포트다. 바인딩은 항상127.0.0.1이며 두 번째 호스트 인수는 거부한다. 페이지의 시작별 토큰·Host/Origin/JSON 제한, C/Rust 공유 슬롯과 취소/정리는 계속 적용된다. Rust의 inspect/recover는 운영자 객체에만 있고 HTTP 경로로 제공하지 않는다. 이 구성도 신뢰하는 본인 코드용이며 샌드박스나 공개 배포 수단이 아니다.
 
