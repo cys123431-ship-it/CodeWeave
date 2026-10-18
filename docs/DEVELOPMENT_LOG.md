@@ -1,11 +1,11 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-18 11:04 KST — F01 실제 Cargo CPU 초과 통합
-- 시작/결과 SHA: 시작8d112674112c293d3db53666cb1079078ba5e8e2; 결과는 test: verify Cargo CPU exhaustion through internal lifecycle 커밋과 후속 CI 기록으로 연결.
+- 시작/결과 SHA: 시작8d112674112c293d3db53666cb1079078ba5e8e2; 구현9274f0cf10ebd8a7a0d3f457ba41fb964f408f0c; 후속 fix: recognize numeric Cargo child CPU signals on macOS.
 - 목표: 신뢰 CI의 낮춘 CPU soft 한도와 실제 Cargo 상수 평가 중단·열거 차단·전체 미실행·소유 공간 정리를 검증.
 - 변경 파일 수: 총7개(CI 빌드예산 helper·예산2검사/실제CPU1검사·CI·설계·활성/보관 일지).
 - 테스트 결과: 신규3건 수정 전2실패·skip1→2통과·skip1(Rust 부재); 관련8건7통과·실패0·skip1; 전체554건545통과·실패0·skip9(Rust 부재); MJS3개·일지4/4·roadmap/diff 성공; 삭제0·기존 기대값 변경0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39085462668 성공 재확인; 이번 결과 SHA CI는 반영 후 조회하며 아직 실제 Cargo 성공 주장 없음.
-- 발견한 문제: 기존 helper에 CPU soft 감소 계약 부재를2검사로 재현. 1~10 검증과 기존 상속 이하 soft 감소만 추가, hard/기본 한도 유지.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39085462668 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39089018430 macOS CPU1실패: rustc signal24/1083ms를 이름 전용 검사가 거부; 숫자 신호 수정 후 CI 재확인 예정.
+- 발견한 문제: 기존 helper에 CPU soft 감소 계약 부재를2검사로 재현. 1~10 검증·상속 이하 soft 감소 추가. macOS Cargo가 SIGXCPU 이름 대신(signal:24)만 출력해 기대값을 OS SIGXCPU 번호+Cargo101+마지막 자식 종료 형식으로 보완; 원인·판정 약화 아님.
 - 보안 영향: 새 외부 입력/API/운영 실행기0. 검증한 정수만 고정 셸 스크립트에 삽입·한도 증가 불가; 신뢰 fixture만 상수 루프 컴파일·운영 진단 문자열에 원인 판정 권한 부여0.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01·실습/숙달 잠금 유지.
 - 다음 작업: 결과 SHA CI를 확인하고 실제 Cargo 메모리 초과 경로를 검증한 뒤 운영 연결 인수 조건을 검토; 단원 완료나 차례 전환 아님.

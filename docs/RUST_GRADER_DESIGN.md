@@ -98,6 +98,7 @@ ENOENT/EACCES/ELIMIT/ECLEANUP/EIO 등 그 밖의 관찰 오류는 운영 예외�
 
 신뢰된 테스트용 rustBuildBudget의 cpuSoftSeconds는 정수1~10만 받는다. 기본값10·hard 상한10·기존 더 낮은 상속 한도·15초 벽시계·80KB 출력·메모리/파일/프로세스 예산은 유지한다. 기존 한도를 적용한 뒤 soft만 요청값 이하로 낮추며 더 낮은 상속 soft/hard는 올리지 않는다. 새 옵션은 테스트 코드 전용이며 서버/API에서 입력받지 않는다.
 실제 Cargo fixture는 long_running_const_eval만 명시적으로 허용한 독립 상수 루프를 컴파일하며 soft CPU1초를 상속한다. 정상 소스 오류·벽시계·출력 초과로 대신 통과하지 않고 Cargo 또는 rustc의 SIGXCPU/CPU time limit exceeded를 요구한다. Cargo101의 자식 신호 진단은 fixture 원인 확인에만 쓰고 운영 판정은 여전히 컴파일 실패다. 관찰 프로세스 자체의 SIGXCPU만 빌드 CPU 제한 초과로 표시한다.
+macOS Cargo는 자식 종료를 이름 없이(signal:24)로 출력한다. fixture는 현재 OS의 SIGXCPU 번호·Cargo101·마지막 괄호 종료 형식을 함께 확인한다. 임의 본문에 포함된 SIGXCPU 문자열은 근거로 삼지 않으며 이 진단 해석은 고정 CI fixture 밖 운영 결과 판정에는 적용하지 않는다.
 내부 pipeline이 compile 다음 열거/사례를 실행하지 않고 전체8사례 미실행을 반환하며, 소유 공간만 정리하고 부모 사용자 파일을 보존하는지 확인한다. 실제 Cargo 메모리 초과·그룹 합산 CPU·악성 제출 격리·운영 Rust 활성화 검증으로 확대하지 않는다.
 
 ### 소유 작업 공간 정리 실패 (2026-10-18)

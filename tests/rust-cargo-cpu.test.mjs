@@ -41,7 +41,11 @@ pub fn value() -> i32 {
     console.log('CPU-constrained Cargo:', JSON.stringify({ status: observed.status, signal: observed.signal,
       code: observed.error?.code, diagnostic: observed.stderr.slice(-2000), observation: observed.observation }));
     assert.equal(observed.error, undefined, 'CPU probe must not substitute wall-clock or output overflow');
-    assert.ok(observed.signal === 'SIGXCPU' || /SIGXCPU|CPU time limit exceeded/.test(observed.stderr),
+    // macOS Cargo reports only the numeric child signal; Linux can add its name.
+    const childCpuExit = observed.status === 101 && new RegExp(
+      `\\(signal: ${os.constants.signals.SIGXCPU}(?:, SIGXCPU:[^\\n]*)?\\)\\s*$`
+    ).test(observed.stderr);
+    assert.ok(observed.signal === 'SIGXCPU' || childCpuExit,
       'must observe actual Cargo/rustc CPU termination, not a source diagnostic');
     return observed;
   } });
