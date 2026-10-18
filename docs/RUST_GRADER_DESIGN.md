@@ -146,6 +146,8 @@ Cargo JSON은 컴파일/산출물 메시지이지 libtest 사례별 안정 JSON 
 
 ### 실제 로컬 학습 서버의 명시적 Rust 연결 (2026-10-18)
 
+검증 SHA `9023116a5f2261aa64b97bbe26ec49fc57424279`의 [CI39118094410](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39118094410)는 Ubuntu 전체607/607·skip0, macOS 관련83/83·skip0, browser 회귀를 통과했다. 양 OS에서 factory의 실제 페이지 토큰으로 Cargo 오답8사례→수정8통과·공간 삭제, C/Rust 공유 슬롯·연결 해제 후 정리 대기, CLI 환경 활성화 불가를 확인했다. 기존 C/PWA Chromium 회귀도 통과했으며 Rust 학습자 UI 인수까지 뜻하지 않는다.
+
 server/learning-server.mjs의 createLearningServer({root, rustService})는 서버를 생성만 하며 import/생성 시 소켓·컴파일러·작업 공간을 시작하지 않는다. 동결된 제어 객체는 address(), listen(port), close()만 제공한다. listen은 정수0~65535 포트만 받고 127.0.0.1에 고정 바인딩하며 호스트 인수를 거부한다. root는 신뢰된 운영 코드가 지정한 학습 파일 루트이고 기존 정적 허용 목록/심볼릭 링크 차단을 그대로 사용한다.
 
 dev-server.mjs는 이 factory를 생성해 PORT 또는4173으로 여는 얇은 CLI다. npm start는 계속 C만 실행 가능하며 Rust 관련 환경 플래그/도구 경로를 해석하지 않는다. 같은 서버의 /api/grade/rust는 기본 비활성503이고 인증을 먼저 검사한다. 운영자가 정리 실패 감독이 있는 createLocalRustGradingService를 직접 생성해 rustService로 넘긴 구성에서만 실행한다. 요청이나 환경으로 registry/sysroot를 정하지 않으며 별도 공개 리스너·인증 우회·임의 명령 인수를 추가하지 않는다.
