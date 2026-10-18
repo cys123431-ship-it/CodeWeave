@@ -54,6 +54,7 @@ jobs:
           node --check tests/helpers/rust-pipeline.mjs
           node --check tests/rust-pipeline.test.mjs
           node --check tests/rust-cancellation.test.mjs
+          node --check tests/rust-cleanup.test.mjs
           node --check tests/rust-resources.test.mjs
           node --check tests/helpers/rust-fixture-linker.mjs
           node --check tests/rust-fixture-linker.test.mjs
@@ -124,7 +125,7 @@ jobs:
         env:
           CODEWEAVE_REQUIRE_RUST: '1'
       - name: Trusted Rust integrated lifecycle and cleanup
-        run: node --test --test-concurrency=1 tests/rust-pipeline.test.mjs tests/rust-cancellation.test.mjs
+        run: node --test --test-concurrency=1 tests/rust-pipeline.test.mjs tests/rust-cancellation.test.mjs tests/rust-cleanup.test.mjs
         env:
           CODEWEAVE_REQUIRE_RUST: '1'
       - name: Diagnose macOS limits on failure

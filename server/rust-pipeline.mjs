@@ -13,6 +13,7 @@ export async function gradeRustInternal(request, definitions, { observe, parent,
   // Capture our exact created directory; never accept a cleanup target from the observer.
   const createdDir = workspace.dir;
   let primary;
+  let failed = false;
   async function call(stage, extra = {}) {
     signal?.throwIfAborted();
     const output = await observe(Object.freeze({ stage, workspace, signal, ...extra }));
@@ -39,14 +40,18 @@ export async function gradeRustInternal(request, definitions, { observe, parent,
     const tests = await runRustCases(workspace.plan, test => call('case', { artifact, test }));
     return buildRustResult(workspace.plan, compiled, tests);
   } catch (error) {
+    failed = true;
     primary = error;
     throw error;
   } finally {
     try {
       await fs.rm(createdDir, { recursive: true, force: true });
     } catch (cleanup) {
-      if (primary) throw new AggregateError([primary, cleanup], 'Rust 단계 실패 후 작업 공간 정리도 실패했습니다.');
-      throw cleanup;
+      const error = new AggregateError(failed ? [primary, cleanup] : [cleanup],
+        'Rust 작업 공간 정리에 실패했습니다.', { cause: cleanup });
+      error.code = 'ERUSTCLEANUP';
+      error.workspaceDir = createdDir;
+      throw error;
     }
   }
 }
