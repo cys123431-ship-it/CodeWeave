@@ -1,10 +1,10 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 06:58 KST — C06 화면·실제 제출 학습 경로 연결
-- 시작/결과 SHA: 시작df2b551f60f9f296256d93d9c5d9dd079a1b8747; 구현d6e900e148b62fcb61c6fea1eeacc916c7a02d78; 수정은 fix: anchor C06 acceptance server to the checked-out project 커밋으로 연결.
+- 시작/결과 SHA: 시작df2b551f60f9f296256d93d9c5d9dd079a1b8747; 구현d6e900e148b62fcb61c6fea1eeacc916c7a02d78·루트수정99de6b23f4346f09e844028370c5cd100d8008ab; 후속 수정은 fix: reload online C06 before authenticated UI submissions 커밋으로 연결.
 - 목표: C06 12절·퀴즈·기존 정적 포인터 도식·동일 완성 예제/스타터를 화면에 연결하고 인증HTTP 오답→수정10/10, 이력/v1/숙달/390px/오프라인/다음 화면 인수.
 - 변경 파일 수: 총10개(화면·메타데이터·채점등록·browser검사/비UI 계약 모드·README·감사표·로드맵2개·활성/보관 일지).
 - 테스트 결과: 화면/등록 계약 검사1건 실패→통과, README/감사표2건 실패→통과; 실제HTTP2제출·관련18/18·전체672건653통과/실패0/skip19(Rust 부재), JS/MJS4개/roadmap/diff 통과; 기존 검사 삭제0·기대값 변경0.
-- CI URL과 결과: 초기 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39170761929 전체672/672·macOS성공, browser 신규helper 토큰 undefined로 실패; QA 실행 cwd가 체크아웃 루트가 아님. 외부 cwd 로컬 재현 실패→명시 루트 수정 후 실제HTTP2제출 통과; 수정 SHA CI 대기.
+- CI URL과 결과: 초기39170761929 browser helper루트 실패→수정; 수정 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39171000238 전체672/672·macOS성공·기존UI통과, 신규C06 첫제출 토큰meta 대기30초 실패.오프라인 shell의 해시만 바뀐 경로에 온라인reload/토큰검사 추가, 기존 submit 토큰 기대값 유지; 재수정 CI 대기.
 - 발견한 문제: C06 부재와 문서24→25 불일치 재현/수정. 완료 전환을 가정하면 과거 Rust 인수 fixture의 C06 고정 기대와 실제 C07 선택이 충돌함을 읽기 전용 재현; 이번10파일 한도로 과거 fixture 수정을 분리하며 C06 완료/차례 승격 보류. 신규 UI 초안의 다음 화면 제목은 실제 소스와 대조 교정. 추가 CI 원인: 검사 서버의 cwd 기본값→모듈 기준 저장소 루트 명시 및 HTTP200 검증, 토큰 기대값 유지.
 - 보안 영향: 기존 loopback/JSON/토큰/GCC 한도 재사용·신규 실행 API/링커 옵션/저장키0; 준비 서버 하네스는 서버 전용, 제출 소스만 기존 채점기에 전달.
 - 단계별 완료율: C06 화면 연결·개발 상태진행 중/next=C/C06 유지; 완료 수 A3/5·B10/11·C5/8·D/E2/8·F1/8·G0/8·H/I0/6 불변; 화면31단원·기본C문제25개/249사례·DS/알고리즘 각2문제.

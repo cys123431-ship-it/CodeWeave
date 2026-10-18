@@ -1437,6 +1437,8 @@ try {
   await expect(page.locator('[data-route="lesson:algo-stable-insertion"]')).toHaveCount(1);
   console.log('PASS: E01 next-unit enters E02; quiz correction, real unstable failure/retry 10/10, mastery, backup, offline attempts, 390px and track return');
   await page.goto(base + '/#lesson:c-preprocessor-once');
+  await page.reload(); // Hash-only navigation can retain the preceding token-free offline shell.
+  await expect(page.locator('meta[name="codeweave-token"]')).toHaveAttribute('content', /^[a-f0-9]{64}$/);
   await expect(page.locator('.detail-head h1')).toHaveText('전처리 매크로: 값을 한 번만 소비하기');
   await expect(page.locator('.practice-zone')).toContainText('함수 직접 호출형');
   await expect(page.locator('#code-input')).toHaveValue(preprocessorStarter);
