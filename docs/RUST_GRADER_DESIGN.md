@@ -107,6 +107,7 @@ ENOENT/EACCES/ELIMIT/ECLEANUP/EIO 등 그 밖의 관찰 오류는 운영 예외�
 tests/fixtures/rust-build-memory.rs는 상수 평가 중 2GiB 반복 배열을 요청하는 독립 음성 fixture다. 런타임 실행이나 새 교육 문제가 아니다. tests/rust-cargo-memory.test.mjs는 기존 trustedRustObserver와 기본 빌드 예산을 그대로 사용하며 한도/벽시계/출력 예산을 올리거나 도구를 바꾸지 않는다.
 실제 Cargo101과 compiler JSON rendered 또는 stderr의 구체적인 할당 실패 진단을 요구하고, 도구 부재·제한 설정 실패·벽시계/출력 초과를 메모리 검증으로 대신하지 않는다. 작은64KiB 배열 대조군은 같은 식/예산에서 실제 컴파일과8사례를 통과해야 한다. 큰2GiB 배열은 E0080 tried to allocate more memory than available to compiler 등 구체적 원인을 확인한다. 일반 E0080만으로 메모리 실패로 인정하지 않는다. 관찰 진단은 고정 fixture 원인 확인용이며 운영 결과는 컴파일 실패로 유지한다. OS 주소 공간 한도만이 유일한 원인이라고 단정하거나 SIGKILL/임의 제출 진단을 권위 있는 메모리 초과 판정으로 바꾸지 않는다.
 열거/사례 미실행·전체8사례 보존·소유 작업 공간 정리·부모 사용자 파일 보존을 검사한다. Linux 주소 공간1GiB와 macOS 시작 Bash VSZ+1GiB는 기존 정책이며 RSS/그룹 합산 메모리 보장이 아니다. CI의 실제 결과를 확인하기 전에는 이 fixture가 메모리 초과 경로를 검증했다고 기록하지 않는다. 운영 실행기/API·실습/숙달 활성화는 별도 인수 대상이다.
+검증 SHA `f877ee8dbd0224ee1c9c69ac121c82584b4c458f`의 [CI39092312409](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39092312409)는 Ubuntu 전체556/556·skip0, macOS 관련32/32·skip0, browser 회귀를 통과했다. 양 OS 모두64KiB 대조군8사례가 통과했고2GiB fixture는 Cargo101/E0080의 구체적인 컴파일러 할당 실패를 반환했으며 열거 차단·전체 미실행·소유 공간 정리·부모 파일 보존이 통과했다. 첫CI39092064031와 JSON 수집CI39092179114의 진단 위치 불일치 실패를 보존하고 기대값 보완 이유를 일지에 기록했다. 이는 컴파일러 메모리 할당 거부 경로의 검증이며 OS 한도 단독 원인·RSS/그룹 합산 메모리·운영 실행기 인수의 증거는 아니다.
 
 ### 소유 작업 공간 정리 실패 (2026-10-18)
 
