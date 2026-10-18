@@ -82,13 +82,19 @@ export function compile(workspace, exercise, spawn = spawnSync) {
   ], { timeout: 4500, maxBuffer: 80_000, encoding: 'utf8' });
 }
 
-export async function runCases(workspace, exercise, run = runSubmission) {
+export async function runCases(workspace, exercise, run = runSubmission, { signal } = {}) {
+  if (signal !== undefined && !(signal instanceof AbortSignal)) {
+    throw new TypeError('Invalid case cancellation signal');
+  }
   const tests = [];
   for (const tc of exercise.cases) {
+    signal?.throwIfAborted();
     const out = await run(workspace.binary, tc.args, {
       input: exercise.grader === 'c-function' ? '' : tc.input,
-      cwd: workspace.dir
+      cwd: workspace.dir,
+      ...(signal ? { abortSignal: signal } : {})
     });
+    signal?.throwIfAborted();
     const actual = (out.stdout || '').trim();
     const expected = tc.expected.trim();
     const fatal = Boolean(out.error) || out.status !== 0;

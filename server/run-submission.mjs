@@ -40,8 +40,15 @@ const limitScript = [
 
 export function runSubmission(binary, args, {
   input = '', cwd, timeout = SUBMISSION_LIMITS.wallTimeMs,
-  maxBuffer = SUBMISSION_LIMITS.outputBytes
+  maxBuffer = SUBMISSION_LIMITS.outputBytes, abortSignal
 } = {}) {
+  if (abortSignal !== undefined && !(abortSignal instanceof AbortSignal)) {
+    throw new TypeError('Invalid submission cancellation signal');
+  }
+  const abortError = () => Object.assign(new Error('제출 실행 취소'), { name: 'AbortError', code: 'ABORT_ERR' });
+  if (abortSignal?.aborted) {
+    return Promise.resolve({ status: null, signal: null, stdout: '', stderr: '', error: abortError() });
+  }
   const posix = process.platform !== 'win32';
   const env = { ...process.env };
   // Do not load startup files or import shell options before setting budgets.
@@ -59,6 +66,7 @@ export function runSubmission(binary, args, {
       finished = true;
       clearTimeout(timer);
       clearTimeout(cleanupTimer);
+      abortSignal?.removeEventListener('abort', cancel);
       const stderr = Buffer.concat(err).toString('utf8');
       if (posix && status === 125 && stderr.includes('CODEWEAVE_LIMIT_SETUP_FAILED')) {
         failure ??= Object.assign(new Error('자원 제한 설정 실패: 제출 프로그램을 실행하지 않았습니다.'), { code: 'ELIMIT' });
@@ -90,6 +98,11 @@ export function runSubmission(binary, args, {
       }
       return size + chunk.length;
     }
+    function cancel() {
+      if (finished) return;
+      failure ??= abortError();
+      stopGroup();
+    }
     child.stdout.on('data', chunk => { outSize = collect(chunk, out, outSize); });
     child.stderr.on('data', chunk => { errSize = collect(chunk, err, errSize); });
     child.stdin.on('error', error => {
@@ -111,6 +124,8 @@ export function runSubmission(binary, args, {
       failure ??= Object.assign(new Error('시간 제한 초과'), { code: 'ETIMEDOUT' });
       stopGroup();
     }, timeout);
+    abortSignal?.addEventListener('abort', cancel, { once: true });
+    if (abortSignal?.aborted) cancel();
     child.stdin.end(input);
   });
 }

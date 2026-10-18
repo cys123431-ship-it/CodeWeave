@@ -6,6 +6,7 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { openLearningFile, parseRequestPath } from './server/static-files.mjs';
 import { parseRequest, writeSources, compile, runCases, buildResult } from './server/grading-pipeline.mjs';
 import { gradingAdmission } from './server/grading-admission.mjs';
+import { createRequestCancellation } from './server/request-cancellation.mjs';
 
 // IMPORTANT: trusted local development only. Compiled student programs are not sandboxed.
 // This binds only to loopback and MUST NOT be put directly on a public network.
@@ -71,11 +72,13 @@ async function grade(req, res) {
     return send(res, 429, { ok: false, message: '다른 코드를 채점하고 있어요. 잠시 후 다시 시도하세요.' });
   }
   let releaseSlot;
+  const lifetime = createRequestCancellation(req, res);
   try {
     const submission = await parseRequest(req, ({ status, result }) => send(res, status, result));
     if (submission.status) {
       return;
     }
+    lifetime.signal.throwIfAborted();
     releaseSlot = gradingAdmission.tryAcquire();
     if (!releaseSlot) {
       return send(res, 429, { ok: false, message: '다른 코드를 채점하고 있어요. 잠시 후 다시 시도하세요.' });
@@ -83,21 +86,26 @@ async function grade(req, res) {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'codeweave-'));
     let result;
     try {
+      lifetime.signal.throwIfAborted();
       const workspace = await writeSources(dir, submission);
+      lifetime.signal.throwIfAborted();
       const compilation = compile(workspace, submission.exercise);
       const tests = compilation.error || compilation.status !== 0
         ? undefined
-        : await runCases(workspace, submission.exercise);
+        : await runCases(workspace, submission.exercise, undefined, { signal: lifetime.signal });
       result = buildResult(submission.exercise, compilation, tests);
     } finally {
       await fs.rm(dir, { force: true, recursive: true });
     }
+    lifetime.signal.throwIfAborted();
     // Release the grading slot and finish cleanup before the client can resubmit.
     releaseSlot();
     return send(res, 200, result);
   } catch (error) {
+    if (lifetime.signal.aborted || res.destroyed || req.aborted) return;
     return send(res, 500, { ok: false, message: '서버 오류: ' + error.message });
   } finally {
+    lifetime.dispose();
     releaseSlot?.();
   }
 }

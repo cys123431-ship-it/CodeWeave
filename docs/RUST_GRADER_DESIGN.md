@@ -148,6 +148,9 @@ Cargo JSON은 컴파일/산출물 메시지이지 libtest 사례별 안정 JSON 
 
 ### 내부 요청 서비스 — 기본 비활성 (2026-10-18)
 
+연결 수명은 server/request-cancellation.mjs의 createRequestCancellation(req,res)로 AbortSignal에 연결한다. 요청 aborted 또는 아직 writableFinished가 아닌 응답 close만 취소하며, 정상 본문 수신의 request close는 취소가 아니다. 기존 C HTTP 경로에 실제 적용했고 C runCases→runSubmission으로 전달한다. 완료/오류/취소 후 dispose가 자기 리스너만 제거하며, 실행 그룹 종료·소유 공간 삭제가 settle하기 전 공유 슬롯을 해제하지 않는다. 닫힌 연결에 성공/오답 결과나500을 쓰지 않는다. C의 동기 GCC 컴파일 자체는 도중 취소할 수 없고 기존4.5초 한도와 다음 비동기 경계 검사에 의존한다. 파일 쓰기/삭제도 진행 중 I/O를 강제 중단하지 않는다.
+Rust 서비스에는 동일 signal을 submit의 옵션으로 전달할 수 있다. CI는 response close 이벤트를 주입해 실제 Cargo→테스트 열거→첫 사례 실행을 취소하고 나머지 사례 차단·공간 삭제·슬롯 해제 순서를 확인한다. 실제 Rust HTTP 경로/인증/실행 어댑터 연결이나 활성화는 아직 아니다. 운영 관측·정리 실패 복구는 별도 남은 작업이며 종료 신호/자원 제한을 격리 보장으로 확대하지 않는다.
+
 server/rust-service.mjs의 createRustGradingService는 enabled:true·신뢰 registry·주입 grade 함수가 모두 있어야 요청을 수락한다. 환경 변수/클라이언트 요청으로 활성화하지 않고 기본 실행기·child_process·HTTP 등록도 없다. 현재 dev-server와 UI는 이 서비스를 사용하지 않는다.
 요청/ID/코드 길이·AbortSignal을 실행 함수 호출 전 검증하고 코드 문자열을 동결한 스냅샷으로 전달한다. 같은 Node 프로세스의 C 채점과 모든 Rust 서비스가 server/grading-admission.mjs의 단일 슬롯을 공유한다. 동시1건, 대기열0이며 Rust 중복 요청은 RUST_BUSY/429다. 기본 비활성은 RUST_DISABLED/503, 요청 오류는 RUST_INVALID/400, 취소는 RUST_CANCELLED/499, 운영/정리/결과 오류는 RUST_UNAVAILABLE/503이다. statusCode는 내부 계약이며 실제 Rust HTTP 응답 구현이나 API 활성화 증거가 아니다.
 사전 취소는 실행하지 않고 실행 중 취소는 signal을 grade에 전달한다. grade와 정리가 settle하기 전에는 슬롯을 해제하지 않으며 늦은 성공은 폐기한다. 실제 중단은 주입 grade의 책임이다. 정리 실패 등 운영 예외는 취소로 숨기지 않는다. 원래 예외/작업 경로/비밀값을 반환하지 않으며 이 서비스는 제출 이력에 쓰지 않는다.

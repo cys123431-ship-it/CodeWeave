@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-18 14:55 KST — F01 연결 수명 취소와 공유 슬롯 정리
+- 시작/결과 SHA: 시작ec590b013a6b66f23a37e052d8ce287f3171759a; 구현 커밋 feat: cancel disconnected grading requests before releasing admission; 결과 SHA/CI 후속 확인.
+- 목표: 연결 해제→실행 그룹 취소→소유 공간 정리→공유 슬롯 해제 연결, 정상 요청 close 오인 취소/늦은 판정 응답 차단.
+- 변경 파일 수: 총9개(수명 helper·9검사·C HTTP/사례/실행기·CI·설계·활성/보관 일지).
+- 테스트 결과: 핵심7건 수정 전7실패→7통과; 보강 정상/리스너1통과·실제 Rust1skip(Rust 부재); 전체576건564통과·실패0·skip12(Rust 부재); MJS5개·일지4/4·roadmap/diff 확인; 삭제0·기존 기대값 변경0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39099293569 성공 재확인; 구현/결과 SHA CI 대기.
+- 발견한 문제: 기존 C는 취소 신호를 무시해 부모/자식이8초 fixture 한도까지 남고 HTTP 연결 해제도 정리를 시작하지 않음을 재현. signal 검증·그룹 종료·사례 전후 검사·리스너 해제 추가; 삭제 대기 중429와 정리 후 정상 재제출 확인.
+- 보안 영향: 새 API/활성 실행기0·기존 인증 선검사 유지. C 실제 연결 취소, Rust 내부 signal 전달만 검증; 동기 GCC 도중 취소/진행 I/O 강제 중단/호스트 격리 보장 아님.
+- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
+- 다음 작업: 결과 SHA CI 확인 후 신뢰 로컬 Rust 실행 어댑터·운영 관측/정리 실패 복구를 검증하고 인증된 HTTP/문제 연결 검토; 단원 완료나 차례 전환 아님.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-18 13:55 KST — F01 C·Rust 공유 채점 슬롯
 - 시작/결과 SHA: 시작0adbacf6abab9351fbe4ebd5d7f92b3272945510; 구현452f4a53322d41ad29e3088210bd3597dc932d02; 후속 docs: record verified shared grading admission CI.
 - 목표: 같은 Node 프로세스의 C/Rust 동시 실행1건·대기열0, 정리 대기·소유자별 안전 해제·재제출 연결 검증.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 새 외부 입력/API/운영 실행기0. 검증한 정수만 고정 셸 스크립트에 삽입·한도 증가 불가; 신뢰 fixture만 상수 루프 컴파일·운영 진단 문자열에 원인 판정 권한 부여0.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01·실습/숙달 잠금 유지.
 - 다음 작업: 결과 SHA CI를 확인하고 실제 Cargo 메모리 초과 경로를 검증한 뒤 운영 연결 인수 조건을 검토; 단원 완료나 차례 전환 아님.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-18 10:04 KST — F01 빌드 실패 분류와 파일 한도 통합
-- 시작/결과 SHA: 시작fc55812030ed4237ad8f09467e382ef85661731a; 구현7d495e41538a241e426a4b86947e5a6a0d4ee0fb; 후속 docs: record verified Rust build failure classification CI.
-- 목표: 빌드 시간/출력/신호·운영 오류를 구분하고 실제 Cargo 파일 한도 실패의 단계 중단/정리를 검증.
-- 변경 파일 수: 총6개(결과 판정기·신규6검사·CI·설계·활성/보관 일지).
-- 테스트 결과: 신규6건 수정 전4실패·1통과·skip1→5통과·skip1(Rust 부재); 코드 없는 오류 추가 재현1실패→통과; 관련26건23통과·실패0·skip3; 전체551건543통과·실패0·skip8(Rust 부재); MJS2개·일지4/4·roadmap/diff 성공; 삭제0·기존 기대값 변경0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39082166568 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39085330936 전체551/551·실패0·skip0·macOS 관련29/29·browser 성공; 양 OS 실제 Cargo SIGXFSZ·미실행/공간 정리 확인, 후속 기록 SHA CI 별도 확인.
-- 발견한 문제: 모든 빌드 제한을 컴파일 실패로 표시하고 일부 도구/정리 오류를 오답 반환하던 경로 재현·수정. 코드 없는 관찰 오류를 제한 설정으로 오인한 초기 구현도 추가 실패 검사 후 ERUSTBUILD로 수정.
-- 보안 영향: 새 외부 입력/API/기본 실행기0. 기존 결과/v1 필드 보존·전체 미실행 유지; 관찰 code/signal만 분류하고 진단 문자열·SIGKILL로 메모리 초과 단정0; 한도 축소는 신뢰 CI fixture만 사용.
-- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01·실습/숙달 잠금 유지.
-- 다음 작업: 결과 SHA CI를 확인하고 실제 Cargo CPU/메모리 초과 경로와 운영 연결 인수 조건을 검토; 단원 완료나 차례 전환 아님.
