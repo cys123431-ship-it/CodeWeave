@@ -87,6 +87,12 @@ finally에서 이 호출이 생성한 정확한 디렉터리만 정리한다. �
 신규 합성 검사는 단계 순서·실패 중단·전체 분모·남의 파일 보존·예외/경계 취소 뒤 디렉터리 정리를 확인한다. 실제 CI는 정상·오답·문법 오류·경고 제출4개를 각각 새 공간에서 빌드하고 결과와 공간 삭제를 검사한다. 정리 실패 주입·빌드 자원 초과 통합·UI/API/기록 연결은 후속 인수 조건이다. F01 단원 상태·순환 차례·실습/숙달 잠금은 바꾸지 않는다.
 구현 `f44965c788f584b5a9e35dcffdda4a5f74e0e090`의 [CI39073420849](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39073420849)에서 Ubuntu 전체531/531·skip0, macOS 신규9/9·skip0 및 browser 회귀를 확인했다. 두 OS 모두 고정 실제 도구와 기존 빌드/실행 예산을 사용해4제출 판정·전체 사례 수·작업 공간 삭제를 통과했다. 단원 전체 완료·운영 실행기 인수나 즉시 취소 검증의 근거로 확대하지 않는다.
 
+### 빌드 실패 분류 (2026-10-18)
+
+buildRustResult는 기존 ok/message/compileOutput/tests 형식을 유지한다. 관찰 오류 ETIMEDOUT·ENOBUFS는 각각 빌드 시간/출력 제한, 직접 관찰된 SIGXCPU·SIGXFSZ는 CPU/파일 제한으로 표시한다. SIGKILL·SIGABRT 등은 비정상 종료일 뿐 메모리 부족으로 단정하지 않는다. Cargo101과 진단 문자열만으로 하위 rustc의 자원 초과를 구조화된 한도 판정으로 승격하지 않는다.
+ENOENT/EACCES/ELIMIT/ECLEANUP/EIO 등 그 밖의 관찰 오류는 운영 예외로 전파해 제출 오답 결과를 만들지 않는다. 원래 code/cause를 보존하고 코드 없는 관찰 오류는 ERUSTBUILD, 고정 제한 래퍼의 예약 종료125는 ELIMIT이다. ABORT_ERR는 AbortError로 전파한다. 모든 정상 반환 빌드 실패의 tests는 전체 선언 사례 수를 유지하고 전부 미실행이다. 실패 분류에 Cargo 진단 텍스트를 신뢰하지 않는다.
+신규 검사는 분류·위장 진단·운영 오류와 실제 Node 시간/출력 초과의 내부 pipeline 중단/정리를 확인한다. 실제 Cargo CI fixture는 정상 15초/기존 자원 예산에 더 낮은 상속 파일 한도1KiB를 적용해 빌드 실패·목록/사례 미실행·소유 공간 삭제를 확인한다. 신뢰된 독립 fixture이며 운영 실행기나 실제 Cargo CPU/메모리 초과 검증을 뜻하지 않는다. Rust 실습/숙달과 HTTP 연결은 계속 비활성이다.
+
 ### 소유 작업 공간 정리 실패 (2026-10-18)
 
 삭제 실패는 항상 code:ERUSTCLEANUP인 AggregateError로 전파한다. cause는 원래 삭제 오류이며 errors는 [원래 단계 오류, 삭제 오류] 또는 단계 예외가 없으면 [삭제 오류]다. null 같은 falsy 값의 throw도 별도 실패 표식으로 보존한다. 정상/컴파일 거부 결과도 정리에 실패하면 반환하지 않는다.

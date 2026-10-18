@@ -88,14 +88,30 @@ function compileDiagnostic(compilation) {
   return diagnostics.join('\n').slice(0, 3000);
 }
 
+function buildFailure(compilation) {
+  const code = compilation?.error?.code;
+  if ((compilation?.error && !['ETIMEDOUT', 'ENOBUFS'].includes(code))
+      || compilation?.status === 125) {
+    const error = new Error('Rust 운영 오류: 컴파일 도구·제한 설정·중단 상태를 확인하세요.',
+      { cause: compilation?.error });
+    error.code = code || (compilation?.status === 125 ? 'ELIMIT' : 'ERUSTBUILD');
+    if (code === 'ABORT_ERR') error.name = 'AbortError';
+    throw error;
+  }
+  if (code === 'ETIMEDOUT') return '빌드 시간 제한 초과';
+  if (code === 'ENOBUFS') return '빌드 출력 크기 제한 초과';
+  if (compilation?.signal === 'SIGXCPU') return '빌드 CPU 제한 초과';
+  if (compilation?.signal === 'SIGXFSZ') return '빌드 파일 크기 제한 초과';
+  // SIGKILL/abort and Cargo diagnostics do not prove memory exhaustion.
+  if (compilation?.signal) return '빌드 비정상 종료';
+  return '컴파일 실패';
+}
+
 export function buildRustResult(plan, compilation, tests = []) {
   const cases = declaredCases(plan);
-  if (['ENOENT', 'ELIMIT'].includes(compilation?.error?.code)) {
-    throw new Error('Rust 운영 오류: 컴파일 도구 또는 제한 설정을 확인하세요.');
-  }
   if (compilation?.status !== 0 || compilation.error || compilation.signal) {
     return {
-      ok: false, message: `0/${cases.length}개 테스트 통과 · 컴파일 실패`,
+      ok: false, message: `0/${cases.length}개 테스트 통과 · ${buildFailure(compilation)}`,
       compileOutput: compileDiagnostic(compilation), tests: cases.map(unexecuted)
     };
   }

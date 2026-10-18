@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-18 10:04 KST — F01 빌드 실패 분류와 파일 한도 통합
+- 시작/결과 SHA: 시작fc55812030ed4237ad8f09467e382ef85661731a; 결과는 fix: distinguish Rust build limits from infrastructure failures 커밋과 후속 CI 기록으로 연결.
+- 목표: 빌드 시간/출력/신호·운영 오류를 구분하고 실제 Cargo 파일 한도 실패의 단계 중단/정리를 검증.
+- 변경 파일 수: 총6개(결과 판정기·신규6검사·CI·설계·활성/보관 일지).
+- 테스트 결과: 신규6건 수정 전4실패·1통과·skip1→5통과·skip1(Rust 부재); 코드 없는 오류 추가 재현1실패→통과; 관련26건23통과·실패0·skip3; 전체551건543통과·실패0·skip8(Rust 부재); MJS2개·일지4/4·roadmap/diff 성공; 삭제0·기존 기대값 변경0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39082166568 성공 재확인; 이번 SHA CI는 반영 후 조회하며 아직 완료 기록 아님.
+- 발견한 문제: 모든 빌드 제한을 컴파일 실패로 표시하고 일부 도구/정리 오류를 오답 반환하던 경로 재현·수정. 코드 없는 관찰 오류를 제한 설정으로 오인한 초기 구현도 추가 실패 검사 후 ERUSTBUILD로 수정.
+- 보안 영향: 새 외부 입력/API/기본 실행기0. 기존 결과/v1 필드 보존·전체 미실행 유지; 관찰 code/signal만 분류하고 진단 문자열·SIGKILL로 메모리 초과 단정0; 한도 축소는 신뢰 CI fixture만 사용.
+- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01·실습/숙달 잠금 유지.
+- 다음 작업: 결과 SHA CI를 확인하고 실제 Cargo CPU/메모리 초과 경로와 운영 연결 인수 조건을 검토; 단원 완료나 차례 전환 아님.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-18 09:04 KST — F01 소유 작업 공간 정리 실패 전파
 - 시작/결과 SHA: 시작c2b68f9bdd42f7beb1c3b9ae9c95506ab4982bed; 구현09254506831e1d4bc861b1c78d214689eb817d8b; macOS 수정b5ac470ec64e1ab38f796cd80a0449d4b9e1a79a; 경합수정992d148b40869eb628281bc90bddbae0c4384766; 후속 docs: record verified Rust cleanup failure CI.
 - 목표: 삭제 실패 분류·원래 단계 오류/소유 복구 경로 보존 및 취소 정리 검사 경합 수정; 성공 응답으로 숨기지 않음.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 외부 입력/코드 실행/파일 접근 경계 변경0; 서버 경로검사는 프로세스0, CI 전용 실제 도구 검사와 기존 제한 빌드만 인수. 운영 API/실습/숙달 잠금 유지.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
 - 다음 작업: 후속 SHA CI 확인 후 빌드→대상 열거→사례 실행을 한 생명주기로 통합하고 취소/정리·문법/경고/자원 초과 분류를 검증. F01 공개 예제 전체 호출은 아직 실제 도구/빌드 예산 경로 미연결.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-17 05:02 KST — F01 실제 Rust 도구 경로·호스트 고정
-- 시작/결과 SHA: 시작87b370beaeaf8b43f2aab185076cc812c60e057e; 커밋 fix: resolve trusted Cargo and rustc paths before fixture builds.
-- 목표: 동일 sysroot의 실제 실행 도구·고정 버전·호스트를 확인해 기존 준비/결과6빌드에 연결; Rust 운영 API는 활성화하지 않음.
-- 변경 파일 수: 총10개(신규 경로검증·CI탐색helper·7검사, 빌드예산helper·준비/결과검사2·CI·설계·활성/보관 일지).
-- 테스트 결과: 신규7건 수정 전6실패·skip1→6통과·skip1(Rust 부재); 관련32건29통과·실패0·skip3; 전체522건517통과·실패0·skip5(Rust 부재); 변경MJS6개 문법·일지4/4·roadmap/diff 성공; 삭제0·기대값 변경0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38952572234 성공 재확인; 구현 결과 SHA CI 대기.
-- 발견한 문제: 기존 Cargo 경로는 PATH의 Rustup proxy이고 RUSTC를 명시하지 않았음. 링크/실행불가/호스트 불일치 거부 및 RUSTC 허용목록 누락을 먼저 검사로 재현 후 구현.
-- 보안 영향: 서버 모듈은 파일 메타데이터만 읽고 프로세스0·API0. 신뢰된 CI helper만 5초/4KiB 고정 probe를 실행하며 실제 Cargo/rustc 버전/host 재확인; 경로 진위/동시교체 격리 보장은 아님.
-- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01·실습/숙달 비활성.
-- 다음 작업: 결과 SHA의 두 OS CI 실제 경로·Cargo6빌드 검증 후 빌드/열거/사례 실행을 한 생명주기로 통합하고 취소/정리·문법/경고/자원 초과 분류를 검증한다.
