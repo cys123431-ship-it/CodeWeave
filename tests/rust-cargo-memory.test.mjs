@@ -6,6 +6,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { createRustPlan } from '../server/rust-contract.mjs';
 import { gradeRustInternal } from '../server/rust-pipeline.mjs';
+import { buildRustResult } from '../server/rust-results.mjs';
 import { trustedRustObserver } from './helpers/rust-pipeline.mjs';
 
 async function fixture() {
@@ -14,7 +15,7 @@ async function fixture() {
   const cases = Array.from({ length: 8 }, (_, i) => ({ id: `case_0${i}`, label: `fixture ${i}` }));
   const definitions = new Map([[request.exerciseId, { id: request.exerciseId, language: 'rust', grader: 'cargo-test',
     starter: code, cases,
-    harness: cases.map(c => `#[test] fn ${c.id}() { assert_eq!(codeweave_submission::value(), 2); }`).join('\n') }]]);
+    harness: cases.map(c => `#[test] fn ${c.id}() { assert_eq!(codeweave_submission::value(), 7); }`).join('\n') }]]);
   return { request, definitions };
 }
 
@@ -36,18 +37,24 @@ test('Real trusted Cargo memory exhaustion stops before enumeration and cleans o
   t.after(() => fs.rm(parent, { recursive: true, force: true }));
   await fs.writeFile(path.join(parent, 'keep'), 'user file');
   const run = await trustedRustObserver();
+  // Same array expression and budget, but a small allocation must really compile.
+  const control = await gradeRustInternal({ ...request, code: request.code.replaceAll('2_147_483_648', '65_536') },
+    definitions, { parent, observe: run });
+  assert.equal(control.ok, true, JSON.stringify(control));
+  assert.equal(control.tests.filter(c => c.passed).length, 8);
+  assert.deepEqual(await fs.readdir(parent), ['keep']);
   const stages = [];
   let observed;
   const result = await gradeRustInternal(request, definitions, { parent, observe: async event => {
     stages.push(event.stage);
     assert.equal(event.stage, 'compile');
     observed = await run(event);
-    console.log('Memory-constrained Cargo:', JSON.stringify({ status: observed.status, signal: observed.signal,
-      code: observed.error?.code, compilerJSON: observed.stdout.slice(-6000),
-      diagnostic: observed.stderr.slice(-2000), observation: observed.observation }));
     assert.equal(observed.error, undefined, 'must not substitute wall-clock or output overflow for memory exhaustion');
     assert.equal(observed.status, 101, 'Cargo must report the failed compiler, not a missing tool or setup failure');
-    assert.match(observed.stderr, /memory allocation of \d+ bytes failed|out of memory/i);
+    const diagnostic = buildRustResult(event.workspace.plan, observed).compileOutput;
+    console.log('Memory-constrained Cargo:', JSON.stringify({ status: observed.status, signal: observed.signal,
+      code: observed.error?.code, diagnostic, observation: observed.observation }));
+    assert.match(diagnostic, /tried to allocate more memory than available to compiler|memory allocation of \d+ bytes failed|out of memory/i);
     return observed;
   } });
   assert.equal(result.ok, false);

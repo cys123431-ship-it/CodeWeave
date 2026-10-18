@@ -105,7 +105,7 @@ ENOENT/EACCES/ELIMIT/ECLEANUP/EIO 등 그 밖의 관찰 오류는 운영 예외�
 ### 실제 Cargo 메모리 초과 fixture (2026-10-18)
 
 tests/fixtures/rust-build-memory.rs는 상수 평가 중 2GiB 반복 배열을 요청하는 독립 음성 fixture다. 런타임 실행이나 새 교육 문제가 아니다. tests/rust-cargo-memory.test.mjs는 기존 trustedRustObserver와 기본 빌드 예산을 그대로 사용하며 한도/벽시계/출력 예산을 올리거나 도구를 바꾸지 않는다.
-실제 Cargo101과 memory allocation/out of memory 진단을 요구하고, 도구 부재·제한 설정 실패·벽시계/출력 초과를 메모리 검증으로 대신하지 않는다. 관찰 진단은 이 고정 fixture의 원인 확인용이며 운영 결과는 컴파일 실패로 유지한다. SIGKILL이나 임의 제출 진단을 권위 있는 메모리 초과 판정으로 바꾸지 않는다.
+실제 Cargo101과 compiler JSON rendered 또는 stderr의 구체적인 할당 실패 진단을 요구하고, 도구 부재·제한 설정 실패·벽시계/출력 초과를 메모리 검증으로 대신하지 않는다. 작은64KiB 배열 대조군은 같은 식/예산에서 실제 컴파일과8사례를 통과해야 한다. 큰2GiB 배열은 E0080 tried to allocate more memory than available to compiler 등 구체적 원인을 확인한다. 일반 E0080만으로 메모리 실패로 인정하지 않는다. 관찰 진단은 고정 fixture 원인 확인용이며 운영 결과는 컴파일 실패로 유지한다. OS 주소 공간 한도만이 유일한 원인이라고 단정하거나 SIGKILL/임의 제출 진단을 권위 있는 메모리 초과 판정으로 바꾸지 않는다.
 열거/사례 미실행·전체8사례 보존·소유 작업 공간 정리·부모 사용자 파일 보존을 검사한다. Linux 주소 공간1GiB와 macOS 시작 Bash VSZ+1GiB는 기존 정책이며 RSS/그룹 합산 메모리 보장이 아니다. CI의 실제 결과를 확인하기 전에는 이 fixture가 메모리 초과 경로를 검증했다고 기록하지 않는다. 운영 실행기/API·실습/숙달 활성화는 별도 인수 대상이다.
 
 ### 소유 작업 공간 정리 실패 (2026-10-18)
