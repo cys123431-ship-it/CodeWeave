@@ -54,7 +54,7 @@ function run(invocation, cwd, signal) {
       cwd, env: invocation.env, detached: true, stdio: ['ignore', 'pipe', 'pipe']
     });
     const stdout = [], stderr = [];
-    let bytes = 0, status = null, termination = null, error, finished = false;
+    let bytes = 0, status = null, termination = null, error, finished = false, stopping = false;
     let timer, cleanupTimer;
     function finish() {
       if (finished) return;
@@ -69,6 +69,10 @@ function run(invocation, cwd, signal) {
       error = Object.assign(new Error('Rust process cleanup failed'), { code: 'ECLEANUP', cause: cause ?? error });
     }
     function stop() {
+      // Abort/limit and the later exit event share one termination attempt.
+      // Never signal a departed/reused group again after the first attempt.
+      if (stopping) return;
+      stopping = true;
       if (child.pid) {
         try { process.kill(-child.pid, 'SIGKILL'); }
         catch (failure) { if (failure.code !== 'ESRCH') cleanupFailure(failure); }

@@ -157,7 +157,7 @@ jobs:
         run: |
           for attempt in $(seq 1 40); do
             echo "Cancellation cleanup probe $attempt/40"
-            node --test --test-name-pattern='cancellation kills the compiler family' tests/rust-executor.test.mjs || exit 1
+            node --test --test-name-pattern='cancellation kills the compiler family|never signals a successfully killed group again' tests/rust-executor.test.mjs || exit 1
           done
       - name: Diagnose macOS limits on failure
         if: failure()

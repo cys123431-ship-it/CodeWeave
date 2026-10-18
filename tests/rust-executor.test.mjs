@@ -128,7 +128,7 @@ test('local Rust executor cancellation kills the compiler family, releases admis
   const { createLocalRustGradingService } = await api();
   const { gradingAdmission } = await import('../server/grading-admission.mjs');
   const fixture = await fakeTools(t), marker = path.join(fixture.root, 'pids');
-  const faults = [], remove = fs.rm.bind(fs), kill = process.kill.bind(process);
+  const faults = [], attempts = new Map(), successful = new Map(), remove = fs.rm.bind(fs), kill = process.kill.bind(process);
   t.mock.method(fs, 'rm', async (target, options) => {
     try { return await remove(target, options); }
     catch (error) {
@@ -137,9 +137,15 @@ test('local Rust executor cancellation kills the compiler family, releases admis
     }
   });
   t.mock.method(process, 'kill', (pid, signal) => {
-    try { return kill(pid, signal); }
+    if (pid < 0) attempts.set(pid, (attempts.get(pid) ?? 0) + 1);
+    try {
+      const result = kill(pid, signal);
+      if (pid < 0) successful.set(pid, (successful.get(pid) ?? 0) + 1);
+      return result;
+    }
     catch (error) {
-      if (pid < 0 && error.code !== 'ESRCH') faults.push({ stage: 'process-group', code: error.code, syscall: error.syscall });
+      if (pid < 0 && error.code !== 'ESRCH') faults.push({ stage: 'process-group', code: error.code,
+        syscall: error.syscall, attempt: attempts.get(pid), previousSuccessfulSignals: successful.get(pid) ?? 0 });
       throw error;
     }
   });
@@ -169,6 +175,33 @@ test('local Rust executor cancellation kills the compiler family, releases admis
     if (faults.length || state === 'quarantined') console.log('Rust cancellation cleanup observation:', JSON.stringify({ state, reason, faults }));
     controller.abort(); await pending;
   }
+});
+
+test('local Rust cancellation never signals a successfully killed group again after parent exit', { skip: !posix, timeout: 10000 }, async t => {
+  const { createLocalRustGradingService } = await api();
+  const { gradingAdmission } = await import('../server/grading-admission.mjs');
+  const fixture = await fakeTools(t), marker = path.join(fixture.root, 'single-kill-pids');
+  const cargoFile = path.join(fixture.sysroot, 'bin', 'cargo'), original = await fs.readFile(cargoFile, 'utf8');
+  await fs.writeFile(cargoFile, original.replace('echo "error: trusted fixture compile failure" >&2\nexit 101', () =>
+    `sleep 30 &\nprintf '%s %s\\n' "$$" "$!" > ${JSON.stringify(marker)}\nwait`));
+  const service = await createLocalRustGradingService({ enabled: true, definitions, ...fixture });
+  const kill = process.kill.bind(process);
+  let groupSignals = 0;
+  t.mock.method(process, 'kill', (pid, signal) => {
+    if (pid < 0 && ++groupSignals > 1) throw Object.assign(Error('post-exit group signal must not be retried'), { code: 'EPERM' });
+    return kill(pid, signal);
+  });
+  const controller = new AbortController();
+  const pending = assert.rejects(service.submit(request, { signal: controller.signal }), { code: 'RUST_CANCELLED' });
+  try {
+    const pids = (await ready(marker)).trim().split(/\s+/).map(Number);
+    assert.equal(pids.length, 2);
+    controller.abort(); await pending;
+    assert.equal(groupSignals, 1);
+    for (const pid of pids) assert.equal(await alive(pid), false);
+    assert.equal(gradingAdmission.busy, false);
+    assert.deepEqual(await fs.readdir(fixture.parent), []);
+  } finally { controller.abort(); await pending; }
 });
 
 test('local Rust executor stops excessive build output without running cases or leaking workspace files', { skip: !posix }, async t => {

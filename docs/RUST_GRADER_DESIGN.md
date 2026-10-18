@@ -146,6 +146,8 @@ Cargo JSON은 컴파일/산출물 메시지이지 libtest 사례별 안정 JSON 
 
 ### 기존 F01의 서버 전용 영수증 계약 (2026-10-18)
 
+검증 중 기존 macOS 취소 경로에서 그룹 kill의 EPERM을 관측했다(CI39121912460·집중 재현39122226261의27번째). 취소/한도 중단과 뒤의 부모 exit가 같은 그룹에 다시 신호를 보내는 경로를 별도 제어 검사로 재현하고 종료 시도를 한 번으로 제한했다. 첫 신호의 EPERM·정리 타이머 오류는 여전히 운영 장애/격리로 처리하며 권한 오류를 무시하거나 신호 권한을 올리지 않는다. 최초 실제 EPERM의 호출 순서는 당시 관측값만으로 단정하지 않는다. macOS CI는 기존 취소와 새 중복 종료 검사 각각40회, 첫 실패 즉시 중단으로 검증한다.
+
 검증 SHA `b760a8bc01fc13f54f3517b8f2421ab74f8d8b4b`의 [CI39121745304](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39121745304)는 Ubuntu 전체612/612·skip0, macOS 관련88/88·skip0, browser 회귀를 통과했다. 양 OS에서 원본 스타터의 경고 오류·8오답의 전체10사례 실행/단언 실패·정답2종10통과·실제 HTTP 오답/수정 제출을 확인했다. 초기 CI39121568374의 성공 Cargo 진행 로그를 빈 문자열과 비교한 신규 검사 오류는 실행된 판정/전체 사례 검증으로 수정했고 경고 정책·원본 소스·기존 검사는 바꾸지 않았다.
 
 server/rust-exercises.mjs의 createRustGradingDefinitions()는 기존 rust-cargo 문제 한 개만 담은 새 Map을 반환한다. ID·pub fn total(items:u32, price:u32)->u32 인터페이스·학습자 스타터를 기존 F01과 보존한다. definition·사례 배열·각 사례는 동결하고 Map은 호출마다 분리한다. import/registry 생성은 실행·도구 탐색·HTTP 활성화가 아니며 다른 Rust 단원이나 C registry를 자동 등록하지 않는다.
