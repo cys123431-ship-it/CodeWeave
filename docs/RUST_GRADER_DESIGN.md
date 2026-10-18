@@ -146,6 +146,8 @@ Cargo JSON은 컴파일/산출물 메시지이지 libtest 사례별 안정 JSON 
 
 ### 기존 F01의 서버 전용 영수증 계약 (2026-10-18)
 
+검증 SHA `b760a8bc01fc13f54f3517b8f2421ab74f8d8b4b`의 [CI39121745304](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39121745304)는 Ubuntu 전체612/612·skip0, macOS 관련88/88·skip0, browser 회귀를 통과했다. 양 OS에서 원본 스타터의 경고 오류·8오답의 전체10사례 실행/단언 실패·정답2종10통과·실제 HTTP 오답/수정 제출을 확인했다. 초기 CI39121568374의 성공 Cargo 진행 로그를 빈 문자열과 비교한 신규 검사 오류는 실행된 판정/전체 사례 검증으로 수정했고 경고 정책·원본 소스·기존 검사는 바꾸지 않았다.
+
 server/rust-exercises.mjs의 createRustGradingDefinitions()는 기존 rust-cargo 문제 한 개만 담은 새 Map을 반환한다. ID·pub fn total(items:u32, price:u32)->u32 인터페이스·학습자 스타터를 기존 F01과 보존한다. definition·사례 배열·각 사례는 동결하고 Map은 호출마다 분리한다. import/registry 생성은 실행·도구 탐색·HTTP 활성화가 아니며 다른 Rust 단원이나 C registry를 자동 등록하지 않는다.
 
 입력 약속은 기존처럼 items0~10·price0~1000이며 반환값은 수량×단가다. 계약 밖 값/넘침·결제 시스템 검증을 구현했다고 주장하지 않는다. 서버가 관리하는10개 case_00~case_09는 모두0, 수량0, 단가0, 수량1, 공개 예제, 단가1, 다른 일반 입력, 수량 상한, 단가 상한, 계약 최댓값과 반복 호출을 구분한다. 하네스는 고정 codeweave_submission 크레이트를 호출하며 요청의 manifest/하네스/명령은 받지 않는다. 서버 전용은 HTTP 정적 제공하지 않는다는 뜻이며 GitHub 소스가 비밀이거나 악성 제출의 진위를 보장한다는 뜻은 아니다.
