@@ -6,6 +6,7 @@
   "description": "교과서형 C·Rust·자료구조·알고리즘 통합 학습 PWA",
   "scripts": {
     "start": "node dev-server.mjs",
+    "start:rust": "node scripts/start-rust.mjs",
     "dev": "node dev-server.mjs",
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",
     "test:browser": "node tests/browser-practice.mjs"

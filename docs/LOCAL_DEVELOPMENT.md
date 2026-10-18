@@ -20,6 +20,18 @@ npm test
 
 일반 `npm start`는 C 채점만 활성화한다. 같은 서버의 `/api/grade/rust`는 인증 후503을 반환하며 `CODEWEAVE_RUST_ENABLED` 같은 환경 변수로는 활성화되지 않는다. Windows Rust 실행은 지원하지 않는다.
 
+### 운영자가 명시적으로 시작하기
+
+Linux/macOS에서 고정 Rust1.99.0과 Node.js20 이상을 준비한다. 이 명령은 도구를 다운로드하거나 설치하지 않는다. 먼저 `npm run start:rust -- --help`를 읽는다. 고정 도구의 실제 설치 경로는 `rustup run 1.99.0 rustc --print sysroot`로 확인할 수 있다. 운영자가 별도로 만든 기존 작업 폴더를 준비하고 아래 두 경로를 실제 절대 경로로 교체한다(공백이 있으면 따옴표 유지).
+
+```bash
+npm run start:rust -- --trusted-personal-code --sysroot "/absolute/fixed-toolchain" --workspace-parent "/absolute/owned-workspaces"
+```
+
+출력된 http://127.0.0.1:4173 에서 F01 단원 또는 `/workbench.html`을 연다. `--port 4174`로 포트만 바꿀 수 있으며 PORT 환경 변수는 이 명령에 적용되지 않는다. 포트0은 검사 전용 임의 포트다. 신뢰 코드 확인 플래그·두 절대 경로는 모두 필수이고 중복/알 수 없는 인수, 호스트/학습 루트 덮어쓰기는 거부한다. 버전·호스트·조상 Cargo 설정·작업 폴더 확인이 실패하면 바인딩하지 않는다. 페이지 토큰은 콘솔에 출력하지 않으며 서버 재시작 후 페이지를 새로고침한다.
+
+Ctrl+C/SIGTERM으로 종료하면 새 연결을 닫고 기존 요청과 끊어진 요청의 채점 정리를 기다린다. 소켓 종료 뒤 공유 슬롯의 정리는 최대5초 더 확인하며 격리/미확정 상태는 실패로 알린다. 슬롯을 강제로 풀거나 운영자 폴더를 자동 삭제하지 않는다. 정리 실패 경고가 있으면 자동 재시작하지 말고 기존 프로세스 종료 여부를 먼저 확인한다. 프로그래밍 방식의 시작/종료 함수 import는 서버를 자동 시작하지 않는다. 이 CLI의 실제 Cargo HTTP 검증과 기존 브라우저의 단원/연습장 검증은 별도 검사이며 Windows/WSL 실기기 인수를 뜻하지 않는다.
+
 신뢰된 운영 코드에서는 `server/learning-server.mjs`의 `createLearningServer({root, rustService})`로 명시적 구성을 만들 수 있다. `rustService`는 `createLocalRustGradingService({enabled:true, definitions, sysroot, parent})`로 생성한다. 기존 F01은 `server/rust-exercises.mjs`의 `createRustGradingDefinitions()`가 반환하는 서버 전용 Map으로 제공한다. sysroot는 고정 버전/호스트의 실제 도구 설치 경로, parent는 조상 Cargo 설정이 없는 신뢰된 작업 공간 부모여야 한다. 다운로드나 임의 경로를 HTTP 입력으로 받지 않는다. 이 구성을 명시적으로 주입한 서버는 온라인 HTML에 F01 활성 표시를 주입한다. 그 페이지의 F01 단원에서만 Cargo 함수 채점·실패/수정 재제출·최근10회 이력·코드 복원과 통합 v1 백업을 사용할 수 있다. 일반 CLI·정적 사이트에서는 열리지 않는다. 표시는 UI 선택용이고 서버 인증/등록 ID 검사를 대체하지 않는다. F01은 단원 화면과 별도 반복 제출 연습장에서 같은 초안·제출 이력을 사용한다. F01 이외 Rust 문제는 활성화하지 않는다.
 
 factory 생성/import는 서버를 시작하지 않는다. 반환 객체의 `await app.listen(4173)`으로 열고 `app.address()`로 실제 포트를 확인하며 `await app.close()`로 닫는다. 포트0은 테스트용 임의 포트다. 바인딩은 항상127.0.0.1이며 두 번째 호스트 인수는 거부한다. 페이지의 시작별 토큰·Host/Origin/JSON 제한, C/Rust 공유 슬롯과 취소/정리는 계속 적용된다. Rust의 inspect/recover는 운영자 객체에만 있고 HTTP 경로로 제공하지 않는다. 이 구성도 신뢰하는 본인 코드용이며 샌드박스나 공개 배포 수단이 아니다.
