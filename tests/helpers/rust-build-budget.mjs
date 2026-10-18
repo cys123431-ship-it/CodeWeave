@@ -1,8 +1,13 @@
 // Trusted CI builds only. Not a production executor or a Rust API permission.
 import path from 'node:path';
 
-export function rustBuildBudget(binary, args, { platform = process.platform, env = process.env } = {}) {
+export function rustBuildBudget(binary, args, {
+  platform = process.platform, env = process.env, cpuSoftSeconds = 10
+} = {}) {
   if (!['linux', 'darwin'].includes(platform)) throw new Error('Rust build budgets: unsupported platform');
+  if (!Number.isInteger(cpuSoftSeconds) || cpuSoftSeconds < 1 || cpuSoftSeconds > 10) {
+    throw new TypeError('Invalid trusted Rust CPU soft ceiling');
+  }
   if (typeof binary !== 'string' || !path.posix.isAbsolute(binary) || binary.includes('\0')
       || !Array.isArray(args) || args.length > 256
       || args.some(arg => typeof arg !== 'string' || arg.includes('\0') || arg.length > 4096)) {
@@ -36,6 +41,10 @@ export function rustBuildBudget(binary, args, { platform = process.platform, env
     'set_limit -f 32768 &&',
     'set_limit -c 0 &&',
     'set_limit -u ' + (platform === 'darwin' ? 512 : 128) + ' || exit 125',
+    'cpu_soft=$(ulimit -S -t) || exit 125',
+    `if [[ "$cpu_soft" == unlimited || "$cpu_soft" -gt ${cpuSoftSeconds} ]]; then`,
+    `  ulimit -S -t ${cpuSoftSeconds} || exit 125`,
+    'fi',
     'exec "$@"'
   ].join('\n');
   return {

@@ -10,6 +10,29 @@ const api = () => import('./helpers/rust-build-budget.mjs');
 const gcc = spawnSync('gcc', ['--version']).status === 0;
 const posix = ['linux', 'darwin'].includes(process.platform);
 
+test('Rust build CPU soft ceiling rejects invalid or increased probe limits', async () => {
+  const { rustBuildBudget } = await api();
+  for (const cpuSoftSeconds of [0, -1, 11, 1.5, '1', null]) {
+    assert.throws(() => rustBuildBudget('/bin/true', [], { cpuSoftSeconds }), /CPU/);
+  }
+});
+
+test('Rust build CPU probe lowers only the soft ceiling and preserves the hard ceiling', { skip: !posix }, async () => {
+  const { rustBuildBudget } = await api();
+  const call = rustBuildBudget('/bin/bash', ['--noprofile', '--norc', '-c', 'ulimit -S -t; ulimit -H -t'], { cpuSoftSeconds: 1 });
+  const out = await observeProcess(call.command, call.args, call);
+  assert.equal(out.status, 0, JSON.stringify(out));
+  const [soft, hard] = out.stdout.trim().split('\n').map(Number);
+  assert.equal(soft, 1);
+  assert.equal(hard, 10);
+  assert.equal(call.timeout, 15000);
+  const inherited = await observeProcess('/bin/bash', ['--noprofile', '--norc', '-c',
+    'ulimit -t 1 || exit 125; exec "$@"', 'lower-cpu', call.command, ...call.args],
+  { env: call.env, timeout: call.timeout });
+  assert.equal(inherited.status, 0, JSON.stringify(inherited));
+  assert.deepEqual(inherited.stdout.trim().split('\n').map(Number), [1, 1]);
+});
+
 test('Rust build budget rejects unsupported platforms and malformed tool arguments', async () => {
   const { rustBuildBudget } = await api();
   assert.throws(() => rustBuildBudget('/bin/true', [], { platform: 'win32' }), /unsupported/);

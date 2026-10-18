@@ -94,6 +94,12 @@ ENOENT/EACCES/ELIMIT/ECLEANUP/EIO 등 그 밖의 관찰 오류는 운영 예외�
 신규 검사는 분류·위장 진단·운영 오류와 실제 Node 시간/출력 초과의 내부 pipeline 중단/정리를 확인한다. 실제 Cargo CI fixture는 정상 15초/기존 자원 예산에 더 낮은 상속 파일 한도1KiB를 적용해 빌드 실패·목록/사례 미실행·소유 공간 삭제를 확인한다. 신뢰된 독립 fixture이며 운영 실행기나 실제 Cargo CPU/메모리 초과 검증을 뜻하지 않는다. Rust 실습/숙달과 HTTP 연결은 계속 비활성이다.
 검증 SHA `7d495e41538a241e426a4b86947e5a6a0d4ee0fb`의 [CI39085330936](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39085330936)에서 Ubuntu 전체551/551·skip0, macOS 관련29/29·skip0, browser 회귀 성공을 실제 확인했다. 양 OS 모두 제한된 실제 Cargo가 status:null/signal:SIGXFSZ로 종료했고, 전체8사례 미실행과 소유 공간 삭제가 통과했다. 분류/시간·출력 초과·운영 오류 검증이며 Cargo CPU/메모리 제한의 원인별 확정이나 운영 API 인수로 확대하지 않는다.
 
+### 실제 Cargo CPU 초과 fixture (2026-10-18)
+
+신뢰된 테스트용 rustBuildBudget의 cpuSoftSeconds는 정수1~10만 받는다. 기본값10·hard 상한10·기존 더 낮은 상속 한도·15초 벽시계·80KB 출력·메모리/파일/프로세스 예산은 유지한다. 기존 한도를 적용한 뒤 soft만 요청값 이하로 낮추며 더 낮은 상속 soft/hard는 올리지 않는다. 새 옵션은 테스트 코드 전용이며 서버/API에서 입력받지 않는다.
+실제 Cargo fixture는 long_running_const_eval만 명시적으로 허용한 독립 상수 루프를 컴파일하며 soft CPU1초를 상속한다. 정상 소스 오류·벽시계·출력 초과로 대신 통과하지 않고 Cargo 또는 rustc의 SIGXCPU/CPU time limit exceeded를 요구한다. Cargo101의 자식 신호 진단은 fixture 원인 확인에만 쓰고 운영 판정은 여전히 컴파일 실패다. 관찰 프로세스 자체의 SIGXCPU만 빌드 CPU 제한 초과로 표시한다.
+내부 pipeline이 compile 다음 열거/사례를 실행하지 않고 전체8사례 미실행을 반환하며, 소유 공간만 정리하고 부모 사용자 파일을 보존하는지 확인한다. 실제 Cargo 메모리 초과·그룹 합산 CPU·악성 제출 격리·운영 Rust 활성화 검증으로 확대하지 않는다.
+
 ### 소유 작업 공간 정리 실패 (2026-10-18)
 
 삭제 실패는 항상 code:ERUSTCLEANUP인 AggregateError로 전파한다. cause는 원래 삭제 오류이며 errors는 [원래 단계 오류, 삭제 오류] 또는 단계 예외가 없으면 [삭제 오류]다. null 같은 falsy 값의 throw도 별도 실패 표식으로 보존한다. 정상/컴파일 거부 결과도 정리에 실패하면 반환하지 않는다.
