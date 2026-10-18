@@ -128,6 +128,21 @@ test('local Rust executor cancellation kills the compiler family, releases admis
   const { createLocalRustGradingService } = await api();
   const { gradingAdmission } = await import('../server/grading-admission.mjs');
   const fixture = await fakeTools(t), marker = path.join(fixture.root, 'pids');
+  const faults = [], remove = fs.rm.bind(fs), kill = process.kill.bind(process);
+  t.mock.method(fs, 'rm', async (target, options) => {
+    try { return await remove(target, options); }
+    catch (error) {
+      if (path.dirname(target) === fixture.parent) faults.push({ stage: 'workspace', code: error.code, syscall: error.syscall });
+      throw error;
+    }
+  });
+  t.mock.method(process, 'kill', (pid, signal) => {
+    try { return kill(pid, signal); }
+    catch (error) {
+      if (pid < 0 && error.code !== 'ESRCH') faults.push({ stage: 'process-group', code: error.code, syscall: error.syscall });
+      throw error;
+    }
+  });
   const cargoFile = path.join(fixture.sysroot, 'bin', 'cargo');
   const cargoSource = await fs.readFile(cargoFile, 'utf8');
   await fs.writeFile(cargoFile, cargoSource.replace('echo "error: trusted fixture compile failure" >&2\nexit 101', () =>
@@ -149,7 +164,11 @@ test('local Rust executor cancellation kills the compiler family, releases admis
     await fs.writeFile(cargoFile, cargoSource);
     assert.equal((await service.submit(request)).ok, false);
     assert.deepEqual(await fs.readdir(fixture.parent), []);
-  } finally { controller.abort(); await pending; }
+  } finally {
+    const { state, reason } = service.inspect();
+    if (faults.length || state === 'quarantined') console.log('Rust cancellation cleanup observation:', JSON.stringify({ state, reason, faults }));
+    controller.abort(); await pending;
+  }
 });
 
 test('local Rust executor stops excessive build output without running cases or leaking workspace files', { skip: !posix }, async t => {
