@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-18 13:55 KST — F01 C·Rust 공유 채점 슬롯
+- 시작/결과 SHA: 시작0adbacf6abab9351fbe4ebd5d7f92b3272945510; 구현 커밋 feat: share grading admission between C and internal Rust services; 결과 SHA/CI 후속 확인.
+- 목표: 같은 Node 프로세스의 C/Rust 동시 실행1건·대기열0, 정리 대기·소유자별 안전 해제·재제출 연결 검증.
+- 변경 파일 수: 총8개(공유 admission·4검사·C 서버·Rust 서비스·CI·설계·활성/보관 일지).
+- 테스트 결과: 신규4건 모듈 부재4실패→슬롯만 구현1통과3실패(C 실제200≠429 포함)→4통과; 전체567건556통과·실패0·skip11(Rust 부재); MJS4개·일지4/4·roadmap/diff 성공; 삭제0·기존 기대값 변경0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39095805143 성공 재확인; 구현/결과 SHA CI 대기.
+- 발견한 문제: C와 각 Rust 서비스의 독립 busy 상태로 겹친 요청 수락을 재현. 공유 동기 lease로 통합하고 오래된/중복 해제는 다음 소유자를 해제하지 않도록 검증. C 비동기 본문 파싱 뒤 재획득 유지.
+- 보안 영향: 새 HTTP 입력/실행기0. 기존 CSRF 선검사 유지·점유 중 GCC/작업 공간 생성0·취소만으로 슬롯 조기 해제0; 여러 프로세스/worker 간 제한이나 격리는 아님.
+- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
+- 다음 작업: 결과 SHA CI 확인 후 신뢰 로컬 Rust 실행 어댑터/연결 해제 취소·운영 관측/복구를 검증하고 HTTP/문제 연결 검토; 단원 완료나 차례 전환 아님.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-18 12:56 KST — F01 기본 비활성 내부 요청 서비스
 - 시작/결과 SHA: 시작91892f13b2cea4e6efc8220fe1eb0d67bdfab786; 구현b212e13b25f4487277791a80cdc72f6284686ba4; 후속 docs: record verified internal Rust admission CI.
 - 목표: 명시적 활성화/주입 실행기만 수락·동시1건/대기열0·취소 정리 대기·운영/결과 오류 비공개 계약 구현, HTTP 연결0.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 새 외부 입력/API/기본 실행기0. 기존 결과/v1 필드 보존·전체 미실행 유지; 관찰 code/signal만 분류하고 진단 문자열·SIGKILL로 메모리 초과 단정0; 한도 축소는 신뢰 CI fixture만 사용.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01·실습/숙달 잠금 유지.
 - 다음 작업: 결과 SHA CI를 확인하고 실제 Cargo CPU/메모리 초과 경로와 운영 연결 인수 조건을 검토; 단원 완료나 차례 전환 아님.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-18 09:04 KST — F01 소유 작업 공간 정리 실패 전파
-- 시작/결과 SHA: 시작c2b68f9bdd42f7beb1c3b9ae9c95506ab4982bed; 구현09254506831e1d4bc861b1c78d214689eb817d8b; macOS 수정b5ac470ec64e1ab38f796cd80a0449d4b9e1a79a; 경합수정992d148b40869eb628281bc90bddbae0c4384766; 후속 docs: record verified Rust cleanup failure CI.
-- 목표: 삭제 실패 분류·원래 단계 오류/소유 복구 경로 보존 및 취소 정리 검사 경합 수정; 성공 응답으로 숨기지 않음.
-- 변경 파일 수: 총9개(내부pipeline·정리5검사·PID helper/3검사·취소검사·CI·설계·활성/보관 일지).
-- 테스트 결과: 정리5건 수정 전5실패→5통과; PID3건 기존 로직1실패·2통과→3통과; 관련 취소9건8통과·skip1; 전체545건538통과·실패0·skip7(Rust 부재); MJS5개·일지4/4·roadmap/diff 확인; 삭제0.
-- CI URL과 결과: 시작39077471479 성공; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39081758630 macOS 경로5실패·Linux 취소1실패; 수정CI39081842389 성공; 경합수정 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39082023020 전체545/545·실패0·skip0·macOS 관련23/23·browser 성공, 후속 기록 SHA CI 별도 확인.
-- 발견한 문제: throw null 원본 소실·복구 식별자 부재 수정. mock restore 오타 수정 후 본래 실패 재현. macOS fixture를 realpath 준비로 수정; Linux signal/stat 사이 종료 경합1실패 재현·부재 재확인 추가, 판정 기대값 완화0.
-- 보안 영향: 외부 입력/API/기본 실행기0. 캡처한 소유 경로만 삭제/복구 식별·부모 파일 보존·자동 재시도0; 내부 경로 HTTP/학습 기록 노출0; 확인 불가 PID는 계속 살아 있음 판정.
-- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01·실습/숙달 잠금 유지.
-- 다음 작업: 후속 결과 SHA CI를 확인하고 빌드 자원 초과/오류 분류 통합 검증; 단원 완료나 차례 전환 아님.

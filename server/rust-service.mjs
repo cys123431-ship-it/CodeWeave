@@ -1,5 +1,6 @@
 // Internal admission contract only: no executor, HTTP registration or environment activation.
 import { createRustPlan } from './rust-contract.mjs';
+import { gradingAdmission } from './grading-admission.mjs';
 
 const messages = {
   RUST_DISABLED: [503, 'Rust 실행은 비활성 상태입니다.'],
@@ -27,7 +28,6 @@ export function createRustGradingService({ enabled = false, definitions, grade }
   if (enabled && (!(definitions instanceof Map) || typeof grade !== 'function')) {
     throw new TypeError('Enabled Rust service requires a trusted registry and grader');
   }
-  let busy = false;
   return Object.freeze({
     async submit(request, options = {}) {
       if (!enabled) throw failure('RUST_DISABLED');
@@ -40,10 +40,10 @@ export function createRustGradingService({ enabled = false, definitions, grade }
       try { plan = createRustPlan(request, definitions); }
       catch { throw failure('RUST_INVALID'); }
       if (signal?.aborted) throw failure('RUST_CANCELLED');
-      if (busy) throw failure('RUST_BUSY');
       const snapshot = Object.freeze({ exerciseId: plan.exerciseId,
         code: plan.files.find(file => file.path === 'src/lib.rs').content });
-      busy = true;
+      const releaseSlot = gradingAdmission.tryAcquire();
+      if (!releaseSlot) throw failure('RUST_BUSY');
       try {
         let value;
         try { value = await grade(snapshot, definitions, { signal }); }
@@ -73,7 +73,7 @@ export function createRustGradingService({ enabled = false, definitions, grade }
         }
       } finally {
         // An abort never frees the slot before the underlying grader/cleanup settles.
-        busy = false;
+        releaseSlot();
       }
     }
   });

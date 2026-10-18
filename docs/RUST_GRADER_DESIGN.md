@@ -147,9 +147,9 @@ Cargo JSON은 컴파일/산출물 메시지이지 libtest 사례별 안정 JSON 
 ### 내부 요청 서비스 — 기본 비활성 (2026-10-18)
 
 server/rust-service.mjs의 createRustGradingService는 enabled:true·신뢰 registry·주입 grade 함수가 모두 있어야 요청을 수락한다. 환경 변수/클라이언트 요청으로 활성화하지 않고 기본 실행기·child_process·HTTP 등록도 없다. 현재 dev-server와 UI는 이 서비스를 사용하지 않는다.
-요청/ID/코드 길이·AbortSignal을 실행 함수 호출 전 검증하고 코드 문자열을 동결한 스냅샷으로 전달한다. 서비스 인스턴스마다 동시1건, 대기열0이며 중복 요청은 RUST_BUSY/429다. 기본 비활성은 RUST_DISABLED/503, 요청 오류는 RUST_INVALID/400, 취소는 RUST_CANCELLED/499, 운영/정리/결과 오류는 RUST_UNAVAILABLE/503이다. statusCode는 내부 계약이며 실제 HTTP 응답 구현이나 API 활성화 증거가 아니다.
+요청/ID/코드 길이·AbortSignal을 실행 함수 호출 전 검증하고 코드 문자열을 동결한 스냅샷으로 전달한다. 같은 Node 프로세스의 C 채점과 모든 Rust 서비스가 server/grading-admission.mjs의 단일 슬롯을 공유한다. 동시1건, 대기열0이며 Rust 중복 요청은 RUST_BUSY/429다. 기본 비활성은 RUST_DISABLED/503, 요청 오류는 RUST_INVALID/400, 취소는 RUST_CANCELLED/499, 운영/정리/결과 오류는 RUST_UNAVAILABLE/503이다. statusCode는 내부 계약이며 실제 Rust HTTP 응답 구현이나 API 활성화 증거가 아니다.
 사전 취소는 실행하지 않고 실행 중 취소는 signal을 grade에 전달한다. grade와 정리가 settle하기 전에는 슬롯을 해제하지 않으며 늦은 성공은 폐기한다. 실제 중단은 주입 grade의 책임이다. 정리 실패 등 운영 예외는 취소로 숨기지 않는다. 원래 예외/작업 경로/비밀값을 반환하지 않으며 이 서비스는 제출 이력에 쓰지 않는다.
-결과는 기존4필드와 tests[{passed,detail}]의 소유 스냅샷만 반환한다. 전체 사례 수·boolean 판정·ok 일치·문자열 상한을 확인하고 sparse 배열·결과 getter 예외도 운영 오류로 거부한다. 요청/결과는 동결한다. 동시 제한은 한 인스턴스 범위일 뿐 여러 프로세스나 C/Rust 공통 전역 한도·호스트 격리가 아니다. 향후 HTTP 연결에는 C와의 공유 슬롯·CSRF·취소·운영 관측/복구 계약을 별도로 검증해야 한다.
+결과는 기존4필드와 tests[{passed,detail}]의 소유 스냅샷만 반환한다. 전체 사례 수·boolean 판정·ok 일치·문자열 상한을 확인하고 sparse 배열·결과 getter 예외도 운영 오류로 거부한다. 요청/결과는 동결한다. 슬롯 획득은 동기적이며 해제 함수는 소유 lease만 해제한다. 중복/오래된 해제는 다음 소유자를 해제하지 않는다. C는 헤더 인증 뒤 조기 busy 검사와 비동기 본문 파싱 뒤 재획득을 수행하고, 임시 공간 삭제가 settle한 뒤 해제한다. Rust도 grade/정리가 settle할 때까지 소유한다. 여러 Node 프로세스·worker·중복 모듈 설치본 간 전역 한도나 호스트 격리는 아니다. 향후 Rust HTTP 연결에는 CSRF·연결 해제 취소·운영 관측/복구 계약을 별도로 검증해야 한다.
 신규 합성 검사는 비활성/잘못된 활성화·요청 거부·중복 차단·코드 보존·취소 뒤 정리 대기/재수락·운영 오류 비공개·잘못된 결과 거부를 검사한다. 실제 CI는 기존 내부 Cargo pipeline을 주입해 중복 거부·정상/오답 재제출·전체8사례·작업 공간 삭제를 확인한다. 신뢰 코드 범위이며 운영 API·Rust 실습/숙달은 계속 비활성이다.
 검증 SHA `b212e13b25f4487277791a80cdc72f6284686ba4`의 [CI39095657268](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39095657268)는 Ubuntu 전체563/563·skip0, macOS 관련39/39·skip0, browser 회귀를 통과했다. 양 OS에서 실제 Cargo pipeline 주입·동시 요청 거부·정상/오답 재제출8사례·소유 공간 삭제가 통과했다. 합성 검사로 사전/진행 중 취소·정리 대기·슬롯 재수락·비공개 오류·sparse/getter/사용자 iterator 결과 경계를 검증했다. HTTP/프로덕션 실행기·공유 C/Rust 전역 슬롯 인수로 확대하지 않는다.
 

@@ -5,6 +5,7 @@ import os from 'node:os';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { openLearningFile, parseRequestPath } from './server/static-files.mjs';
 import { parseRequest, writeSources, compile, runCases, buildResult } from './server/grading-pipeline.mjs';
+import { gradingAdmission } from './server/grading-admission.mjs';
 
 // IMPORTANT: trusted local development only. Compiled student programs are not sandboxed.
 // This binds only to loopback and MUST NOT be put directly on a public network.
@@ -62,25 +63,23 @@ function authorizeGrade(req, res) {
   }
   return true;
 }
-let busy = false;
 async function grade(req, res) {
   if (!authorizeGrade(req, res)) {
     return;
   }
-  if (busy) {
+  if (gradingAdmission.busy) {
     return send(res, 429, { ok: false, message: '다른 코드를 채점하고 있어요. 잠시 후 다시 시도하세요.' });
   }
-  let ownsSlot = false;
+  let releaseSlot;
   try {
     const submission = await parseRequest(req, ({ status, result }) => send(res, status, result));
     if (submission.status) {
       return;
     }
-    if (busy) {
+    releaseSlot = gradingAdmission.tryAcquire();
+    if (!releaseSlot) {
       return send(res, 429, { ok: false, message: '다른 코드를 채점하고 있어요. 잠시 후 다시 시도하세요.' });
     }
-    busy = true;
-    ownsSlot = true;
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'codeweave-'));
     let result;
     try {
@@ -92,16 +91,14 @@ async function grade(req, res) {
       result = buildResult(submission.exercise, compilation, tests);
     } finally {
       await fs.rm(dir, { force: true, recursive: true });
-      busy = false;
-      ownsSlot = false;
     }
     // Release the grading slot and finish cleanup before the client can resubmit.
+    releaseSlot();
     return send(res, 200, result);
   } catch (error) {
-    if (ownsSlot) {
-      busy = false;
-    }
     return send(res, 500, { ok: false, message: '서버 오류: ' + error.message });
+  } finally {
+    releaseSlot?.();
   }
 }
 const server = http.createServer(async (req, res) => {
