@@ -2,7 +2,7 @@
 // Run with: npm run test:browser. No browser dependency enters the shipped app.
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
 import { mkdir, mkdtemp, realpath, readdir, rm } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -147,7 +147,10 @@ try {
   }
   console.log(`PASS: all ${Object.keys(solutions).length} C exercises compile and pass their real GCC tests`);
 
-  browser = await chromium.launch({ headless: true });
+  // Keep QA parallelism small: Cargo's unchanged per-UID nproc budget also
+  // counts Chromium's threads. These flags do not disable browser isolation.
+  browser = await chromium.launch({ headless: true,
+    args: ['--renderer-process-limit=2', '--num-raster-threads=1'] });
   // UI transport fixture only. Actual Cargo → HTTP → client/v1 is mandatory
   // in rust-client.test.mjs on the Rust-equipped test job, not simulated here.
   const rustCorrect = 'pub fn total(items: u32, price: u32) -> u32 { items * price }';
@@ -252,6 +255,10 @@ try {
   }
   // Actual Cargo, HTTP, both browser screens and v1 storage, without interception.
   const actualTools = await trustedRustTools();
+  const taskSnapshot = spawnSync('ps', ['-u', String(process.getuid()), '-L', '-o', 'pid='],
+    { encoding: 'utf8', timeout: 3000, maxBuffer: 100000 });
+  assert.equal(taskSnapshot.status, 0);
+  console.log('F01 browser pre-build UID task count:', taskSnapshot.stdout.trim().split(/\s+/).length);
   const actualParent = await realpath(await mkdtemp(path.join(os.tmpdir(), 'codeweave-browser-f01-')));
   const actualService = await createLocalRustGradingService({ enabled: true,
     definitions: createRustGradingDefinitions(), sysroot: path.dirname(path.dirname(actualTools.rustc)), parent: actualParent });

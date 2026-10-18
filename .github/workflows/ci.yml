@@ -185,7 +185,10 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Real GCC and browser integration tests
-        run: npm run test:browser
+        # Reduce the QA browser's CPU/thread parallelism, never raise grading limits.
+        run: |
+          browser_cpu=$(node -e "console.log(require('fs').readFileSync('/proc/self/status','utf8').match(/^Cpus_allowed_list:\s+(\d+)/m)[1])")
+          taskset -c "$browser_cpu" npm run test:browser
         env:
           CODEWEAVE_QA_DIR: ${{ runner.temp }}/codeweave-qa
       - name: Save UI verification image
