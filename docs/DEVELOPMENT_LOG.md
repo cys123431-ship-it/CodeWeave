@@ -1,10 +1,10 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-18 21:57 KST — F01 단원 채점·v1 제출 연결
-- 시작/결과 SHA: 시작84b10b71ef4a4f0ceca017ac73aedb96cf5d2ec4; 커밋 feat: connect opt-in F01 lesson grading and preserve v1 history; 결과 CI 확인 전.
+- 시작/결과 SHA: 시작84b10b71ef4a4f0ceca017ac73aedb96cf5d2ec4; 구현d0797b5799e1f7b7e1bff79224f7e15c14ffc005; 후속 docs: record verified opt-in F01 lesson client CI.
 - 목표: 명시적 로컬 Cargo 구성의 F01 단원에서 실패/수정 재제출·분리 숙달·이력 복원·기존 v1 백업 보존, 기본 C CLI 유지.
 - 변경 파일 수: 총10개(서버 HTML 표시·단원 UI/원고·공용 결과 검증·PWA·신규8검사·브라우저·로컬 안내·활성/보관 일지).
 - 테스트 결과: 신규4건 실패→통과 및 앱 기존 C 백업의 Rust 이력 소실1건 실패→통과; 전체 첫621건602통과/1실패/18skip→재검사621건603통과/0실패/18skip(Rust 부재); 신규8건7통과/1skip·JS/MJS7개·일지/원문/roadmap/diff 확인; 삭제0·기존 기대값 변경0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39122822352 성공 재확인; 결과 SHA의 실제 Cargo/브라우저 CI 대기.
+- CI URL과 결과: 시작39122822352 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39130256413 전체621/621·실패0·skip0·macOS89/89+취소80/80·browser 성공; 실제 Cargo HTTP 오답→수정10/10→v1 복원/공간 삭제, 합성 채점 UI의 재제출/복원/숙달 분리·390px·오프라인 이력 통과. 제한된 단원 연결 항목 완료, 후속 기록 SHA CI 별도 확인.
 - 발견한 문제: 활성 실습 판정을 백업 교체 범위로 재사용하면 기존 C 백업이 Rust 이력을 삭제함을 실제 앱 DOM fixture로 재현·C 범위 고정으로 수정. 브라우저 UI는 합성 채점 fixture, 실제 Cargo HTTP→클라이언트/v1은 별도 CI 필수 검사로 구분.
 - 보안 영향: 신규 HTTP 경로/환경 활성화0·기존 인증/공유 슬롯 유지; 서버 주입 표시+페이지 토큰이 있는 F01만 UI 활성·10사례 결과 검증·취소 후 저장 금지·오프라인 표시/토큰 제거. v1 키/형식 변경0.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
