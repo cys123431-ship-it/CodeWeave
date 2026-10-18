@@ -1,14 +1,14 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 03:55 KST — F01 독립 원고·종합 인수 근거 정리
-- 시작/결과 SHA: 시작101c8797db88cbb872cbeff0af64dc5289dd8bde; 결과는 feat: preserve F01 manuscript and verify actual Cargo next-lesson flow 커밋으로 연결, CI 대기.
+- 시작/결과 SHA: 시작101c8797db88cbb872cbeff0af64dc5289dd8bde; 구현ac4337da58ebd373e93356415de6af958156157e; 후속 docs: record verified F01 manuscript and next-lesson acceptance CI.
 - 목표: 기존 F01의 25분 원고를 독립 보존하고 화면의 완성 Cargo3파일·실행 검사와 연결; 실제 Cargo 숙달 뒤 다음 단원/복귀까지 검증.
 - 변경 파일 수: 총8개(신규 원고/3검사·화면 출처·로드맵2개·browser 인수 보강·활성/보관 일지).
 - 테스트 결과: 신규3건 모두 실패→통과; 전체654건635통과/실패0/skip19(Rust 부재), 관련17건16통과/1skip·JS/MJS3개/roadmap/diff 통과; 기존 검사 삭제0·기존 기대값 변경0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39153170002 성공과3job로그 실제 재조회; 전체651/651·실제 Cargo 원고예제/CLI/브라우저 재제출·백업·숙달·오프라인 검토; 이번 결과 SHA CI 대기.
+- CI URL과 결과: 시작39153170002 성공 재조회; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39156938496 전체654/654·실패0·skip0·macOS112건111통과/1skip(Linux 전용)·취소120/120·browser 실제Cargo 오답→수정10/10·숙달→다음Rust단원→복귀·v1/C백업·390px/오프라인 성공. 독립 원고 보존 항목 인수; 후속 기록 SHA CI 별도 확인.
 - 발견한 문제: 독립 Rust 원고 부재와 로드맵 원고 근거 누락을 재현·보완. 로드맵 검증기는 기본 C registry만 완료로 인정하므로 선택적 Rust의 검증된 인수 계약은 별도 보완 필요; 완료 판정 우회0. 새 browser 초안의 존재하지 않는 selector는 소스 검토 중 실제 제목 locator로 교정.
 - 보안 영향: 기존 F01 문서·검증만 확장; 외부 입력/코드 실행/파일 접근 권한 추가0·기본 Rust 비활성·v1/사용자 기록/한도 유지.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
-- 다음 작업: 이번 CI의 실제 Cargo 다음 단원/복귀 근거 확인 후 선택적 Rust 인수 계약을 로드맵 검증기에 연결하고 F01 완료/다음 C 차례 전환을 검토; Cargo 자원 오류 세부 분류·실기기 인수는 별도 남음.
+- 다음 작업: 선택적 Rust의 검증된 인수 계약을 로드맵 검증기에 연결하고 F01 완료/다음 C 차례 전환을 검토; 실행기 기능을 더 늘리지 말고 현재 근거를 먼저 판정. Cargo 자원 오류 세부 분류·실기기 인수는 별도 남음.
 
 ---
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
