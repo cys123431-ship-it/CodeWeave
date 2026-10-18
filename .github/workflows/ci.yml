@@ -59,6 +59,7 @@ jobs:
           node --check server/rust-budget.mjs
           node --check server/rust-executor.mjs
           node --check tests/rust-executor.test.mjs
+          node --check tests/rust-recovery.test.mjs
           node --check tests/rust-service.test.mjs
           node --check tests/helpers/rust-pipeline.mjs
           node --check tests/rust-pipeline.test.mjs
@@ -139,7 +140,7 @@ jobs:
         env:
           CODEWEAVE_REQUIRE_RUST: '1'
       - name: Trusted Rust integrated lifecycle and cleanup
-        run: node --test --test-concurrency=1 tests/rust-pipeline.test.mjs tests/rust-cancellation.test.mjs tests/rust-cleanup.test.mjs tests/rust-process-state.test.mjs tests/rust-build-failures.test.mjs tests/rust-cargo-cpu.test.mjs tests/rust-cargo-memory.test.mjs tests/rust-service.test.mjs tests/grading-admission.test.mjs tests/request-cancellation.test.mjs tests/rust-executor.test.mjs
+        run: node --test --test-concurrency=1 tests/rust-pipeline.test.mjs tests/rust-cancellation.test.mjs tests/rust-cleanup.test.mjs tests/rust-process-state.test.mjs tests/rust-build-failures.test.mjs tests/rust-cargo-cpu.test.mjs tests/rust-cargo-memory.test.mjs tests/rust-service.test.mjs tests/grading-admission.test.mjs tests/request-cancellation.test.mjs tests/rust-executor.test.mjs tests/rust-recovery.test.mjs
         env:
           CODEWEAVE_REQUIRE_RUST: '1'
       - name: Diagnose macOS limits on failure

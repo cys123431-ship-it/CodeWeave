@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-18 17:03 KST — F01 정리 실패 차단·수동 공간 복구
+- 시작/결과 SHA: 시작d7dad843b300f2f84910e7596064c62db78a2a7e; 구현 커밋 제목 feat: quarantine Rust cleanup failures and verify manual recovery; 실제 SHA/CI 후속 기록.
+- 목표: 로컬 Rust 정리 실패 뒤 C·Rust 공유 슬롯 차단, 비공개 상태와 삭제 없는 명시적 공간 복구·재제출 검증.
+- 변경 파일 수: 총9개(공유 admission·Rust 서비스/준비/어댑터·신규9검사·CI·설계·활성/보관 일지).
+- 테스트 결과: 신규 합성8건 각각 수정 전 실패→통과·실제1skip(Rust 부재); 전체594건580통과·실패0·skip14(Rust 부재); MJS5개·일지4/4·보관 원문 보존·roadmap/diff 확인; 삭제0·기존 기대값 변경0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39107035357 성공 재확인; 결과 SHA CI 대기(성공 확인 전 완료 아님).
+- 발견한 문제: 정리 실패 뒤 슬롯 재개·준비 실패 중 삭제 오류의 원인 소실을 재현·수정. 부모 교체 시 경로 부재를 정리 완료로 오인하는 신규 검사도 실패 재현 후 device/inode·정규 경로 검증으로 수정.
+- 보안 영향: 새 HTTP/실행 활성화0; 오류·공간 경로는 신뢰 운영자 내부만 관측, 자동 삭제/강제 해제0; 프로세스 정리 불확실성은 공간 복구로 해제 불가, 진도/v1/실습 잠금 변경0.
+- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
+- 다음 작업: 결과 SHA CI 확인 후 인증된 Rust HTTP 경로·실제 문제/기록 연결을 검증; 프로세스 불확실성 수동 인수는 계속 필요, 단원 완료/차례 전환 아님.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-18 16:02 KST — F01 명시적 신뢰 로컬 Rust 어댑터
 - 시작/결과 SHA: 시작100b5e31169cf3eb4298a0742122e1766bfbf86e; 구현53ff9da243109efafd4fd90eceaf110ced2f3cc6; 후속 docs: record verified local Rust adapter CI.
 - 목표: 기본 비활성·고정 도구/호스트·공유 예산·환경/설정 경계·그룹 취소/정리·서비스 결과 계약을 실제 어댑터로 연결, HTTP 등록0.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 새 외부 HTTP 입력/호스트 실행기0. 기본 비활성·환경/요청 활성화0·검증 코드 스냅샷·한 인스턴스1슬롯; 경로/예외 비밀값 응답0·진도/v1/실습 잠금 변경0.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
 - 다음 작업: 결과 SHA CI를 확인하고 신뢰 로컬 실행 어댑터/공유 C·Rust 슬롯·연결 해제 취소·운영 관측/복구를 검증한 뒤 HTTP/실제 문제 연결을 검토; 단원 완료나 차례 전환 아님.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-18 11:57 KST — F01 실제 Cargo 메모리 초과 통합
-- 시작/결과 SHA: 시작d0812d689dd685fda7a6479465dc4aa8517d598d; 구현d62787b6785487392fffc23a984aa4fdffbb96b4; 진단수집201d00ad4a5b701e00c78babaa714871e6eb62ca; 대조군수정f877ee8dbd0224ee1c9c69ac121c82584b4c458f; 후속 docs: record verified Cargo allocation failure CI.
-- 목표: 기존 CI 빌드 예산에서 실제 컴파일러 할당 실패·열거 차단·전체 미실행·소유 공간 정리와 부모 파일 보존 검증.
-- 변경 파일 수: 총6개(독립 Rust 음성fixture·신규2검사·CI·설계·활성/보관 일지).
-- 테스트 결과: 신규2건 초기 fixture 부재로 계약1실패·실제1skip→계약1통과·실제1skip(Rust 부재); 실제 CI 메모리 검사도 초기 진단 수집 실패→대조군/JSON 진단 확인 통과; 전체556건546통과·실패0·skip10(Rust 부재); MJS1개·일지4/4·roadmap/diff 성공; 삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39089293054 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39092064031 macOS 실제검사1실패: Cargo101이지만 stderr에 메모리 진단 부재; 진단수집CI39092179114에서 JSON E0080/컴파일러 메모리 부족 확인; 대조군수정 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39092312409 전체556/556·실패0·skip0·macOS 관련32/32·browser 성공, 양 OS 작은 배열8통과/큰 배열 할당 실패·정리 확인; 후속 기록 SHA CI 별도 확인.
-- 발견한 문제: 실제 Cargo 메모리 실패 통합 증거 부재. 첫 CI stderr만으로 원인 확인 불가해 JSON 수집 추가, E0080 할당 실패를 확인해 rendered 진단 검사로 변경(정상 컴파일 오류를 메모리 실패로 허용하지 않음); 작은 배열 대조군의 실제 예상값7로 하네스 수정. 초기 새 검사의 존재하지 않는 plan.language 가정을 소스 보존 검사로 바로잡음(기존 계약에 없는 필드를 제품에 추가하지 않기 위한 테스트 수정).
-- 보안 영향: 새 외부 입력/API/실행기0. 신뢰 CI fixture만 컴파일·기존 한도 증가0·운영 메모리 판정 추가0; 진도/v1/실습 잠금 변경0.
-- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
-- 다음 작업: 후속 결과 SHA CI를 확인하고 Rust 실행 어댑터의 명시적 활성화·동시 요청/취소·오류 응답 인수 계약 검증; 단원 완료나 차례 전환 아님.

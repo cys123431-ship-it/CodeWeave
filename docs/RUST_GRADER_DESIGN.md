@@ -153,7 +153,16 @@ server/rust-executor.mjs의 비동기 createLocalRustGradingService는 기본 �
 PATH/HOME/LANG/LC_ALL/TMPDIR만 신뢰 운영 환경에서 캡처하고 컴파일러 hooks/플래그/대상 경로 등 나머지 상속값을 버린다. private CARGO_HOME/target·절대 RUSTC·offline/frozen·경고 실패 정책을 고정한다. Linux x64의 명시적 어댑터는 기존 CI와 같은 -Clinker-features=-lld를 사용하며 pure plan과 다른 플랫폼은 그대로다. PATH의 시스템 링커는 운영자가 신뢰해야 한다.
 Cargo는 현재 디렉터리의 조상 .cargo/config와 config.toml도 읽으므로 활성화 전과 매 제출의 공간 생성 전에 부모부터 루트까지 해당 설정 존재를 검사해 거부한다. 설정 내용을 읽거나 파일을 수정·삭제하지 않는다. private CARGO_HOME으로 사용자 기본 설정도 배제한다. 검사 후 설정/도구가 바뀌는 공격을 격리하지 않으므로 부모·도구 경로는 계속 신뢰해야 한다. 근거: [Cargo 설정 탐색](https://doc.rust-lang.org/cargo/reference/config.html#hierarchical-structure), [환경 변수](https://doc.rust-lang.org/cargo/reference/environment-variables.html), 2026-10-18 확인.
 각 단계는 detached 그룹으로 실행하고 정상 종료·취소·시간/출력 초과 모두 소유 그룹을 종료한 뒤 스트림 정리를 기다린다. 정리 오류는 취소로 덮지 않고 운영 오류로 전파한다. Cargo 실행기125/126/127·프로세스 정리/도구 장애는 오답 결과가 아니라 기존 서비스의 비공개503이다. 실제 Cargo101 컴파일 오류·경고와 한도 초과는 기존 전체 미실행 결과 계약을 따른다. 기존 pipeline의 소유 공간 삭제와 서비스의 공유 슬롯 해제/안전한 결과 복사를 재사용한다.
-신뢰 개인 코드용 내부 어댑터이며 파일/네트워크 격리·악성 제출 판정 진위는 보장하지 않는다. 운영 관측·정리 실패 복구와 인증된 HTTP 연결/실제 Rust 문제·숙달 인수는 아직 남아 있다.
+신뢰 개인 코드용 내부 어댑터이며 파일/네트워크 격리·악성 제출 판정 진위는 보장하지 않는다. 아래의 제한된 운영 상태/공간 복구 외에 프로세스 불확실성의 수동 인수와 인증된 HTTP 연결/실제 Rust 문제·숙달 인수는 아직 남아 있다.
+
+### 정리 실패 후 차단과 명시적 공간 복구 (2026-10-18)
+
+로컬 어댑터는 공간 ERUSTCLEANUP 또는 프로세스 ECLEANUP을 만나면 C·Rust 공통 lease를 격리 상태로 보유한다. 정상 finally의 release나 중복/오래된 해제는 이 상태와 다음 소유자를 풀지 못한다. 같은 어댑터의 후속 제출은 비공개 RUST_UNAVAILABLE/503, 공유 슬롯의 다른 요청은 기존 busy로 거부하며 새 실행/공간 생성을 시작하지 않는다. prepare 도중 쓰기와 삭제가 함께 실패해도 두 원인을 AggregateError로 보존하고 정확한 소유 workspaceDir로 ERUSTCLEANUP을 전달한다.
+inspect()는 동결된 state·reason·workspaceDir 세 필드만 반환한다. state는 disabled/ready/quarantined/recovering, reason은 null/workspace-cleanup/process-cleanup이다. 경로는 신뢰 로컬 운영자만 사용하는 정보이며 HTTP·학습자 결과·진도/v1 백업에 노출하지 않는다. 오류 원문·코드·프로세스 출력은 상태에 담지 않는다. 비활성 서비스의 관측/복구는 도구 probe나 공간 생성을 하지 않는다.
+recover()는 경로나 강제 해제 인수를 받지 않으며 파일을 삭제·이동하거나 프로세스를 종료하지 않는다. 운영자가 장애를 해결하고 해당 공간을 직접 정리한 뒤에만 호출한다. workspace-cleanup이고, 시작 때 캡처한 정규 부모 경로·device/inode가 그대로이며, lstat으로 정확한 소유 경로가 ENOENT임을 확인한 경우에만 소유 resume capability로 슬롯을 한 번 해제한다. 존재하는 폴더/파일·끊어진 심볼릭 링크·부모 이동/교체·접근 오류는 false를 반환하며 차단을 유지한다. 부모의 다른 파일은 만지지 않는다.
+중첩 오류에 ECLEANUP이 있거나 오류 그래프 확인 한도(32객체·배열16개)를 넘으면 보수적으로 process-cleanup으로 분류한다. 공간이 없어도 recover()로 해제할 수 없다. 운영자가 남은 프로세스를 확인·종료한 뒤 의도적으로 재시작해야 하며, 재시작 자체가 이전 프로세스 정리의 증거는 아니다. 상태는 메모리에만 있고 여러 Node 프로세스/worker 간 잠금이나 악성 파일 시스템 경합 격리가 아니다. 공간의 다른 경로 이동까지 추적하지 않으므로 부모와 수동 작업은 신뢰해야 한다.
+주입형 내부 서비스의 선택적 onCleanupFailure는 원본 오류와 private resume을 신뢰 운영자에게만 전달한다. 이 감독 hook 없는 기존 주입 서비스의 해제 동작은 호환을 유지한다. 로컬 실행 어댑터는 항상 감독을 연결하며, 향후 HTTP는 이 어댑터를 사용해야 하고 hook/inspect/recover/resume을 외부에 노출하면 안 된다. 네 필드 채점 결과와 Rust HTTP/UI·실습/숙달 비활성 정책은 그대로다.
+새 검사는 lease 격리/오래된 해제, 오류 비공개, 삭제 전 재실행 거부, 수동 삭제 뒤 재제출, 끊어진 링크, 준비 중 복합 오류, 부모 교체 거부, 프로세스 불확실성의 복구 거부를 재현한다. 실제 Rust 제출의 삭제 실패→차단→수동 정리→새 성공8사례 경로는 Linux/macOS CI에서 필수다. 권한 장애는 소유 경로의 EACCES 주입이며 실제 OS 권한 설정을 바꾸거나 임의 프로세스를 남기지 않는다.
 
 공유 슬롯 검증 SHA `452f4a53322d41ad29e3088210bd3597dc932d02`의 [CI39099160821](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39099160821)는 Ubuntu 전체567/567·skip0, macOS 관련43/43·skip0, browser 회귀를 통과했다. 실제 C HTTP 경로를 띄워 내부 Rust 점유 중 C의429·GCC/임시 공간 생성0, 해제 후 C 정상 재제출 및 C 점유 중 내부 Rust 거부를 양 OS에서 확인했다. 취소 후 정리 대기·여러 서비스 간 배타성·이전 소유자의 중복 해제 무효도 검사했다. Rust HTTP 경로/실행 어댑터 활성화는 포함하지 않는다.
 
@@ -162,7 +171,7 @@ Cargo는 현재 디렉터리의 조상 .cargo/config와 config.toml도 읽으므
 연결 수명 검증 SHA `27db37fe4823be3d1bf395be8a3ca657ad852a5f`의 [CI39102784378](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39102784378)는 Ubuntu 전체576/576·skip0, macOS 관련52/52·skip0, browser 회귀를 통과했다. C 실제 HTTP 연결 해제→부모/자식 종료→삭제 대기 중429→삭제 완료 뒤 정상 재제출, Rust response close 이벤트→실제 사례 취소→후속 차단/소유 공간 정리/공유 슬롯 해제를 양 OS에서 확인했다. 첫 macOS 검사의 시스템 실행 파일 제어군126은 자체 GCC C 제어군으로 수정했으며 성공0 기대값과 자원 한도는 유지했다.
 
 연결 수명은 server/request-cancellation.mjs의 createRequestCancellation(req,res)로 AbortSignal에 연결한다. 요청 aborted 또는 아직 writableFinished가 아닌 응답 close만 취소하며, 정상 본문 수신의 request close는 취소가 아니다. 기존 C HTTP 경로에 실제 적용했고 C runCases→runSubmission으로 전달한다. 완료/오류/취소 후 dispose가 자기 리스너만 제거하며, 실행 그룹 종료·소유 공간 삭제가 settle하기 전 공유 슬롯을 해제하지 않는다. 닫힌 연결에 성공/오답 결과나500을 쓰지 않는다. C의 동기 GCC 컴파일 자체는 도중 취소할 수 없고 기존4.5초 한도와 다음 비동기 경계 검사에 의존한다. 파일 쓰기/삭제도 진행 중 I/O를 강제 중단하지 않는다.
-Rust 서비스에는 동일 signal을 submit의 옵션으로 전달할 수 있다. CI는 response close 이벤트를 주입해 실제 Cargo→테스트 열거→첫 사례 실행을 취소하고 나머지 사례 차단·공간 삭제·슬롯 해제 순서를 확인한다. 실제 Rust HTTP 경로/인증/실행 어댑터 연결이나 활성화는 아직 아니다. 운영 관측·정리 실패 복구는 별도 남은 작업이며 종료 신호/자원 제한을 격리 보장으로 확대하지 않는다.
+Rust 서비스에는 동일 signal을 submit의 옵션으로 전달할 수 있다. CI는 response close 이벤트를 주입해 실제 Cargo→테스트 열거→첫 사례 실행을 취소하고 나머지 사례 차단·공간 삭제·슬롯 해제 순서를 확인한다. 실제 Rust HTTP 경로/인증/실행 어댑터 연결이나 활성화는 아직 아니다. 운영 상태/공간 복구는 위의 제한된 계약을 따르며 종료 신호/자원 제한을 격리 보장으로 확대하지 않는다.
 
 server/rust-service.mjs의 createRustGradingService는 enabled:true·신뢰 registry·주입 grade 함수가 모두 있어야 요청을 수락한다. 환경 변수/클라이언트 요청으로 활성화하지 않고 기본 실행기·child_process·HTTP 등록도 없다. 현재 dev-server와 UI는 이 서비스를 사용하지 않는다.
 요청/ID/코드 길이·AbortSignal을 실행 함수 호출 전 검증하고 코드 문자열을 동결한 스냅샷으로 전달한다. 같은 Node 프로세스의 C 채점과 모든 Rust 서비스가 server/grading-admission.mjs의 단일 슬롯을 공유한다. 동시1건, 대기열0이며 Rust 중복 요청은 RUST_BUSY/429다. 기본 비활성은 RUST_DISABLED/503, 요청 오류는 RUST_INVALID/400, 취소는 RUST_CANCELLED/499, 운영/정리/결과 오류는 RUST_UNAVAILABLE/503이다. statusCode는 내부 계약이며 실제 Rust HTTP 응답 구현이나 API 활성화 증거가 아니다.

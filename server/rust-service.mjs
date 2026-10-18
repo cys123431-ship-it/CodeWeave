@@ -23,8 +23,11 @@ function validResult(value, count) {
     && value.ok === value.tests.every(tc => tc.passed);
 }
 
-export function createRustGradingService({ enabled = false, definitions, grade } = {}) {
+export function createRustGradingService({ enabled = false, definitions, grade, onCleanupFailure } = {}) {
   if (typeof enabled !== 'boolean') throw new TypeError('Rust activation must be boolean');
+  if (onCleanupFailure !== undefined && typeof onCleanupFailure !== 'function') {
+    throw new TypeError('Cleanup supervision must be a trusted function');
+  }
   if (enabled && (!(definitions instanceof Map) || typeof grade !== 'function')) {
     throw new TypeError('Enabled Rust service requires a trusted registry and grader');
   }
@@ -48,6 +51,14 @@ export function createRustGradingService({ enabled = false, definitions, grade }
         let value;
         try { value = await grade(snapshot, definitions, { signal }); }
         catch (error) {
+          if (['ERUSTCLEANUP', 'ECLEANUP'].includes(error?.code)) {
+            if (onCleanupFailure) {
+              const resume = releaseSlot.quarantine();
+              try { await onCleanupFailure(Object.freeze({ error, resume })); }
+              catch { /* Reporting failure never reopens admission or leaks its exception. */ }
+            }
+            throw failure('RUST_UNAVAILABLE');
+          }
           if (error?.name === 'AbortError' || error?.code === 'ABORT_ERR') {
             throw failure('RUST_CANCELLED');
           }

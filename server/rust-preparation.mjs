@@ -19,7 +19,14 @@ export async function prepareRustWorkspace(request, definitions, parent = os.tmp
     return { dir, targetDir: path.join(dir, 'target'), plan };
   } catch (error) {
     // Only the exact directory just created by this call is cleaned up.
-    await fs.rm(dir, { recursive: true, force: true });
+    try {
+      await fs.rm(dir, { recursive: true, force: true });
+    } catch (cleanup) {
+      const failure = new AggregateError([error, cleanup], 'Rust 준비 공간 정리에 실패했습니다.', { cause: cleanup });
+      failure.code = 'ERUSTCLEANUP';
+      failure.workspaceDir = dir;
+      throw failure;
+    }
     throw error;
   }
 }

@@ -9,6 +9,27 @@ import { rustBudget, rustBuildBudget } from './rust-budget.mjs';
 import { gradeRustInternal } from './rust-pipeline.mjs';
 import { createRustGradingService } from './rust-service.mjs';
 
+function hasProcessCleanupFailure(error) {
+  const pending = [error], seen = new Set();
+  for (let count = 0; pending.length && count < 32; count++) {
+    const current = pending.pop();
+    if (!current || typeof current !== 'object' || seen.has(current)) continue;
+    seen.add(current);
+    if (current.code === 'ECLEANUP') return true;
+    if (Array.isArray(current.errors)) {
+      if (current.errors.length > 16) return true;
+      pending.push(...current.errors);
+    }
+    if (current.cause) pending.push(current.cause);
+  }
+  // Unknown/deeper error chains cannot authorize a workspace-only recovery.
+  return pending.length > 0;
+}
+
+function unavailable() {
+  return Object.assign(new Error('Rust 채점 도구를 사용할 수 없습니다.'), { code: 'RUST_UNAVAILABLE', statusCode: 503 });
+}
+
 async function assertNoCargoConfig(parent) {
   for (let dir = parent; ; dir = path.dirname(dir)) {
     for (const name of ['config', 'config.toml']) {
@@ -95,11 +116,22 @@ function run(invocation, cwd, signal) {
 
 export async function createLocalRustGradingService({ enabled = false, definitions, sysroot, parent } = {}) {
   if (typeof enabled !== 'boolean') throw new TypeError('Rust activation must be boolean');
-  if (!enabled) return createRustGradingService();
+  if (!enabled) {
+    const service = createRustGradingService();
+    return Object.freeze({
+      submit: (...args) => service.submit(...args),
+      inspect: () => Object.freeze({ state: 'disabled', reason: null, workspaceDir: null }),
+      async recover(...args) {
+        if (args.length) throw new TypeError('Recovery does not accept a path or override');
+        return false;
+      }
+    });
+  }
   if (!(definitions instanceof Map)) throw new TypeError('Local Rust execution requires a trusted registry');
   if (!['linux', 'darwin'].includes(process.platform)) throw new Error('Local Rust execution requires Linux or macOS');
   const root = await fs.realpath(parent ?? os.tmpdir());
-  if (!(await fs.stat(root)).isDirectory()) throw new TypeError('Rust workspace parent must be a directory');
+  const parentIdentity = await fs.stat(root, { bigint: true });
+  if (!parentIdentity.isDirectory()) throw new TypeError('Rust workspace parent must be a directory');
   await assertNoCargoConfig(root);
   // The operator supplies the sysroot. Neither submitted fields nor a moving PATH rustup proxy selects it.
   const tools = await resolveRustToolPaths(sysroot);
@@ -112,7 +144,9 @@ export async function createLocalRustGradingService({ enabled = false, definitio
   });
   checkRustToolchain(probe(tools.cargo, ['--version']), probe(tools.rustc, ['--version']));
   checkRustToolHost(probe(tools.rustc, ['-vV']), tools.host);
+  let activeWorkspace = null, incident = null, recovering = false;
   const observe = async ({ stage, workspace, artifact, test, signal }) => {
+    activeWorkspace = workspace.dir;
     signal?.throwIfAborted();
     const env = { ...baseEnv, ...workspace.plan.environment, RUSTC: tools.rustc,
       CARGO_HOME: path.join(workspace.dir, 'cargo-home'), CARGO_TARGET_DIR: workspace.targetDir,
@@ -137,8 +171,54 @@ export async function createLocalRustGradingService({ enabled = false, definitio
     }
     return output;
   };
-  return createRustGradingService({ enabled: true, definitions, grade: async (request, registry, { signal }) => {
-    await assertNoCargoConfig(root);
-    return gradeRustInternal(request, registry, { parent: root, signal, observe });
-  } });
+  const service = createRustGradingService({ enabled: true, definitions,
+    onCleanupFailure: ({ error, resume }) => {
+      // Establish a conservative incident before inspecting even trusted exception metadata.
+      incident = Object.freeze({ reason: 'process-cleanup', workspaceDir: null, resume });
+      const candidate = error.code === 'ERUSTCLEANUP' ? error.workspaceDir : activeWorkspace;
+      const dir = typeof candidate === 'string' && path.normalize(candidate) === candidate
+        && path.dirname(candidate) === root && path.basename(candidate).startsWith('codeweave-rust-')
+        ? candidate : null;
+      incident = Object.freeze({ reason: dir && !hasProcessCleanupFailure(error)
+        ? 'workspace-cleanup' : 'process-cleanup', workspaceDir: dir, resume });
+    },
+    grade: async (request, registry, { signal }) => {
+      activeWorkspace = null;
+      await assertNoCargoConfig(root);
+      return gradeRustInternal(request, registry, { parent: root, signal, observe });
+    }
+  });
+  return Object.freeze({
+    async submit(...args) {
+      if (incident) throw unavailable();
+      return service.submit(...args);
+    },
+    inspect() {
+      return Object.freeze({ state: incident ? (recovering ? 'recovering' : 'quarantined') : 'ready',
+        reason: incident?.reason ?? null, workspaceDir: incident?.workspaceDir ?? null });
+    },
+    async recover(...args) {
+      if (args.length) throw new TypeError('Recovery does not accept a path or override');
+      const current = incident;
+      if (!current || recovering || current.reason !== 'workspace-cleanup' || !current.workspaceDir) return false;
+      recovering = true;
+      try {
+        try {
+          const identity = await fs.lstat(root, { bigint: true });
+          if (!identity.isDirectory() || identity.dev !== parentIdentity.dev || identity.ino !== parentIdentity.ino
+              || await fs.realpath(root) !== root) return false;
+        } catch { return false; }
+        try {
+          // lstat also sees dangling/replacement links. Never follow or remove a recovery target.
+          await fs.lstat(current.workspaceDir);
+          return false;
+        } catch (error) {
+          if (error.code !== 'ENOENT') return false;
+        }
+        if (incident !== current || !current.resume()) return false;
+        incident = null;
+        return true;
+      } finally { recovering = false; }
+    }
+  });
 }
