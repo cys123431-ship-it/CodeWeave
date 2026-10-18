@@ -92,6 +92,7 @@ finally에서 이 호출이 생성한 정확한 디렉터리만 정리한다. �
 buildRustResult는 기존 ok/message/compileOutput/tests 형식을 유지한다. 관찰 오류 ETIMEDOUT·ENOBUFS는 각각 빌드 시간/출력 제한, 직접 관찰된 SIGXCPU·SIGXFSZ는 CPU/파일 제한으로 표시한다. SIGKILL·SIGABRT 등은 비정상 종료일 뿐 메모리 부족으로 단정하지 않는다. Cargo101과 진단 문자열만으로 하위 rustc의 자원 초과를 구조화된 한도 판정으로 승격하지 않는다.
 ENOENT/EACCES/ELIMIT/ECLEANUP/EIO 등 그 밖의 관찰 오류는 운영 예외로 전파해 제출 오답 결과를 만들지 않는다. 원래 code/cause를 보존하고 코드 없는 관찰 오류는 ERUSTBUILD, 고정 제한 래퍼의 예약 종료125는 ELIMIT이다. ABORT_ERR는 AbortError로 전파한다. 모든 정상 반환 빌드 실패의 tests는 전체 선언 사례 수를 유지하고 전부 미실행이다. 실패 분류에 Cargo 진단 텍스트를 신뢰하지 않는다.
 신규 검사는 분류·위장 진단·운영 오류와 실제 Node 시간/출력 초과의 내부 pipeline 중단/정리를 확인한다. 실제 Cargo CI fixture는 정상 15초/기존 자원 예산에 더 낮은 상속 파일 한도1KiB를 적용해 빌드 실패·목록/사례 미실행·소유 공간 삭제를 확인한다. 신뢰된 독립 fixture이며 운영 실행기나 실제 Cargo CPU/메모리 초과 검증을 뜻하지 않는다. Rust 실습/숙달과 HTTP 연결은 계속 비활성이다.
+검증 SHA `7d495e41538a241e426a4b86947e5a6a0d4ee0fb`의 [CI39085330936](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39085330936)에서 Ubuntu 전체551/551·skip0, macOS 관련29/29·skip0, browser 회귀 성공을 실제 확인했다. 양 OS 모두 제한된 실제 Cargo가 status:null/signal:SIGXFSZ로 종료했고, 전체8사례 미실행과 소유 공간 삭제가 통과했다. 분류/시간·출력 초과·운영 오류 검증이며 Cargo CPU/메모리 제한의 원인별 확정이나 운영 API 인수로 확대하지 않는다.
 
 ### 소유 작업 공간 정리 실패 (2026-10-18)
 
