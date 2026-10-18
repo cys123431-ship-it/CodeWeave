@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-18 19:01 KST — F01 명시적 로컬 서버 연결
+- 시작/결과 SHA: 시작a8fc2086384865bbeac88e8b3b9587db31e4ffec; 구현 커밋 제목 feat: mount opt-in Rust grading in the loopback learning server; 실제 SHA/CI 후속 기록.
+- 목표: 일반 CLI의 C 기본 동작 보존·명시적 Rust 주입만 실행·동일 페이지 토큰/공유 슬롯·고정 loopback 실제 서버 연결 검증.
+- 변경 파일 수: 총8개(서버 factory·얇은 CLI·신규6검사·CI·로컬 안내·설계·활성/보관 일지).
+- 테스트 결과: 신규5건 모듈 부재5실패→5통과·실제1skip(Rust 부재); 첫 전체590통과/1실패/skip16→재검사607건591통과·실패0·skip16(Rust 부재); 관련39건38통과·skip1·일지4/4·C grade 원문/보관 원문/MJS3개/roadmap/diff 확인; 삭제0·기존 기대값 변경0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39114164622 성공 재확인; 결과 SHA CI 대기(성공 전 완료 아님).
+- 발견한 문제: 실제 서버 연결 부재5건 재현·수정, C grade 원문 보존. 첫 전체 검사는 안내 편집 중 잠시 중복된 빈 브라우저 헤딩을 읽어1실패; 빈 중복 헤딩을 제거해2/2 재확인하고 전체 재검사(기대값/설명 문장 변경0).
+- 보안 영향: /api/grade/rust를 같은 서버에 등록하되 기본503·환경 활성화0, 명시적 신뢰 서비스만 실행·127.0.0.1 고정/호스트 인수 거부·페이지 토큰/정적 접근 제한 유지; HTTP 복구 경로0·진도/v1/실습 잠금 변경0.
+- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
+- 다음 작업: 결과 SHA CI 확인 후 기존 F01 실제 교육 문제 registry·클라이언트 제출/v1 기록 연결을 좁은 항목으로 인수; 새 단원/차례 전환 아님.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-18 18:00 KST — F01 기본 비활성 Rust HTTP 계약
 - 시작/결과 SHA: 시작05f220fd152d2147c1418baeece7b5edc91c314f; 구현43952d642459d82b9514fb3e1f978b7bc22f75b9; 후속 docs: record verified Rust HTTP adapter CI.
 - 목표: 공유 loopback 인증·명시적 활성화·본문 제한·취소/정리·안전 오류 계약을 실제 HTTP 요청으로 검증, dev-server Rust 등록0.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 새 API/활성 실행기0·기존 인증 선검사 유지. C 실제 연결 취소, Rust 내부 signal 전달만 검증; 동기 GCC 도중 취소/진행 I/O 강제 중단/호스트 격리 보장 아님.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
 - 다음 작업: 결과 SHA CI 확인 후 신뢰 로컬 Rust 실행 어댑터·운영 관측/정리 실패 복구를 검증하고 인증된 HTTP/문제 연결 검토; 단원 완료나 차례 전환 아님.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-18 13:55 KST — F01 C·Rust 공유 채점 슬롯
-- 시작/결과 SHA: 시작0adbacf6abab9351fbe4ebd5d7f92b3272945510; 구현452f4a53322d41ad29e3088210bd3597dc932d02; 후속 docs: record verified shared grading admission CI.
-- 목표: 같은 Node 프로세스의 C/Rust 동시 실행1건·대기열0, 정리 대기·소유자별 안전 해제·재제출 연결 검증.
-- 변경 파일 수: 총8개(공유 admission·4검사·C 서버·Rust 서비스·CI·설계·활성/보관 일지).
-- 테스트 결과: 신규4건 모듈 부재4실패→슬롯만 구현1통과3실패(C 실제200≠429 포함)→4통과; 전체567건556통과·실패0·skip11(Rust 부재); MJS4개·일지4/4·roadmap/diff 성공; 삭제0·기존 기대값 변경0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39095805143 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39099160821 전체567/567·실패0·skip0·macOS 관련43/43·browser 성공; C/Rust 양방향 거부·GCC/임시 공간0·해제 뒤 실제 C 재제출 성공, 후속 기록 SHA CI 별도 확인.
-- 발견한 문제: C와 각 Rust 서비스의 독립 busy 상태로 겹친 요청 수락을 재현. 공유 동기 lease로 통합하고 오래된/중복 해제는 다음 소유자를 해제하지 않도록 검증. C 비동기 본문 파싱 뒤 재획득 유지.
-- 보안 영향: 새 HTTP 입력/실행기0. 기존 CSRF 선검사 유지·점유 중 GCC/작업 공간 생성0·취소만으로 슬롯 조기 해제0; 여러 프로세스/worker 간 제한이나 격리는 아님.
-- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
-- 다음 작업: 결과 SHA CI 확인 후 신뢰 로컬 Rust 실행 어댑터/연결 해제 취소·운영 관측/복구를 검증하고 HTTP/문제 연결 검토; 단원 완료나 차례 전환 아님.

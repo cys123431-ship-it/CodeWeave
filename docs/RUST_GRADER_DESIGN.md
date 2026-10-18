@@ -144,11 +144,21 @@ Cargo JSON은 컴파일/산출물 메시지이지 libtest 사례별 안정 JSON 
 
 ## 5. 결과·실패·재제출
 
+### 실제 로컬 학습 서버의 명시적 Rust 연결 (2026-10-18)
+
+server/learning-server.mjs의 createLearningServer({root, rustService})는 서버를 생성만 하며 import/생성 시 소켓·컴파일러·작업 공간을 시작하지 않는다. 동결된 제어 객체는 address(), listen(port), close()만 제공한다. listen은 정수0~65535 포트만 받고 127.0.0.1에 고정 바인딩하며 호스트 인수를 거부한다. root는 신뢰된 운영 코드가 지정한 학습 파일 루트이고 기존 정적 허용 목록/심볼릭 링크 차단을 그대로 사용한다.
+
+dev-server.mjs는 이 factory를 생성해 PORT 또는4173으로 여는 얇은 CLI다. npm start는 계속 C만 실행 가능하며 Rust 관련 환경 플래그/도구 경로를 해석하지 않는다. 같은 서버의 /api/grade/rust는 기본 비활성503이고 인증을 먼저 검사한다. 운영자가 정리 실패 감독이 있는 createLocalRustGradingService를 직접 생성해 rustService로 넘긴 구성에서만 실행한다. 요청이나 환경으로 registry/sysroot를 정하지 않으며 별도 공개 리스너·인증 우회·임의 명령 인수를 추가하지 않는다.
+
+C /api/grade의 grade 함수는 들여쓰기를 제외하고 이전 본문을 그대로 이동했다. C와 Rust는 같은 시작별 페이지 토큰과 같은 Node 프로세스의 공유 슬롯을 사용한다. Rust 실행/취소 후 정리가 대기 중이면 C도429이고 정리가 끝난 뒤 C 컴파일을 재수락한다. 서로 다른 factory 인스턴스의 토큰은 공유하지 않는다. 서버 코드·도구·하네스·문서는 정적 HTTP에서 계속404이며 inspect/recover는 경로에 등록하지 않는다.
+
+검사는 생성 시 비활성·고정 loopback/잘못된 인수 거부·토큰 분리, 기본503·인증 거부·C/정적 회귀, CLI 환경 활성화 불가, 명시적 Rust와 실제 C의 같은 토큰/배타성, 실제 소켓 연결 해제 후 C 차단/정리 대기를 검증한다. Linux/macOS 필수 CI는 이 factory가 제공한 실제 페이지에서 받은 토큰으로 Cargo 오답8사례→수정8통과·소유 공간 삭제·하네스 요청 거부를 확인한다. 아직 F01 실제 교육 문제 registry와 클라이언트/v1 제출 기록·실습/숙달은 연결하지 않았으며 다음 인수 항목이다.
+
 ### 기본 비활성 Rust HTTP 어댑터 (2026-10-18)
 
 검증 SHA `43952d642459d82b9514fb3e1f978b7bc22f75b9`의 [CI39114005911](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39114005911)는 Ubuntu 전체601/601·skip0, macOS 관련77/77·skip0, browser 회귀를 통과했다. 양 OS에서 실제 로컬 HTTP 제출의 오답8사례·수정8통과·정리 실패503·후속429·운영자 수동 복구를 확인했다. 일반 서버의 Rust 라우트 등록이나 학습자 UI/실습 인수까지 완료한 것은 아니다.
 
-server/rust-http.mjs의 createRustHttpHandler는 기본 비활성이며 신뢰된 서버 코드가 enabled:true·service·auth를 직접 제공해야 한다. 서비스는 정리 실패 감독이 연결된 createLocalRustGradingService를 사용한다. 환경 변수·클라이언트 필드로 활성화하지 않는다. 이번 구현은 로컬 HTTP fixture에서 연결을 검증하며 dev-server의 Rust 라우트·학습자 UI·실습/숙달은 아직 등록/활성화하지 않는다. HTTP 경로와 실제 문제/v1 기록의 최종 연결은 다음 인수 범위다.
+server/rust-http.mjs의 createRustHttpHandler는 기본 비활성이며 신뢰된 서버 코드가 enabled:true·service·auth를 직접 제공해야 한다. 서비스는 정리 실패 감독이 연결된 createLocalRustGradingService를 사용한다. 환경 변수·클라이언트 필드로 활성화하지 않는다. 이 절의 최초 검증 범위는 HTTP fixture였으며 이후 실제 서버 연결은 위 factory 절을 따른다. 일반 CLI의 Rust 실행·학습자 UI·실습/숙달은 여전히 비활성이고 실제 교육 문제/v1 기록은 다음 인수 범위다.
 
 server/local-auth.mjs는 기존 C 인증을 동작 변경 없이 공유한 것이다. 실제 서버 포트를 제공하는 함수마다 새32바이트 토큰을 만들고 페이지용 meta만 제공한다. Content-Type 정확히 application/json, 단일 Host의 127.0.0.1/localhost:실제PORT, 존재하는 단일 Origin의 동일 loopback HTTP 출처, 단일 X-CodeWeave-Token을 검사한다. 헤더 중복·외부/다른 포트·토큰 누락/이전 토큰은 실행 전에 거부하며 C 페이지/PWA의 기존 토큰 주입/캐시 제거 계약을 유지한다.
 
