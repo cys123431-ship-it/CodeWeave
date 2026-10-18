@@ -144,6 +144,15 @@ Cargo JSON은 컴파일/산출물 메시지이지 libtest 사례별 안정 JSON 
 
 ## 5. 결과·실패·재제출
 
+### 명시적 신뢰 로컬 실행 어댑터 (2026-10-18)
+
+server/rust-executor.mjs의 비동기 createLocalRustGradingService는 기본 비활성이며, enabled:true·신뢰 registry Map·운영자가 지정한 실제 sysroot가 있어야 실행 서비스를 만든다. 환경 변수/제출 필드로 활성화하거나 rustup PATH 프록시·설치/다운로드로 도구를 선택하지 않는다. 같은 sysroot의 실제 cargo/rustc 절대 경로·버전1.99.0·현재 호스트를 제한된5초/4KB probe로 검증한다. Linux/macOS만 허용하며 Windows Rust 실행은 계속 비활성이다. dev-server/HTTP/UI에는 등록하지 않았다.
+기존 CI 한도 함수를 server/rust-budget.mjs로 이동하고 tests/helpers의 기존 이름은 재내보내기로 보존했다. 값·스크립트/argv·낮은 상속 한도 보존 정책은 변경하지 않았다. Cargo 빌드는 CPU10초·주소 공간1GiB·파일32MiB·벽시계15초, 테스트는 CPU2초·주소 공간256MiB·파일2MiB·벽시계2초, 양쪽 합산 출력80KB다. macOS 주소 공간은 시작 Bash VSZ에 예산을 더하며 사용자 프로세스 Linux128/macOS512·코어0도 유지한다. 프로세스 그룹 전체 CPU/메모리 합산 한도는 아니다.
+PATH/HOME/LANG/LC_ALL/TMPDIR만 신뢰 운영 환경에서 캡처하고 컴파일러 hooks/플래그/대상 경로 등 나머지 상속값을 버린다. private CARGO_HOME/target·절대 RUSTC·offline/frozen·경고 실패 정책을 고정한다. Linux x64의 명시적 어댑터는 기존 CI와 같은 -Clinker-features=-lld를 사용하며 pure plan과 다른 플랫폼은 그대로다. PATH의 시스템 링커는 운영자가 신뢰해야 한다.
+Cargo는 현재 디렉터리의 조상 .cargo/config와 config.toml도 읽으므로 활성화 전과 매 제출의 공간 생성 전에 부모부터 루트까지 해당 설정 존재를 검사해 거부한다. 설정 내용을 읽거나 파일을 수정·삭제하지 않는다. private CARGO_HOME으로 사용자 기본 설정도 배제한다. 검사 후 설정/도구가 바뀌는 공격을 격리하지 않으므로 부모·도구 경로는 계속 신뢰해야 한다. 근거: [Cargo 설정 탐색](https://doc.rust-lang.org/cargo/reference/config.html#hierarchical-structure), [환경 변수](https://doc.rust-lang.org/cargo/reference/environment-variables.html), 2026-10-18 확인.
+각 단계는 detached 그룹으로 실행하고 정상 종료·취소·시간/출력 초과 모두 소유 그룹을 종료한 뒤 스트림 정리를 기다린다. 정리 오류는 취소로 덮지 않고 운영 오류로 전파한다. Cargo 실행기125/126/127·프로세스 정리/도구 장애는 오답 결과가 아니라 기존 서비스의 비공개503이다. 실제 Cargo101 컴파일 오류·경고와 한도 초과는 기존 전체 미실행 결과 계약을 따른다. 기존 pipeline의 소유 공간 삭제와 서비스의 공유 슬롯 해제/안전한 결과 복사를 재사용한다.
+신뢰 개인 코드용 내부 어댑터이며 파일/네트워크 격리·악성 제출 판정 진위는 보장하지 않는다. 운영 관측·정리 실패 복구와 인증된 HTTP 연결/실제 Rust 문제·숙달 인수는 아직 남아 있다.
+
 공유 슬롯 검증 SHA `452f4a53322d41ad29e3088210bd3597dc932d02`의 [CI39099160821](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39099160821)는 Ubuntu 전체567/567·skip0, macOS 관련43/43·skip0, browser 회귀를 통과했다. 실제 C HTTP 경로를 띄워 내부 Rust 점유 중 C의429·GCC/임시 공간 생성0, 해제 후 C 정상 재제출 및 C 점유 중 내부 Rust 거부를 양 OS에서 확인했다. 취소 후 정리 대기·여러 서비스 간 배타성·이전 소유자의 중복 해제 무효도 검사했다. Rust HTTP 경로/실행 어댑터 활성화는 포함하지 않는다.
 
 ### 내부 요청 서비스 — 기본 비활성 (2026-10-18)
@@ -200,11 +209,11 @@ Cargo 준비·사례 결과·F01 예시·직접 rustc 자원 fixture가 같은 �
 
 ### 신뢰된 CI 테스트 바이너리의 실행 예산 (2026-10-16)
 
-테스트 전용 `tests/helpers/rust-budget.mjs`가 고정 Bash 스크립트와 argv를 분리하며 PATH/LANG/LC_ALL/TMPDIR만 전달한다. 운영 코드·API에서는 사용하지 않는다.
+기존 `tests/helpers/rust-budget.mjs`는 현재 `server/rust-budget.mjs`를 재내보낸다. CI와 명시적 신뢰 로컬 어댑터가 같은 고정 Bash 스크립트/argv와 PATH/LANG/LC_ALL/TMPDIR 허용 목록을 사용하며 HTTP/API 활성화는 하지 않는다.
 실행 후보는 CPU2초, 가상 메모리256MiB, 파일2MiB, 사용자 프로세스 Linux128/macOS512, 코어0, 벽시계2초, 합산 출력80KB다. macOS는 공유 영역을 위해 Bash 초기 VSZ에256MiB를 더한 주소 공간 예산이며 RSS 상한이 아니다.
 기존의 더 낮은 soft/hard 한도를 높이지 않고 설정 실패 시 바이너리 실행 전125로 멈춘다. 사용자별 프로세스 한도는 제출별 격리가 아니며 root에서는 집행되지 않을 수 있다.
 CI는 실제 Rust의 getrlimit·그룹 ID·384MiB 예약 거부·4MiB 파일/SIGXFSZ·CPU 소진·정상/시간 초과 뒤 fork 자식 정리를 Linux/macOS에서 검증한다. 기존 Cargo 결과 fixture의 정상/단언 실패/조기 exit도 제한된 실행기를 거친다.
-운영 Cargo 빌드 실행기와 도구체인 고정은 여전히 미완료다. 아래 CI 빌드 예산 실험과 이 실행 예산 검증은 기존 C 한도를 변경하지 않고 Rust API/실습/숙달을 활성화하지 않는다. Windows Rust 실행은 지원하지 않는다.
+이 절의 과거 CI 예산 실험 이후 도구체인 고정과 위의 명시적 신뢰 로컬 어댑터를 구현했다. 인증된 HTTP 운영 연결/실습 인수는 여전히 미완료다. 기존 C 한도와 Rust API/실습/숙달은 변경하지 않으며 Windows Rust 실행은 지원하지 않는다.
 
 ### 신뢰된 CI Cargo 빌드 예산 (2026-10-17)
 
