@@ -4,8 +4,8 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 목표: 연결 해제→실행 그룹 취소→소유 공간 정리→공유 슬롯 해제 연결, 정상 요청 close 오인 취소/늦은 판정 응답 차단.
 - 변경 파일 수: 총9개(수명 helper·9검사·C HTTP/사례/실행기·CI·설계·활성/보관 일지).
 - 테스트 결과: 핵심7건 수정 전7실패→7통과; 보강 정상/리스너1통과·실제 Rust1skip(Rust 부재); 전체576건564통과·실패0·skip12(Rust 부재); MJS5개·일지4/4·roadmap/diff 확인; 삭제0·기존 기대값 변경0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39099293569 성공 재확인; 구현/결과 SHA CI 대기.
-- 발견한 문제: 기존 C는 취소 신호를 무시해 부모/자식이8초 fixture 한도까지 남고 HTTP 연결 해제도 정리를 시작하지 않음을 재현. signal 검증·그룹 종료·사례 전후 검사·리스너 해제 추가; 삭제 대기 중429와 정리 후 정상 재제출 확인.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39099293569 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39102637332 macOS 정상 종료 fixture1실패(126≠0), 실제 C/Rust 취소·정리 검사는 통과; 수정/결과 CI 대기.
+- 발견한 문제: 기존 C의 취소 무시/HTTP 정리 미시작7건 재현·수정. 첫 CI macOS /bin/true가 기존 예산에서126으로 종료해 정상 제어군을 자체 GCC C로 교체(실제 C HTTP 정상 제어군은 이미 통과); 성공0 기대값/한도 완화0·리스너 제거 검증 유지.
 - 보안 영향: 새 API/활성 실행기0·기존 인증 선검사 유지. C 실제 연결 취소, Rust 내부 signal 전달만 검증; 동기 GCC 도중 취소/진행 I/O 강제 중단/호스트 격리 보장 아님.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
 - 다음 작업: 결과 SHA CI 확인 후 신뢰 로컬 Rust 실행 어댑터·운영 관측/정리 실패 복구를 검증하고 인증된 HTTP/문제 연결 검토; 단원 완료나 차례 전환 아님.

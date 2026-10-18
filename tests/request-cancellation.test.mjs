@@ -143,11 +143,16 @@ test('C active cancellation kills the owned POSIX family before the deadline and
   } finally { controller.abort(); await pending; }
 });
 
-test('C runner removes cancellation listeners after normal completion and missing executables', async () => {
+test('C runner removes cancellation listeners after normal completion and missing executables', { skip: !gcc }, async t => {
   const controller = new AbortController();
-  const binary = posix ? '/bin/true' : process.execPath;
-  const result = await runSubmission(binary, posix ? [] : ['-e', ''], { abortSignal: controller.signal });
-  assert.equal(result.status, 0);
+  const dir = await temporary(t), file = path.join(dir, 'normal.c');
+  const binary = path.join(dir, process.platform === 'win32' ? 'normal.exe' : 'normal');
+  // Use the runner's actual C contract, not a platform system binary's loader requirements.
+  await fs.writeFile(file, 'int main(void) { return 0; }\n');
+  const compiled = spawnSync('gcc', ['-std=c11', '-Wall', '-Wextra', '-Werror', '-Wpedantic', file, '-o', binary], { encoding: 'utf8' });
+  assert.equal(compiled.status, 0, compiled.stderr);
+  const result = await runSubmission(binary, [], { cwd: dir, abortSignal: controller.signal });
+  assert.equal(result.status, 0, JSON.stringify(result));
   assert.equal(getEventListeners(controller.signal, 'abort').length, 0);
   const missing = await runSubmission('/codeweave-no-such-executable', [], { abortSignal: controller.signal });
   assert.notEqual(missing.status, 0);
