@@ -146,6 +146,8 @@ Cargo JSON은 컴파일/산출물 메시지이지 libtest 사례별 안정 JSON 
 
 ### 명시적 신뢰 로컬 실행 어댑터 (2026-10-18)
 
+검증 SHA `53ff9da243109efafd4fd90eceaf110ced2f3cc6`의 [CI39106889937](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39106889937)는 Ubuntu 전체585/585·skip0, macOS 관련61/61·skip0, browser 회귀를 통과했다. 양 OS에서 새 어댑터로 실제 Cargo 정상8통과·오답8실패·문법/경고 전체 미실행·실행 중 사례 취소와 소유 공간 정리를 확인했다. 합성 도구로 비활성/버전·호스트 거부, 환경 hooks 제거, 프로세스 가족 취소/재제출, 출력 제한, launcher125/126/127 운영 오류, 조상 Cargo 설정 사전/후속 거부도 검증했다. HTTP/UI 등록과 실제 학습자 Rust 문제·숙달 인수는 포함하지 않는다.
+
 server/rust-executor.mjs의 비동기 createLocalRustGradingService는 기본 비활성이며, enabled:true·신뢰 registry Map·운영자가 지정한 실제 sysroot가 있어야 실행 서비스를 만든다. 환경 변수/제출 필드로 활성화하거나 rustup PATH 프록시·설치/다운로드로 도구를 선택하지 않는다. 같은 sysroot의 실제 cargo/rustc 절대 경로·버전1.99.0·현재 호스트를 제한된5초/4KB probe로 검증한다. Linux/macOS만 허용하며 Windows Rust 실행은 계속 비활성이다. dev-server/HTTP/UI에는 등록하지 않았다.
 기존 CI 한도 함수를 server/rust-budget.mjs로 이동하고 tests/helpers의 기존 이름은 재내보내기로 보존했다. 값·스크립트/argv·낮은 상속 한도 보존 정책은 변경하지 않았다. Cargo 빌드는 CPU10초·주소 공간1GiB·파일32MiB·벽시계15초, 테스트는 CPU2초·주소 공간256MiB·파일2MiB·벽시계2초, 양쪽 합산 출력80KB다. macOS 주소 공간은 시작 Bash VSZ에 예산을 더하며 사용자 프로세스 Linux128/macOS512·코어0도 유지한다. 프로세스 그룹 전체 CPU/메모리 합산 한도는 아니다.
 PATH/HOME/LANG/LC_ALL/TMPDIR만 신뢰 운영 환경에서 캡처하고 컴파일러 hooks/플래그/대상 경로 등 나머지 상속값을 버린다. private CARGO_HOME/target·절대 RUSTC·offline/frozen·경고 실패 정책을 고정한다. Linux x64의 명시적 어댑터는 기존 CI와 같은 -Clinker-features=-lld를 사용하며 pure plan과 다른 플랫폼은 그대로다. PATH의 시스템 링커는 운영자가 신뢰해야 한다.
