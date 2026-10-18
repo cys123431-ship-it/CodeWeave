@@ -191,7 +191,7 @@ test('local Rust cancellation never signals a successfully killed group again af
   const kill = process.kill.bind(process);
   let groupSignals = 0;
   t.mock.method(process, 'kill', (pid, signal) => {
-    if (pid < 0 && ++groupSignals > 1) throw Object.assign(Error('post-exit group signal must not be retried'), { code: 'EPERM' });
+    if (pid < 0 && signal !== 0 && ++groupSignals > 1) throw Object.assign(Error('post-exit group signal must not be retried'), { code: 'EPERM' });
     return kill(pid, signal);
   });
   const controller = new AbortController();
@@ -218,6 +218,44 @@ test('local Rust executor stops excessive build output without running cases or 
   assert.ok(result.tests.every(tc => tc.detail === '미실행'));
   assert.ok(result.compileOutput.length <= 3000);
   assert.deepEqual(await fs.readdir(fixture.parent), []);
+});
+
+test('Rust parent and pipe close do not release admission before a delayed killed descendant exits', { skip: !posix }, async t => {
+  const { createLocalRustGradingService } = await api();
+  const { gradingAdmission } = await import('../server/grading-admission.mjs');
+  const fixture = await fakeTools(t), marker = path.join(fixture.root, 'detached-pid');
+  const cargo = path.join(fixture.sysroot, 'bin', 'cargo');
+  const original = await fs.readFile(cargo, 'utf8');
+  await fs.writeFile(cargo, original.replace('echo "error: trusted fixture compile failure" >&2\nexit 101', () =>
+    `sleep 30 </dev/null >/dev/null 2>&1 &\nprintf '%s\\n' "$!" > ${JSON.stringify(marker)}\nexit 101`));
+  const kill = process.kill.bind(process);
+  let group, timer, delayed = false, observedBusy = false;
+  t.mock.method(process, 'kill', (pid, signal) => {
+    if (pid < 0 && signal === 'SIGKILL' && !delayed) {
+      group = pid;
+      delayed = true;
+      // Model acknowledged signal delivery whose descendant termination is not instantaneous.
+      timer = setTimeout(() => {
+        observedBusy = gradingAdmission.busy;
+        try { kill(group, 'SIGKILL'); } catch (error) { if (error.code !== 'ESRCH') throw error; }
+      }, 120);
+      return true;
+    }
+    return kill(pid, signal);
+  });
+  const service = await createLocalRustGradingService({ enabled: true, definitions, ...fixture });
+  try {
+    const result = await service.submit(request);
+    const pid = Number((await ready(marker)).trim());
+    assert.equal(result.ok, false);
+    assert.equal(await alive(pid), false, 'pipe EOF is not descendant termination');
+    assert.equal(observedBusy, true, 'shared admission stays held until descendant termination');
+    assert.equal(gradingAdmission.busy, false);
+    assert.deepEqual(await fs.readdir(fixture.parent), []);
+  } finally {
+    clearTimeout(timer);
+    if (group) { try { kill(group, 'SIGKILL'); } catch (error) { if (error.code !== 'ESRCH') throw error; } }
+  }
 });
 
 test('local Rust executor reports build launcher failures as infrastructure errors instead of failed submissions', { skip: !posix }, async t => {

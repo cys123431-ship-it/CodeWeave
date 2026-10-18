@@ -191,41 +191,54 @@ test('workspace acknowledgement refuses a moved or replaced parent instead of co
 
 test('unconfirmed process cleanup cannot be reset through a workspace acknowledgement', { skip: !posix, timeout: 10000 }, async t => {
   // Isolate the deliberately unrecoverable admission state in a child process.
-  const helper = `import assert from 'node:assert/strict';
-    import fs from 'node:fs/promises'; import os from 'node:os'; import path from 'node:path';
-    import { createLocalRustGradingService } from ${JSON.stringify(new URL('../server/rust-executor.mjs', import.meta.url).href)};
-    import { gradingAdmission } from ${JSON.stringify(new URL('../server/grading-admission.mjs', import.meta.url).href)};
-    import { resolveRustToolPaths } from ${JSON.stringify(new URL('../server/rust-tools.mjs', import.meta.url).href)};
-    const root=await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(),'codeweave-process-fault-')));
-    const sysroot=path.join(root,'tools'),parent=path.join(root,'work'); await fs.mkdir(path.join(sysroot,'bin'),{recursive:true});await fs.mkdir(parent);
-    const cargo=path.join(sysroot,'bin','cargo'),rustc=path.join(sysroot,'bin','rustc');
-    await fs.writeFile(cargo,'#!/bin/sh\\n',{mode:0o700});await fs.writeFile(rustc,'#!/bin/sh\\n',{mode:0o700});
-    const tools=await resolveRustToolPaths(sysroot);
-    await fs.writeFile(cargo,'#!/bin/sh\\nif [ "$1" = --version ]; then echo "cargo 1.99.0 (trusted)"; exit 0; fi\\nexit 101\\n');
-    await fs.writeFile(rustc,'#!/bin/sh\\nif [ "$1" = --version ]; then echo "rustc 1.99.0 (trusted)"; exit 0; fi\\nprintf "%s\\\\n" "host: '+tools.host+'" "release: 1.99.0"\\n');
-    try {
-      const service=await createLocalRustGradingService({enabled:true,sysroot,parent,definitions:new Map(${JSON.stringify([...definitions])})});
-      assert.equal(typeof service.inspect,'function');
-      const originalKill=process.kill;
-      process.kill=(pid,...args)=>{if(pid<0)throw Object.assign(Error('PRIVATE group inspection failure'),{code:'EPERM'});return originalKill(pid,...args);};
-      try {await assert.rejects(service.submit(${JSON.stringify(request)}),{code:'RUST_UNAVAILABLE'});}finally{process.kill=originalKill;}
-      assert.equal(service.inspect().reason,'process-cleanup');
-      assert.equal(await service.recover(),false);assert.equal(gradingAdmission.busy,true);
-      assert.deepEqual(await fs.readdir(parent),[]);
-      await assert.rejects(service.submit(${JSON.stringify(request)}),{code:'RUST_UNAVAILABLE'});
-      console.log('PROCESS_QUARANTINE_VERIFIED');
-    } finally {await fs.rm(root,{recursive:true,force:true});}`;
-  const child = spawn(process.execPath, ['--input-type=module', '-e', helper], { stdio: ['ignore', 'pipe', 'pipe'] });
-  t.after(async () => {
-    if (child.exitCode === null && child.signalCode === null) {
-      const ended = once(child, 'exit'); child.kill(); await ended;
-    }
-  });
-  let out = '', err = '';
-  child.stdout.on('data', chunk => { out += chunk; }); child.stderr.on('data', chunk => { err += chunk; });
-  const [status] = await once(child, 'exit');
-  assert.equal(status, 0, err);
-  assert.match(out, /PROCESS_QUARANTINE_VERIFIED/);
+  for (const mode of ['signal', 'observation', 'deadline']) {
+    const helper = `import assert from 'node:assert/strict';
+      import childProcess from 'node:child_process'; import {syncBuiltinESMExports} from 'node:module';
+      import fs from 'node:fs/promises'; import os from 'node:os'; import path from 'node:path';
+      import { createLocalRustGradingService } from ${JSON.stringify(new URL('../server/rust-executor.mjs', import.meta.url).href)};
+      import { gradingAdmission } from ${JSON.stringify(new URL('../server/grading-admission.mjs', import.meta.url).href)};
+      import { resolveRustToolPaths } from ${JSON.stringify(new URL('../server/rust-tools.mjs', import.meta.url).href)};
+      const root=await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(),'codeweave-process-fault-')));
+      const sysroot=path.join(root,'tools'),parent=path.join(root,'work'); await fs.mkdir(path.join(sysroot,'bin'),{recursive:true});await fs.mkdir(parent);
+      const cargo=path.join(sysroot,'bin','cargo'),rustc=path.join(sysroot,'bin','rustc');
+      await fs.writeFile(cargo,'#!/bin/sh\\n',{mode:0o700});await fs.writeFile(rustc,'#!/bin/sh\\n',{mode:0o700});
+      const tools=await resolveRustToolPaths(sysroot);
+      await fs.writeFile(cargo,'#!/bin/sh\\nif [ "$1" = --version ]; then echo "cargo 1.99.0 (trusted)"; exit 0; fi\\nexit 101\\n');
+      await fs.writeFile(rustc,'#!/bin/sh\\nif [ "$1" = --version ]; then echo "rustc 1.99.0 (trusted)"; exit 0; fi\\nprintf "%s\\\\n" "host: '+tools.host+'" "release: 1.99.0"\\n');
+      try {
+        const service=await createLocalRustGradingService({enabled:true,sysroot,parent,definitions:new Map(${JSON.stringify([...definitions])})});
+        assert.equal(typeof service.inspect,'function');
+        const originalKill=process.kill;
+        process.kill=(pid,signal)=>{
+          if(pid<0 && ((${JSON.stringify(mode)}==='signal' && signal!==0) || (${JSON.stringify(mode)}==='observation' && signal===0)))
+            throw Object.assign(Error('PRIVATE group inspection failure'),{code:'EPERM'});
+          if(pid<0 && signal===0 && ${JSON.stringify(mode)}==='deadline') return true;
+          return originalKill(pid,signal);
+        };
+        const originalSpawn=childProcess.spawnSync;
+        if(${JSON.stringify(mode)}==='deadline') {
+          childProcess.spawnSync=(command,...args)=>command==='/bin/ps'?{status:1,stdout:'',stderr:'PRIVATE unavailable'}:originalSpawn(command,...args);
+          syncBuiltinESMExports();
+        }
+        try {await assert.rejects(service.submit(${JSON.stringify(request)}),{code:'RUST_UNAVAILABLE'});}finally{process.kill=originalKill;}
+        assert.equal(service.inspect().reason,'process-cleanup');
+        assert.equal(await service.recover(),false);assert.equal(gradingAdmission.busy,true);
+        assert.deepEqual(await fs.readdir(parent),[]);
+        await assert.rejects(service.submit(${JSON.stringify(request)}),{code:'RUST_UNAVAILABLE'});
+        console.log('PROCESS_QUARANTINE_VERIFIED');
+      } finally {await fs.rm(root,{recursive:true,force:true});}`;
+    const child = spawn(process.execPath, ['--input-type=module', '-e', helper], { stdio: ['ignore', 'pipe', 'pipe'] });
+    t.after(async () => {
+      if (child.exitCode === null && child.signalCode === null) {
+        const ended = once(child, 'exit'); child.kill(); await ended;
+      }
+    });
+    let out = '', err = '';
+    child.stdout.on('data', chunk => { out += chunk; }); child.stderr.on('data', chunk => { err += chunk; });
+    const [status] = await once(child, 'exit');
+    assert.equal(status, 0, err);
+    assert.match(out, /PROCESS_QUARANTINE_VERIFIED/);
+  }
 });
 
 const cargo = spawnSync('cargo', ['--version'], { timeout: 3000 }).status === 0;

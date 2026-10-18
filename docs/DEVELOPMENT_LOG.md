@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-19 00:00 KST — Rust 프로세스 그룹 종료 확인
+- 시작/결과 SHA: 시작234f8f6d36b89d9b606afa2441b9a35fee82fa85; 구현 fix: await owned Rust group termination before releasing admission (결과 SHA는 후속 CI 확인 기록).
+- 목표: 부모/파이프 종료와 자식 종료를 구분하고 살아 있는 소유 그룹이 남으면 정리/슬롯 해제를 보류; 관측 불가/기한 초과는 격리.
+- 변경 파일 수: 총9개(새 그룹 관측 모듈·실행기·신규 관측 검사·기존 실행기/복구 검사 확장·CI·로컬 안내·활성/보관 일지).
+- 테스트 결과: 신규7건 중6건 실패→통과·전체641건623통과/실패0/skip18(Rust 부재); 관련32건30통과/2skip·집중3검사20회60/60·MJS5개/roadmap/diff 확인; 삭제0.
+- CI URL과 결과: 시작39137310067 성공 확인; 구현/결과 SHA CI 대기, 아직 완료로 기록하지 않음.
+- 발견한 문제: 지연된 SIGKILL 자식이 파이프 EOF 뒤에도 생존하는 회귀 재현. 초기 ps 의존 구현은 관련21건12실패/1skip(조회 실패 격리 연쇄)→ESRCH 보수 대기 및 Linux Node/proc PID 불일치 검사로 수정; 이전 두 관측의 정확한 원인은 단정하지 않음. 기존 계측1건 변경 사유: signal0은 종료 신호가 아니므로 조회만 제외하고 실제 종료1회 기대는 유지.
+- 보안 영향: 고정 ps·2MiB/200ms 관측·소유 그룹 signal0만 조회·SIGKILL 재전달0·기존500ms 정리 기한 유지; 권한 거부/관측 실패 기한 초과는503·공유 격리·복구 불가 유지, HTTP/진도/v1 변경0.
+- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
+- 다음 작업: 결과 SHA CI 확인 후 운영자가 실행 가능한 명시적 Rust 시작 경로 인수; Cargo 내부 자원 부족 세부 분류/실기기 인수는 남음, 새 단원/차례 전환 아님.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-18 23:31 KST — Rust 빌드 준비 실패와 학습자 결과 분리
 - 시작/결과 SHA: 시작816b5fdc41989eac3e90ed5aeddc4c45fa3ba3ba; 구현7f000f5c83da9203c42eaf4219ffc3fcae39018f·이식성328751554bc34875cf7f8f52c767fbefb63d06a7; 후속 docs: record verified Rust launch preparation CI and remaining cancellation observation.
 - 목표: Cargo 시작 전 준비 실패/시간 초과는503·이력 없음, 실제 컴파일 실패/취소와 분리하고 UID 한도 적용 뒤 준비 subshell 제거.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 서버 전용 rust-cargo 한 ID만 정의·새 Map/동결 사례·HTTP 하네스 요청/정적 제공 거부; import/CLI 자동 활성화0·진도/v1/실습 잠금 변경0·계약 밖 입력/악성 제출 진위 보장 아님.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
 - 다음 작업: 결과 SHA CI 확인 뒤 F01 클라이언트 요청·반복 제출/v1 복원·화면 인수; 첫 종료 권한 오류가 재현되면 원인 추적 우선, 새 단원/차례 전환 아님.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-18 19:01 KST — F01 명시적 로컬 서버 연결
-- 시작/결과 SHA: 시작a8fc2086384865bbeac88e8b3b9587db31e4ffec; 구현9023116a5f2261aa64b97bbe26ec49fc57424279; 후속 docs: record verified mounted Rust server CI.
-- 목표: 일반 CLI의 C 기본 동작 보존·명시적 Rust 주입만 실행·동일 페이지 토큰/공유 슬롯·고정 loopback 실제 서버 연결 검증.
-- 변경 파일 수: 총8개(서버 factory·얇은 CLI·신규6검사·CI·로컬 안내·설계·활성/보관 일지).
-- 테스트 결과: 신규5건 모듈 부재5실패→5통과·실제1skip(Rust 부재); 첫 전체590통과/1실패/skip16→재검사607건591통과·실패0·skip16(Rust 부재); 관련39건38통과·skip1·일지4/4·C grade 원문/보관 원문/MJS3개/roadmap/diff 확인; 삭제0·기존 기대값 변경0.
-- CI URL과 결과: 시작39114164622 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39118094410 전체607/607·실패0·skip0·macOS 관련83/83·browser 성공; 양 OS 실제 서버 페이지 토큰·Cargo 오답8/수정8통과·C/Rust 배타/취소·공간 삭제 확인, 후속 기록 SHA CI 별도 확인.
-- 발견한 문제: 실제 서버 연결 부재5건 재현·수정, C grade 원문 보존. 첫 전체 검사는 안내 편집 중 잠시 중복된 빈 브라우저 헤딩을 읽어1실패; 빈 중복 헤딩을 제거해2/2 재확인하고 전체 재검사(기대값/설명 문장 변경0).
-- 보안 영향: /api/grade/rust를 같은 서버에 등록하되 기본503·환경 활성화0, 명시적 신뢰 서비스만 실행·127.0.0.1 고정/호스트 인수 거부·페이지 토큰/정적 접근 제한 유지; HTTP 복구 경로0·진도/v1/실습 잠금 변경0.
-- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
-- 다음 작업: 결과 SHA CI 확인 후 기존 F01 실제 교육 문제 registry·클라이언트 제출/v1 기록 연결을 좁은 항목으로 인수; 새 단원/차례 전환 아님.

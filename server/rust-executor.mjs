@@ -8,6 +8,7 @@ import { checkRustToolchain } from './rust-preparation.mjs';
 import { rustBudget, rustBuildBudget, RUST_READY_MARKER } from './rust-budget.mjs';
 import { gradeRustInternal } from './rust-pipeline.mjs';
 import { createRustGradingService } from './rust-service.mjs';
+import { groupHasLiveMembers } from './process-group-state.mjs';
 
 function hasProcessCleanupFailure(error) {
   const pending = [error], seen = new Set();
@@ -57,12 +58,13 @@ function run(invocation, cwd, signal) {
     const stdout = [], stderr = [];
     let readiness = '', readinessBytes = 0;
     let bytes = 0, status = null, termination = null, error, finished = false, stopping = false;
-    let timer, cleanupTimer;
+    let timer, cleanupTimer, settlementTimer;
     function finish() {
       if (finished) return;
       finished = true;
       clearTimeout(timer);
       clearTimeout(cleanupTimer);
+      clearTimeout(settlementTimer);
       signal?.removeEventListener('abort', cancel);
       resolve({ status, signal: termination, error, launcherReady: readiness === RUST_READY_MARKER,
         stdout: Buffer.concat(stdout).toString('utf8'), stderr: Buffer.concat(stderr).toString('utf8') });
@@ -102,6 +104,19 @@ function run(invocation, cwd, signal) {
       error ??= cancelled();
       stop();
     }
+    function settleGroup() {
+      if (finished) return;
+      if (!child.pid || error?.code === 'ECLEANUP') return finish();
+      try {
+        if (!groupHasLiveMembers(child.pid)) return finish();
+      } catch (failure) {
+        cleanupFailure(failure);
+        return finish();
+      }
+      // SIGKILL delivery and pipe EOF are not proof that every descendant has exited.
+      // Keep the existing 500ms cleanup deadline and shared lease; never signal again.
+      settlementTimer = setTimeout(settleGroup, 10);
+    }
     child.stdout.on('data', chunk => collect(chunk, stdout));
     child.stderr.on('data', chunk => collect(chunk, stderr));
     child.stdio[3]?.on('data', chunk => {
@@ -120,7 +135,10 @@ function run(invocation, cwd, signal) {
       // Descendants must not outlive even a normally exiting tool/test parent.
       stop();
     });
-    child.once('close', finish);
+    child.once('close', () => {
+      clearTimeout(timer);
+      settleGroup();
+    });
     timer = setTimeout(() => {
       error ??= Object.assign(new Error('Rust execution deadline exceeded'), { code: 'ETIMEDOUT' });
       stop();
