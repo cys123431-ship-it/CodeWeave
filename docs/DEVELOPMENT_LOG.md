@@ -1,14 +1,14 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-18 09:04 KST — F01 소유 작업 공간 정리 실패 전파
-- 시작/결과 SHA: 시작c2b68f9bdd42f7beb1c3b9ae9c95506ab4982bed; 구현09254506831e1d4bc861b1c78d214689eb817d8b; 후속 fix: canonicalize Rust cleanup fixture parent on macOS.
-- 목표: 삭제 실패를 분류하고 원래 단계 오류와 정확한 복구 경로를 보존; 성공/컴파일 거부 응답으로 숨기지 않음.
-- 변경 파일 수: 총6개(내부pipeline·신규 정리5검사·CI·설계·활성/보관 일지).
-- 테스트 결과: 신규5건 수정 전5실패→5통과; 관련20건18통과·실패0·skip2(Rust 부재); 전체 첫542건534통과·실패1·skip7, 재검사542건535통과·실패0·skip7(Rust 부재); MJS2개·일지4/4·roadmap/diff 성공; 삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39077471479 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39081758630 macOS 신규5건 경로 정규화 실패·수정 후 CI 재확인 예정, 아직 완료 아님.
-- 발견한 문제: 원래 throw null이 정리 실패에 가려지고 삭제 오류에 복구 식별자 부재. 신규 mock의 restore API 오타를 먼저 수정해 본래5실패 재현. 전체 첫 실행의 기존 취소 검사에서 일시 생존 판정1실패, 관련/전체 재검사 통과·원인 미확정. macOS /var→/private/var 실경로 계약에 맞춰 fixture 부모를 realpath로 준비, 기대값 완화0.
-- 보안 영향: 외부 입력/API/기본 실행기 추가0. 캡처한 소유 디렉터리만 삭제/복구 식별, 자동 재시도0·부모 파일 보존; 내부 경로는 HTTP/학습 기록에 노출하지 않음.
+- 시작/결과 SHA: 시작c2b68f9bdd42f7beb1c3b9ae9c95506ab4982bed; 구현09254506831e1d4bc861b1c78d214689eb817d8b; macOS 수정b5ac470ec64e1ab38f796cd80a0449d4b9e1a79a; 후속 fix: recheck disappearing Linux PIDs in cleanup evidence.
+- 목표: 삭제 실패 분류·원래 단계 오류/소유 복구 경로 보존 및 취소 정리 검사 경합 수정; 성공 응답으로 숨기지 않음.
+- 변경 파일 수: 총9개(내부pipeline·정리5검사·PID helper/3검사·취소검사·CI·설계·활성/보관 일지).
+- 테스트 결과: 정리5건 수정 전5실패→5통과; PID3건 기존 로직1실패·2통과→3통과; 관련 취소9건8통과·skip1; 전체545건538통과·실패0·skip7(Rust 부재); MJS5개·일지4/4·roadmap/diff 확인; 삭제0.
+- CI URL과 결과: 시작39077471479 성공; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39081758630 macOS 경로5실패·Linux 취소1실패; 수정CI39081842389 전체 성공·macOS20/20, PID 경합 수정 후속 CI 확인 전 완료 아님.
+- 발견한 문제: throw null 원본 소실·복구 식별자 부재 수정. mock restore 오타 수정 후 본래 실패 재현. macOS fixture를 realpath 준비로 수정; Linux signal/stat 사이 종료 경합1실패 재현·부재 재확인 추가, 판정 기대값 완화0.
+- 보안 영향: 외부 입력/API/기본 실행기0. 캡처한 소유 경로만 삭제/복구 식별·부모 파일 보존·자동 재시도0; 내부 경로 HTTP/학습 기록 노출0; 확인 불가 PID는 계속 살아 있음 판정.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01·실습/숙달 잠금 유지.
-- 다음 작업: 결과 SHA CI와 취소 생존 판정 회귀를 우선 확인하고 빌드 자원 초과/오류 분류 통합 검증; 단원 완료나 차례 전환 아님.
+- 다음 작업: 결과 SHA CI·취소 생존 판정 회귀를 확인하고 빌드 자원 초과/오류 분류 통합 검증; 단원 완료나 차례 전환 아님.
 
 ---
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함

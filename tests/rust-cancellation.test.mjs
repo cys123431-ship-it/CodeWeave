@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { getEventListeners } from 'node:events';
 import { observeProcess } from './helpers/observe-process.mjs';
 import { gradeRustInternal } from '../server/rust-pipeline.mjs';
+import { linuxProcessAlive } from './helpers/linux-process-alive.mjs';
 
 const posix = ['linux', 'darwin'].includes(process.platform);
 async function temporary(t) {
@@ -23,12 +24,8 @@ async function ready(file) {
   throw Error('Trusted fixture did not become ready');
 }
 async function alive(pid) {
+  if (process.platform === 'linux') return linuxProcessAlive(pid);
   try { process.kill(pid, 0); } catch (error) { if (error.code === 'ESRCH') return false; throw error; }
-  if (process.platform === 'linux') {
-    const stat = await fs.readFile(`/proc/${pid}/stat`, 'utf8').catch(() => '');
-    // Unknown /proc state must not be mistaken for proof that a live PID exited.
-    return !stat || stat.slice(stat.lastIndexOf(')') + 2)[0] !== 'Z';
-  }
   const state = spawnSync('/bin/ps', ['-o', 'stat=', '-p', String(pid)], { encoding: 'utf8' }).stdout.trim();
   return !!state && !state.startsWith('Z');
 }
