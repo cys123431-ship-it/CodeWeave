@@ -43,7 +43,8 @@ test('Real trusted Cargo memory exhaustion stops before enumeration and cleans o
     assert.equal(event.stage, 'compile');
     observed = await run(event);
     console.log('Memory-constrained Cargo:', JSON.stringify({ status: observed.status, signal: observed.signal,
-      code: observed.error?.code, diagnostic: observed.stderr.slice(-2000), observation: observed.observation }));
+      code: observed.error?.code, compilerJSON: observed.stdout.slice(-6000),
+      diagnostic: observed.stderr.slice(-2000), observation: observed.observation }));
     assert.equal(observed.error, undefined, 'must not substitute wall-clock or output overflow for memory exhaustion');
     assert.equal(observed.status, 101, 'Cargo must report the failed compiler, not a missing tool or setup failure');
     assert.match(observed.stderr, /memory allocation of \d+ bytes failed|out of memory/i);

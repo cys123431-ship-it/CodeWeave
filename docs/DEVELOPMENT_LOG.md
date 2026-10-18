@@ -1,11 +1,11 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-18 11:57 KST — F01 실제 Cargo 메모리 초과 통합
-- 시작/결과 SHA: 시작d0812d689dd685fda7a6479465dc4aa8517d598d; 결과는 test: verify Cargo compiler allocation failure cleanup 커밋과 후속 CI 기록으로 연결.
+- 시작/결과 SHA: 시작d0812d689dd685fda7a6479465dc4aa8517d598d; 구현d62787b6785487392fffc23a984aa4fdffbb96b4; 후속 test: retain compiler JSON diagnostics for memory probe.
 - 목표: 기존 CI 빌드 예산에서 실제 컴파일러 할당 실패·열거 차단·전체 미실행·소유 공간 정리와 부모 파일 보존 검증.
 - 변경 파일 수: 총6개(독립 Rust 음성fixture·신규2검사·CI·설계·활성/보관 일지).
 - 테스트 결과: 신규2건 초기 fixture 부재로 계약1실패·실제1skip→계약1통과·실제1skip(Rust 부재); 실제 Rust 실패 재현은 CI에서 확인 예정; 전체556건546통과·실패0·skip10(Rust 부재); MJS1개·일지4/4·roadmap/diff 성공; 삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39089293054 성공 재확인; 이번 결과 SHA CI는 반영 후 조회하며 실제 메모리 검증 완료 주장 없음.
-- 발견한 문제: 실제 Cargo 메모리 실패 통합 증거 부재. 초기 새 검사의 존재하지 않는 plan.language 가정을 소스 보존 검사로 바로잡음(기존 계약에 없는 필드를 제품에 추가하지 않기 위한 테스트 수정).
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39089293054 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39092064031 macOS 실제검사1실패: Cargo101이지만 stderr에 메모리 진단 부재; compiler JSON stdout 추가 수집 후 원인 확인.
+- 발견한 문제: 실제 Cargo 메모리 실패 통합 증거 부재. 첫 CI stderr만으로 원인 확인 불가해 기대값 유지·compiler JSON 수집 추가. 초기 새 검사의 존재하지 않는 plan.language 가정을 소스 보존 검사로 바로잡음(기존 계약에 없는 필드를 제품에 추가하지 않기 위한 테스트 수정).
 - 보안 영향: 새 외부 입력/API/실행기0. 신뢰 CI fixture만 컴파일·기존 한도 증가0·운영 메모리 판정 추가0; 진도/v1/실습 잠금 변경0.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
 - 다음 작업: 결과 SHA CI와 실제 할당 실패 원인을 확인하고 F01 운영 연결의 남은 인수 조건을 검토; 단원 완료나 차례 전환 아님.
