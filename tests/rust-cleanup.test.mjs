@@ -13,7 +13,7 @@ const definitions = new Map([[request.exerciseId, { id: request.exerciseId, lang
 
 for (const mode of ['success-result', 'compile-result', 'observer-error', 'falsy-error', 'cancelled']) {
   test(`Rust cleanup failure preserves recovery directory and original outcome: ${mode}`, async t => {
-    const parent = await fs.mkdtemp(path.join(os.tmpdir(), 'codeweave-cleanup-test-'));
+    const parent = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'codeweave-cleanup-test-')));
     const remove = fs.rm.bind(fs);
     t.after(() => remove(parent, { recursive: true, force: true }));
     const sentinel = path.join(parent, 'keep');
