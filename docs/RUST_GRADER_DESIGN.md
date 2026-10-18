@@ -102,6 +102,12 @@ ENOENT/EACCES/ELIMIT/ECLEANUP/EIO 등 그 밖의 관찰 오류는 운영 예외�
 내부 pipeline이 compile 다음 열거/사례를 실행하지 않고 전체8사례 미실행을 반환하며, 소유 공간만 정리하고 부모 사용자 파일을 보존하는지 확인한다. 실제 Cargo 메모리 초과·그룹 합산 CPU·악성 제출 격리·운영 Rust 활성화 검증으로 확대하지 않는다.
 검증 SHA `f0cf182cb5e5b49080b4cf4d2a028dfd870be81c`의 [CI39089131992](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39089131992)는 Ubuntu 전체554/554·skip0, macOS 관련30/30·skip0, browser 회귀를 통과했다. 실제 Cargo101/자식 rustc 신호24가 Linux1223ms·macOS1177ms에 관찰됐고, 열거 차단·전체 미실행·공간 정리·부모 파일 보존이 통과했다. 최초 CI39089018430의 양 OS 이름 전용 검사 실패를 보존하고, OS 숫자 신호 형식 보완 이유를 일지에 기록했다.
 
+### 실제 Cargo 메모리 초과 fixture (2026-10-18)
+
+tests/fixtures/rust-build-memory.rs는 상수 평가 중 2GiB 반복 배열을 요청하는 독립 음성 fixture다. 런타임 실행이나 새 교육 문제가 아니다. tests/rust-cargo-memory.test.mjs는 기존 trustedRustObserver와 기본 빌드 예산을 그대로 사용하며 한도/벽시계/출력 예산을 올리거나 도구를 바꾸지 않는다.
+실제 Cargo101과 memory allocation/out of memory 진단을 요구하고, 도구 부재·제한 설정 실패·벽시계/출력 초과를 메모리 검증으로 대신하지 않는다. 관찰 진단은 이 고정 fixture의 원인 확인용이며 운영 결과는 컴파일 실패로 유지한다. SIGKILL이나 임의 제출 진단을 권위 있는 메모리 초과 판정으로 바꾸지 않는다.
+열거/사례 미실행·전체8사례 보존·소유 작업 공간 정리·부모 사용자 파일 보존을 검사한다. Linux 주소 공간1GiB와 macOS 시작 Bash VSZ+1GiB는 기존 정책이며 RSS/그룹 합산 메모리 보장이 아니다. CI의 실제 결과를 확인하기 전에는 이 fixture가 메모리 초과 경로를 검증했다고 기록하지 않는다. 운영 실행기/API·실습/숙달 활성화는 별도 인수 대상이다.
+
 ### 소유 작업 공간 정리 실패 (2026-10-18)
 
 삭제 실패는 항상 code:ERUSTCLEANUP인 AggregateError로 전파한다. cause는 원래 삭제 오류이며 errors는 [원래 단계 오류, 삭제 오류] 또는 단계 예외가 없으면 [삭제 오류]다. null 같은 falsy 값의 throw도 별도 실패 표식으로 보존한다. 정상/컴파일 거부 결과도 정리에 실패하면 반환하지 않는다.

@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-18 11:57 KST — F01 실제 Cargo 메모리 초과 통합
+- 시작/결과 SHA: 시작d0812d689dd685fda7a6479465dc4aa8517d598d; 결과는 test: verify Cargo compiler allocation failure cleanup 커밋과 후속 CI 기록으로 연결.
+- 목표: 기존 CI 빌드 예산에서 실제 컴파일러 할당 실패·열거 차단·전체 미실행·소유 공간 정리와 부모 파일 보존 검증.
+- 변경 파일 수: 총6개(독립 Rust 음성fixture·신규2검사·CI·설계·활성/보관 일지).
+- 테스트 결과: 신규2건 초기 fixture 부재로 계약1실패·실제1skip→계약1통과·실제1skip(Rust 부재); 실제 Rust 실패 재현은 CI에서 확인 예정; 전체556건546통과·실패0·skip10(Rust 부재); MJS1개·일지4/4·roadmap/diff 성공; 삭제0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39089293054 성공 재확인; 이번 결과 SHA CI는 반영 후 조회하며 실제 메모리 검증 완료 주장 없음.
+- 발견한 문제: 실제 Cargo 메모리 실패 통합 증거 부재. 초기 새 검사의 존재하지 않는 plan.language 가정을 소스 보존 검사로 바로잡음(기존 계약에 없는 필드를 제품에 추가하지 않기 위한 테스트 수정).
+- 보안 영향: 새 외부 입력/API/실행기0. 신뢰 CI fixture만 컴파일·기존 한도 증가0·운영 메모리 판정 추가0; 진도/v1/실습 잠금 변경0.
+- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
+- 다음 작업: 결과 SHA CI와 실제 할당 실패 원인을 확인하고 F01 운영 연결의 남은 인수 조건을 검토; 단원 완료나 차례 전환 아님.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-18 11:04 KST — F01 실제 Cargo CPU 초과 통합
 - 시작/결과 SHA: 시작8d112674112c293d3db53666cb1079078ba5e8e2; 구현9274f0cf10ebd8a7a0d3f457ba41fb964f408f0c; 신호수정f0cf182cb5e5b49080b4cf4d2a028dfd870be81c; 후속 docs: record verified Cargo CPU exhaustion CI.
 - 목표: 신뢰 CI의 낮춘 CPU soft 한도와 실제 Cargo 상수 평가 중단·열거 차단·전체 미실행·소유 공간 정리를 검증.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 새 외부 입력/API0·운영 실행기0. 선택적 AbortSignal만 CI helper에 전달, 생성한 프로세스 그룹만 SIGKILL 요청·리스너 제거; 임의 PID/명령 입력 추가0·취소 사유 진단 복제0.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01·실습/숙달 잠금 유지.
 - 다음 작업: 결과 SHA CI를 확인하고 정리 실패 주입·빌드 자원 초과/오류 분류를 통합 검증한 뒤 F01 실제 문제/UI/API 연결을 검토; 전체 단원 완료나 차례 전환 아님.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-18 06:58 KST — F01 내부 Cargo 단계 생명주기 연결
-- 시작/결과 SHA: 시작160ef9894d1b0b417658b417c26dd277a07afc03; 구현f44965c788f584b5a9e35dcffdda4a5f74e0e090; 후속 docs: record verified internal Rust lifecycle CI.
-- 목표: 준비→빌드→산출물/양쪽 목록→사례별 실행→결과를 내부 관찰 함수로 연결하고 모든 경로에서 생성 공간 정리; 운영 API는 비활성.
-- 변경 파일 수: 총7개(신규 내부pipeline·9검사·CI관찰helper, CI·Rust설계·활성/보관 일지).
-- 테스트 결과: 신규9건 중 합성8건 실패→통과·실제1건skip(Cargo 부재); 로컬 전체531건525통과·실패0·skip6(Rust 부재); 관련13건12통과·skip1, 일지4/4·MJS3개 문법·roadmap/diff 성공; 삭제0·기대값 변경0.
-- CI URL과 결과: 시작39069198371 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39073420849 전체531/531·실패0·skip0, macOS 신규9/9·browser 회귀 성공. 정상/오답/문법/경고4제출의 실제 실행과 공간 정리 통과; 후속 기록 SHA CI 별도 확인.
-- 발견한 문제: 분리 어댑터에 통합/소유 공간 정리 경로 부재를 먼저7검사로 재현. 초기 구현의 첫 목록 실패 뒤 불필요한 ignored 열거를 추가1검사로 재현·수정; 빈 CI step도 검토 중 제거.
-- 보안 영향: 서버 기본 호스트 실행기·HTTP 등록0, 관찰 함수 없으면 파일 생성 전 거부. CI만 기존 실제 도구·빌드/실행 예산 사용, 생성한 정확한 디렉터리만 finally 정리; 취소는 경계 검사이며 실행 중 즉시 그룹 취소는 미구현.
-- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01·Rust 실습/숙달 잠금 유지.
-- 다음 작업: 결과 SHA CI 확인 후 실행 중 취소·정리 실패 주입·실제 빌드 자원 초과 통합과 오류 분류를 검증하고 F01 실제 문제/UI/API 연결을 검토; 단원 완료나 차례 전환 아님.
