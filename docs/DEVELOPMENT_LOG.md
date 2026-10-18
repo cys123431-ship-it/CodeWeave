@@ -1,10 +1,10 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-18 12:56 KST — F01 기본 비활성 내부 요청 서비스
-- 시작/결과 SHA: 시작91892f13b2cea4e6efc8220fe1eb0d67bdfab786; 결과는 feat: gate internal Rust grading requests and cleanup admission 커밋과 후속 CI 기록으로 연결.
+- 시작/결과 SHA: 시작91892f13b2cea4e6efc8220fe1eb0d67bdfab786; 구현b212e13b25f4487277791a80cdc72f6284686ba4; 후속 docs: record verified internal Rust admission CI.
 - 목표: 명시적 활성화/주입 실행기만 수락·동시1건/대기열0·취소 정리 대기·운영/결과 오류 비공개 계약 구현, HTTP 연결0.
 - 변경 파일 수: 총6개(신규 서비스·7검사·CI·설계·활성/보관 일지).
 - 테스트 결과: 신규7건 수정 전6실패·실제1skip→6통과·실제1skip(Rust 부재); sparse/복사 전 개수/사용자 iterator 경계 각각 실패 재현→통과·getter 오류 거부; 전체563건552통과·실패0·skip11(Rust 부재); MJS2개·일지4/4·roadmap/diff 성공; 삭제0·기존 기대값 변경0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39092456730 성공 재확인; 이번 결과 SHA CI는 반영 후 확인하며 실제 연결 성공 미확정.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39092456730 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39095657268 전체563/563·실패0·skip0·macOS 관련39/39·browser 성공; 양 OS 실제 Cargo 중복 거부/정상·오답 재제출/공간 정리 통과, 후속 기록 SHA CI 별도 확인.
 - 발견한 문제: 실행 요청 수락/동시성/안전 오류 경계 부재를 먼저6검사로 재현. 초기 결과 검사의 sparse 배열 통과를 추가 재현·소유 스냅샷 검증으로 수정, getter 예외도 운영 오류로 치환. 잘못된 사례 수는 복사 전 거부하고 사용자 iterator 대신 선언 수만 인덱스로 복사하도록 각각 재현 후 보완.
 - 보안 영향: 새 외부 HTTP 입력/호스트 실행기0. 기본 비활성·환경/요청 활성화0·검증 코드 스냅샷·한 인스턴스1슬롯; 경로/예외 비밀값 응답0·진도/v1/실습 잠금 변경0.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.

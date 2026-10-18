@@ -151,6 +151,7 @@ server/rust-service.mjs의 createRustGradingService는 enabled:true·신뢰 regi
 사전 취소는 실행하지 않고 실행 중 취소는 signal을 grade에 전달한다. grade와 정리가 settle하기 전에는 슬롯을 해제하지 않으며 늦은 성공은 폐기한다. 실제 중단은 주입 grade의 책임이다. 정리 실패 등 운영 예외는 취소로 숨기지 않는다. 원래 예외/작업 경로/비밀값을 반환하지 않으며 이 서비스는 제출 이력에 쓰지 않는다.
 결과는 기존4필드와 tests[{passed,detail}]의 소유 스냅샷만 반환한다. 전체 사례 수·boolean 판정·ok 일치·문자열 상한을 확인하고 sparse 배열·결과 getter 예외도 운영 오류로 거부한다. 요청/결과는 동결한다. 동시 제한은 한 인스턴스 범위일 뿐 여러 프로세스나 C/Rust 공통 전역 한도·호스트 격리가 아니다. 향후 HTTP 연결에는 C와의 공유 슬롯·CSRF·취소·운영 관측/복구 계약을 별도로 검증해야 한다.
 신규 합성 검사는 비활성/잘못된 활성화·요청 거부·중복 차단·코드 보존·취소 뒤 정리 대기/재수락·운영 오류 비공개·잘못된 결과 거부를 검사한다. 실제 CI는 기존 내부 Cargo pipeline을 주입해 중복 거부·정상/오답 재제출·전체8사례·작업 공간 삭제를 확인한다. 신뢰 코드 범위이며 운영 API·Rust 실습/숙달은 계속 비활성이다.
+검증 SHA `b212e13b25f4487277791a80cdc72f6284686ba4`의 [CI39095657268](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39095657268)는 Ubuntu 전체563/563·skip0, macOS 관련39/39·skip0, browser 회귀를 통과했다. 양 OS에서 실제 Cargo pipeline 주입·동시 요청 거부·정상/오답 재제출8사례·소유 공간 삭제가 통과했다. 합성 검사로 사전/진행 중 취소·정리 대기·슬롯 재수락·비공개 오류·sparse/getter/사용자 iterator 결과 경계를 검증했다. HTTP/프로덕션 실행기·공유 C/Rust 전역 슬롯 인수로 확대하지 않는다.
 
 | 사건 | HTTP/기록 계약 | tests와 상태 |
 |---|---|---|
