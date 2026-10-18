@@ -344,10 +344,14 @@
         {
           "id": "C06",
           "title": "전처리 매크로·조건부 컴파일과 중복 평가",
-          "status": "미착수",
+          "status": "진행 중",
           "lessonIds": [],
-          "manuscripts": [],
-          "tests": []
+          "manuscripts": [
+            "content/c/23-preprocessor-once.md"
+          ],
+          "tests": [
+            "tests/preprocessor-exercise.test.mjs"
+          ]
         },
         {
           "id": "C07",
