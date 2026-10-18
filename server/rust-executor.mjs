@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { resolveRustToolPaths, checkRustToolHost } from './rust-tools.mjs';
 import { checkRustToolchain } from './rust-preparation.mjs';
-import { rustBudget, rustBuildBudget } from './rust-budget.mjs';
+import { rustBudget, rustBuildBudget, RUST_READY_MARKER } from './rust-budget.mjs';
 import { gradeRustInternal } from './rust-pipeline.mjs';
 import { createRustGradingService } from './rust-service.mjs';
 
@@ -51,9 +51,11 @@ function run(invocation, cwd, signal) {
   if (signal?.aborted) return Promise.resolve({ status: null, signal: null, error: cancelled(), stdout: '', stderr: '' });
   return new Promise(resolve => {
     const child = spawn(invocation.command, invocation.args, {
-      cwd, env: invocation.env, detached: true, stdio: ['ignore', 'pipe', 'pipe']
+      cwd, env: invocation.env, detached: true,
+      stdio: ['ignore', 'pipe', 'pipe', ...(invocation.readyFd === 3 ? ['pipe'] : [])]
     });
     const stdout = [], stderr = [];
+    let readiness = '', readinessBytes = 0;
     let bytes = 0, status = null, termination = null, error, finished = false, stopping = false;
     let timer, cleanupTimer;
     function finish() {
@@ -62,7 +64,7 @@ function run(invocation, cwd, signal) {
       clearTimeout(timer);
       clearTimeout(cleanupTimer);
       signal?.removeEventListener('abort', cancel);
-      resolve({ status, signal: termination, error,
+      resolve({ status, signal: termination, error, launcherReady: readiness === RUST_READY_MARKER,
         stdout: Buffer.concat(stdout).toString('utf8'), stderr: Buffer.concat(stderr).toString('utf8') });
     }
     function cleanupFailure(cause) {
@@ -82,6 +84,7 @@ function run(invocation, cwd, signal) {
         cleanupFailure();
         child.stdout.destroy();
         child.stderr.destroy();
+        child.stdio[3]?.destroy();
         finish();
       }, 500);
     }
@@ -101,6 +104,15 @@ function run(invocation, cwd, signal) {
     }
     child.stdout.on('data', chunk => collect(chunk, stdout));
     child.stderr.on('data', chunk => collect(chunk, stderr));
+    child.stdio[3]?.on('data', chunk => {
+      readinessBytes += chunk.length;
+      // Readiness is a bounded, separate channel, never compiler diagnostics.
+      if (readinessBytes <= RUST_READY_MARKER.length) readiness += chunk.toString('ascii');
+      else {
+        error ??= Object.assign(new Error('Invalid Rust launcher readiness'), { code: 'ERUSTTOOL' });
+        stop();
+      }
+    });
     child.once('error', failure => { error ??= failure; stop(); });
     child.once('exit', (code, reason) => {
       status = code;
@@ -157,7 +169,7 @@ export async function createLocalRustGradingService({ enabled = false, definitio
       RUSTFLAGS: ['-Dwarnings', ...(process.platform === 'linux' && process.arch === 'x64' ? ['-Clinker-features=-lld'] : [])].join(' ') };
     let invocation;
     if (stage === 'compile') {
-      invocation = rustBuildBudget(tools.cargo, workspace.plan.compile.args, { env });
+      invocation = rustBuildBudget(tools.cargo, workspace.plan.compile.args, { env, readyFd: 3 });
     } else {
       const args = stage === 'list' ? workspace.plan.list.args
         : stage === 'list-ignored' ? workspace.plan.listIgnored.args : stage === 'case' ? test.args : null;
@@ -165,7 +177,9 @@ export async function createLocalRustGradingService({ enabled = false, definitio
       invocation = rustBudget(artifact, args, { env });
     }
     const output = await run(invocation, workspace.dir, signal);
-    if (stage === 'compile' && [126, 127].includes(output.status)) {
+    if (output.error?.code === 'ABORT_ERR') throw output.error;
+    if (stage === 'compile' && (!output.launcherReady || [126, 127].includes(output.status))
+        && output.error?.code !== 'ECLEANUP') {
       throw Object.assign(new Error('Local Cargo launcher unavailable'), { code: 'ERUSTTOOL' });
     }
     if (output.status === 125 || output.error?.code === 'ECLEANUP') {

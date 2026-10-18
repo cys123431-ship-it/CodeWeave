@@ -1,6 +1,8 @@
 // Resource budgets for explicit trusted local Rust use; not a sandbox or HTTP activation.
 import path from 'node:path';
 
+export const RUST_READY_MARKER = 'CODEWEAVE_RUST_READY\n';
+
 export function rustBudget(binary, args, { platform = process.platform, env = process.env } = {}) {
   if (!['linux', 'darwin'].includes(platform)) throw new Error('Rust execution budgets: unsupported platform');
   if (typeof binary !== 'string' || !path.posix.isAbsolute(binary) || binary.includes('\0')
@@ -44,8 +46,9 @@ export function rustBudget(binary, args, { platform = process.platform, env = pr
 }
 
 export function rustBuildBudget(binary, args, {
-  platform = process.platform, env = process.env, cpuSoftSeconds = 10
+  platform = process.platform, env = process.env, cpuSoftSeconds = 10, readyFd = null
 } = {}) {
+  if (readyFd !== null && readyFd !== 3) throw new TypeError('Invalid trusted Rust readiness descriptor');
   if (!['linux', 'darwin'].includes(platform)) throw new Error('Rust build budgets: unsupported platform');
   if (!Number.isInteger(cpuSoftSeconds) || cpuSoftSeconds < 1 || cpuSoftSeconds > 10) {
     throw new TypeError('Invalid trusted Rust CPU soft ceiling');
@@ -81,17 +84,22 @@ export function rustBuildBudget(binary, args, {
     'set_limit -t 10 &&',
     'set_limit -v "$vm_cap" &&',
     'set_limit -f 32768 &&',
-    'set_limit -c 0 &&',
-    'set_limit -u ' + (platform === 'darwin' ? 512 : 128) + ' || exit 125',
+    'set_limit -c 0 || exit 125',
     'cpu_soft=$(ulimit -S -t) || exit 125',
     `if [[ "$cpu_soft" == unlimited || "$cpu_soft" -gt ${cpuSoftSeconds} ]]; then`,
     `  ulimit -S -t ${cpuSoftSeconds} || exit 125`,
     'fi',
+    // Command substitutions fork. Complete them before lowering the UID-wide cap.
+    'set_limit -u ' + (platform === 'darwin' ? 512 : 128) + ' || exit 125',
+    ...(readyFd === 3 ? [
+      `printf '%s\\n' '${RUST_READY_MARKER.trim()}' >&3 || exit 125`,
+      'exec 3>&-'
+    ] : []),
     'exec "$@"'
   ].join('\n');
   return {
     command: '/bin/bash',
     args: ['--noprofile', '--norc', '-c', script, 'codeweave-rust-build', binary, ...args],
-    env: environment, timeout: 15000, maxBuffer: 80000
+    env: environment, timeout: 15000, maxBuffer: 80000, readyFd
   };
 }

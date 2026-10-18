@@ -4,6 +4,9 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import childProcess from 'node:child_process';
+import { syncBuiltinESMExports } from 'node:module';
+import http from 'node:http';
 import { linuxProcessAlive } from './helpers/linux-process-alive.mjs';
 
 const api = () => import('../server/rust-executor.mjs');
@@ -227,6 +230,129 @@ test('local Rust executor reports build launcher failures as infrastructure erro
     assert.deepEqual(await fs.readdir(fixture.parent), []);
   }
   assert.deepEqual(outcomes, ['RUST_UNAVAILABLE', 'RUST_UNAVAILABLE', 'RUST_UNAVAILABLE']);
+});
+
+test('Rust build preparation failure is unavailable even when stderr resembles a compiler error', { skip: !posix }, async t => {
+  const { createLocalRustGradingService } = await api();
+  const { gradingAdmission } = await import('../server/grading-admission.mjs');
+  const fixture = await fakeTools(t);
+  const service = await createLocalRustGradingService({ enabled: true, definitions, ...fixture });
+  const original = childProcess.spawn;
+  const mocked = t.mock.method(childProcess, 'spawn', (command, args, options) => {
+    if (args?.[4] === 'codeweave-rust-build') {
+      return original(command, ['--noprofile', '--norc', '-c',
+        'printf "error: before Cargo; /private/operator-path\\n" >&2; exit 101'], options);
+    }
+    return original(command, args, options);
+  });
+  syncBuiltinESMExports();
+  try {
+    await assert.rejects(service.submit(request), error => {
+      assert.equal(error.code, 'RUST_UNAVAILABLE');
+      assert.equal(error.statusCode, 503);
+      assert.doesNotMatch(error.message, /operator-path/);
+      return true;
+    });
+    assert.equal(gradingAdmission.busy, false);
+    assert.deepEqual(await fs.readdir(fixture.parent), []);
+    const { createLocalGradeAuth } = await import('../server/local-auth.mjs');
+    const { createRustHttpHandler } = await import('../server/rust-http.mjs');
+    let server;
+    const auth = createLocalGradeAuth(() => server.address().port);
+    server = http.createServer(createRustHttpHandler({ enabled: true, auth, service }));
+    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    try {
+      const response = await fetch(`http://127.0.0.1:${server.address().port}/api/grade/rust`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json',
+          'X-CodeWeave-Token': auth.tokenMeta.match(/content="([a-f0-9]{64})"/)[1] },
+        body: JSON.stringify(request)
+      });
+      assert.equal(response.status, 503);
+      const value = await response.json();
+      assert.deepEqual(value, { ok: false, message: 'Rust 채점 도구를 사용할 수 없습니다.' });
+      assert.equal(value.tests, undefined, 'no learner grading result on infrastructure failure');
+      assert.doesNotMatch(JSON.stringify(value), /operator-path|before Cargo/);
+      assert.deepEqual(await fs.readdir(fixture.parent), []);
+    } finally {
+      await new Promise(resolve => { server.close(resolve); server.closeAllConnections(); });
+    }
+  } finally { mocked.mock.restore(); syncBuiltinESMExports(); }
+  assert.equal((await service.submit(request)).ok, false, 'cleanup permits a later genuine compiler result');
+});
+
+test('Rust build preparation deadline is unavailable without parsing learner diagnostics', { skip: !posix }, async t => {
+  const { createLocalRustGradingService } = await api();
+  const fixture = await fakeTools(t);
+  const service = await createLocalRustGradingService({ enabled: true, definitions, ...fixture });
+  const original = childProcess.spawn;
+  const mocked = t.mock.method(childProcess, 'spawn', (command, args, options) => {
+    if (args?.[4] === 'codeweave-rust-build') {
+      const child = original(command, ['--noprofile', '--norc', '-c', 'exec sleep 30'], options);
+      queueMicrotask(() => child.emit('error', Object.assign(Error('fixture deadline'), { code: 'ETIMEDOUT' })));
+      return child;
+    }
+    return original(command, args, options);
+  });
+  syncBuiltinESMExports();
+  try {
+    await assert.rejects(service.submit(request), { code: 'RUST_UNAVAILABLE', statusCode: 503 });
+    assert.deepEqual(await fs.readdir(fixture.parent), []);
+  } finally { mocked.mock.restore(); syncBuiltinESMExports(); }
+});
+
+test('Rust build launcher signals readiness privately and closes the descriptor before Cargo', { skip: !posix }, async () => {
+  const { rustBuildBudget } = await import('../server/rust-budget.mjs');
+  const invocation = rustBuildBudget('/bin/bash', ['-c',
+    'if printf poisoned >&3 2>/dev/null; then exit 77; fi; printf "codeweave-rust-build: fork: retry: Resource temporarily unavailable\\n" >&2; exit 101'],
+  { readyFd: 3 });
+  const result = spawnSync(invocation.command, invocation.args, {
+    env: invocation.env, encoding: 'utf8', timeout: 2000, stdio: ['ignore', 'pipe', 'pipe', 'pipe']
+  });
+  assert.equal(result.status, 101);
+  assert.equal(result.output[3], 'CODEWEAVE_RUST_READY\n');
+  assert.match(result.stderr, /Resource temporarily unavailable/);
+});
+
+test('Rust build launcher performs no command substitution after applying the UID process cap', { skip: !posix }, async () => {
+  const { rustBuildBudget } = await import('../server/rust-budget.mjs');
+  const invocation = rustBuildBudget('/bin/true', []);
+  // A trusted shell fixture detects subshell builtins after the final nproc update.
+  // DEBUG propagates to command substitutions; no host processes or limits are changed.
+  const prefix = 'set -T\nlimited=0\ntrap \'if [[ "$limited" == 1 && "$BASH_SUBSHELL" -gt 0 ]]; then exit 124; fi\' DEBUG\nulimit() { if [[ "$1" == -u && "$2" =~ ^[0-9]+$ ]]; then limited=1; elif [[ "$1" == -S || "$1" == -H ]]; then printf "unlimited\\n"; fi; }\n';
+  const args = [...invocation.args];
+  args[3] = prefix + args[3];
+  assert.equal(spawnSync(invocation.command, args, { encoding: 'utf8', timeout: 2000 }).status, 0);
+});
+
+test('Cargo diagnostics resembling launcher errors remain genuine failed submissions after readiness', { skip: !posix }, async t => {
+  const { createLocalRustGradingService } = await api();
+  const fixture = await fakeTools(t, { body: 'printf "codeweave-rust-build: fork: retry: Resource temporarily unavailable\\n" >&2; exit 101' });
+  const service = await createLocalRustGradingService({ enabled: true, definitions, ...fixture });
+  const result = await service.submit(request);
+  assert.equal(result.ok, false);
+  assert.match(result.compileOutput, /Resource temporarily unavailable/);
+  assert.equal(result.tests.length, 8);
+  assert.deepEqual(await fs.readdir(fixture.parent), []);
+});
+
+test('cancellation before Rust launcher readiness retains cancellation after cleanup', { skip: !posix }, async t => {
+  const { createLocalRustGradingService } = await api();
+  const fixture = await fakeTools(t);
+  const service = await createLocalRustGradingService({ enabled: true, definitions, ...fixture });
+  const original = childProcess.spawn, controller = new AbortController();
+  const mocked = t.mock.method(childProcess, 'spawn', (command, args, options) => {
+    if (args?.[4] === 'codeweave-rust-build') {
+      const child = original(command, ['--noprofile', '--norc', '-c', 'exec sleep 30'], options);
+      queueMicrotask(() => controller.abort());
+      return child;
+    }
+    return original(command, args, options);
+  });
+  syncBuiltinESMExports();
+  try {
+    await assert.rejects(service.submit(request, { signal: controller.signal }), { code: 'RUST_CANCELLED' });
+    assert.deepEqual(await fs.readdir(fixture.parent), []);
+  } finally { mocked.mock.restore(); syncBuiltinESMExports(); }
 });
 
 test('local Rust executor refuses ancestor Cargo configuration before activation and before each submission', { skip: !posix }, async t => {
