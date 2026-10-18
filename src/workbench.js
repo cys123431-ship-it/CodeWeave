@@ -1,20 +1,23 @@
 import { lessons } from './catalog.js';
 import { DRAFTS_KEY, PROGRESS_KEY, normalizeProgress, safeRead } from './logic.js';
 import { ITERATIONS_KEY, MAX_CODE_LENGTH, normalizeIterations } from './iterations.js';
-import { formatGradingResult, recordGradedSubmission, readExerciseDrafts, saveExerciseDraft } from './practice.js';
+import { formatGradingResult, recordGradedSubmission, readExerciseDrafts, saveExerciseDraft, hasRustGrading, gradingRequestFor } from './practice.js';
 import { MAX_BACKUP_FILE_SIZE, createFullBackup, parseCodeWeaveBackup, restoreCodeWeaveBackup } from './backup.js';
 import { exerciseById, isGradedExercise } from './exercises.js';
 import { MAX_MULTI_FILE_LENGTH, parseMultiFileSubmission, serializeMultiFileSubmission } from './multi-file.js';
 
 const $ = selector => document.querySelector(selector);
-const cLessons = lessons.filter(lesson => isGradedExercise(lesson.challenge.id));
-const knownIds = cLessons.map(lesson => lesson.id);
 const allIds = lessons.map(l => l.id);
 const storedDrafts = readExerciseDrafts(localStorage, allIds);
+const storedIterations = normalizeIterations(safeRead(localStorage, ITERATIONS_KEY, {}), allIds);
+const rustEnabled = hasRustGrading(document);
+// The original v1 attempt format always replaces C only, not the visible list.
+const legacyAttemptIds = lessons.filter(lesson => isGradedExercise(lesson.challenge.id)).map(lesson => lesson.id);
+const practiceLessons = lessons.filter(lesson => isGradedExercise(lesson.challenge.id) || lesson.id === 'rust-cargo');
 const state = {
-  lessonId: knownIds[0],
+  lessonId: practiceLessons[0].id,
   drafts: storedDrafts && typeof storedDrafts === 'object' && !Array.isArray(storedDrafts) ? storedDrafts : {},
-  iterations: normalizeIterations(safeRead(localStorage, ITERATIONS_KEY, {}), lessons.map(l => l.id)),
+  iterations: storedIterations,
   busy: false
 };
 
@@ -36,7 +39,22 @@ function persist(code = currentSubmission()) {
     $('#draft-status').textContent = '브라우저 저장 공간이 부족합니다. 백업을 내려받으세요.';
   }
 }
-function currentLesson() { return cLessons.find(l => l.id === state.lessonId); }
+function currentLesson() { return practiceLessons.find(l => l.id === state.lessonId); }
+function canGrade() { return isGradedExercise(state.lessonId) || (rustEnabled && state.lessonId === 'rust-cargo'); }
+function refreshExerciseOptions() {
+  const visible = practiceLessons.filter(lesson => lesson.id !== 'rust-cargo' || rustEnabled ||
+    typeof state.drafts[lesson.id] === 'string' || state.iterations[lesson.id]?.length > 0);
+  if (!visible.some(lesson => lesson.id === state.lessonId)) state.lessonId = visible[0].id;
+  const select = $('#lesson-select');
+  select.replaceChildren();
+  for (const lesson of visible) {
+    const option = document.createElement('option');
+    option.value = lesson.id;
+    option.textContent = lesson.title;
+    select.append(option);
+  }
+  select.value = state.lessonId;
+}
 function bindCodeEditor(editor) {
   editor.addEventListener('input', () => persist());
   editor.addEventListener('keydown', event => {
@@ -74,7 +92,15 @@ function displayExercise() {
   $('#sample-input').textContent = lesson.challenge.input;
   $('#sample-output').textContent = lesson.challenge.expected;
   displayEditors(lesson);
-  $('#grade-result').textContent = '코드를 작성한 뒤 로컬 GCC로 채점하세요.';
+  const language = lesson.id === 'rust-cargo' ? 'Rust' : 'C';
+  const tool = language === 'Rust' ? 'Cargo' : 'GCC';
+  $('#code-label').textContent = language + ' 코드 작성';
+  $('#code-input').setAttribute('aria-label', language + ' 코드 작성');
+  $('#grade-code').textContent = '▶ 로컬 ' + tool + '로 채점';
+  $('#grade-code').disabled = state.busy || !canGrade();
+  $('#grade-result').textContent = canGrade()
+    ? '코드를 작성한 뒤 로컬 ' + tool + '로 채점하세요.'
+    : 'Rust 채점 비활성: 저장된 코드와 이력을 복원할 수 있습니다. 채점하려면 명시적으로 구성한 로컬 Cargo 서버의 온라인 페이지를 여세요.';
   displayAttempts();
 }
 function displayAttempts() {
@@ -111,6 +137,9 @@ function displayAttempts() {
 }
 async function grade() {
   if (state.busy) return;
+  let request;
+  try { request = gradingRequestFor(state.lessonId, rustEnabled); }
+  catch (error) { $('#grade-result').textContent = error.message; return; }
   state.busy = true;
   $('#grade-code').disabled = true;
   $('#lesson-select').disabled = true;
@@ -118,27 +147,28 @@ async function grade() {
   let code;
   try { code = currentSubmission(); state.drafts[id] = code; persist(code); }
   catch (error) { $('#grade-result').textContent = '제출 형식 오류: ' + error.message; state.busy = false; $('#grade-code').disabled = false; $('#lesson-select').disabled = false; return; }
-  $('#grade-result').textContent = '로컬 GCC 서버에서 컴파일하고 테스트하는 중...';
+  $('#grade-result').textContent = '로컬 ' + (id === 'rust-cargo' ? 'Cargo' : 'GCC') + ' 서버에서 컴파일하고 테스트하는 중...';
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 10000);
+  const timer = setTimeout(() => controller.abort(), request.timeout);
   try {
     const token = document.querySelector('meta[name="codeweave-token"]')?.content ?? '';
-    const response = await fetch('./api/grade', {
+    const response = await fetch(request.endpoint, {
       method: 'POST', headers: {'Content-Type':'application/json','X-CodeWeave-Token':token},
       body: JSON.stringify({exerciseId:id,code}), signal:controller.signal
     });
     if (!response.ok) throw new Error('HTTP ' + response.status);
     const result = await response.json();
+    controller.signal.throwIfAborted();
     state.iterations = recordGradedSubmission(localStorage, lessons.map(l => l.id), id, code, result);
     persist();
     $('#grade-result').textContent = formatGradingResult(result);
     displayAttempts();
   } catch (error) {
-    $('#grade-result').textContent = '채점 실패: 개인 PC에서 GCC와 Node.js를 설치하고 npm start로 실행했는지 확인하세요.\n' + error.message;
+    $('#grade-result').textContent = '채점 실패: 개인 PC의 로컬 채점 서버 연결과 도구 구성을 확인하세요.\n' + error.message;
   } finally {
     clearTimeout(timer);
     state.busy = false;
-    $('#grade-code').disabled = false;
+    $('#grade-code').disabled = !canGrade();
     $('#lesson-select').disabled = false;
   }
 }
@@ -159,22 +189,19 @@ async function importHistory(file) {
   if (file.size > MAX_BACKUP_FILE_SIZE) { alert('백업 파일이 너무 큽니다(최대 5MB).'); return; }
   try {
     const input = JSON.parse(await file.text());
-    const parsed = parseCodeWeaveBackup(input, { knownIds: allIds, attemptIds: knownIds });
+    const parsed = parseCodeWeaveBackup(input, { knownIds: allIds, attemptIds: legacyAttemptIds });
     const label = parsed.format === 'full' ? '통합 백업' : parsed.format === 'legacy-progress' ? '기존 진도 백업' : '기존 제출 이력 백업';
     if (!confirm(label + '을 복원하면 해당 범위의 현재 기록을 교체합니다. 계속할까요?')) return;
-    const data = restoreCodeWeaveBackup(localStorage, input, { knownIds: allIds, attemptIds: knownIds });
+    const data = restoreCodeWeaveBackup(localStorage, input, { knownIds: allIds, attemptIds: legacyAttemptIds });
     state.drafts = data.drafts;
     state.iterations = data.iterations;
+    refreshExerciseOptions();
     displayExercise();
     $('#draft-status').textContent = label + '을 복원했습니다.';
   } catch (error) { alert('백업 복원 실패: ' + error.message); }
 }
 function init() {
-  for (const lesson of cLessons) {
-    const option = document.createElement('option');
-    option.value = lesson.id; option.textContent = lesson.title;
-    $('#lesson-select').append(option);
-  }
+  refreshExerciseOptions();
   $('#lesson-select').addEventListener('change', event => {
     state.drafts = readExerciseDrafts(localStorage, allIds);
     state.lessonId = event.target.value;
@@ -212,9 +239,11 @@ window.addEventListener('storage', event => {
     let activeCode; try { activeCode = currentSubmission(); } catch { activeCode = state.drafts[state.lessonId]; }
     state.drafts = readExerciseDrafts(localStorage, allIds);
     state.drafts[state.lessonId] = activeCode;
+    refreshExerciseOptions();
   }
   if (event.key === ITERATIONS_KEY || event.key === null) {
     state.iterations = normalizeIterations(safeRead(localStorage, ITERATIONS_KEY, {}), lessons.map(l => l.id));
+    refreshExerciseOptions();
     displayAttempts();
   }
 });

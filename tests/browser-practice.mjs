@@ -4,14 +4,17 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, mkdtemp, realpath, readdir, rm } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import os from 'node:os';
 import { serializeMultiFileSubmission } from '../src/multi-file.js';
 import { createLearningServer } from '../server/learning-server.mjs';
 import { createRustGradingService } from '../server/rust-service.mjs';
 import { createRustGradingDefinitions } from '../server/rust-exercises.mjs';
 import { createAttemptBackup } from '../src/attempt-backup.js';
+import { createLocalRustGradingService } from '../server/rust-executor.mjs';
+import { trustedRustTools } from './helpers/rust-tools.mjs';
 
 const require = createRequire(import.meta.url);
 let playwright, expect;
@@ -246,6 +249,116 @@ try {
   } finally {
     await rustContext.close();
     await rustApp.close();
+  }
+  // Actual Cargo, HTTP, both browser screens and v1 storage, without interception.
+  const actualTools = await trustedRustTools();
+  const actualParent = await realpath(await mkdtemp(path.join(os.tmpdir(), 'codeweave-browser-f01-')));
+  const actualService = await createLocalRustGradingService({ enabled: true,
+    definitions: createRustGradingDefinitions(), sysroot: path.dirname(path.dirname(actualTools.rustc)), parent: actualParent });
+  const actualApp = createLearningServer({ root, rustService: actualService });
+  let actualContext;
+  try {
+    const address = await actualApp.listen(0), actualBase = 'http://127.0.0.1:' + address.port;
+    actualContext = await browser.newContext({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
+    const actualPage = await actualContext.newPage(), actualBench = await actualContext.newPage();
+    for (const p of [actualPage, actualBench]) {
+      p.on('pageerror', error => errors.push(error.message));
+      p.on('dialog', dialog => dialog.accept());
+    }
+    await actualPage.goto(actualBase + '/#lesson:rust-cargo');
+    const rustStarter = await actualPage.locator('#code-input').inputValue();
+    const actualSubmit = async (p, source) => {
+      await p.locator('#code-input').fill(source);
+      const response = p.waitForResponse(r => r.url().endsWith('/api/grade/rust'), { timeout: 45000 });
+      await p.locator('#grade-code').click();
+      const graded = await response;
+      assert.equal(graded.status(), 200);
+      assert.deepEqual(graded.request().postDataJSON(), { exerciseId: 'rust-cargo', code: source });
+      assert.equal(graded.request().headers()['x-codeweave-token'],
+        await p.locator('meta[name="codeweave-token"]').getAttribute('content'));
+      const answer = await graded.json();
+      assert.equal(answer.tests.length, 10);
+      await ready(p);
+      assert.deepEqual(await readdir(actualParent), [], 'cleanup finishes before UI result');
+      return answer;
+    };
+    const compileFailure = await actualSubmit(actualPage, rustStarter);
+    assert.equal(compileFailure.ok, false);
+    assert.notEqual(compileFailure.compileOutput, '');
+    assert.ok(compileFailure.tests.every(tc => tc.detail === '미실행'));
+    await expect(actualPage.locator('.terminal[role="status"]')).toContainText('미실행');
+    await actualBench.goto(actualBase + '/workbench.html');
+    await actualBench.locator('#lesson-select').selectOption('rust-cargo');
+    await expect(actualBench.locator('#code-label')).toHaveText('Rust 코드 작성');
+    await expect(actualBench.locator('#code-input')).toHaveValue(rustStarter);
+    await expect(actualBench.locator('#attempt-list li')).toHaveCount(1);
+    const assertionFailure = await actualSubmit(actualBench, rustWrong);
+    assert.equal(assertionFailure.ok, false);
+    assert.ok(assertionFailure.tests.some(tc => !tc.passed && tc.detail.startsWith('단언 실패 · ')));
+    assert.ok(assertionFailure.tests.every(tc => tc.detail !== '미실행'));
+    await expect(actualPage.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+    const fixed = await actualSubmit(actualBench, rustCorrect);
+    assert.equal(fixed.ok, true);
+    assert.ok(fixed.tests.every(tc => tc.passed));
+    await expect(actualBench.locator('#grade-result')).toContainText('10/10');
+    await expect(actualPage.locator('#attempt-history-container .attempt-list li')).toHaveCount(3);
+    await expect(actualPage.locator('.mastery-state')).not.toContainText('전체 숙달');
+    await actualPage.reload();
+    await expect(actualPage.locator('.learning-status-list li').nth(2)).toContainText('통과');
+    await actualPage.locator('#mark-theory').click();
+    await actualPage.locator('[data-quiz="rust-cargo"][data-choice="0"]').click();
+    await expect(actualPage.locator('.mastery-state')).toContainText('전체 숙달');
+    await actualBench.locator('#attempt-list li').nth(1).getByRole('button').click();
+    await expect(actualBench.locator('#code-input')).toHaveValue(rustWrong);
+    assert.equal((await history(actualBench))['rust-cargo'].length, 3);
+    const backupEvent = actualBench.waitForEvent('download');
+    await actualBench.locator('#export-history').click();
+    const backupDownload = await backupEvent, backupChunks = [];
+    for await (const chunk of await backupDownload.createReadStream()) backupChunks.push(chunk);
+    const actualBackup = Buffer.concat(backupChunks), beforeImport = await history(actualBench);
+    await actualBench.evaluate(() => localStorage.setItem('codeweave.iterations.v1', '{}'));
+    await actualBench.locator('#import-file').setInputFiles({ name: 'actual-f01.json', mimeType: 'application/json', buffer: actualBackup });
+    await expect(actualBench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
+    assert.deepEqual(await history(actualBench), beforeImport);
+    const oldC = createAttemptBackup({ drafts: {}, iterations: {} }, ['c-hello']);
+    await actualBench.locator('#import-file').setInputFiles({ name: 'legacy-c.json', mimeType: 'application/json',
+      buffer: Buffer.from(JSON.stringify(oldC)) });
+    await expect(actualBench.locator('#draft-status')).toHaveText('기존 제출 이력 백업을 복원했습니다.');
+    assert.deepEqual(await history(actualBench), beforeImport);
+    await actualBench.reload();
+    await actualBench.locator('#lesson-select').selectOption('rust-cargo');
+    await expect(actualBench.locator('#code-input')).toHaveValue(rustWrong);
+    assert.equal(await actualBench.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await actualPage.evaluate(async () => {
+      await navigator.serviceWorker.ready;
+      if (!navigator.serviceWorker.controller) await new Promise(resolve =>
+        navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true }));
+    });
+    await actualBench.reload(); // Cache a token-free document in the controlled shell.
+    await actualBench.locator('#lesson-select').selectOption('rust-cargo');
+    if (qaDir) await actualBench.screenshot({ path: path.join(qaDir, 'f01-real-cargo-workbench-mobile.png'), fullPage: true });
+    await actualContext.setOffline(true);
+    await actualBench.reload();
+    await actualBench.locator('#lesson-select').selectOption('rust-cargo');
+    await expect(actualBench.locator('#grade-code')).toBeDisabled();
+    await expect(actualBench.locator('#attempt-list li')).toHaveCount(3);
+    await expect(actualBench.locator('meta[name="codeweave-token"], meta[name="codeweave-rust"]')).toHaveCount(0);
+    await actualBench.locator('#attempt-list li').nth(2).getByRole('button').click();
+    await expect(actualBench.locator('#code-input')).toHaveValue(rustStarter);
+    assert.deepEqual(await history(actualBench), beforeImport);
+    await actualContext.setOffline(false);
+    await actualBench.reload();
+    await actualBench.locator('#lesson-select').selectOption('rust-cargo');
+    await expect(actualBench.locator('#grade-code')).toBeEnabled();
+    console.log('PASS: REAL Cargo F01 browser: starter compile failure → workbench assertion failure → correction 10/10; shared lesson history, separate mastery, v1/C legacy restore, offline read-only and 390px');
+  } finally {
+    await actualContext?.close();
+    await actualApp.close();
+    // Never erase quarantined executor evidence or free an uncertain slot.
+    const status = actualService.inspect();
+    if (status.state === 'quarantined') throw Error('Actual F01 browser service quarantined: ' + status.reason);
+    assert.deepEqual(await readdir(actualParent), []);
+    await rm(actualParent, { recursive: true, force: true });
   }
   const warningContext = await browser.newContext();
   warningContext.on('page', p => p.on('pageerror', e => errors.push(e.message)));

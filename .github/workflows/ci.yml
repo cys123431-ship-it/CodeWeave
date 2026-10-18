@@ -23,6 +23,8 @@ jobs:
           node --check src/figures.js
           node --check src/logic.js
           node --check src/workbench.js
+          node --check tests/rust-workbench.test.mjs
+          node --check tests/browser-practice.mjs
           node --check src/iterations.js
           node --check src/attempt-backup.js
           node --check src/practice.js
@@ -172,6 +174,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Select fixed Rust toolchain for real F01 browser grading
+        run: |
+          toolchain=$(node --input-type=module -e "import {RUST_TOOLCHAIN_VERSION} from './server/rust-preparation.mjs'; console.log(RUST_TOOLCHAIN_VERSION)")
+          rustup toolchain install "$toolchain" --profile minimal --no-self-update
+          rustup default "$toolchain"
+          node scripts/prepare-rust-inputs.mjs
       - name: Install browser test tooling only
         run: npm install --no-save --package-lock=false playwright@1.62.1
       - name: Install Chromium

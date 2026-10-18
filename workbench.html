@@ -17,7 +17,7 @@
     </header>
     <div class="wb-grid">
       <section class="wb-card" aria-labelledby="exercise-title">
-        <label for="lesson-select">C언어 연습문제 선택</label>
+        <label for="lesson-select">연습문제 선택 (C · 선택적 Rust F01)</label>
         <select id="lesson-select"></select>
         <h2 id="exercise-title"></h2>
         <p id="exercise-description"></p>
@@ -28,7 +28,7 @@
         <p class="wb-caption" id="draft-status" role="status">코드는 이 브라우저에 자동 저장됩니다.</p>
         <div class="wb-actions"><button class="primary" id="grade-code">▶ 로컬 GCC로 채점</button><button class="secondary" id="reset-code">초기 코드로 되돌리기</button></div>
         <pre id="grade-result" class="wb-output" aria-live="polite">아직 제출하지 않았습니다.</pre>
-        <p class="wb-warning">이 채점 기능은 개인 PC에서 <code>npm start</code>로 실행한 로컬 GCC 서버에서만 작동합니다. 외부에 공개된 실행 서버는 제공하지 않습니다.</p>
+        <p class="wb-warning">C는 개인 PC의 <code>npm start</code> 로컬 GCC 서버를 사용합니다. Rust F01은 명시적으로 구성한 신뢰 로컬 Cargo 서버에서만 채점합니다. 일반 서버·오프라인에서도 저장된 F01 코드는 복원할 수 있습니다. 외부에 공개된 실행 서버는 제공하지 않습니다.</p>
       </section>
       <aside class="wb-card" aria-labelledby="attempt-heading">
         <h2 id="attempt-heading">반복 제출 기록</h2>
