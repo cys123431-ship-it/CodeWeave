@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { exerciseById } from '../src/exercises.js';
 import { gradingExercises } from '../server/grading-exercises.mjs';
 import { gradingRequestFor } from '../src/practice.js';
+import { historicalRustPending } from './fixtures/rust-delivery-state.mjs';
 
 const checks = ['theory', 'example-tests', 'quiz-retry', 'actual-grading',
   'correction-retry', 'backup', 'mastery-next', 'explicit-start', 'offline'];
@@ -15,12 +16,8 @@ const evidence = {
 };
 const find = data => data.stages.find(stage => stage.id === 'F').units.find(unit => unit.id === 'F01');
 const load = async () => JSON.parse(await readFile(new URL('../docs/roadmap.json', import.meta.url), 'utf8'));
-async function pending() {
-  const data = await load();
-  find(data).status = '진행 중';
-  delete find(data).practiceDelivery;
-  data.next = { track: 'F-G', unit: 'F01' };
-  return data;
+async function pending(source) {
+  return historicalRustPending(source ?? await load());
 }
 async function api() {
   const module = await import('../scripts/roadmap.mjs');
@@ -95,7 +92,21 @@ test('roadmap delivery never enables default execution or counts another Rust sa
 
 test('published F01 completion is reproducible from the independently reviewed scoped delivery', async () => {
   const { recordRustPracticeDelivery } = await api();
-  assert.deepEqual(await load(), recordRustPracticeDelivery(await pending(), evidence));
+  // F01's reviewed proof is stable; unrelated live progress must not be rewound.
+  assert.deepEqual(find(await load()), find(recordRustPracticeDelivery(await pending(), evidence)));
+});
+
+test('historical F01 replay stays at C06 while live delivery respects independent C06 completion', async () => {
+  const { recordRustPracticeDelivery, validateRoadmap } = await api();
+  const progressed = await pending();
+  progressed.stages.find(stage => stage.id === 'C').units.find(unit => unit.id === 'C06').status = '완료';
+  const before = structuredClone(progressed);
+  assert.equal(validateRoadmap(progressed), true);
+  const live = recordRustPracticeDelivery(progressed, evidence);
+  assert.deepEqual(live.next, { track: 'C', unit: 'C07' });
+  const replay = recordRustPracticeDelivery(await pending(progressed), evidence);
+  assert.deepEqual(replay.next, { track: 'C', unit: 'C06' });
+  assert.deepEqual(progressed, before);
 });
 
 test('local Rust acceptance rejects a sparse check list instead of counting a missing entry as reviewed', async () => {
