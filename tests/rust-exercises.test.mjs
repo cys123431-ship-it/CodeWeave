@@ -108,8 +108,10 @@ test('real F01 Cargo grading rejects the starter and representative wrong soluti
     const answer = await service.submit(request(code));
     assert.equal(answer.ok, false, name);
     assert.equal(answer.tests.length, 10, name);
-    assert.ok(answer.tests.some(tc => tc.detail !== '미실행' && !tc.passed), name + ': real assertions, not compiler errors, reject the solution');
-    assert.equal(answer.compileOutput, '', name + ': the wrong solution must compile');
+    assert.ok(answer.tests.some(tc => !tc.passed && tc.detail.startsWith('단언 실패 · ')),
+      name + ': real assertions, not compiler errors, reject the solution');
+    assert.ok(answer.tests.every(tc => tc.passed ? tc.detail === '테스트 통과' : tc.detail.startsWith('단언 실패 · ')),
+      name + ': all ten cases must run; compile, infrastructure and fatal runtime failures are not substitutes');
     assert.deepEqual(await fs.readdir(parent), []);
     console.log('F01 verified:', JSON.stringify({ solution: name, compiled: true,
       passed: answer.tests.filter(tc => tc.passed).length, cases: answer.tests.length }));
