@@ -148,7 +148,7 @@ test('local Rust executor cancellation kills the compiler family, releases admis
     }
     catch (error) {
       if (pid < 0 && error.code !== 'ESRCH') faults.push({ stage: 'process-group', code: error.code,
-        syscall: error.syscall, attempt: attempts.get(pid), previousSuccessfulSignals: successful.get(pid) ?? 0 });
+        signal, syscall: error.syscall, attempt: attempts.get(pid), previousSuccessfulSignals: successful.get(pid) ?? 0 });
       throw error;
     }
   });
@@ -190,9 +190,14 @@ test('local Rust cancellation never signals a successfully killed group again af
   const service = await createLocalRustGradingService({ enabled: true, definitions, ...fixture });
   const kill = process.kill.bind(process);
   let groupSignals = 0;
+  const faults = [];
   t.mock.method(process, 'kill', (pid, signal) => {
     if (pid < 0 && signal !== 0 && ++groupSignals > 1) throw Object.assign(Error('post-exit group signal must not be retried'), { code: 'EPERM' });
-    return kill(pid, signal);
+    try { return kill(pid, signal); }
+    catch (error) {
+      if (pid < 0 && error.code !== 'ESRCH' && faults.length < 8) faults.push({ signal, code: error.code, groupSignals });
+      throw error;
+    }
   });
   const controller = new AbortController();
   const pending = assert.rejects(service.submit(request, { signal: controller.signal }), { code: 'RUST_CANCELLED' });
@@ -204,7 +209,12 @@ test('local Rust cancellation never signals a successfully killed group again af
     for (const pid of pids) assert.equal(await alive(pid), false);
     assert.equal(gradingAdmission.busy, false);
     assert.deepEqual(await fs.readdir(fixture.parent), []);
-  } finally { controller.abort(); await pending; }
+  } finally {
+    if (faults.length || service.inspect().state === 'quarantined') {
+      console.log('Rust single-stop observation:', JSON.stringify({ faults, state: service.inspect().state, reason: service.inspect().reason }));
+    }
+    controller.abort(); await pending;
+  }
 });
 
 test('local Rust executor stops excessive build output without running cases or leaking workspace files', { skip: !posix }, async t => {
