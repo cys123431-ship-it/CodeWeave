@@ -144,6 +144,8 @@ Cargo JSON은 컴파일/산출물 메시지이지 libtest 사례별 안정 JSON 
 
 ## 5. 결과·실패·재제출
 
+공유 슬롯 검증 SHA `452f4a53322d41ad29e3088210bd3597dc932d02`의 [CI39099160821](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39099160821)는 Ubuntu 전체567/567·skip0, macOS 관련43/43·skip0, browser 회귀를 통과했다. 실제 C HTTP 경로를 띄워 내부 Rust 점유 중 C의429·GCC/임시 공간 생성0, 해제 후 C 정상 재제출 및 C 점유 중 내부 Rust 거부를 양 OS에서 확인했다. 취소 후 정리 대기·여러 서비스 간 배타성·이전 소유자의 중복 해제 무효도 검사했다. Rust HTTP 경로/실행 어댑터 활성화는 포함하지 않는다.
+
 ### 내부 요청 서비스 — 기본 비활성 (2026-10-18)
 
 server/rust-service.mjs의 createRustGradingService는 enabled:true·신뢰 registry·주입 grade 함수가 모두 있어야 요청을 수락한다. 환경 변수/클라이언트 요청으로 활성화하지 않고 기본 실행기·child_process·HTTP 등록도 없다. 현재 dev-server와 UI는 이 서비스를 사용하지 않는다.
