@@ -1,10 +1,10 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 03:02 KST — 명시적 Rust 학습 서버 시작 명령
-- 시작/결과 SHA: 시작b67eb7acd9d83eb1f5ca3c8c5d94699b986fd7dc; 구현 feat: add explicit trusted local Rust server command (결과 SHA는 후속 CI 확인 기록).
+- 시작/결과 SHA: 시작b67eb7acd9d83eb1f5ca3c8c5d94699b986fd7dc; 구현b9889799a07d30740776c6c24ed4990f6e7a5569; 후속 docs: record verified explicit Rust CLI startup and shutdown CI.
 - 목표: 별도 start:rust에서 확인 플래그·두 절대 경로를 요구하고 기본 C 명령/인증/한도를 보존, 종료 시 연결 해제 뒤의 정리/격리까지 확인.
 - 변경 파일 수: 총8개(신규 CLI/9검사·package 명령·CI·README·로컬 안내·활성/보관 일지).
 - 테스트 결과: 신규9건 중 합성8건 실패→통과·실제1skip; 전체651건632통과/실패0/skip19(Rust 부재), 관련19건17통과/2skip·MJS2개/roadmap/diff/보관 원문 확인; 삭제0·기존 기대값 변경0.
-- CI URL과 결과: 시작39140050527 성공 확인; 구현/결과 SHA CI 대기, 아직 완료로 기록하지 않음.
+- CI URL과 결과: 시작39140050527 성공 확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39152941413 전체651/651·실패0·skip0·macOS112건111통과/1skip(Linux namespace 전용)·취소120/120·browser 실제Cargo/390px/오프라인 성공. 양 OS 새 CLI의 실제HTTP 오답→수정10/10·정상 종료·공간 정리 통과; 시작 명령 항목 인수, 후속 기록 SHA CI 별도 확인.
 - 발견한 문제: 기존 미완료2파일을 최신 main과 동일 기준으로 승계. t.mock.env is not a function1건→환경 복원 방식으로 수정, npm 명령 부재/종료 helper 부재를 추가 재현. 정리 미확정 시 강제 슬롯 해제·강제 종료 없이 실패를 알리며 기존 F01 완료 상태는 바꾸지 않음.
 - 보안 영향: 사용자 CLI만 활성화·HTTP 신규 경로0·호스트/학습 루트 덮어쓰기 거부·고정 도구 검증 뒤 바인딩; 토큰/운영 경로 원문 콘솔 노출0·기존 C/Rust 한도/공유 슬롯·사용자 파일·v1 보존.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
