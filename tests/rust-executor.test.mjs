@@ -315,13 +315,14 @@ test('Rust build launcher signals readiness privately and closes the descriptor 
 
 test('Rust build launcher performs no command substitution after applying the UID process cap', { skip: !posix }, async () => {
   const { rustBuildBudget } = await import('../server/rust-budget.mjs');
-  const invocation = rustBuildBudget('/bin/true', []);
+  const invocation = rustBuildBudget('/bin/bash', ['--noprofile', '--norc', '-c', 'exit 0']);
   // A trusted shell fixture detects subshell builtins after the final nproc update.
   // DEBUG propagates to command substitutions; no host processes or limits are changed.
   const prefix = 'set -T\nlimited=0\ntrap \'if [[ "$limited" == 1 && "$BASH_SUBSHELL" -gt 0 ]]; then exit 124; fi\' DEBUG\nulimit() { if [[ "$1" == -u && "$2" =~ ^[0-9]+$ ]]; then limited=1; elif [[ "$1" == -S || "$1" == -H ]]; then printf "unlimited\\n"; fi; }\n';
   const args = [...invocation.args];
   args[3] = prefix + args[3];
-  assert.equal(spawnSync(invocation.command, args, { encoding: 'utf8', timeout: 2000 }).status, 0);
+  const result = spawnSync(invocation.command, args, { encoding: 'utf8', timeout: 2000 });
+  assert.equal(result.status, 0, result.stderr);
 });
 
 test('Cargo diagnostics resembling launcher errors remain genuine failed submissions after readiness', { skip: !posix }, async t => {
