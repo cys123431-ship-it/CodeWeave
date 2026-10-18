@@ -2,7 +2,7 @@ import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { createLocalGradeAuth } from './server/local-auth.mjs';
 import { openLearningFile, parseRequestPath } from './server/static-files.mjs';
 import { parseRequest, writeSources, compile, runCases, buildResult } from './server/grading-pipeline.mjs';
 import { gradingAdmission } from './server/grading-admission.mjs';
@@ -13,8 +13,7 @@ import { createRequestCancellation } from './server/request-cancellation.mjs';
 const HOST = '127.0.0.1';
 const PORT = Number(process.env.PORT || 4173);
 const ROOT = process.cwd();
-const gradeToken = randomBytes(32);
-const tokenMeta = '  <meta name="codeweave-token" content="' + gradeToken.toString('hex') + '">\n';
+const { tokenMeta, hasLocalHost, authorizeGrade } = createLocalGradeAuth(() => server.address().port);
 function send(res, status, data) {
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
@@ -22,47 +21,6 @@ function send(res, status, data) {
     'X-Content-Type-Options': 'nosniff'
   });
   res.end(JSON.stringify(data));
-}
-function headerCount(req, name) {
-  let count = 0;
-  for (let i = 0; i < req.rawHeaders.length; i += 2) {
-    if (req.rawHeaders[i].toLowerCase() === name) {
-      count++;
-    }
-  }
-  return count;
-}
-function singleHeader(req, name) {
-  return headerCount(req, name) === 1 ? req.headers[name] : undefined;
-}
-function localAuthorities() {
-  const port = server.address().port;
-  return ['127.0.0.1:' + port, 'localhost:' + port];
-}
-function hasLocalHost(req) {
-  return localAuthorities().includes(singleHeader(req, 'host'));
-}
-function authorizeGrade(req, res) {
-  if (singleHeader(req, 'content-type') !== 'application/json') {
-    send(res, 415, { ok: false, message: 'Content-Type은 application/json이어야 합니다.' });
-    return false;
-  }
-  if (!hasLocalHost(req)) {
-    send(res, 403, { ok: false, message: '허용되지 않은 Host입니다.' });
-    return false;
-  }
-  const origins = localAuthorities().map(host => 'http://' + host);
-  if (headerCount(req, 'origin') > 0 && !origins.includes(singleHeader(req, 'origin'))) {
-    send(res, 403, { ok: false, message: '허용되지 않은 Origin입니다.' });
-    return false;
-  }
-  const token = singleHeader(req, 'x-codeweave-token');
-  if (typeof token !== 'string' || !/^[0-9a-f]{64}$/.test(token) ||
-      !timingSafeEqual(Buffer.from(token, 'hex'), gradeToken)) {
-    send(res, 403, { ok: false, message: '채점 토큰이 없거나 만료되었습니다. 페이지를 새로고침하세요.' });
-    return false;
-  }
-  return true;
 }
 async function grade(req, res) {
   if (!authorizeGrade(req, res)) {

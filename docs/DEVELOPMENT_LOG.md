@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-18 18:00 KST — F01 기본 비활성 Rust HTTP 계약
+- 시작/결과 SHA: 시작05f220fd152d2147c1418baeece7b5edc91c314f; 구현 커밋 제목 feat: add authenticated opt-in Rust HTTP adapter; 실제 SHA/CI 후속 기록.
+- 목표: 공유 loopback 인증·명시적 활성화·본문 제한·취소/정리·안전 오류 계약을 실제 HTTP 요청으로 검증, dev-server Rust 등록0.
+- 변경 파일 수: 총8개(공유 인증·기존 C 인증 재사용·Rust HTTP·신규7검사·CI·설계·활성/보관 일지).
+- 테스트 결과: 신규6건 수정 전 모듈 부재6실패→6통과·실제1skip(Rust 부재); 전체601건586통과·실패0·skip15(Rust 부재); 관련36건34통과·skip2·MJS4개·일지4/4·보관 원문/roadmap/diff 확인; 삭제0·기존 기대값 변경0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39111186394 성공 재확인; 결과 SHA CI 대기(성공 전 완료 아님).
+- 발견한 문제: Rust HTTP의 인증/본문/수명/비공개 응답 연결 부재를 먼저6검사로 재현. C 인증은 공용 factory로 옮기고 기존 헤더·토큰/PWA 회귀 검사를 유지.
+- 보안 영향: 외부 HTTP 입력을 받는 어댑터를 추가하되 일반 서버 등록/환경 활성화0; 인증 선검사·바이트 상한·공유 슬롯·취소·정리 실패 차단 유지, 운영 경로/예외 응답0·진도/v1/실습 잠금 변경0.
+- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
+- 다음 작업: 결과 SHA CI 확인 후 명시적 로컬 서버 구성과 F01 실제 문제·클라이언트 제출/v1 기록 연결을 좁은 항목으로 인수; 새 단원/차례 전환 아님.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-18 17:03 KST — F01 정리 실패 차단·수동 공간 복구
 - 시작/결과 SHA: 시작d7dad843b300f2f84910e7596064c62db78a2a7e; 구현42328c75fd5aebf5be9f8c331ae40032684d6561; 후속 docs: record verified Rust quarantine and recovery CI.
 - 목표: 로컬 Rust 정리 실패 뒤 C·Rust 공유 슬롯 차단, 비공개 상태와 삭제 없는 명시적 공간 복구·재제출 검증.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 새 HTTP 입력/실행기0. 기존 CSRF 선검사 유지·점유 중 GCC/작업 공간 생성0·취소만으로 슬롯 조기 해제0; 여러 프로세스/worker 간 제한이나 격리는 아님.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
 - 다음 작업: 결과 SHA CI 확인 후 신뢰 로컬 Rust 실행 어댑터/연결 해제 취소·운영 관측/복구를 검증하고 HTTP/문제 연결 검토; 단원 완료나 차례 전환 아님.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-18 12:56 KST — F01 기본 비활성 내부 요청 서비스
-- 시작/결과 SHA: 시작91892f13b2cea4e6efc8220fe1eb0d67bdfab786; 구현b212e13b25f4487277791a80cdc72f6284686ba4; 후속 docs: record verified internal Rust admission CI.
-- 목표: 명시적 활성화/주입 실행기만 수락·동시1건/대기열0·취소 정리 대기·운영/결과 오류 비공개 계약 구현, HTTP 연결0.
-- 변경 파일 수: 총6개(신규 서비스·7검사·CI·설계·활성/보관 일지).
-- 테스트 결과: 신규7건 수정 전6실패·실제1skip→6통과·실제1skip(Rust 부재); sparse/복사 전 개수/사용자 iterator 경계 각각 실패 재현→통과·getter 오류 거부; 전체563건552통과·실패0·skip11(Rust 부재); MJS2개·일지4/4·roadmap/diff 성공; 삭제0·기존 기대값 변경0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39092456730 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39095657268 전체563/563·실패0·skip0·macOS 관련39/39·browser 성공; 양 OS 실제 Cargo 중복 거부/정상·오답 재제출/공간 정리 통과, 후속 기록 SHA CI 별도 확인.
-- 발견한 문제: 실행 요청 수락/동시성/안전 오류 경계 부재를 먼저6검사로 재현. 초기 결과 검사의 sparse 배열 통과를 추가 재현·소유 스냅샷 검증으로 수정, getter 예외도 운영 오류로 치환. 잘못된 사례 수는 복사 전 거부하고 사용자 iterator 대신 선언 수만 인덱스로 복사하도록 각각 재현 후 보완.
-- 보안 영향: 새 외부 HTTP 입력/호스트 실행기0. 기본 비활성·환경/요청 활성화0·검증 코드 스냅샷·한 인스턴스1슬롯; 경로/예외 비밀값 응답0·진도/v1/실습 잠금 변경0.
-- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
-- 다음 작업: 결과 SHA CI를 확인하고 신뢰 로컬 실행 어댑터/공유 C·Rust 슬롯·연결 해제 취소·운영 관측/복구를 검증한 뒤 HTTP/실제 문제 연결을 검토; 단원 완료나 차례 전환 아님.

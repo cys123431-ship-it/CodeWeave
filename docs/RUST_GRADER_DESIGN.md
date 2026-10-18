@@ -144,6 +144,18 @@ Cargo JSON은 컴파일/산출물 메시지이지 libtest 사례별 안정 JSON 
 
 ## 5. 결과·실패·재제출
 
+### 기본 비활성 Rust HTTP 어댑터 (2026-10-18)
+
+server/rust-http.mjs의 createRustHttpHandler는 기본 비활성이며 신뢰된 서버 코드가 enabled:true·service·auth를 직접 제공해야 한다. 서비스는 정리 실패 감독이 연결된 createLocalRustGradingService를 사용한다. 환경 변수·클라이언트 필드로 활성화하지 않는다. 이번 구현은 로컬 HTTP fixture에서 연결을 검증하며 dev-server의 Rust 라우트·학습자 UI·실습/숙달은 아직 등록/활성화하지 않는다. HTTP 경로와 실제 문제/v1 기록의 최종 연결은 다음 인수 범위다.
+
+server/local-auth.mjs는 기존 C 인증을 동작 변경 없이 공유한 것이다. 실제 서버 포트를 제공하는 함수마다 새32바이트 토큰을 만들고 페이지용 meta만 제공한다. Content-Type 정확히 application/json, 단일 Host의 127.0.0.1/localhost:실제PORT, 존재하는 단일 Origin의 동일 loopback HTTP 출처, 단일 X-CodeWeave-Token을 검사한다. 헤더 중복·외부/다른 포트·토큰 누락/이전 토큰은 실행 전에 거부하며 C 페이지/PWA의 기존 토큰 주입/캐시 제거 계약을 유지한다.
+
+Rust HTTP는 POST만 허용하고 인증→명시적 활성화→공유 busy 선검사→본문 파싱→서비스 순서로 처리한다. 본문 UTF-8 바이트는 기존 MAX_CODE_LENGTH×4+4096으로 제한하며 JSON·ID/코드/추가 필드는 기존 Rust 서비스가 검증한다. 비동기 본문 뒤의 슬롯 재획득·실제 실행과 정리는 서비스 책임이다. 한글25,000자는 HTTP에서 잘리지 않으며 소스의 Rust 문법 통과를 뜻하지는 않는다.
+
+요청 aborted 또는 완료 전 response close는 기존 createRequestCancellation의 signal로 전달한다. 정상 request close는 취소하지 않고, 닫힌 연결/늦은 결과에는 응답하지 않으며 리스너를 해제한다. HTTP가 별도로 lease를 획득하거나 정리 완료 전에 해제하지 않는다. 기본 비활성503·요청 오류400·공유 busy429·취소499·운영 장애503을 고정 메시지로 전달하며 예외의 statusCode/message/cause/workspaceDir는 사용하지 않는다. 응답은 JSON·no-store·nosniff이고 CORS 허용 헤더를 추가하지 않는다.
+
+새 HTTP 검사는 기본 비활성/의존성 거부, 인증 거부 전 서비스/공간 생성0, 서버별 토큰 갱신, JSON/바이트/코드 경계와 네 필드 결과, 운영 오류 비공개, 연결 해제 뒤 정리 대기 중429를 검사한다. Linux/macOS 필수 CI는 실제 Cargo 오답8사례→수정8통과→정리 실패503/후속429→운영자 수동 복구를 같은 로컬 HTTP 경로에서 확인한다. 이는 신뢰 개인 코드 범위이며 공개 실행 서버 배포·파일/네트워크 격리·실기기 UI 인수는 아니다.
+
 ### 명시적 신뢰 로컬 실행 어댑터 (2026-10-18)
 
 검증 SHA `53ff9da243109efafd4fd90eceaf110ced2f3cc6`의 [CI39106889937](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39106889937)는 Ubuntu 전체585/585·skip0, macOS 관련61/61·skip0, browser 회귀를 통과했다. 양 OS에서 새 어댑터로 실제 Cargo 정상8통과·오답8실패·문법/경고 전체 미실행·실행 중 사례 취소와 소유 공간 정리를 확인했다. 합성 도구로 비활성/버전·호스트 거부, 환경 hooks 제거, 프로세스 가족 취소/재제출, 출력 제한, launcher125/126/127 운영 오류, 조상 Cargo 설정 사전/후속 거부도 검증했다. HTTP/UI 등록과 실제 학습자 Rust 문제·숙달 인수는 포함하지 않는다.
