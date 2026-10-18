@@ -185,17 +185,28 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Real GCC and browser integration tests
-        # Reduce the QA browser's CPU/thread parallelism, never raise grading limits.
+        # RLIMIT_NPROC counts all threads of a UID, including the Actions worker.
+        # Use an isolated non-root QA identity, not a higher grading limit.
         run: |
           browser_cpu=$(node -e "console.log(require('fs').readFileSync('/proc/self/status','utf8').match(/^Cpus_allowed_list:\s+(\d+)/m)[1])")
-          taskset -c "$browser_cpu" npm run test:browser
-        env:
-          CODEWEAVE_QA_DIR: ${{ runner.temp }}/codeweave-qa
+          node_binary=$(command -v node)
+          qa_root=$(mktemp -d /tmp/codeweave-browser.XXXXXX)
+          [[ "$qa_root" == /tmp/codeweave-browser.* ]]
+          sudo useradd --create-home --user-group --shell /usr/sbin/nologin codeweaveqa
+          git archive HEAD | tar -x -C "$qa_root"
+          cp -a node_modules "$qa_root/node_modules"
+          rust_sysroot=$(rustc --print sysroot)
+          cp -a "$rust_sysroot" "$qa_root/toolchain"
+          browser_cache=$(node -e "const p=require('path');console.log(p.dirname(p.dirname(p.dirname(require('playwright').chromium.executablePath()))))")
+          cp -a "$browser_cache" "$qa_root/browsers"
+          sudo chown -R codeweaveqa:codeweaveqa "$qa_root"
+          sudo install -d -o codeweaveqa -g codeweaveqa -m 755 /tmp/codeweave-browser-qa-output
+          sudo -u codeweaveqa env -i PATH="$qa_root/toolchain/bin:$(dirname "$node_binary"):/usr/local/bin:/usr/bin:/bin" LANG=C.UTF-8 PLAYWRIGHT_BROWSERS_PATH="$qa_root/browsers" CODEWEAVE_QA_DIR=/tmp/codeweave-browser-qa-output taskset -c "$browser_cpu" "$node_binary" "$qa_root/tests/browser-practice.mjs"
       - name: Save UI verification image
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: codeweave-browser-qa
-          path: ${{ runner.temp }}/codeweave-qa
+          path: /tmp/codeweave-browser-qa-output
           if-no-files-found: ignore
           retention-days: 7

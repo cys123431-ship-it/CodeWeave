@@ -261,6 +261,7 @@ try {
   await browser.close();
   browser = await chromium.launch(browserOptions);
   const actualTools = await trustedRustTools();
+  assert.notEqual(process.getuid(), 0, 'real browser grading must enforce nproc as a non-root user');
   const taskSnapshot = spawnSync('ps', ['-u', String(process.getuid()), '-L', '-o', 'pid='],
     { encoding: 'utf8', timeout: 3000, maxBuffer: 100000 });
   assert.equal(taskSnapshot.status, 0);
