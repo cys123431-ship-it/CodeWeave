@@ -240,6 +240,7 @@ test('Rust parent and pipe close do not release admission before a delayed kille
     `sleep 30 </dev/null >/dev/null 2>&1 &\nprintf '%s\\n' "$!" > ${JSON.stringify(marker)}\nexit 101`));
   const kill = process.kill.bind(process);
   let group, timer, delayed = false, observedBusy = false;
+  const faults = [];
   t.mock.method(process, 'kill', (pid, signal) => {
     if (pid < 0 && signal === 'SIGKILL' && !delayed) {
       group = pid;
@@ -251,7 +252,11 @@ test('Rust parent and pipe close do not release admission before a delayed kille
       }, 120);
       return true;
     }
-    return kill(pid, signal);
+    try { return kill(pid, signal); }
+    catch (error) {
+      if (pid < 0 && error.code !== 'ESRCH' && faults.length < 8) faults.push({ signal, code: error.code });
+      throw error;
+    }
   });
   const service = await createLocalRustGradingService({ enabled: true, definitions, ...fixture });
   try {
@@ -264,6 +269,9 @@ test('Rust parent and pipe close do not release admission before a delayed kille
     assert.deepEqual(await fs.readdir(fixture.parent), []);
   } finally {
     clearTimeout(timer);
+    if (faults.length || service.inspect().state === 'quarantined') {
+      console.log('Rust delayed-stop observation:', JSON.stringify({ faults, state: service.inspect().state, reason: service.inspect().reason }));
+    }
     if (group) { try { kill(group, 'SIGKILL'); } catch (error) { if (error.code !== 'ESRCH') throw error; } }
   }
 });

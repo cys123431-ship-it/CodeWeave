@@ -216,7 +216,7 @@ test('unconfirmed process cleanup cannot be reset through a workspace acknowledg
           return originalKill(pid,signal);
         };
         const originalSpawn=childProcess.spawnSync;
-        if(${JSON.stringify(mode)}==='deadline') {
+        if(['deadline','observation'].includes(${JSON.stringify(mode)})) {
           childProcess.spawnSync=(command,...args)=>command==='/bin/ps'?{status:1,stdout:'',stderr:'PRIVATE unavailable'}:originalSpawn(command,...args);
           syncBuiltinESMExports();
         }

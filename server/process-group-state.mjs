@@ -26,17 +26,23 @@ export function parseGroupSnapshot(output, group) {
 
 export function groupHasLiveMembers(group) {
   validateGroup(group);
+  let denied;
   try {
     process.kill(-group, 0);
   } catch (error) {
     if (error.code === 'ESRCH') return false;
-    throw error;
+    if (error.code !== 'EPERM') throw error;
+    denied = error;
   }
+  const pending = () => {
+    if (denied) throw denied;
+    return true;
+  };
   if (process.platform === 'linux') {
     try {
       const self = readFileSync('/proc/self/stat', 'utf8');
-      if (Number(self.slice(0, self.indexOf(' '))) !== process.pid) return true;
-    } catch { return true; }
+      if (Number(self.slice(0, self.indexOf(' '))) !== process.pid) return pending();
+    } catch { return pending(); }
   }
   const result = spawnSync('/bin/ps', ['-axo', 'pgid=,stat='], {
     env: { PATH: '/usr/bin:/bin', LANG: 'C', LC_ALL: 'C' },
@@ -44,7 +50,12 @@ export function groupHasLiveMembers(group) {
   });
   // A failed snapshot proves nothing. Keep waiting for ESRCH, or let the caller's
   // cleanup deadline quarantine the service; never infer termination from failure.
-  if (result.error || result.signal || result.status !== 0) return true;
-  try { return parseGroupSnapshot(result.stdout, group); }
-  catch { return true; }
+  if (result.error || result.signal || result.status !== 0) return pending();
+  let live;
+  try { live = parseGroupSnapshot(result.stdout, group); }
+  catch { return pending(); }
+  // EPERM is not proof of existence or exit. Only independent terminal evidence
+  // can settle it; a live/unknown snapshot must retain the permission failure.
+  if (denied && live) throw denied;
+  return live;
 }

@@ -77,9 +77,29 @@ test('real POSIX group observation distinguishes a running owned group from its 
 
 test('group observation accepts ESRCH but never treats permission failures as termination', async t => {
   const { groupHasLiveMembers } = await api();
+  const ps = t.mock.method(childProcess, 'spawnSync', () => ({ status: 1, stdout: '', stderr: 'unavailable' }));
+  syncBuiltinESMExports();
   let code = 'ESRCH';
   t.mock.method(process, 'kill', () => { throw Object.assign(Error('fixture'), { code }); });
-  assert.equal(groupHasLiveMembers(30), false);
-  code = 'EPERM';
-  assert.throws(() => groupHasLiveMembers(30), { code: 'EPERM' });
+  try {
+    assert.equal(groupHasLiveMembers(30), false);
+    code = 'EPERM';
+    assert.throws(() => groupHasLiveMembers(30), { code: 'EPERM' });
+  } finally { ps.mock.restore(); syncBuiltinESMExports(); }
+});
+
+test('a denied signal-zero query requires positive terminal snapshot evidence, not an assumed exit', { skip: !posix }, async t => {
+  const { groupHasLiveMembers } = await api();
+  t.mock.method(process, 'kill', () => { throw Object.assign(Error('fixture'), { code: 'EPERM' }); });
+  const self = t.mock.method(fs, 'readFileSync', () => `${process.pid} (node) S`);
+  let stdout = '20 S\n30 Z+\n';
+  const ps = t.mock.method(childProcess, 'spawnSync', () => ({ status: 0, stdout, stderr: '' }));
+  syncBuiltinESMExports();
+  try {
+    assert.equal(groupHasLiveMembers(30), false);
+    stdout = '20 S\n30 S\n';
+    assert.throws(() => groupHasLiveMembers(30), { code: 'EPERM' });
+    stdout = '';
+    assert.throws(() => groupHasLiveMembers(30), { code: 'EPERM' });
+  } finally { self.mock.restore(); ps.mock.restore(); syncBuiltinESMExports(); }
 });
