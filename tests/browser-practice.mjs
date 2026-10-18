@@ -149,8 +149,11 @@ try {
 
   // Keep QA parallelism small: Cargo's unchanged per-UID nproc budget also
   // counts Chromium's threads. These flags do not disable browser isolation.
-  browser = await chromium.launch({ headless: true,
-    args: ['--renderer-process-limit=2', '--num-raster-threads=1'] });
+  const browserOptions = { headless: true, args: [
+    '--renderer-process-limit=2', '--num-raster-threads=1', '--process-per-site',
+    '--disable-gpu', '--js-flags=--single-threaded'
+  ] };
+  browser = await chromium.launch(browserOptions);
   // UI transport fixture only. Actual Cargo → HTTP → client/v1 is mandatory
   // in rust-client.test.mjs on the Rust-equipped test job, not simulated here.
   const rustCorrect = 'pub fn total(items: u32, price: u32) -> u32 { items * price }';
@@ -254,6 +257,9 @@ try {
     await rustApp.close();
   }
   // Actual Cargo, HTTP, both browser screens and v1 storage, without interception.
+  // Discard idle processes retained by the preceding service-worker fixture.
+  await browser.close();
+  browser = await chromium.launch(browserOptions);
   const actualTools = await trustedRustTools();
   const taskSnapshot = spawnSync('ps', ['-u', String(process.getuid()), '-L', '-o', 'pid='],
     { encoding: 'utf8', timeout: 3000, maxBuffer: 100000 });
@@ -268,6 +274,9 @@ try {
     const address = await actualApp.listen(0), actualBase = 'http://127.0.0.1:' + address.port;
     actualContext = await browser.newContext({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
     const actualPage = await actualContext.newPage(), actualBench = await actualContext.newPage();
+    console.log('F01 browser task snapshot:', spawnSync('ps',
+      ['-u', String(process.getuid()), '-o', 'pid=,nlwp=,comm='],
+      { encoding: 'utf8', timeout: 3000, maxBuffer: 100000 }).stdout);
     for (const p of [actualPage, actualBench]) {
       p.on('pageerror', error => errors.push(error.message));
       p.on('dialog', dialog => dialog.accept());
