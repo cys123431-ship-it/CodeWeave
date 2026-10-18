@@ -61,7 +61,7 @@
 | C03 | fgets 조각과 논리적인 한 줄 | 완료 | `c-fgets-logical-line` · [원고](../content/c/10-fgets-logical-line.md) · [검사](../tests/fgets-content.test.mjs) |
 | C04 | strtol로 정수·범위·잔여 입력 검증 | 완료 | `c-strtol-integer-input` · [원고](../content/c/11-strtol-integer-input.md) · [검사](../tests/strtol-content.test.mjs) |
 | C05 | 파일 입출력: 스트림 수명·오류·EOF | 완료 | `c-file-stream-count` · [원고](../content/c/22-file-streams.md) · [검사](../tests/stream-exercise.test.mjs) · [검사](../tests/browser-practice.mjs) · [검사](../tests/exercise-audit.test.mjs) |
-| C06 | 전처리 매크로·조건부 컴파일과 중복 평가 | 진행 중 | [원고](../content/c/23-preprocessor-once.md) · [검사](../tests/preprocessor-exercise.test.mjs) |
+| C06 | 전처리 매크로·조건부 컴파일과 중복 평가 | 진행 중 | `c-preprocessor-once` · [원고](../content/c/23-preprocessor-once.md) · [검사](../tests/preprocessor-exercise.test.mjs) · [검사](../tests/browser-practice.mjs) |
 | C07 | 오류 반환·errno와 자원 정리 경로 | 미착수 | — |
 | C08 | 표준 라이브러리·함수 포인터와 빌드 자동화 | 미착수 | — |
 

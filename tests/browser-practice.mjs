@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
-import { mkdir, mkdtemp, realpath, readdir, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, realpath, readdir, rm, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import os from 'node:os';
@@ -15,6 +15,53 @@ import { createRustGradingDefinitions } from '../server/rust-exercises.mjs';
 import { createAttemptBackup } from '../src/attempt-backup.js';
 import { createLocalRustGradingService } from '../server/rust-executor.mjs';
 import { trustedRustTools } from './helpers/rust-tools.mjs';
+import { lessons as c06Lessons } from '../src/catalog.js';
+import { exerciseById as c06ExerciseById } from '../src/exercises.js';
+import { gradingExercises as c06Graders } from '../server/grading-exercises.mjs';
+import { preprocessorExercise, preprocessorStarter } from '../server/preprocessor-exercise.mjs';
+
+const c06Correct = '#include <stddef.h>\nint take_nonnegative(int *cursor,int *out){if(!cursor||!out||cursor==out)return 0;int value=*cursor;if(value < -10000 || value > 10000)return 0;*out=value<0?0:value;*cursor=value+1;return 1;}';
+const c06Wrong = c06Correct.replace('*cursor=value+1;', '*cursor=value<0?value:value+1;');
+// Fast non-UI acceptance is also available without loading Playwright/Chromium.
+// The regular browser suite runs the same contract and then the real UI flow.
+async function verifyC06Contract() {
+  const lesson = c06Lessons.find(lesson => lesson.id === 'c-preprocessor-once');
+  assert.ok(lesson, 'C06 must be a learner-facing lesson');
+  assert.equal(lesson.track, 'c');
+  assert.equal(lesson.challenge.starter, preprocessorStarter);
+  assert.equal(lesson.challenge.input, preprocessorExercise.publicExample.input);
+  assert.equal(lesson.challenge.expected, preprocessorExercise.publicExample.output);
+  const metadata = c06ExerciseById(lesson.id);
+  assert.equal(metadata.grader, 'c-function');
+  assert.deepEqual(metadata.prerequisites, preprocessorExercise.prerequisites);
+  assert.deepEqual(c06Graders.get(lesson.id), preprocessorExercise);
+  const manuscript = await readFile(new URL('../content/c/23-preprocessor-once.md', import.meta.url), 'utf8');
+  const program = manuscript.match(/```c\n([\s\S]*?)\n```/)[1];
+  assert.ok(lesson.sections.some(section => section.code?.trim() === program.trim()));
+  console.log('PASS: C06 catalog, starter, public example, prepared registry and compiled manuscript remain identical');
+  const app = createLearningServer();
+  try {
+    const address = await app.listen(0);
+    const url = 'http://127.0.0.1:' + address.port;
+    const html = await (await fetch(url)).text();
+    const token = html.match(/name="codeweave-token" content="([a-f0-9]{64})"/)?.[1];
+    assert.match(token, /^[a-f0-9]{64}$/);
+    for (const [code, ok] of [[c06Wrong, false], [c06Correct, true]]) {
+      const response = await fetch(url + '/api/grade', { method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CodeWeave-Token': token },
+        body: JSON.stringify({ exerciseId: lesson.id, code }) });
+      assert.equal(response.status, 200);
+      const result = await response.json();
+      assert.equal(result.ok, ok, JSON.stringify(result));
+      assert.equal(result.tests.length, 10);
+    }
+    console.log('PASS: C06 authenticated real GCC HTTP rejects negative non-consumption then accepts correction 10/10');
+  } finally {
+    await app.close();
+  }
+}
+await verifyC06Contract();
+if (process.argv.includes('--c06-contract-only')) process.exit(0);
 
 const require = createRequire(import.meta.url);
 let playwright, expect;
@@ -1387,6 +1434,52 @@ try {
   await expect(page.locator('[data-route="lesson:algo-binary"]')).toHaveCount(1);
   await expect(page.locator('[data-route="lesson:algo-stable-insertion"]')).toHaveCount(1);
   console.log('PASS: E01 next-unit enters E02; quiz correction, real unstable failure/retry 10/10, mastery, backup, offline attempts, 390px and track return');
+  await page.goto(base + '/#lesson:c-preprocessor-once');
+  await expect(page.locator('.detail-head h1')).toHaveText('전처리 매크로: 값을 한 번만 소비하기');
+  await expect(page.locator('.practice-zone')).toContainText('함수 직접 호출형');
+  await expect(page.locator('#code-input')).toHaveValue(preprocessorStarter);
+  await page.locator('[data-quiz="c-preprocessor-once"][data-choice="0"]').click();
+  await expect(page.locator('.feedback.bad')).toBeVisible();
+  await page.locator('[data-retry="c-preprocessor-once"]').click();
+  await page.locator('[data-quiz="c-preprocessor-once"][data-choice="1"]').click();
+  await page.locator('#mark-theory').click();
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, c06Wrong);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, c06Correct);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('10/10');
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await bench.reload();
+  await bench.locator('#lesson-select').selectOption('c-preprocessor-once');
+  await expect(bench.locator('#code-input')).toHaveValue(c06Correct);
+  const c06DownloadEvent = bench.waitForEvent('download');
+  await bench.locator('#export-history').click();
+  const c06Download = await c06DownloadEvent, c06Chunks = [];
+  for await (const chunk of await c06Download.createReadStream()) c06Chunks.push(chunk);
+  const c06Backup = Buffer.concat(c06Chunks), c06Data = JSON.parse(c06Backup);
+  assert.equal(c06Data.iterations['c-preprocessor-once'].length, 2);
+  assert.equal(c06Data.drafts['c-preprocessor-once'], c06Correct);
+  assert.equal(c06Data.drafts['rust-cargo'], rustDraft);
+  await bench.locator('#import-file').setInputFiles({ name: 'c06-backup.json', mimeType: 'application/json', buffer: c06Backup });
+  await expect(bench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.locator('#code-input')).toHaveValue(c06Correct);
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('[data-restore-attempt="1"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(c06Wrong);
+  await page.locator('[data-restore-attempt="0"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(c06Correct);
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('.figure-box svg')).toHaveAttribute('role', 'img');
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  if (qaDir) await page.screenshot({ path: path.join(qaDir, 'preprocessor-once-mobile.png'), fullPage: true });
+  await context.setOffline(false);
+  await page.locator('.next-action [data-route="lesson:c-file-stream-count"]').click();
+  await expect(page.locator('.detail-head h1')).toHaveText('파일 스트림: 읽기·EOF·오류와 소유권');
+  console.log('PASS: C06 real GCC 10-case failure/correction, quiz retry, separate mastery, shared history, v1, 390px/offline and next lesson');
   assert.deepEqual(errors, []);
   console.log('PASS: 390px mobile layout and offline reload of drafts/history; no browser exceptions');
 } catch (error) {

@@ -793,6 +793,29 @@ export const lessons = [
     challenge:{id:'c-student-vector-push',title:'기하급수 성장으로 학생 한 명 추가하기',description:'push_student는 정규 상태를 검사하고 빈 슬롯이 있으면 재할당 없이 value를 추가합니다. 가득 찼으면 0→4, 이후 두 배 용량을 계산하되 SIZE_MAX 오버플로를 먼저 거부하고 reserve_students를 호출하세요. reserve 실패 시 모든 상태를 보존하고, 성공 뒤에만 새 레코드와 length를 공개합니다. reserve_students와 main은 작성하지 않습니다.',starter:'#include <stddef.h>\n#include <stdint.h>\n\nstruct Student {\n    int id;\n    int score;\n};\n\nint reserve_students(struct Student **students, size_t length,\n                     size_t *capacity, size_t new_capacity);\n\nint push_student(struct Student **students, size_t *length,\n                 size_t *capacity, struct Student value) {\n    // TODO: 상태 검증 → 필요하면 0→4/두 배 성장 → reserve 재사용 → 레코드와 길이 공개\n    (void)students;\n    (void)length;\n    (void)capacity;\n    (void)value;\n    return 0;\n}',input:'push_student(&students, &length, &capacity, (struct Student){309, 95})',expected:'1 · 길이 3 · 용량 4 · 새 학생 309:95'}
   },
   {
+    id: 'c-preprocessor-once', track: 'c', level: '응용',
+    title: '전처리 매크로: 값을 한 번만 소비하기', minutes: 25,
+    source: '독자 원고 content/c/23-preprocessor-once.md. GCC 공식 전처리 문서의 동작 의미 확인; 원문 예제 복제 없음.',
+    summary: '토큰 치환과 함수 호출을 구별하고, 중복 평가를 고쳐 커서 값을 정확히 한 번 소비합니다.',
+    figure: 'pointer',
+    sections: [
+      { heading: '개요·필요성·선수 지식·목표', text: '함수·반환값·포인터·조건 연산자를 먼저 복습하세요. 헤더의 설정이나 빌드별 기능 선택을 읽으려면 전처리 치환과 실행 중 함수 호출을 구분해야 합니다. 이번에는 원래 값을 한 번 읽어 이름 붙이고 계산과 상태 변경을 분리합니다.' },
+      { heading: '매크로는 함수 선언이 아니다', text: '#define은 이름을 토큰으로 치환하는 규칙입니다. CW_NONNEG(2 + 5)는 비교와 조건식으로 펼쳐집니다. 일반 함수처럼 인수 결과를 매개변수 객체에 한 번 저장해 주는 것이 아닙니다.', code: '#define CW_NONNEG(value) ((value) < 0 ? 0 : (value))' },
+      { heading: '괄호와 평가 횟수는 다른 문제', text: '인수와 전체 식의 괄호는 연산 우선순위 문제를 줄입니다. 그러나 같은 인수가 조건과 선택된 갈래에 각각 들어가면 다시 평가될 수 있습니다. 상태를 바꾸는 읽기를 매크로에 직접 넘기기 전에 지역 변수에 원래 값을 저장하세요.' },
+      { heading: '정적 도식: 포인터와 대상 객체', text: '위 그림의 p가 가리키는 x를 이번 함수의 cursor가 가리키는 int 객체로 생각해 봅니다. 주소를 복사하는 것과 대상 값을 변경하는 것은 다릅니다. 원고의 소비 흐름은 cursor 값 7→8, 지역 변수 once=7, CW_NONNEG(once) 순서입니다. once를 여러 번 읽어도 cursor는 더 바뀌지 않습니다.' },
+      { heading: '완성 프로그램: 소비와 계산 분리', text: '다음은 example.c 전체입니다. read_next가 원래 값을 반환하고 커서를 증가시킨 뒤, 상태를 바꾸지 않는 once를 매크로에 넘깁니다.', code: '#include <stdio.h>\n#ifndef CW_TRACE\n#define CW_TRACE 0\n#endif\n#define CW_NONNEG(value) ((value) < 0 ? 0 : (value))\nstatic int read_next(int *cursor) {\n    int value = *cursor;\n    *cursor = value + 1;\n    return value;\n}\nint main(void) {\n    int cursor = 7;\n    int once = read_next(&cursor);\n    int result = CW_NONNEG(once);\n#if CW_TRACE\n    puts("trace: enabled");\n#endif\n    printf("%d %d\\n", result, cursor);\n    return 0;\n}' },
+      { heading: '빌드·실제 출력과 이유', text: 'gcc -std=c11 -Wall -Wextra -Wpedantic -Werror example.c -o example로 빌드하고 실행합니다. 출력은 7 8 한 줄입니다. 결과는 원래 값 7이며, 커서만 다음 값 8이 됩니다. -DCW_TRACE=1을 추가하면 trace: enabled 다음 줄에 7 8이 나옵니다. 예제와 두 설정을 실제 GCC로 검사했습니다.' },
+      { heading: '흔한 오류: 중복 평가 관찰과 수정', text: 'once/result 두 선언을 아래 한 선언으로 바꾸면 조건에서 7을 읽고 양수 갈래에서 다시 8을 읽습니다. 출력은 8 9입니다. ?:는 조건을 먼저 평가한 뒤 선택한 갈래 하나를 평가하므로 이 예제는 정의되지 않은 동작의 출력을 예측하는 예제가 아닙니다. 원래의 once 방식으로 복구하고 다시 실행하세요.', code: '/* 위 완성 프로그램의 두 선언을 대체하는 조각 */\nint result = CW_NONNEG(read_next(&cursor));' },
+      { heading: '조건부 컴파일과 실행 중 if', text: '#ifndef CW_TRACE는 정의가 없을 때 기본값 0을 둡니다. #if CW_TRACE는 값이 0이면 메시지 코드를 제외합니다. #ifdef는 값이 아니라 정의 유무를 보므로 -DCW_TRACE=0도 정의됨으로 판단합니다. 실행 중 입력으로 분기하는 if와 구분하세요.' },
+      { heading: '중간 점검·핵심 요약', text: 'cursor=-3이나 0에서도 once 방식은 읽기 한 번입니다. 괄호는 우선순위, 지역 변수는 소비 시점, #if는 코드 포함 선택입니다. 형이 정해진 계산은 일반 함수나 static inline 함수로 옮길 수도 있습니다. inline이 반드시 인라인 최적화를 보장하지는 않습니다.' },
+      { heading: '직접 풀기·함수 계약', text: 'take_nonnegative(int *cursor,int *out)를 작성합니다. 두 인수는 살아 있는 int 객체를 가리키거나 NULL입니다. NULL·같은 객체·원래 cursor 값이 -10000..10000 밖이면 실패0, 접근 가능한 두 객체를 보존합니다. 성공하면 out=max(원래 값,0), cursor=원래 값+1, 반환1입니다. 음수도 소비합니다. main/printf는 제출하지 않습니다. 채점은 특정 매크로 문구가 아니라 동작을 검사합니다.' },
+      { heading: '기초·응용·도전·Mini Project', text: '기초: 완성 예제의 시작값을 0과 -3으로 바꿔 예상/실제 상태를 비교합니다. 응용: 중복 평가 변형을 고칩니다. 도전: #ifdef와 #if를 설정0/1로 각각 빌드해 설명합니다. Mini Project: 센서 값 하나를 소비해 음수를 0으로 정리하는 로그 표를 만듭니다. 입력 약속과 소비 횟수부터 적으세요.' },
+      { heading: '테스트·수정·재제출·복습 연결', text: '10사례는 일반/음수/0/양끝·NULL·범위 밖·별칭·독립/연속 호출을 구분합니다. 실패 시 원래 값과 증가 뒤 값, 소비 횟수, 실패 전에 쓴 객체부터 확인하세요. 기대값 대신 구현을 고치고 전체 재제출합니다. 이전 제출 복원은 새 제출이 아닙니다. 이론·퀴즈·실습은 따로 기록됩니다. 다음 화면은 파일 스트림 복습이며 다음 개발 차례는 별도의 자료구조 큐입니다.' }
+    ],
+    quiz: { question: '괄호를 갖춘 CW_NONNEG에 상태를 바꾸는 함수 호출을 직접 넘길 때 옳은 설명은?', options: ['괄호가 있으므로 항상 한 번만 호출된다', '선택되는 갈래에 따라 다시 호출될 수 있다', '전처리기가 함수 반환값을 미리 계산한다', '반드시 컴파일 오류가 난다'], answer: 1, explanation: '치환된 인수가 조건과 선택한 갈래에서 각각 평가될 수 있습니다. 먼저 한 번 읽어 지역 변수에 저장하거나 형이 정해진 함수를 사용하세요.' },
+    challenge: { id: 'c-preprocessor-once', title: '커서 값을 한 번만 소비하기', description: 'NULL/같은 객체/범위 밖은 실패0과 기존 값 보존. 성공 시 원래 값을 음수이면0으로 out에 기록하고 cursor는 정확히1 증가, 반환1입니다. 범위 -10000..10000. 함수만 제출하세요.', starter: '#include <stddef.h>\nint take_nonnegative(int *cursor, int *out) {\n    (void)cursor;\n    (void)out;\n    /* TODO: 검증 뒤 원래 값을 한 번만 소비하고 결과 기록 */\n    return 0;\n}\n', input: 'cursor=7, take_nonnegative(&cursor, &out)', expected: '1 7 8' }
+  },
+  {
     id: 'c-file-stream-count', track: 'c', level: '응용',
     title: '파일 스트림: 읽기·EOF·오류와 소유권', minutes: 25,
     source: 'C05 독자 원고 content/c/22-file-streams.md · 화면/API 전달판',
