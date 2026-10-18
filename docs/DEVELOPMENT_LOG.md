@@ -1,10 +1,10 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-18 17:03 KST — F01 정리 실패 차단·수동 공간 복구
-- 시작/결과 SHA: 시작d7dad843b300f2f84910e7596064c62db78a2a7e; 구현 커밋 제목 feat: quarantine Rust cleanup failures and verify manual recovery; 실제 SHA/CI 후속 기록.
+- 시작/결과 SHA: 시작d7dad843b300f2f84910e7596064c62db78a2a7e; 구현42328c75fd5aebf5be9f8c331ae40032684d6561; 후속 docs: record verified Rust quarantine and recovery CI.
 - 목표: 로컬 Rust 정리 실패 뒤 C·Rust 공유 슬롯 차단, 비공개 상태와 삭제 없는 명시적 공간 복구·재제출 검증.
 - 변경 파일 수: 총9개(공유 admission·Rust 서비스/준비/어댑터·신규9검사·CI·설계·활성/보관 일지).
 - 테스트 결과: 신규 합성8건 각각 수정 전 실패→통과·실제1skip(Rust 부재); 전체594건580통과·실패0·skip14(Rust 부재); MJS5개·일지4/4·보관 원문 보존·roadmap/diff 확인; 삭제0·기존 기대값 변경0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39107035357 성공 재확인; 결과 SHA CI 대기(성공 확인 전 완료 아님).
+- CI URL과 결과: 시작39107035357 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39111020162 전체594/594·실패0·skip0·macOS 관련70/70·browser 성공; 양 OS 실제 삭제 실패 차단·수동 정리 후 정상8사례 재제출 통과, 후속 기록 SHA CI 별도 확인.
 - 발견한 문제: 정리 실패 뒤 슬롯 재개·준비 실패 중 삭제 오류의 원인 소실을 재현·수정. 부모 교체 시 경로 부재를 정리 완료로 오인하는 신규 검사도 실패 재현 후 device/inode·정규 경로 검증으로 수정.
 - 보안 영향: 새 HTTP/실행 활성화0; 오류·공간 경로는 신뢰 운영자 내부만 관측, 자동 삭제/강제 해제0; 프로세스 정리 불확실성은 공간 복구로 해제 불가, 진도/v1/실습 잠금 변경0.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.

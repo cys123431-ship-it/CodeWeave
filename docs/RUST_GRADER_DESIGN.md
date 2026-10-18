@@ -157,6 +157,8 @@ Cargo는 현재 디렉터리의 조상 .cargo/config와 config.toml도 읽으므
 
 ### 정리 실패 후 차단과 명시적 공간 복구 (2026-10-18)
 
+검증 SHA `42328c75fd5aebf5be9f8c331ae40032684d6561`의 [CI39111020162](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39111020162)는 Ubuntu 전체594/594·skip0, macOS 관련70/70·skip0, browser 회귀를 통과했다. 양 OS에서 실제 Rust 삭제 실패 뒤 공유 슬롯 차단·복구 전 재제출 거부·수동 정리 뒤 새8사례 통과를 확인했다. 프로세스 정리 불확실성은 자식 테스트의 EPERM 주입으로 복구 거부를 검증했으며 실제 OS 정리 장애를 해결했다는 뜻은 아니다.
+
 로컬 어댑터는 공간 ERUSTCLEANUP 또는 프로세스 ECLEANUP을 만나면 C·Rust 공통 lease를 격리 상태로 보유한다. 정상 finally의 release나 중복/오래된 해제는 이 상태와 다음 소유자를 풀지 못한다. 같은 어댑터의 후속 제출은 비공개 RUST_UNAVAILABLE/503, 공유 슬롯의 다른 요청은 기존 busy로 거부하며 새 실행/공간 생성을 시작하지 않는다. prepare 도중 쓰기와 삭제가 함께 실패해도 두 원인을 AggregateError로 보존하고 정확한 소유 workspaceDir로 ERUSTCLEANUP을 전달한다.
 inspect()는 동결된 state·reason·workspaceDir 세 필드만 반환한다. state는 disabled/ready/quarantined/recovering, reason은 null/workspace-cleanup/process-cleanup이다. 경로는 신뢰 로컬 운영자만 사용하는 정보이며 HTTP·학습자 결과·진도/v1 백업에 노출하지 않는다. 오류 원문·코드·프로세스 출력은 상태에 담지 않는다. 비활성 서비스의 관측/복구는 도구 probe나 공간 생성을 하지 않는다.
 recover()는 경로나 강제 해제 인수를 받지 않으며 파일을 삭제·이동하거나 프로세스를 종료하지 않는다. 운영자가 장애를 해결하고 해당 공간을 직접 정리한 뒤에만 호출한다. workspace-cleanup이고, 시작 때 캡처한 정규 부모 경로·device/inode가 그대로이며, lstat으로 정확한 소유 경로가 ENOENT임을 확인한 경우에만 소유 resume capability로 슬롯을 한 번 해제한다. 존재하는 폴더/파일·끊어진 심볼릭 링크·부모 이동/교체·접근 오류는 false를 반환하며 차단을 유지한다. 부모의 다른 파일은 만지지 않는다.
