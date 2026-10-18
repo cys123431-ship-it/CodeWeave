@@ -24,6 +24,22 @@ test('confirmed roadmap validates all nine stages and counts only evidenced comp
   }
 });
 
+test('accepted C06 retains its grading evidence and the C turn hands off to the next unfinished DS unit', async () => {
+  const { data, api } = await load();
+  const unit = data.stages.find(stage => stage.id === 'C').units.find(item => item.id === 'C06');
+  assert.equal(unit.status, '완료');
+  assert.deepEqual(unit.lessonIds, ['c-preprocessor-once']);
+  assert.ok(unit.manuscripts.includes('content/c/23-preprocessor-once.md'));
+  assert.ok(unit.tests.includes('tests/preprocessor-exercise.test.mjs'));
+  assert.ok(unit.tests.includes('tests/browser-practice.mjs'));
+  const handoff = structuredClone(data);
+  const track = api.nextTurn('C');
+  handoff.next = { track, unit: api.selectUnit(handoff, track).id };
+  assert.equal(track, 'D');
+  assert.equal(api.validateRoadmap(handoff), true);
+  assert.equal(gradingExercises.get('c-preprocessor-once').cases.length, 10);
+});
+
 test('ungraded samples cannot be promoted to completed and catalog entries cannot be double counted', async () => {
   const { data, api } = await load();
   const sample = structuredClone(data);

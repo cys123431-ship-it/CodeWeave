@@ -10,8 +10,8 @@
     "C"
   ],
   "next": {
-    "track": "C",
-    "unit": "C06"
+    "track": "D",
+    "unit": "D03"
   },
   "limits": {
     "screenSections": [
@@ -344,7 +344,7 @@
         {
           "id": "C06",
           "title": "전처리 매크로·조건부 컴파일과 중복 평가",
-          "status": "진행 중",
+          "status": "완료",
           "lessonIds": [
             "c-preprocessor-once"
           ],
