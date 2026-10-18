@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-18 21:57 KST — F01 단원 채점·v1 제출 연결
+- 시작/결과 SHA: 시작84b10b71ef4a4f0ceca017ac73aedb96cf5d2ec4; 커밋 feat: connect opt-in F01 lesson grading and preserve v1 history; 결과 CI 확인 전.
+- 목표: 명시적 로컬 Cargo 구성의 F01 단원에서 실패/수정 재제출·분리 숙달·이력 복원·기존 v1 백업 보존, 기본 C CLI 유지.
+- 변경 파일 수: 총10개(서버 HTML 표시·단원 UI/원고·공용 결과 검증·PWA·신규8검사·브라우저·로컬 안내·활성/보관 일지).
+- 테스트 결과: 신규4건 실패→통과 및 앱 기존 C 백업의 Rust 이력 소실1건 실패→통과; 전체 첫621건602통과/1실패/18skip→재검사621건603통과/0실패/18skip(Rust 부재); 신규8건7통과/1skip·JS/MJS7개·일지/원문/roadmap/diff 확인; 삭제0·기존 기대값 변경0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39122822352 성공 재확인; 결과 SHA의 실제 Cargo/브라우저 CI 대기.
+- 발견한 문제: 활성 실습 판정을 백업 교체 범위로 재사용하면 기존 C 백업이 Rust 이력을 삭제함을 실제 앱 DOM fixture로 재현·C 범위 고정으로 수정. 브라우저 UI는 합성 채점 fixture, 실제 Cargo HTTP→클라이언트/v1은 별도 CI 필수 검사로 구분.
+- 보안 영향: 신규 HTTP 경로/환경 활성화0·기존 인증/공유 슬롯 유지; 서버 주입 표시+페이지 토큰이 있는 F01만 UI 활성·10사례 결과 검증·취소 후 저장 금지·오프라인 표시/토큰 제거. v1 키/형식 변경0.
+- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
+- 다음 작업: 결과 SHA CI 인수 후 별도 연습장 Rust 선택/이력과 운영자가 실행 가능한 명시 구성 안내를 연결; 실제 Cargo 브라우저 통합 인수 전 F01 완료/차례 전환 금지.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-18 19:55 KST — F01 서버 전용 영수증 채점 계약
 - 시작/결과 SHA: 시작f97e41780ae65805800a1f4665940f1ef61cc483; 계약8f8250d5ad23009e9efec566683494711a5ab375·검사수정b760a8bc01fc13f54f3517b8f2421ab74f8d8b4b·진단b618def5036c931ab3da60643cbe5c470758d470·종료수정04dba566c7a9d40aa83c327d60fb5940891fa67f; 후속 docs: record verified F01 contract and single-stop cleanup CI.
 - 목표: 기존 rust-cargo ID/함수/스타터를 보존한10사례·불변 서버 registry·대표 오답/다른 정답·실제 HTTP 수정 제출 검증.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 새 HTTP/실행 활성화0; 오류·공간 경로는 신뢰 운영자 내부만 관측, 자동 삭제/강제 해제0; 프로세스 정리 불확실성은 공간 복구로 해제 불가, 진도/v1/실습 잠금 변경0.
 - 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
 - 다음 작업: 결과 SHA CI 확인 후 인증된 Rust HTTP 경로·실제 문제/기록 연결을 검증; 프로세스 불확실성 수동 인수는 계속 필요, 단원 완료/차례 전환 아님.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-18 16:02 KST — F01 명시적 신뢰 로컬 Rust 어댑터
-- 시작/결과 SHA: 시작100b5e31169cf3eb4298a0742122e1766bfbf86e; 구현53ff9da243109efafd4fd90eceaf110ced2f3cc6; 후속 docs: record verified local Rust adapter CI.
-- 목표: 기본 비활성·고정 도구/호스트·공유 예산·환경/설정 경계·그룹 취소/정리·서비스 결과 계약을 실제 어댑터로 연결, HTTP 등록0.
-- 변경 파일 수: 총9개(로컬 어댑터·공용 예산·기존 helper2개 재내보내기·9검사·CI·설계·활성/보관 일지).
-- 테스트 결과: 합성8건 각각 실패 재현→통과·실제1skip(Rust 부재); 기존 예산 함수 본문2개 원문 보존 확인; 전체585건572통과·실패0·skip13(Rust 부재); MJS5개·일지4/4·roadmap/diff 확인; 삭제0·기존 기대값 변경0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39102944583 성공 재확인; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39106889937 전체585/585·실패0·skip0·macOS 관련61/61·browser 성공; 양 OS 새 어댑터의 실제 정상/오답/문법/경고 판정·사례 취소/정리 통과, 후속 기록 SHA CI 별도 확인.
-- 발견한 문제: 빌드 launcher126/127이 오답 결과가 되는 경계와 조상 Cargo 설정 혼입을 각각 먼저 재현·운영 오류/사전 거부로 수정. 신규 PID 셸 fixture의 String.replace가 $$를 $로 바꾸어 NaN이 된 오류는 콜백 치환으로 수정(PID 판정 기대값 유지).
-- 보안 영향: 새 HTTP/환경 활성화0·enabled:true+신뢰 registry/sysroot만 실행. 개인 신뢰 Rust 호스트 실행 코드를 추가하되 기존 한도 증가0·상위 설정 수정/삭제0·진도/v1/실습 잠금 변경0; 경로/도구 변경 경합·파일/네트워크 격리 미지원.
-- 단계별 완료율: A3/5·B10/11·C5/8·D/E2/8·F/G0/8·H/I0/6 유지; F01진행 중·next=F-G/F01.
-- 다음 작업: 결과 SHA CI 확인 후 운영 관측/정리 실패 복구와 인증된 HTTP·실제 Rust 문제 연결을 검증; 단원 완료나 차례 전환 아님.

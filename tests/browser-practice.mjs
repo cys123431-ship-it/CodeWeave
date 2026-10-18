@@ -8,6 +8,10 @@ import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { serializeMultiFileSubmission } from '../src/multi-file.js';
+import { createLearningServer } from '../server/learning-server.mjs';
+import { createRustGradingService } from '../server/rust-service.mjs';
+import { createRustGradingDefinitions } from '../server/rust-exercises.mjs';
+import { createAttemptBackup } from '../src/attempt-backup.js';
 
 const require = createRequire(import.meta.url);
 let playwright, expect;
@@ -141,6 +145,108 @@ try {
   console.log(`PASS: all ${Object.keys(solutions).length} C exercises compile and pass their real GCC tests`);
 
   browser = await chromium.launch({ headless: true });
+  // UI transport fixture only. Actual Cargo → HTTP → client/v1 is mandatory
+  // in rust-client.test.mjs on the Rust-equipped test job, not simulated here.
+  const rustCorrect = 'pub fn total(items: u32, price: u32) -> u32 { items * price }';
+  const rustWrong = rustCorrect.replace('items * price', 'items + price');
+  const rustApp = createLearningServer({ root, rustService: createRustGradingService({
+    enabled: true, definitions: createRustGradingDefinitions(), grade: request => {
+      const ok = request.code === rustCorrect;
+      return { ok, message: ok ? '10/10' : '0/10', compileOutput: '',
+        tests: Array.from({ length: 10 }, () => ({ passed: ok, detail: ok ? '테스트 통과' : '단언 실패 · UI fixture' })) };
+    }
+  }) });
+  const rustAddress = await rustApp.listen(0), rustBase = 'http://127.0.0.1:' + rustAddress.port;
+  const rustContext = await browser.newContext({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
+  const rustPage = await rustContext.newPage();
+  rustPage.on('pageerror', error => errors.push(error.message));
+  let rustDialogs = 0;
+  rustPage.on('dialog', dialog => { rustDialogs++; return dialog.accept(); });
+  try {
+    await rustPage.goto(rustBase + '/#lesson:rust-cargo');
+    await expect(rustPage.locator('#grade-code')).toBeEnabled();
+    await expect(rustPage.locator('.practice-card').last()).toContainText('Cargo 함수 테스트형');
+    const submitRust = async source => {
+      await rustPage.locator('#code-input').fill(source);
+      const response = rustPage.waitForResponse(r => r.url().endsWith('/api/grade/rust'));
+      await rustPage.locator('#grade-code').click();
+      const result = await response;
+      assert.deepEqual(result.request().postDataJSON(), { exerciseId: 'rust-cargo', code: source });
+      assert.equal(result.request().headers()['x-codeweave-token'],
+        await rustPage.locator('meta[name="codeweave-token"]').getAttribute('content'));
+      await ready(rustPage);
+    };
+    await submitRust(rustWrong);
+    await expect(rustPage.locator('.terminal[role="status"]')).toContainText('0/10');
+    await expect(rustPage.locator('.mastery-state')).not.toContainText('전체 숙달');
+    await submitRust(rustCorrect);
+    await expect(rustPage.locator('.terminal[role="status"]')).toContainText('10/10');
+    await expect(rustPage.locator('.mastery-state')).not.toContainText('전체 숙달');
+    await rustPage.locator('#mark-theory').click();
+    await rustPage.locator('[data-quiz="rust-cargo"][data-choice="0"]').click();
+    await expect(rustPage.locator('.mastery-state')).toContainText('전체 숙달');
+    await rustPage.locator('[data-restore-attempt="1"]').click();
+    await expect(rustPage.locator('#code-input')).toHaveValue(rustWrong);
+    assert.equal((await history(rustPage))['rust-cargo'].length, 2, 'restoring is not submitting');
+    await rustPage.reload();
+    await expect(rustPage.locator('#code-input')).toHaveValue(rustWrong);
+    await expect(rustPage.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+    const beforeErrors = await history(rustPage);
+    for (const fixture of [{ status: 429, body: '{}' },
+      { status: 200, body: JSON.stringify({ ok: true, message: '9/9', compileOutput: '',
+        tests: Array.from({ length: 9 }, () => ({ passed: true, detail: '통과' })) }) }]) {
+      await rustPage.route('**/api/grade/rust', route => route.fulfill({ ...fixture, contentType: 'application/json' }));
+      await submitRust(rustCorrect);
+      await expect(rustPage.locator('.terminal[role="status"]')).toContainText('제출 기록을 추가하지 않았습니다');
+      assert.deepEqual(await history(rustPage), beforeErrors);
+      await rustPage.unroute('**/api/grade/rust');
+    }
+    await rustPage.locator('[data-route="settings"]').click();
+    const downloadEvent = rustPage.waitForEvent('download');
+    await rustPage.locator('#export-progress').click();
+    const download = await downloadEvent, chunks = [];
+    for await (const chunk of await download.createReadStream()) chunks.push(chunk);
+    const backup = Buffer.concat(chunks);
+    assert.equal(JSON.parse(backup).iterations['rust-cargo'].length, 2);
+    await rustPage.evaluate(() => localStorage.setItem('codeweave.iterations.v1', '{}'));
+    const beforeRestoreDialogs = rustDialogs;
+    await rustPage.locator('#import-file').setInputFiles({ name: 'f01.json', mimeType: 'application/json', buffer: backup });
+    await expect.poll(() => rustDialogs).toBe(beforeRestoreDialogs + 2);
+    assert.deepEqual(await history(rustPage), beforeErrors);
+    const legacyC = createAttemptBackup({ drafts: {}, iterations: {} }, ['c-hello']);
+    const beforeLegacyDialogs = rustDialogs;
+    await rustPage.locator('#import-file').setInputFiles({ name: 'old-c.json', mimeType: 'application/json',
+      buffer: Buffer.from(JSON.stringify(legacyC)) });
+    await expect.poll(() => rustDialogs).toBe(beforeLegacyDialogs + 2);
+    assert.deepEqual(await history(rustPage), beforeErrors, 'legacy C backup must not erase Rust history');
+    await rustPage.goto(rustBase + '/#lesson:rust-cargo');
+    await rustPage.evaluate(async () => {
+      await navigator.serviceWorker.ready;
+      if (!navigator.serviceWorker.controller) await new Promise(resolve =>
+        navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true }));
+    });
+    await expect(rustPage.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+    assert.equal(await rustPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    if (qaDir) {
+      await mkdir(qaDir, { recursive: true });
+      await rustPage.screenshot({ path: path.join(qaDir, 'f01-local-submissions-mobile.png'), fullPage: true });
+    }
+    await rustContext.setOffline(true);
+    await rustPage.reload();
+    await expect(rustPage.locator('#grade-code')).toBeDisabled();
+    await expect(rustPage.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+    await expect(rustPage.locator('meta[name="codeweave-token"], meta[name="codeweave-rust"]')).toHaveCount(0);
+    await rustPage.locator('[data-restore-attempt="1"]').click();
+    await expect(rustPage.locator('#code-input')).toHaveValue(rustWrong);
+    assert.deepEqual(await history(rustPage), beforeErrors);
+    await rustContext.setOffline(false);
+    await rustPage.reload();
+    await expect(rustPage.locator('#grade-code')).toBeEnabled();
+    console.log('PASS: F01 configured UI fixture routes Cargo requests, keeps error/history/mastery separate, restores both v1 formats and preserves offline attempts at 390px');
+  } finally {
+    await rustContext.close();
+    await rustApp.close();
+  }
   const warningContext = await browser.newContext();
   warningContext.on('page', p => p.on('pageerror', e => errors.push(e.message)));
   try {

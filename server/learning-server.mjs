@@ -106,7 +106,8 @@ export function createLearningServer({ root = process.cwd(), rustService } = {})
       if (file.contentType.startsWith('text/html')) {
         const html = await file.handle.readFile('utf8');
         await file.handle.close();
-        const page = Buffer.from(html.replace('</head>', tokenMeta + '</head>'));
+        const rustMeta = rustService === undefined ? '' : '  <meta name="codeweave-rust" content="rust-cargo">\n';
+        const page = Buffer.from(html.replace('</head>', tokenMeta + rustMeta + '</head>'));
         res.writeHead(200, {
           'Content-Type': file.contentType,
           'Content-Length': page.length,

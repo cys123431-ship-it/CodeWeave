@@ -2,13 +2,37 @@ import { DRAFTS_KEY, escapeHtml, safeRead } from './logic.js';
 import { ITERATIONS_KEY, MAX_CODE_LENGTH, MAX_ITERATIONS, normalizeIterations, recordIteration } from './iterations.js';
 import { formatSubmissionForDisplay } from './multi-file.js';
 import { formatCompilerFeedback, normalizeCompilerFeedback } from './compiler-feedback.js';
+import { exerciseById } from './exercises.js';
+
+// This marker selects a local UI route, never grants server-side authority.
+// Offline shells have neither marker nor token. Other Rust IDs remain ungraded.
+export function hasRustGrading(document) {
+  return document.querySelector('meta[name="codeweave-rust"]')?.content === 'rust-cargo'
+    && /^[a-f0-9]{64}$/.test(document.querySelector('meta[name="codeweave-token"]')?.content ?? '');
+}
+
+export function gradingRequestFor(id, rustEnabled = false) {
+  if (id === 'rust-cargo' && rustEnabled === true) {
+    return { endpoint: './api/grade/rust', timeout: 45000, expectedTests: 10 };
+  }
+  const exercise = exerciseById(id);
+  if (exercise?.language === 'c' && exercise.grader) {
+    return { endpoint: './api/grade', timeout: 10000 };
+  }
+  throw new Error('이 문제의 로컬 채점은 활성화되지 않았습니다.');
+}
 
 // A transport error or malformed response must never become a graded submission.
-export function validateGradingResult(result) {
+export function validateGradingResult(result, expectedTests) {
   if (!result || typeof result !== 'object' || Array.isArray(result) ||
       typeof result.ok !== 'boolean' || !Array.isArray(result.tests) ||
-      result.tests.some(test => !test || typeof test.passed !== 'boolean') ||
+      Array.from(result.tests).some(test => !test || typeof test.passed !== 'boolean') ||
       (result.ok && (!result.tests.length || result.tests.some(test => !test.passed))) ||
+      (expectedTests !== undefined && (result.tests.length !== expectedTests ||
+        result.ok !== result.tests.every(test => test.passed) ||
+        typeof result.message !== 'string' || result.message.length > 3000 ||
+        typeof result.compileOutput !== 'string' || result.compileOutput.length > 3000 ||
+        result.tests.some(test => typeof test.detail !== 'string' || test.detail.length > 300))) ||
       (result.compilerFeedback !== undefined && (result.ok || !normalizeCompilerFeedback(result.compilerFeedback)))) {
     throw new Error('잘못된 채점 결과입니다. 제출 기록은 저장하지 않았습니다.');
   }
@@ -16,7 +40,7 @@ export function validateGradingResult(result) {
 }
 
 export function recordGradedSubmission(storage, knownIds, id, code, result, at) {
-  validateGradingResult(result);
+  validateGradingResult(result, id === 'rust-cargo' ? 10 : undefined);
   if (!knownIds.includes(id) || typeof code !== 'string' || code.length > MAX_CODE_LENGTH) {
     throw new Error('지원하지 않는 문제 또는 코드 길이입니다.');
   }
