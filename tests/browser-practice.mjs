@@ -277,6 +277,11 @@ try {
       assert.equal(graded.request().headers()['x-codeweave-token'],
         await p.locator('meta[name="codeweave-token"]').getAttribute('content'));
       const answer = await graded.json();
+      console.log('F01 actual browser diagnostic:', JSON.stringify({
+        ok: answer.ok, message: answer.message,
+        compileOutput: String(answer.compileOutput ?? '').replaceAll(actualParent, '<workspace>').slice(0, 1800),
+        tests: answer.tests
+      }));
       assert.equal(answer.tests.length, 10);
       await ready(p);
       assert.deepEqual(await readdir(actualParent), [], 'cleanup finishes before UI result');
@@ -285,6 +290,7 @@ try {
     const compileFailure = await actualSubmit(actualPage, rustStarter);
     assert.equal(compileFailure.ok, false);
     assert.notEqual(compileFailure.compileOutput, '');
+    assert.match(compileFailure.compileOutput, /unused.variable|unused variable|unused_variables/i);
     assert.ok(compileFailure.tests.every(tc => tc.detail === '미실행'));
     await expect(actualPage.locator('.terminal[role="status"]')).toContainText('미실행');
     await actualBench.goto(actualBase + '/workbench.html');
