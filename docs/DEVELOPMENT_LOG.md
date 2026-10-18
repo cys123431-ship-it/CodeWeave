@@ -1,14 +1,14 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 04:59 KST — F01 제한 범위 인수·다음 C 차례 연결
-- 시작/결과 SHA: 시작f91a931d3214e8038c8e889b5295790f29e02d50; 결과는 feat: accept scoped F01 Cargo delivery and advance rotation 커밋으로 연결, 결과 CI 대기.
+- 시작/결과 SHA: 시작f91a931d3214e8038c8e889b5295790f29e02d50; 구현b7d1d2a217bd362ab8d9c8469cdcc8b946637208; 후속 docs: record verified scoped F01 acceptance and rotation CI.
 - 목표: 검증된 Linux/macOS 신뢰 로컬 F01 원고·화면·실제 채점·수정/재제출·백업·숙달/다음단원·명시 시작을 독립 검토하고 로드맵에 제한 범위 인수 기록.
 - 변경 파일 수: 총8개(로드맵 검증기·신규7검사·기존 이론 fixture·인수 검토표·로드맵2개·활성/보관 일지).
 - 테스트 결과: 신규7건 중 핵심6건 실패→통과, 관련22/22·MJS3개/roadmap/diff 통과; 전체661건642통과/실패0/skip19(Rust 부재), 최종 전체 재검사 동일. 기존 검사 삭제0·성공 기대값 변경0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39157149118 전체654/654·macOS111통과/1Linux전용skip·취소120/120·browser 실제Cargo 실패→수정10/10·숙달→다음Rust→복귀·v1/390px/오프라인 성공을 재조회; 이번 결과 CI 대기.
+- CI URL과 결과: 시작39157149118 성공로그 재검토; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39161791569 전체661/661·실패0·skip0·macOS112건111통과/1Linux전용skip·취소120/120·browser 실제Cargo 실패→수정10/10·숙달→다음Rust→복귀·v1/390px/오프라인 성공. F01 제한 범위 인수 완료, 후속 기록 SHA CI 별도 확인.
 - 발견한 문제: C registry만 인정하던 완료 검증에 F01 전용 scoped 근거 계약 추가. 누락/외부CI/다른문제/중복차례/희소 checks 배열 거부. 기존 이론검사 fixture 수정 이유는 실제 완료 후에도 과거 이론만의 상태를 재구성해 동일한 미완료/0개 기대를 보존하기 위함이며 기대값 완화0.
 - 보안 영향: 운영 메타데이터 검증만 변경·외부 입력/코드 실행/파일 접근 권한 추가0; 기본 C registry·Rust 비활성·학습자 숙달/v1/한도 불변, SHA/URL 형식이 원격CI 성공 인증은 아님.
-- 단계별 완료율: 검토 SHA 근거로 F01 제한 범위 완료 판정·F1/8(12.5%); A3/5·B10/11·C5/8·D/E2/8·G0/8·H/I0/6 유지; next=C/C06, 최종 반영 판정은 이번 CI 확인 후.
-- 다음 작업: 결과 SHA CI 성공 확인 후 C06 전처리 매크로·조건부 컴파일·중복 평가를 좁은 계약으로 설계/구현; 다음 D차례 D03 큐로 순환. Cargo 내부 자원 오류 세부 분류와 실기기 인수는 별도 미완료.
+- 단계별 완료율: F01 제한 범위 완료·F1/8(12.5%); A3/5·B10/11·C5/8·D/E2/8·G0/8·H/I0/6 유지; next=C/C06.
+- 다음 작업: 후속 기록 SHA CI 확인 후 C06 전처리 매크로·조건부 컴파일·중복 평가를 좁은 계약으로 설계/구현; 다음 D차례 D03 큐로 순환. Cargo 내부 자원 오류 세부 분류와 실기기 인수는 별도 미완료.
 
 ---
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
