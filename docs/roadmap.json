@@ -626,8 +626,8 @@
           "lessonIds": [
             "rust-mut"
           ],
-          "manuscripts": [],
-          "tests": []
+          "manuscripts": ["content/rust/02-bindings.md"],
+          "tests": ["tests/rust-mut-preparation.test.mjs"]
         },
         {
           "id": "F03",
