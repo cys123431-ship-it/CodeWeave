@@ -13,6 +13,28 @@ const dataURL = new URL('../docs/roadmap.json', import.meta.url);
 const moduleURL = new URL('../scripts/roadmap.mjs', import.meta.url);
 const load = async () => ({ data: JSON.parse(await readFile(dataURL, 'utf8')), api: await import(moduleURL) });
 
+function historicalDSRotation(source) {
+  const changed = structuredClone(source);
+  changed.stages.find(stage => stage.id === 'D').units[0].status = '완료';
+  changed.stages.find(stage => stage.id === 'D').units[1].status = '진행 중';
+  // Replay the D02 → D03 scenario, not the subsequently published completion.
+  changed.stages.find(stage => stage.id === 'D').units.find(unit => unit.id === 'D03').status = '진행 중';
+  return changed;
+}
+
+test('historical DS rotation keeps its D03 handoff while live selection respects later completion', async () => {
+  const { data, api } = await load();
+  const progressed = structuredClone(data);
+  progressed.stages.find(stage => stage.id === 'D').units.find(unit => unit.id === 'D03').status = '완료';
+  const before = structuredClone(progressed);
+  assert.equal(api.selectUnit(progressed, 'D').id, 'D04');
+  const historical = historicalDSRotation(progressed);
+  assert.equal(api.selectUnit(historical, 'D').id, 'D02');
+  historical.stages.find(stage => stage.id === 'D').units[1].status = '완료';
+  assert.equal(api.selectUnit(historical, 'D').id, 'D03');
+  assert.deepEqual(progressed, before);
+});
+
 test('confirmed roadmap validates all nine stages and counts only evidenced completed units', async () => {
   const { data, api } = await load();
   assert.doesNotThrow(() => api.validateRoadmap(data));
@@ -77,9 +99,7 @@ test('rotation keeps D E Rust C order and skips already completed units within a
   assert.equal(api.nextTurn('C'), 'D');
   assert.throws(() => api.nextTurn('unknown'), /track|트랙/);
   assert.equal(api.selectUnit(data, data.next.track).id, data.next.unit);
-  const changed = structuredClone(data);
-  changed.stages.find(stage => stage.id === 'D').units[0].status = '완료';
-  changed.stages.find(stage => stage.id === 'D').units[1].status = '진행 중';
+  const changed = historicalDSRotation(data);
   assert.equal(api.selectUnit(changed, 'D').id, 'D02');
   changed.stages.find(stage => stage.id === 'D').units[1].status = '완료';
   assert.equal(api.selectUnit(changed, 'D').id, 'D03');
