@@ -1,10 +1,10 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 11:01 KST — D03 인수 확정과 E03 차례 전환
-- 시작/결과 SHA: 시작007bc3f2d991ca89e41800dc61efc7133893a617; 순환검사분리623cca754a3db60e8ba8992d9cf3243c7c3f2028; 인수 반영 커밋 제목 docs: accept verified circular queue and rotate to E03.
+- 시작/결과 SHA: 시작007bc3f2d991ca89e41800dc61efc7133893a617; 순환검사분리623cca754a3db60e8ba8992d9cf3243c7c3f2028; 인수798c12ab37f6e187f543df0d80014030f34b01a5; 후속 docs: record verified D03 acceptance and E03 rotation CI.
 - 목표: 과거 D02→D03 순환 검사와 현재 진척을 분리하고, 검증된 D03 제한 범위를 완료 처리해 다음 E/E03으로 이동.
 - 변경 파일 수: 총6개(roadmap검사·로드맵2개·D03 인수 문서·활성/보관 일지).
 - 테스트 결과: 신규 역사적 순환 D04≠D03·완료 상태 진행 중≠완료 각1건 실패→통과; 관련36/36·비UI 계약/인증GCC HTTP 오답→수정10/10·전체690건671통과/실패0/skip19(Rust 부재)·fixture 재검14/14·MJS/roadmap/diff/일지4건 통과; 기존 검사 삭제/성공 기대값 변경0.
-- CI URL과 결과: 기준 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39184453228 성공·688/688 및 D03 browser PASS3건·아티팩트 존재 재조회; 순환검사분리39188192510 실행 중, 이번 인수 반영 SHA CI 확인 전.
+- CI URL과 결과: 기준39184453228 성공·D03 PASS3건·아티팩트 존재 재조회; 순환검사분리39188192510 성공689/689; 인수 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39188397929 성공·Ubuntu690/690·실패0/skip0·macOS/browser 성공·D03 실제GCC/학습 경로 PASS3건 확인. D03 제한 범위 완료·E03 차례 전환 인수, 후속 기록 SHA CI 별도 확인.
 - 발견한 문제: 순환 fixture가 현재 D03 완료를 상속해 D04를 선택함을 재현. 당시 D03 진행 중만 복원하도록 수정한 사유는 역사적 재생과 현재 완료의 분리이며 D03 기대 유지·라이브 D04 선택/입력 불변도 검증.
 - 보안 영향: 개발 상태·검사 fixture·인수 근거만 변경, 외부 입력/코드 실행/파일 접근 권한/API/사용자 저장키 변경0.
 - 단계별 완료율: A3/5 60%·B10/11 90.9%·C6/8 75%·D3/8 37.5%·E2/8 25%·F1/8 12.5%·G0/8·H/I0/6; 분모·화면32·공개 문제 수 불변, D03 범위 근거 docs/D03_ACCEPTANCE.md.
