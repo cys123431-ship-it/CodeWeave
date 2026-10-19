@@ -1338,7 +1338,7 @@ export const lessons = [
     },
     {
       "heading": "테스트·풀이 개선·복습 연결",
-      "text": "10사례는 빈/단일·공개 예시·정렬/역순 최대8·동일 키·정수 극값·실패 보존·접두부·반복/독립 상태를 검사합니다. 스타터는 컴파일되지만 통과하지 않습니다. 실패 사례 → 정렬 결과와 두 횟수 분리 추적 → 수정 → 전체 재제출 순서로 연습하세요. 이론·퀴즈·실습·복습은 따로 기록되며 제출 이력에서 앞선 코드를 복원할 수 있습니다. 다음 알고리즘 주제인 재귀 분할·병합은 아직 준비되지 않았습니다. 트랙으로 돌아가 기존 탐색과 정렬 비용을 비교해 복습하세요."
+      "text": "10사례는 빈/단일·공개 예시·정렬/역순 최대8·동일 키·정수 극값·실패 보존·접두부·반복/독립 상태를 검사합니다. 스타터는 컴파일되지만 통과하지 않습니다. 실패 사례 → 정렬 결과와 두 횟수 분리 추적 → 수정 → 전체 재제출 순서로 연습하세요. 이론·퀴즈·실습·복습은 따로 기록되며 제출 이력에서 앞선 코드를 복원할 수 있습니다. 다음 단원에서는 재귀 분할·병합과 보조 공간을 배웁니다. 다음 단원 버튼으로 이동한 뒤 삽입 정렬의 제자리 이동과 비교해 복습하세요."
     }
   ],
   "quiz": {
@@ -1359,6 +1359,88 @@ export const lessons = [
     "starter": "#include <stddef.h>\nstruct SortItem { int key; int tag; };\nint stable_sort_counted(struct SortItem items[], size_t count,\n                        size_t *out_comparisons, size_t *out_moves) {\n    (void)items;\n    (void)count;\n    (void)out_comparisons;\n    (void)out_moves;\n    /* TODO: 입력 검증, 안정 삽입 정렬, 횟수 공개 */\n    return 0;\n}\n",
     "input": "{2:20,1:10,2:21}",
     "expected": "1 2 3 1:10 2:20 2:21"
+  }
+}
+,
+{
+  "id": "algo-merge",
+  "track": "algo",
+  "level": "분할 정복",
+  "title": "병합 정렬: 나누고 보조 배열로 합치기",
+  "minutes": 25,
+  "source": "E03 독자 원고·정적 도식·C 함수형 실습",
+  "summary": "반열린 구간을 나누고 두 정렬 구간을 보조 배열로 합칩니다.",
+  "figure": "merge-auxiliary",
+  "sections": [
+    {
+      "heading": "개요·필요성·선수·목표",
+      "text": "뒤섞인 점수 목록을 오름차순으로 만들자. 삽입 정렬은 한 값을 끼워 넣지만, 병합 정렬은 작은 목록을 정렬한 뒤 합친다.\n선수: 배열·함수·포인터·재귀·삽입 정렬. 예상 25분. 목표는 반열린 구간을 나누고, 두 정렬된 구간을 보조 배열로 합쳐 원본에 돌려놓는 것이다.\n이번 범위는 int 최대64개, 호출자가 제공한 보조 배열이다. 동적 할당·레코드 정렬·외부 파일 정렬은 다음 심화 과제다."
+    },
+    {
+      "heading": "이론 — 나누기는 어디서 멈추나",
+      "text": "구간 [left,right)는 left를 포함하고 right를 제외한다. 길이가 0 또는1이면 이미 정렬되어 있다.\nmid = left + (right-left)/2로 나눠 [left,mid), [mid,right)를 먼저 정렬한다. 홀수 길이도 두 구간이 겹치거나 빠지지 않는다.\n두 구간의 앞쪽 값 중 작은 것을 scratch[k]에 쓰고 선택한 쪽만 전진한다. 한쪽이 끝나면 다른 쪽의 남은 값을 모두 복사한다.\n병합 후 scratch의 해당 구간을 values에 복사한다. 원본에 바로 덮어쓰면 아직 비교하지 않은 값을 잃을 수 있다."
+    },
+    {
+      "heading": "도식 — 분할과 병합",
+      "text": "독자 정적 도식 키: merge-auxiliary. 5,1,4,2,3을 [5,1]과 [4,2,3]으로 나눈 뒤 각각 1,5 / 2,3,4로 정렬한다.\n마지막 병합: 1과2→1, 5와2→2, 5와3→3, 5와4→4, 남은5→5. scratch는 1,2,3,4,5가 되고 원본으로 복사한다."
+    },
+    {
+      "heading": "함수 계약 — 누가 공간을 준비하나",
+      "text": "merge_sort(values,n,scratch,capacity)는 성공1, 거부0을 반환한다. n>64는 먼저 거부한다. n=0은 NULL도 성공하며 아무것도 읽거나 쓰지 않는다.\nn>0일 때 values가 NULL이면 거부한다. n=1은 values를 그대로 두고 scratch 없이 성공한다.\nn>=2는 scratch != NULL, capacity>=n을 요구한다. 거부하면 두 배열을 모두 보존한다. 성공하면 두 배열의 앞 n개가 같은 오름차순 결과이며 그 밖의 칸은 보존한다.\n호출자는 values에 n개, scratch에 capacity개 이상의 유효한 int 공간을 제공하며 두 영역은 겹치지 않아야 한다. 함수는 실제 할당 크기나 겹침을 검사하지 않는다."
+    },
+    {
+      "heading": "완성 프로그램 — 제출할 함수와 실행 예제",
+      "text": "다음은 완성 프로그램이다. 제출 시에는 main을 빼고 include·보조 함수·merge_sort만 작성한다.",
+      "code": "#include <stddef.h>\n#include <stdio.h>\nstatic void divide(int *values, int *scratch, size_t left, size_t right) {\n    if (right - left < 2) return;\n    size_t mid = left + (right - left) / 2;\n    divide(values, scratch, left, mid);\n    divide(values, scratch, mid, right);\n    size_t i = left, j = mid, k = left;\n    while (i < mid && j < right) {\n        if (values[i] <= values[j]) scratch[k++] = values[i++];\n        else scratch[k++] = values[j++];\n    }\n    while (i < mid) scratch[k++] = values[i++];\n    while (j < right) scratch[k++] = values[j++];\n    for (k = left; k < right; ++k) values[k] = scratch[k];\n}\nint merge_sort(int *values, size_t n, int *scratch, size_t capacity) {\n    if (n > 64) return 0;\n    if (n == 0) return 1;\n    if (values == NULL) return 0;\n    if (n == 1) return 1;\n    if (scratch == NULL || capacity < n) return 0;\n    divide(values, scratch, 0, n);\n    return 1;\n}\nint main(void) {\n    int values[] = {5, 1, 4, 2, 3};\n    int scratch[5];\n    printf(\"%d\\n\", merge_sort(values, 5, scratch, 5));\n    for (size_t i = 0; i < 5; ++i) printf(\"%d%s\", values[i], i == 4 ? \"\\n\" : \" \");\n    for (size_t i = 0; i < 5; ++i) printf(\"%d%s\", scratch[i], i == 4 ? \"\\n\" : \" \");\n    return 0;\n}"
+    },
+    {
+      "heading": "실제 출력과 이유",
+      "text": "1\n1 2 3 4 5\n1 2 3 4 5\n\n첫1은 성공이다. 두 번째 줄은 원본, 세 번째 줄은 마지막 병합 결과가 남은 보조 배열이다. gcc -std=c11 -Wall -Wextra -Wpedantic -Werror로 컴파일한다."
+    },
+    {
+      "heading": "흔한 오류 — 남은 구간을 잊지 말자",
+      "text": "비교 루프만 쓰면 한쪽이 먼저 끝났을 때 나머지가 빠진다. 홀수 길이는 mid 양쪽 길이가 다르다. k=0으로 매번 시작하면 하위 구간의 위치가 깨진다.\ncapacity를 확인하기 전에 쓰면 실패해도 데이터가 바뀐다. 비교를 values[i]-values[j]로 만들면 극값에서 정수 오버플로가 날 수 있다. 관계 비교를 사용한다."
+    },
+    {
+      "heading": "중간 점검·퀴즈·핵심 요약",
+      "text": "길이5인 [0,5)의 mid는? 선택: 1 / 2 / 3 / 5. 정답2: [0,2)와 [2,5)는 길이2와3이다.\n왜 scratch가 필요한지, 오른쪽이 먼저 비면 무엇을 복사해야 하는지 말해 보자. 요약: 길이1에서 중단→양쪽 정렬→앞값 비교→남은 구간→복사."
+    },
+    {
+      "heading": "직접 풀기 — 기초·응용·도전",
+      "text": "기초: 빈 입력과 길이1의 반환값을 먼저 구현한다. 응용: 홀수·짝수·음수·중복·극값까지 병합하고 보조 공간 부족 시 원본을 보존한다.\n도전: 배열 중간의 부분 구간만 넘겨 양 끝 경계가 유지되는지 확인한다. 출력만 맞추지 말고 scratch 앞 n개와 범위 밖 보존도 검사한다.\n실제 GCC 채점은 준비된 10사례 계약을 그대로 사용한다. 실패한 사례를 확인하고 코드를 수정해 전체 사례에 재제출한다."
+    },
+    {
+      "heading": "Mini Project — 점수 정리 도구",
+      "text": "호출자가 점수 배열과 같은 길이의 작업 배열을 마련한다. 성공하면 정렬 결과를 표시하고 공간이 부족하면 원본으로 다시 시도한다. 입출력은 main에서, 정렬은 함수에서 맡긴다."
+    },
+    {
+      "heading": "심화 — 시간·공간과 검증의 한계",
+      "text": "시간과 보조 공간의 비용을 먼저 말해 보고 심화 설명을 펼쳐 확인하세요.",
+      "advancedText": "각 깊이에서 합치는 총 길이는 O(n), 분할 깊이는 O(log n)이므로 병합 정렬 시간은 O(n log n)이다. 보조 배열은 O(n), 재귀 호출은 O(log n) 공간이다.\n같은 값에서 왼쪽을 먼저 고르면 레코드로 확장할 때 안정성을 유지할 수 있다. 이번 int 결과만으로 같은 키의 원래 순서나 알고리즘의 시간 복잡도를 증명할 수는 없다."
+    },
+    {
+      "heading": "테스트·개선·복습 연결",
+      "text": "실패한 사례의 구간 길이와 i/j/k, 남은 쪽을 표로 추적하고 수정·재제출하세요. 정렬·역순·전부 같은 값도 다시 확인합니다. 이론 읽기·퀴즈 통과·실습 통과·복습은 따로 기록됩니다. 다음 주제인 재귀 트리·백트래킹(E04)은 아직 미구현입니다. 트랙으로 돌아가 탐색·삽입 정렬과 보조 공간을 비교해 복습하세요."
+    }
+  ],
+  "quiz": {
+    "question": "길이5인 [0,5)를 나눌 때 mid와 왼쪽 구간의 길이는?",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "5"
+    ],
+    "answer": 1,
+    "explanation": "mid=0+(5-0)/2=2입니다. 왼쪽[0,2)는2개, 오른쪽[2,5)는3개이며 겹치거나 빠지는 원소가 없습니다."
+  },
+  "challenge": {
+    "id": "algo-merge",
+    "title": "보조 공간을 받는 병합 정렬",
+    "description": "merge_sort(int *values, size_t n, int *scratch, size_t capacity)를 작성하세요. n>64는 먼저 거부0, n=0은 NULL도 성공1이며 아무것도 접근하지 않습니다. n>0의 NULL values는 거부합니다. n=1은 values와 scratch를 보존하고 보조 공간 없이 성공합니다. n>=2는 NULL이 아닌 scratch와 capacity>=n을 요구합니다. 성공하면 두 배열의 앞 n개가 같은 오름차순 결과이고 나머지 칸은 보존합니다. 거부하면 두 배열을 보존하세요. 호출자는 유효한 길이와 서로 겹치지 않는 두 영역을 제공합니다. main·printf는 작성하지 않습니다. 공개 출력은 별도 하네스가 만듭니다.",
+    "starter": "#include <stddef.h>\nint merge_sort(int *values, size_t n, int *scratch, size_t capacity) {\n    (void)values;\n    (void)n;\n    (void)scratch;\n    (void)capacity;\n    /* TODO: 검증 후 구간을 나누고 scratch로 병합해 복사 */\n    return 0;\n}\n",
+    "input": "{5,1,4,2,3}",
+    "expected": "1 2 3 4 5"
   }
 }
 ];

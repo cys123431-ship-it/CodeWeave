@@ -20,6 +20,60 @@ import { exerciseById as c06ExerciseById } from '../src/exercises.js';
 import { gradingExercises as c06Graders } from '../server/grading-exercises.mjs';
 import { preprocessorExercise, preprocessorStarter } from '../server/preprocessor-exercise.mjs';
 import { queueExercise, queueMetadata, queueStarter } from '../server/queue-exercise.mjs';
+import { mergeExercise, mergeMetadata, mergeStarter } from '../server/merge-exercise.mjs';
+
+const mergeManuscript = await readFile(new URL('../content/algo/03-merge-sort.md', import.meta.url), 'utf8');
+const mergeProgram = mergeManuscript.match(/```c\n([\s\S]*?)\n```/)[1];
+const mergeCorrect = mergeProgram.split('int main(void)')[0];
+const mergeWrong = mergeCorrect.replace('while (j < right) scratch[k++] = values[j++];', 'while (j < right) { ++k; ++j; }');
+
+function verifyMergeContract() {
+  const lesson = c06Lessons.find(item => item.id === 'algo-merge');
+  assert.ok(lesson, 'E03 must be reachable from the learner catalog');
+  assert.equal(lesson.track, 'algo');
+  assert.equal(lesson.figure, 'merge-auxiliary');
+  assert.deepEqual(c06ExerciseById(lesson.id), { ...mergeMetadata, requiredFiles: [] });
+  assert.deepEqual(c06Graders.get(lesson.id), mergeExercise);
+  assert.equal(lesson.challenge.starter, mergeStarter);
+  assert.equal(lesson.challenge.input, mergeMetadata.publicExample.input);
+  assert.equal(lesson.challenge.expected, mergeMetadata.publicExample.output);
+  assert.ok(lesson.sections.some(section => section.code?.trim() === mergeProgram.trim()));
+  assert.deepEqual(lesson.quiz.options, ['1', '2', '3', '5']);
+  assert.equal(lesson.quiz.answer, 1);
+  assert.equal(Object.hasOwn(c06ExerciseById(lesson.id), 'harness'), false);
+  console.log('PASS: E03 catalog, compiled manuscript, starter, public example and original ten-case private contract match');
+}
+async function verifyMergeHTTP() {
+  const app = createLearningServer({ root: fileURLToPath(new URL('../', import.meta.url)) });
+  try {
+    const { port } = await app.listen(0);
+    const base = 'http://127.0.0.1:' + port;
+    const response = await fetch(base);
+    assert.equal(response.status, 200);
+    const token = (await response.text()).match(/name="codeweave-token" content="([a-f0-9]{64})"/)?.[1];
+    assert.match(token, /^[a-f0-9]{64}$/);
+    assert.notEqual(mergeWrong, mergeCorrect);
+    for (const [code, ok] of [[mergeWrong, false], [mergeCorrect, true]]) {
+      const response = await fetch(base + '/api/grade', { method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CodeWeave-Token': token },
+        body: JSON.stringify({ exerciseId: mergeExercise.id, code }), signal: AbortSignal.timeout(10000) });
+      assert.equal(response.status, 200);
+      const result = await response.json();
+      assert.equal(result.ok, ok, JSON.stringify(result));
+      assert.equal(result.tests.length, 10);
+    }
+    console.log('PASS: E03 authenticated real GCC HTTP rejects missing remainder then accepts correction 10/10');
+  } finally {
+    await app.close();
+  }
+}
+if (process.argv.includes('--merge-http-only')) {
+  await verifyMergeHTTP();
+  process.exit(0);
+}
+verifyMergeContract();
+await verifyMergeHTTP();
+if (process.argv.includes('--merge-contract-only')) process.exit(0);
 
 const queueManuscript = await readFile(new URL('../content/ds/03-queue.md', import.meta.url), 'utf8');
 const queueCorrect = queueManuscript.match(/```c\n([\s\S]*?)\n```/)[1].split('int main(void)')[0];
@@ -1589,6 +1643,64 @@ try {
   await page.locator('.next-action [data-route="lesson:algo-binary"]').click();
   await expect(page.locator('.detail-head h1')).toHaveText('복잡도와 선형·이진 탐색의 전제');
   console.log('PASS: D03 real GCC LIFO failure/correction 10/10, quiz retry, separate mastery, shared history, v1, 390px diagram/offline and next lesson');
+  // E02's actual next action now enters E03; no synthetic E04 is advertised.
+  await page.goto(base + '/#lesson:algo-stable-insertion');
+  await page.locator('.next-action [data-route="lesson:algo-merge"]').click();
+  await page.reload();
+  await expect(page.locator('meta[name="codeweave-token"]')).toHaveAttribute('content', /^[a-f0-9]{64}$/);
+  await expect(page.locator('.detail-head h1')).toHaveText('병합 정렬: 나누고 보조 배열로 합치기');
+  await expect(page.locator('.practice-zone')).toContainText('함수 직접 호출형');
+  await expect(page.locator('#code-input')).toHaveValue(mergeStarter);
+  await page.locator('[data-quiz="algo-merge"][data-choice="0"]').click();
+  await expect(page.locator('.feedback.bad')).toBeVisible();
+  await page.locator('[data-retry="algo-merge"]').click();
+  await page.locator('[data-quiz="algo-merge"][data-choice="1"]').click();
+  await page.locator('#mark-theory').click();
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, mergeWrong);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, mergeCorrect);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('10/10');
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await bench.reload();
+  await bench.locator('#lesson-select').selectOption('algo-merge');
+  await expect(bench.locator('#code-input')).toHaveValue(mergeCorrect);
+  const mergeDownloadEvent = bench.waitForEvent('download');
+  await bench.locator('#export-history').click();
+  const mergeDownload = await mergeDownloadEvent, mergeChunks = [];
+  for await (const chunk of await mergeDownload.createReadStream()) mergeChunks.push(chunk);
+  const mergeBackup = Buffer.concat(mergeChunks), mergeData = JSON.parse(mergeBackup);
+  assert.equal(mergeData.drafts['algo-merge'], mergeCorrect);
+  assert.equal(mergeData.iterations['algo-merge'].length, 2);
+  assert.equal(mergeData.drafts['ds-queue'], queueCorrect);
+  assert.equal(mergeData.drafts['c-preprocessor-once'], c06Correct);
+  assert.equal(mergeData.drafts['rust-cargo'], rustDraft);
+  await bench.locator('#import-file').setInputFiles({ name: 'merge-backup.json', mimeType: 'application/json', buffer: mergeBackup });
+  await expect(bench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.locator('#code-input')).toHaveValue(mergeCorrect);
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('[data-restore-attempt="1"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(mergeWrong);
+  await page.locator('[data-restore-attempt="0"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(mergeCorrect);
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('.figure-box svg')).toHaveAttribute('role', 'img');
+  assert.equal(await page.evaluate(() => {
+    const svg = document.querySelector('.figure-box svg'), view = svg.viewBox.baseVal;
+    return [...svg.querySelectorAll('text')].every(text => {
+      const box = text.getBBox();
+      return box.x >= 0 && box.y >= 0 && box.x + box.width <= view.width && box.y + box.height <= view.height;
+    }) && document.documentElement.scrollWidth <= innerWidth;
+  }), true, 'E03 merge diagram and learner page must fit 390px');
+  if (qaDir) await page.screenshot({ path: path.join(qaDir, 'merge-sort-mobile.png'), fullPage: true });
+  await context.setOffline(false);
+  await page.locator('[data-route="track:algo"]').first().click();
+  await expect(page.locator('[data-route="lesson:algo-merge"]')).toHaveCount(1);
+  console.log('PASS: E03 E02-next entry, real GCC missing-remainder failure/correction 10/10, quiz retry, separate mastery, shared history, v1, 390px/offline and track return; E04 remains unavailable');
   assert.deepEqual(errors, []);
   console.log('PASS: 390px mobile layout and offline reload of drafts/history; no browser exceptions');
 } catch (error) {

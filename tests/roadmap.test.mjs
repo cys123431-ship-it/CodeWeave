@@ -6,12 +6,38 @@ import { exerciseById } from '../src/exercises.js';
 import { gradingExercises } from '../server/grading-exercises.mjs';
 import { listExercise } from '../server/ds-list-exercise.mjs';
 import { stackExercise, stackMetadata, stackStarter } from '../server/stack-exercise.mjs';
+import { mergeExercise, mergeMetadata, mergeStarter } from '../server/merge-exercise.mjs';
 import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
 
 const dataURL = new URL('../docs/roadmap.json', import.meta.url);
 const moduleURL = new URL('../scripts/roadmap.mjs', import.meta.url);
 const load = async () => ({ data: JSON.parse(await readFile(dataURL, 'utf8')), api: await import(moduleURL) });
+
+test('E03 publishes its prepared merge contract and compiled example without private client cases', async () => {
+  const lesson = lessons.find(item => item.id === 'algo-merge');
+  assert.ok(lesson, 'E03 must be reachable from the learner catalog');
+  assert.equal(lesson.track, 'algo');
+  assert.equal(lesson.figure, 'merge-auxiliary');
+  assert.deepEqual(exerciseById(lesson.id), { ...mergeMetadata, requiredFiles: [] });
+  assert.deepEqual(gradingExercises.get(lesson.id), mergeExercise);
+  assert.equal(Object.hasOwn(exerciseById(lesson.id), 'harness'), false);
+  assert.equal(lesson.challenge.starter, mergeStarter);
+  assert.equal(lesson.challenge.input, mergeMetadata.publicExample.input);
+  assert.equal(lesson.challenge.expected, mergeMetadata.publicExample.output);
+  const manuscript = await readFile(new URL('../content/algo/03-merge-sort.md', import.meta.url), 'utf8');
+  const program = manuscript.match(/```c\n([\s\S]*?)\n```/)[1];
+  assert.ok(lesson.sections.some(section => section.code?.trim() === program.trim()));
+  assert.deepEqual(lesson.quiz.options, ['1', '2', '3', '5']);
+  assert.equal(lesson.quiz.answer, 1);
+});
+
+test('README algorithm counts match delivered lessons and runnable grading contracts', async () => {
+  const readme = await readFile(new URL('../README.md', import.meta.url), 'utf8');
+  const algorithm = lessons.filter(lesson => lesson.track === 'algo');
+  const runnable = algorithm.filter(lesson => gradingExercises.has(lesson.challenge.id));
+  assert.ok(readme.split('\n').includes(`| 알고리즘 | ${algorithm.length} | ${runnable.length} |`));
+});
 
 function historicalDSRotation(source) {
   const changed = structuredClone(source);

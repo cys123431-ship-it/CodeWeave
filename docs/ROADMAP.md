@@ -84,7 +84,7 @@
 |---|---|---|---|
 | E01 | 복잡도와 선형·이진 탐색의 전제 | 완료 | `algo-binary` · [원고](../content/algo/01-search.md) · [검사](../tests/algo-search.test.mjs) · [검사](../tests/exercises.test.mjs) · [검사](../tests/browser-practice.mjs) |
 | E02 | 안정 정렬과 비교·이동 횟수 | 완료 | `algo-stable-insertion` · [원고](../content/algo/02-stable-insertion.md) · [검사](../tests/sort-exercise.test.mjs) · [검사](../tests/roadmap.test.mjs) · [검사](../tests/browser-practice.mjs) |
-| E03 | 분할 정복: 병합 정렬과 보조 공간 | 진행 중 | [원고](../content/algo/03-merge-sort.md) · [검사](../tests/merge-exercise.test.mjs) |
+| E03 | 분할 정복: 병합 정렬과 보조 공간 | 진행 중 | `algo-merge` · [원고](../content/algo/03-merge-sort.md) · [검사](../tests/merge-exercise.test.mjs) · [검사](../tests/roadmap.test.mjs) · [검사](../tests/browser-practice.mjs) |
 | E04 | 재귀 트리·백트래킹과 되돌리기 | 미착수 | — |
 | E05 | 탐욕 선택과 반례로 명세 검증 | 미착수 | — |
 | E06 | 동적 계획: 상태·점화식·기저 사례 | 미착수 | — |

@@ -83,6 +83,7 @@ export function validateExerciseMetadata(definitions) {
 }
 
 export const exercises = Object.freeze(validateExerciseMetadata([
+  {"id":"algo-merge","kind":"practice","language":"c","grader":"c-function","concepts":["divide-and-conquer","merge-sort","half-open-range","auxiliary-space"],"prerequisites":["c-array","c-functions","c-recursion-factorial","algo-stable-insertion"],"publicExample":{"input":"{5,1,4,2,3}","output":"1 2 3 4 5"}},
   { id:'ds-queue', kind:'practice', language:'c', grader:'c-function', concepts:['queue','fifo','circular-index','capacity','failure-preservation'], prerequisites:['c-array','c-functions','c-pointer'], publicExample:{input:'enqueue(2), enqueue(5), dequeue',output:'1 2 1'} },
   { id:'c-preprocessor-once', kind:'concept', language:'c', grader:'c-function', concepts:['preprocessor','macro-expansion','single-evaluation','conditional-compilation','failure-preservation'], prerequisites:['c-functions','c-pointer'], publicExample:{input:'cursor=7, take_nonnegative(&cursor, &out)',output:'1 7 8'} },
   {"id":"algo-stable-insertion","kind":"practice","language":"c","grader":"c-function","concepts":["stable-sort","insertion-sort","operation-counts","prefix-boundary"],"prerequisites":["c-array","c-functions","c-struct-array-sort"],"publicExample":{"input":"{2:20,1:10,2:21}","output":"1 2 3 1:10 2:20 2:21"}},
