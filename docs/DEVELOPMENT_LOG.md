@@ -1,10 +1,10 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 09:05 KST — D03 원형 큐 원고·채점 계약 준비
-- 시작/결과 SHA: 시작266b3d53d0268ba51af1aefd905b80f4ec291b34; 구현 커밋 제목 feat: prepare bounded circular queue learning contract.
+- 시작/결과 SHA: 시작266b3d53d0268ba51af1aefd905b80f4ec291b34; 구현dfcd95178c5d2e0a27eafe61aa0a45bd0e17c539; 후속 docs: record verified D03 queue preparation CI.
 - 목표: D03 2회 중 첫 범위로 독자 원고·정적 도식·용량4 FIFO/순환/실패 보존의 10사례 함수형 계약 준비.
 - 변경 파일 수: 총8개(신규 원고·준비 하네스·14검사·공용 정적 도식·로드맵2개·활성/보관 일지).
 - 테스트 결과: 최초 신규12건 실패→통과·추가 로드맵/INT_MIN 거부 오답2건 실패→통과; 관련45/45·전체688건669통과/실패0/skip19(Rust 부재)·JS/MJS3개/roadmap/diff 통과; 실제GCC 정답10/10·오답8종·스타터 실패·완성 예제 출력 검증, 삭제/기대값 변경0.
-- CI URL과 결과: 기준 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39175518209 성공 조회; 이번 결과 SHA CI 확인 전.
+- CI URL과 결과: 기준39175518209 성공 조회; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39179870084 성공·Ubuntu688/688·실패0/skip0·D03신규14검사 실제GCC 통과·macOS 기존 회귀/browser 성공. 원고·채점 계약 준비 항목 완료, 화면/실습 인수 아님; 후속 기록 SHA CI 별도 확인.
 - 발견한 문제: INT_MIN을 미리 넣어 꺼내기만 검사한 초안은 삽입 거부 오답을 놓침을 재현하고 독립 큐 혼합 사례에 실제 INT_MIN 삽입 추가. 원격 읽기 성공·새 파일3개/기존5개 수정, 일지 읽기 명령의 괄호 SyntaxError는 읽기만 실패 후 교정.
 - 보안 영향: 서버 전용 준비 하네스·기존 GCC 파이프라인 재사용, 운영 registry/공개 실행/API/링커 옵션/사용자 저장키 변경0; 정적 SVG는 실행 콘텐츠 없음.
 - 단계별 완료율: D03미착수→진행 중·next=D/D03 유지; 완료 수 A3/5·B10/11·C6/8·D/E2/8·F1/8·G0/8·H/I0/6 불변, 화면/공개 문제 수 불변.
