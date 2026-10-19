@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { gradingExercises } from '../server/grading-exercises.mjs';
 import { writeSources, compile, runCases, buildResult } from '../server/grading-pipeline.mjs';
 import { figureFor } from '../src/figures.js';
@@ -47,6 +48,11 @@ async function grade(t, code) {
   return buildResult(exercise, built, await runCases(workspace, exercise));
 }
 test('C07 preparation keeps ten immutable owned-resource cases outside production grading', async () => {
+  for (const file of ['../server/owned-stream-exercise.mjs', '../src/figures.js', './owned-stream-exercise.test.mjs']) {
+    const checked = spawnSync(process.execPath, ['--check', fileURLToPath(new URL(file, import.meta.url))],
+      { encoding: 'utf8', timeout: 4500 });
+    assert.equal(checked.status, 0, checked.stderr);
+  }
   const { ownedStreamExercise: exercise, ownedStreamMetadata: metadata } = await load();
   assert.equal(exercise.cases.length, 10);
   assert.equal(new Set(exercise.cases.map(c => c.args.join())).size, 10);

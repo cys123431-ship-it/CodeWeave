@@ -1,10 +1,10 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 19:03 KST — C07 소유 스트림·오류 정리 계약 준비
-- 시작/결과 SHA: 시작04751784fe9c4f5370b38452c37187cbb90902b6; RED 68aa9ea36340b62b3c3e125bc1600f41759386b8; 구현 feat: prepare C07 owned-stream error and cleanup contract; PR #3, 실제 결과 SHA/CI 후속 확인.
+- 시작/결과 SHA: 시작04751784fe9c4f5370b38452c37187cbb90902b6; RED 68aa9ea36340b62b3c3e125bc1600f41759386b8; 구현58b3d201de6c56e08237de528455c0a6c15d5be0; PR #3 후속 docs: record CI-verified C07 preparation and syntax checks; 실제 후속 SHA/CI 최종 보고.
 - 목표: C05 borrowed와 대비되는 owned FILE의 한 바이트·EOF·오류/errno 스냅샷·정리10사례와 독자 원고/도식 준비; 화면/운영 채점은 미등록.
 - 변경 파일 수: 총8개(신규 C07 서버 모듈·13검사·원고·정적 도식·로드맵2개·활성/보관 일지).
-- 테스트 결과: PR RED CI744건731통과/실패13/skip0, 신규13건의 모듈/도식/원고 부재 확인; 구현 CI 대기. 로컬 npm/node/GCC/git/미커밋/브라우저 검사 미실행(409 environment_offline); V8 본문 구문 사전 확인은 node --check로 간주하지 않음.
-- CI URL과 결과: 기준 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39228126437 성공731/731; RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39235098471 의도된 실패13; 구현 결과 SHA CI 대기.
+- 테스트 결과: PR RED CI744건731통과/실패13/skip0, 신규13건의 모듈/도식/원고 부재 확인; 구현 CI744/744·실패0/skip0·정답10/10·오답8종/스타터 거부·완성 출력 통과; 후속 CI에서 변경 JS/MJS3개 node --check 명시 검사 추가(기존 기대 유지). 로컬 npm/node/GCC/git/미커밋/브라우저 검사 미실행(409 environment_offline); V8 본문 구문 사전 확인은 node --check로 간주하지 않음.
+- CI URL과 결과: 기준 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39228126437 성공731/731; RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39235098471 의도된 실패13; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39235618568 성공744/744·실패0/skip0·browser/macOS 기존 회귀 성공. C07 준비 항목 완료·화면/단원 인수 아님, 후속 SHA CI 별도 확인.
 - 발견한 문제: exec-server 연결 실패409 Conflict·environment_offline·Environment is not connected; 로컬 미완료 변경을 추정/덮어쓰지 않고 독립 PR/CI로 진행. 공식 POSIX 본문 직접 접근403은 재우회하지 않았고 독자 원고/실제 GCC 검사로 구분. fclose 단독 실패 주입은 후속 미검증 범위.
 - 보안 영향: 기존 함수형 GCC 검사에 독립 하네스·tmpfile/pipe 정리만 재사용; 실행 API/운영 registry/링커 인수/저장키 변경0, main 미수정·별도 PR로 보존.
 - 단계별 완료율: C07미착수→진행 중·next=C/C07 유지; 완료 A3/5·B10/11·C6/8·D/E3/8·F2/8·G0/8·H/I0/6, 화면33/기본 문제 수 불변.
