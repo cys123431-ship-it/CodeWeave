@@ -933,15 +933,91 @@ export const lessons = [
   }
 },
   {
-    id:'rust-mut',track:'rust',level:'시작하기',title:'변수 바인딩과 가변성',minutes:20,source:'기초 Rust 개념 독자 작성 초안 (Rust 교재 미제공)',
-    summary:'C의 변수와 비교하여 Rust에서 let과 mut가 어떻게 다른지 배웁니다.',figure:'variables',
-    sections:[
-      {heading:'Rust 변수는 기본적으로 재대입이 허용되지 않는다',text:'Rust에서 let으로 선언한 변수는 기본적으로 재대입할 수 없습니다. 값을 변경할 계획이라면 mut를 명시합니다. 컴파일러는 프로그램 실행 전 변경 규칙을 검사해 일부 실수를 조기에 발견하도록 돕습니다.',code:'let x = 3;\nlet mut count = 1;\ncount += 1;'},
-      {heading:'C의 변수와 비교해 보기',text:'C에서는 일반 변수에 새 값을 대입할 수 있지만, Rust는 불변을 기본으로 사용합니다. 이런 차이를 문법 암기가 아니라 프로그램이 의도치 않게 상태를 바꾸는 것을 막는다는 관점에서 이해해 보세요.'}
+  "id": "rust-mut",
+  "track": "rust",
+  "level": "시작하기",
+  "title": "변수 바인딩과 가변성",
+  "minutes": 25,
+  "source": "독자 작성 F02 원고·실제 Cargo 테스트",
+  "summary": "바인딩·재대입·가림을 구별하고 i32 계산과 bool 판정을 직접 검사합니다.",
+  "figure": "rust-binding-copy",
+  "sections": [
+    {
+      "heading": "개요·필요성·선수·목표",
+      "text": "접수 건수처럼 바뀌는 값과 기준값처럼 보존해야 하는 값을 구별하자. Rust의 let과 mut는 그 의도를 선언에 드러낸다. 선수: F01의 함수·인자·반환값·Cargo 테스트. 예상25분. 목표는 불변 바인딩, 재대입, 가림, i32와 bool을 작은 함수로 설명하고 검사하는 것이다. 이번 범위는 정수 증감과 0 이상 판정이다. 반복·분기 설계, 소유권·참조, 문자열 입력 처리는 다음 단원으로 넘긴다."
+    },
+    {
+      "heading": "이론 — 바인딩과 재대입",
+      "text": "let before = 3;은 before라는 이름을 값에 연결한다. 기본적으로 이 바인딩에는 다른 값을 다시 대입할 수 없다. let mut current = start;는 current에 재대입하겠다는 뜻이다. current += step;은 기존 값에 step을 더해 같은 바인딩에 저장한다. mut가 없는데 +=를 쓰면 실행 중 실패하는 것이 아니라 컴파일 단계에서 거부된다. 컴파일 오류와 테스트 단언 실패는 고치는 순서가 다르다."
+    },
+    {
+      "heading": "이론 — 정수와 불리언을 구별하기",
+      "text": "i32는 부호 있는 32비트 정수이고 bool은 true/false다. value >= 0의 결과는 정수가 아니라 bool이다. C의 참·거짓 정수 표현과 그대로 혼동하지 말자. 이 실습의 start와 step은 각각 -1000 이상1000 이하(양끝 포함)다. 합도 -2000 이상2000 이하라 i32로 표현할 수 있다. is_nonnegative는 i32 전체 범위에서 비교한다. 임의 정수의 덧셈이 언제나 안전하다는 뜻은 아니다. 범위를 넘는 산술의 일반 처리는 이번 계약 밖이며 다음 오류 처리 주제에서 다룬다."
+    },
+    {
+      "heading": "도식 — 호출자의 값과 지역 바인딩",
+      "text": "독자 정적 도식 키: rust-binding-copy. before=3을 인자로 넘겨 지역 current에 복사하고 current += -5 뒤 -2를 반환한다. 호출자 before는 여전히3이다. 여기서 i32는 Copy 형이다. 이 예를 모든 Rust 값이나 모든 C/Rust 인자 전달의 비용 규칙으로 일반화하지 않는다."
+    },
+    {
+      "heading": "이론 — 가림은 같은 바인딩의 수정이 아니다",
+      "text": "let label = 4; 뒤 let label = label > 0;은 같은 이름으로 새 바인딩을 만든다. 뒤의 label은 bool이다. 재대입은 기존 바인딩의 형을 바꾸지 않지만 새 let으로 가리면 다른 형을 사용할 수 있다. 둘 중 무엇을 썼는지 이름만 보지 말고 let이 다시 있는지 확인한다."
+    },
+    {
+      "heading": "완성 프로그램 — 두 함수를 main에서 사용하기",
+      "text": "다음은 완성 프로그램이다. 실습 제출에는 main을 빼고 pub 함수 두 개만 작성한다.",
+      "code": "pub fn next_count(start: i32, step: i32) -> i32 {\n    let mut current = start;\n    current += step;\n    current\n}\npub fn is_nonnegative(value: i32) -> bool {\n    value >= 0\n}\nfn main() {\n    let before = 3;\n    let after = next_count(before, -5);\n    println!(\"{} {} {}\", before, after, is_nonnegative(after));\n    let label = 4;\n    let label = label > 0;\n    println!(\"{}\", label);\n}"
+    },
+    {
+      "heading": "실제 출력과 단계별 이유",
+      "text": "3+(-5)=-2다. 함수의 지역 current만 바뀌어 before는3이다. -2 >= 0은 false, 새 label의 4 > 0은 true다. rustc --edition=2021 -Dwarnings example.rs -o example로 컴파일하고 실행한다. 프로젝트에서는 F01의 cargo test 흐름을 재사용한다.",
+      "code": "3 -2 false\ntrue"
+    },
+    {
+      "heading": "흔한 오류 — 선언과 결과를 나눠 확인하기",
+      "text": "mut를 빼고 current += step을 쓰면 E0384 진단을 읽고 변경 의도에 맞게 선언을 고친다. 숫자0을 bool 대신 반환하면 형이 맞지 않는다. value > 0은 0을 잘못 제외한다. step을 무조건1로 바꾸거나 결과를0으로 보정하면 음수 입력에서 틀린다. 반환할 마지막 식에 세미콜론을 붙이면 그 블록의 반환 의미가 달라진다. 이 함수에서 원하는 것은 i32 또는 bool 결과다."
+    },
+    {
+      "heading": "중간 점검·퀴즈·핵심 요약",
+      "text": "기존 퀴즈: 재대입 가능한 바인딩은? let mut / var / dynamic / constant. 정답은 let mut다. 기존 선택 번호와 사용자 퀴즈 키는 유지한다. before=3, step=-5 뒤 before와 반환값은? 3과-2다. 요약: 기본 불변→변경 의도에 mut→다시 let이면 새 바인딩→비교 결과는 bool."
+    },
+    {
+      "heading": "직접 풀기 — 기초·응용·도전",
+      "text": "기초: next_count의 두 인자와 반환형을 쓰고 지역 값에 step을 반영한다. 응용: is_nonnegative로 음수·0·양수를 나눈다. 도전: 1000+1000과 -1000+(-1000), 증감 상쇄, 반복 호출을 확인하고 이전 호출 결과가 다음 호출을 오염시키지 않게 한다. 채점은 반환값을 검사한다. 올바른 불변 식 start + step으로 구현해도 통과한다. mut 사용 여부를 문자열 검색으로 강요하거나 코드를 실행하지 않고 정답으로 인정하지 않는다."
+    },
+    {
+      "heading": "Mini Project — 작은 변화량 보고서",
+      "text": "호출자가 before와 step을 정해 after와 0 이상 여부를 표시한다. 출력은 main, 계산·판정은 함수에 둔다. start/step 범위는 위 계약을 지킨다."
+    },
+    {
+      "heading": "심화 — mut와 인자 전달을 더 정확히 보기",
+      "text": "지역 current가 가변이라는 사실만으로 호출자의 before가 바뀌지는 않는다. 참조를 통해 대상을 바꾸는 이야기는 F06에서 따로 배운다. 이번 bool/i32 예제는 가림의 형 변화를 보여준다. 이름이 같다는 이유로 같은 저장 대상·수명·소유권 관계라고 추정하지 않는다.",
+      "advanced": true
+    },
+    {
+      "heading": "테스트·개선·복습 연결",
+      "text": "명시적으로 --include-f02를 켠 개인 로컬 Cargo 서버에서만 10사례를 실행합니다. 컴파일 진단 → 실패 입력 확인 → 수정 → 전체 재제출 순서로 연습하세요. 기존 main 초안은 보존됩니다. 새 함수 과제를 시작하려면 초안을 백업한 뒤 직접 초기화하세요. 이론·퀴즈·실습·복습은 별개이며 다음 학습 주제는 조건·반복·식입니다."
+    }
+  ],
+  "quiz": {
+    "question": "Rust에서 값을 재대입할 수 있는 변수를 선언하는 키워드는?",
+    "options": [
+      "let mut",
+      "var",
+      "dynamic",
+      "constant"
     ],
-    quiz:{question:'Rust에서 값을 재대입할 수 있는 변수를 선언하는 키워드는?',options:['let mut','var','dynamic','constant'],answer:0,explanation:'let mut count = 0; 처럼 선언합니다.'},
-    challenge:{id:'rust-mut',title:'가변 변수 연습',description:'가변 변수 n을 사용해 3에서 4로 바꾸어 출력하는 코드를 작성해 보세요. Rust 자동 채점 연결은 다음 단계에 구현합니다.',starter:'fn main() {\n    let mut n = 3;\n    // TODO\n    println!("{}", n);\n}',input:'입력 없음',expected:'4'}
+    "answer": 0,
+    "explanation": "let mut count = 0; 처럼 선언합니다."
   },
+  "challenge": {
+    "id": "rust-mut",
+    "title": "증감과 0 이상 판정",
+    "description": "pub fn next_count(start: i32, step: i32) -> i32와 pub fn is_nonnegative(value: i32) -> bool을 작성하세요. start/step은 -1000..=1000, 판정은 i32 전체 범위입니다. main 없이 함수 두 개만 제출합니다. 이전 main 초안은 자동 교체하지 않습니다.",
+    "starter": "pub fn next_count(start: i32, step: i32) -> i32 {\n    let _ = (start, step);\n    // TODO: start에서 step만큼 바뀐 값 반환\n    0\n}\npub fn is_nonnegative(value: i32) -> bool {\n    let _ = value;\n    // TODO: 0 이상인지 판정\n    false\n}\n",
+    "input": "next_count(3, -5), is_nonnegative(-2)",
+    "expected": "-2 false"
+  }
+},
   {
   "id": "ds-list-find",
   "track": "ds",

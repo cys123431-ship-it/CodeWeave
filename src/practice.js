@@ -11,8 +11,21 @@ export function hasRustGrading(document) {
     && /^[a-f0-9]{64}$/.test(document.querySelector('meta[name="codeweave-token"]')?.content ?? '');
 }
 
+export function rustGradingIds(document) {
+  if (!hasRustGrading(document)) return Object.freeze([]);
+  const marker = document.querySelector('meta[name="codeweave-rust-exercises"]');
+  if (typeof marker?.content !== 'string') return Object.freeze(['rust-cargo']);
+  const ids = marker.content.split(' ');
+  if (!ids.includes('rust-cargo') || new Set(ids).size !== ids.length ||
+      ids.some(id => !['rust-cargo', 'rust-mut'].includes(id))) return Object.freeze([]);
+  return Object.freeze(ids);
+}
+
 export function gradingRequestFor(id, rustEnabled = false) {
-  if (id === 'rust-cargo' && rustEnabled === true) {
+  const enabled = Array.isArray(rustEnabled)
+    ? ['rust-cargo', 'rust-mut'].includes(id) && rustEnabled.includes(id)
+    : id === 'rust-cargo' && rustEnabled === true;
+  if (enabled) {
     return { endpoint: './api/grade/rust', timeout: 45000, expectedTests: 10 };
   }
   const exercise = exerciseById(id);
@@ -40,7 +53,7 @@ export function validateGradingResult(result, expectedTests) {
 }
 
 export function recordGradedSubmission(storage, knownIds, id, code, result, at) {
-  validateGradingResult(result, id === 'rust-cargo' ? 10 : undefined);
+  validateGradingResult(result, ['rust-cargo', 'rust-mut'].includes(id) ? 10 : undefined);
   if (!knownIds.includes(id) || typeof code !== 'string' || code.length > MAX_CODE_LENGTH) {
     throw new Error('지원하지 않는 문제 또는 코드 길이입니다.');
   }

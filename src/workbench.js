@@ -1,7 +1,7 @@
 import { lessons } from './catalog.js';
 import { DRAFTS_KEY, PROGRESS_KEY, normalizeProgress, safeRead } from './logic.js';
 import { ITERATIONS_KEY, MAX_CODE_LENGTH, normalizeIterations } from './iterations.js';
-import { formatGradingResult, recordGradedSubmission, readExerciseDrafts, saveExerciseDraft, hasRustGrading, gradingRequestFor } from './practice.js';
+import { formatGradingResult, recordGradedSubmission, readExerciseDrafts, saveExerciseDraft, rustGradingIds, gradingRequestFor } from './practice.js';
 import { MAX_BACKUP_FILE_SIZE, createFullBackup, parseCodeWeaveBackup, restoreCodeWeaveBackup } from './backup.js';
 import { exerciseById, isGradedExercise } from './exercises.js';
 import { MAX_MULTI_FILE_LENGTH, parseMultiFileSubmission, serializeMultiFileSubmission } from './multi-file.js';
@@ -10,10 +10,10 @@ const $ = selector => document.querySelector(selector);
 const allIds = lessons.map(l => l.id);
 const storedDrafts = readExerciseDrafts(localStorage, allIds);
 const storedIterations = normalizeIterations(safeRead(localStorage, ITERATIONS_KEY, {}), allIds);
-const rustEnabled = hasRustGrading(document);
+const rustEnabled = rustGradingIds(document);
 // The original v1 attempt format always replaces C only, not the visible list.
 const legacyAttemptIds = lessons.filter(lesson => isGradedExercise(lesson.challenge.id)).map(lesson => lesson.id);
-const practiceLessons = lessons.filter(lesson => isGradedExercise(lesson.challenge.id) || lesson.id === 'rust-cargo');
+const practiceLessons = lessons.filter(lesson => isGradedExercise(lesson.challenge.id) || lesson.track === 'rust');
 const state = {
   lessonId: practiceLessons[0].id,
   drafts: storedDrafts && typeof storedDrafts === 'object' && !Array.isArray(storedDrafts) ? storedDrafts : {},
@@ -40,9 +40,9 @@ function persist(code = currentSubmission()) {
   }
 }
 function currentLesson() { return practiceLessons.find(l => l.id === state.lessonId); }
-function canGrade() { return isGradedExercise(state.lessonId) || (rustEnabled && state.lessonId === 'rust-cargo'); }
+function canGrade() { return isGradedExercise(state.lessonId) || (rustEnabled.includes(state.lessonId)); }
 function refreshExerciseOptions() {
-  const visible = practiceLessons.filter(lesson => lesson.id !== 'rust-cargo' || rustEnabled ||
+  const visible = practiceLessons.filter(lesson => lesson.track !== 'rust' || rustEnabled.includes(lesson.id) ||
     typeof state.drafts[lesson.id] === 'string' || state.iterations[lesson.id]?.length > 0);
   if (!visible.some(lesson => lesson.id === state.lessonId)) state.lessonId = visible[0].id;
   const select = $('#lesson-select');
@@ -92,7 +92,7 @@ function displayExercise() {
   $('#sample-input').textContent = lesson.challenge.input;
   $('#sample-output').textContent = lesson.challenge.expected;
   displayEditors(lesson);
-  const language = lesson.id === 'rust-cargo' ? 'Rust' : 'C';
+  const language = lesson.track === 'rust' ? 'Rust' : 'C';
   const tool = language === 'Rust' ? 'Cargo' : 'GCC';
   $('#code-label').textContent = language + ' 코드 작성';
   $('#code-input').setAttribute('aria-label', language + ' 코드 작성');
@@ -147,7 +147,7 @@ async function grade() {
   let code;
   try { code = currentSubmission(); state.drafts[id] = code; persist(code); }
   catch (error) { $('#grade-result').textContent = '제출 형식 오류: ' + error.message; state.busy = false; $('#grade-code').disabled = false; $('#lesson-select').disabled = false; return; }
-  $('#grade-result').textContent = '로컬 ' + (id === 'rust-cargo' ? 'Cargo' : 'GCC') + ' 서버에서 컴파일하고 테스트하는 중...';
+  $('#grade-result').textContent = '로컬 ' + (exerciseById(id)?.language === 'rust' ? 'Cargo' : 'GCC') + ' 서버에서 컴파일하고 테스트하는 중...';
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), request.timeout);
   try {

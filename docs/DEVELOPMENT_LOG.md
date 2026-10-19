@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-19 16:54 KST — F02 화면·연습장 학습 경로
+- 시작/결과 SHA: 시작2bf3c2696109cdb0fd0f74f55880d28e3a0cb176; 현재 feat: connect explicitly enabled F02 learning and workbench flow; 실제 결과 SHA/CI 후속 기록.
+- 목표: 명시적 F02 활성 목록만 Cargo 제출·숙달 허용, 준비 원고/스타터와 화면·연습장·이력/v1·390px·오프라인 연결.
+- 변경 파일 수: 총10개(학습/연습장/공통 요청·화면/메타데이터·신규3검사/browser·README·활성/보관 일지).
+- 테스트 결과: 신규3건 실패→통과·legacy DOM 오류 재현→수정·관련18건17통과/skip1·일지4/4·UI계약11/11·JS/MJS7개/roadmap/diff 통과; 전체726건696통과/실패5/취소2/skip23, 콘텐츠 단독 재검사1/1·GCC API 단독 재검사105/105·실제 Cargo/browser CI 대기, 기존 검사 삭제0.
+- CI URL과 결과: 기준 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39209035761 성공723/723; 이번 결과 SHA CI 대기, 완료 선언 아님.
+- 발견한 문제: F01 하드코딩·F02 불완전 결과 저장 차단, 기존 main 초안 보존. 로컬 GCC API120초 초과로 연쇄 실패·배열 예제 compile status null은 콘텐츠 단독 재실행 통과. CPU cap2/2에서도 CPU6초 프로그램 status0으로 두 번 실패(로컬 OS 집행 미검증); CI 필수. 대형 읽기/게시 기준 누락은 ref 쓰기 전에 검출·교정.
+- 보안 영향: 서버가 주입한 고정 과제 목록+토큰 존재 시만 UI 활성화; 서버 인증/실행 한도/파일 접근/저장키 불변, 기본 F01·C·오프라인은 F02 미활성.
+- 단계별 완료율: F02진행 중·next=F-G/F02 유지, A3/5·B10/11·C6/8·D/E3/8·F1/8·G0/8·H/I0/6 및 화면33/기본 문제 수 불변.
+- 다음 작업: 결과 SHA CI 실제 Cargo/browser 검증 후 F02 인수 근거·로드맵 optional Rust delivery 검증 확장 및 C07 순환을 별도 항목으로 반영; 10파일 한도로 상태 승격 보류.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 15:07 KST — F02 명시적 운영자 실행 경로
 - 시작/결과 SHA: 시작3f0fb7d3360357525e7aae6f29e5c2bb59e20dcc; 구현e0d0fc7378fa55dbdf4789a87c96dde41fd8a693; 후속 docs: record verified F02 operator opt-in CI.
 - 목표: --include-f02를 명시한 신뢰 로컬 Rust 서버만 F02 계약을 허용하고 기본 F01/C 경계·허용 목록·인증·정리 보존.
@@ -11,6 +24,7 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 다음 작업: 결과 SHA CI 확인 후 F02 화면·연습장·요청/숙달의 F01 하드코딩을 과제별 활성 목록으로 연결·원고/새 스타터/이력/v1/390px/오프라인 인수. 이번은 실행 기반 항목이며 화면·단원 완료나 다음 C 차례 전환 아님; 10파일 한도로 콘텐츠 인수 미완료를 명시.
 
 ---
+
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 14:04 KST — F02 바인딩·가변성·스칼라 채점 계약 준비
 - 시작/결과 SHA: 시작1454e1284f316fa2ca1ea759acf09e6706bfe6ab; 구현101a3d9684d4f9199664c93fb697dab97edd8e26; 후속 docs: record verified F02 preparation CI.
@@ -24,6 +38,7 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 다음 작업: 결과 SHA 실제 Cargo 성공 확인 뒤 F02 원고/퀴즈/새 함수 스타터·선택적 Rust 채점·기록/v1/숙달을 연결; F01 전용 경계를 확장할 지점은 명시적으로 검사하고 F02 인수 전 차례 승격 금지.
 
 ---
+
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 13:00 KST — E03 화면과 실제 제출 학습 경로
 - 시작/결과 SHA: 시작773283c4ca4a91951f89b8fd62ab346684200ffd; 구현bab4021b955c68531ca413e05cef9457905e16cf; 현재 docs: accept verified E03 and rotate to Rust F02; 실제 후속 SHA/CI 최종 보고.
@@ -37,6 +52,7 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 다음 작업: 결과 SHA CI 확인 후 F02 변수 바인딩·가변성과 스칼라 형의 기존 샘플을 검토하고 좁은 Cargo 실습 계약부터 확장. F01 명시적 로컬 Rust 실행 경계·다른 트랙 기록 보존; E04는 미착수.
 
 ---
+
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 11:58 KST — E03 병합 정렬 원고·채점 계약 준비
 - 시작/결과 SHA: 시작88e89bbce77f07e012d89633b3992c9d209d5efc; 구현b9a544aa2798949c86134bb1d18d9fce36894830; 후속 docs: record verified E03 preparation CI.
@@ -48,16 +64,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 기존 GCC 함수형 파이프라인만 검사에 재사용·서버 전용 하네스·정적 SVG; 운영 registry/실행 API/링커 옵션/파일 접근 권한/사용자 저장키 변경0.
 - 단계별 완료율: E03미착수→진행 중·next=E/E03 유지; 완료 A3/5·B10/11·C6/8·D3/8·E2/8·F1/8·G0/8·H/I0/6 및 화면32/공개 문제 수 불변.
 - 다음 작업: 결과 SHA CI 성공 확인 뒤 다음 콘텐츠 실행에 E03 화면10~15절·퀴즈·준비 계약 등록·인증HTTP 오답→수정·이력/v1/숙달·390px/오프라인·다음 화면 연결; 성공 후 Rust 차례 인수.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-19 11:01 KST — D03 인수 확정과 E03 차례 전환
-- 시작/결과 SHA: 시작007bc3f2d991ca89e41800dc61efc7133893a617; 순환검사분리623cca754a3db60e8ba8992d9cf3243c7c3f2028; 인수798c12ab37f6e187f543df0d80014030f34b01a5; 후속 docs: record verified D03 acceptance and E03 rotation CI.
-- 목표: 과거 D02→D03 순환 검사와 현재 진척을 분리하고, 검증된 D03 제한 범위를 완료 처리해 다음 E/E03으로 이동.
-- 변경 파일 수: 총6개(roadmap검사·로드맵2개·D03 인수 문서·활성/보관 일지).
-- 테스트 결과: 신규 역사적 순환 D04≠D03·완료 상태 진행 중≠완료 각1건 실패→통과; 관련36/36·비UI 계약/인증GCC HTTP 오답→수정10/10·전체690건671통과/실패0/skip19(Rust 부재)·fixture 재검14/14·MJS/roadmap/diff/일지4건 통과; 기존 검사 삭제/성공 기대값 변경0.
-- CI URL과 결과: 기준39184453228 성공·D03 PASS3건·아티팩트 존재 재조회; 순환검사분리39188192510 성공689/689; 인수 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39188397929 성공·Ubuntu690/690·실패0/skip0·macOS/browser 성공·D03 실제GCC/학습 경로 PASS3건 확인. D03 제한 범위 완료·E03 차례 전환 인수, 후속 기록 SHA CI 별도 확인.
-- 발견한 문제: 순환 fixture가 현재 D03 완료를 상속해 D04를 선택함을 재현. 당시 D03 진행 중만 복원하도록 수정한 사유는 역사적 재생과 현재 완료의 분리이며 D03 기대 유지·라이브 D04 선택/입력 불변도 검증.
-- 보안 영향: 개발 상태·검사 fixture·인수 근거만 변경, 외부 입력/코드 실행/파일 접근 권한/API/사용자 저장키 변경0.
-- 단계별 완료율: A3/5 60%·B10/11 90.9%·C6/8 75%·D3/8 37.5%·E2/8 25%·F1/8 12.5%·G0/8·H/I0/6; 분모·화면32·공개 문제 수 불변, D03 범위 근거 docs/D03_ACCEPTANCE.md.
-- 다음 작업: 결과 SHA CI 성공 확인 후 E/E03 분할 정복: 병합 정렬과 보조 공간을 좁은 C 함수형 계약으로 설계·원고/경계 사례 준비; 이번 새 단원/문제 추가 없음.

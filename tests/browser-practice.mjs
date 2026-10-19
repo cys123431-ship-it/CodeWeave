@@ -11,7 +11,7 @@ import os from 'node:os';
 import { serializeMultiFileSubmission } from '../src/multi-file.js';
 import { createLearningServer } from '../server/learning-server.mjs';
 import { createRustGradingService } from '../server/rust-service.mjs';
-import { createRustGradingDefinitions } from '../server/rust-exercises.mjs';
+import { createRustGradingDefinitions, createRustBindingDefinitions } from '../server/rust-exercises.mjs';
 import { createAttemptBackup } from '../src/attempt-backup.js';
 import { createLocalRustGradingService } from '../server/rust-executor.mjs';
 import { trustedRustTools } from './helpers/rust-tools.mjs';
@@ -483,6 +483,7 @@ try {
     await expect(actualPage.locator('.mastery-state')).toContainText('전체 숙달');
     await actualPage.locator('.next-action [data-route="lesson:rust-mut"]').click();
     await expect(actualPage.locator('.detail-head h1')).toHaveText('변수 바인딩과 가변성');
+    await expect(actualPage.locator('#grade-code')).toBeDisabled();
     assert.equal(new URL(actualPage.url()).hash, '#lesson:rust-mut');
     await actualPage.goto(actualBase + '/#lesson:rust-cargo');
     await expect(actualPage.locator('.mastery-state')).toContainText('전체 숙달');
@@ -537,6 +538,107 @@ try {
     if (status.state === 'quarantined') throw Error('Actual F01 browser service quarantined: ' + status.reason);
     assert.deepEqual(await readdir(actualParent), []);
     await rm(actualParent, { recursive: true, force: true });
+  }
+  const f02Parent = await realpath(await mkdtemp(path.join(os.tmpdir(), 'codeweave-browser-f02-')));
+  const f02Service = await createLocalRustGradingService({ enabled: true,
+    definitions: createRustBindingDefinitions(), sysroot: path.dirname(path.dirname(actualTools.rustc)), parent: f02Parent });
+  const f02App = createLearningServer({ root, rustService: f02Service, rustExerciseIds: ['rust-cargo', 'rust-mut'] });
+  let f02Context;
+  try {
+    const address = await f02App.listen(0), f02Base = 'http://127.0.0.1:' + address.port;
+    f02Context = await browser.newContext({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
+    const p = await f02Context.newPage(), bench = await f02Context.newPage();
+    for (const screen of [p, bench]) {
+      screen.on('pageerror', error => errors.push(error.message));
+      screen.on('dialog', dialog => dialog.accept());
+    }
+    await p.goto(f02Base + '/#lesson:rust-mut');
+    await expect(p.locator('#grade-code')).toBeEnabled();
+    const starter = await p.locator('#code-input').inputValue();
+    const manuscript = await readFile(new URL('../content/rust/02-bindings.md', import.meta.url), 'utf8');
+    const correct = manuscript.match(/```rust\n([\s\S]*?)\n```/)[1].split('fn main()')[0];
+    const submit = async (screen, code) => {
+      await screen.locator('#code-input').fill(code);
+      const response = screen.waitForResponse(r => r.url().endsWith('/api/grade/rust'), { timeout: 45000 });
+      await screen.locator('#grade-code').click();
+      const result = await response;
+      assert.equal(result.status(), 200);
+      assert.deepEqual(result.request().postDataJSON(), { exerciseId: 'rust-mut', code });
+      assert.equal(result.request().headers()['x-codeweave-token'],
+        await screen.locator('meta[name="codeweave-token"]').getAttribute('content'));
+      const value = await result.json();
+      assert.equal(value.tests.length, 10);
+      await ready(screen);
+      assert.deepEqual(await readdir(f02Parent), []);
+      return value;
+    };
+    const failed = await submit(p, starter);
+    assert.equal(failed.ok, false);
+    assert.ok(failed.tests.some(tc => tc.detail.startsWith('단언 실패 · ')));
+    await bench.goto(f02Base + '/workbench.html');
+    await bench.locator('#lesson-select').selectOption('rust-mut');
+    await expect(bench.locator('#code-label')).toHaveText('Rust 코드 작성');
+    await expect(bench.locator('#code-input')).toHaveValue(starter);
+    assert.equal((await submit(bench, correct)).ok, true);
+    await expect(bench.locator('#grade-result')).toContainText('10/10');
+    await expect(p.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+    await p.reload();
+    await expect(p.locator('.mastery-state')).not.toContainText('전체 숙달');
+    await p.locator('#mark-theory').click();
+    await p.locator('[data-quiz="rust-mut"][data-choice="1"]').click();
+    await expect(p.locator('.feedback.bad')).toBeVisible();
+    await p.locator('[data-retry="rust-mut"]').click();
+    await p.locator('[data-quiz="rust-mut"][data-choice="0"]').click();
+    await expect(p.locator('.mastery-state')).toContainText('전체 숙달');
+    await p.locator('.next-action [data-route="lesson:ds-list-find"]').click();
+    await p.goto(f02Base + '/#lesson:rust-mut');
+    await expect(p.locator('.mastery-state')).toContainText('전체 숙달');
+    await bench.locator('#attempt-list li').nth(1).getByRole('button').click();
+    await expect(bench.locator('#code-input')).toHaveValue(starter);
+    assert.equal((await history(bench))['rust-mut'].length, 2);
+    const downloadEvent = bench.waitForEvent('download');
+    await bench.locator('#export-history').click();
+    const download = await downloadEvent, chunks = [];
+    for await (const chunk of await download.createReadStream()) chunks.push(chunk);
+    const before = await history(bench);
+    await bench.evaluate(() => localStorage.setItem('codeweave.iterations.v1', '{}'));
+    await bench.locator('#import-file').setInputFiles({ name: 'f02.json', mimeType: 'application/json', buffer: Buffer.concat(chunks) });
+    await expect(bench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
+    assert.deepEqual(await history(bench), before);
+    await bench.locator('#import-file').setInputFiles({ name: 'legacy-c.json', mimeType: 'application/json',
+      buffer: Buffer.from(JSON.stringify(createAttemptBackup({ drafts: {}, iterations: {} }, ['c-hello']))) });
+    await expect(bench.locator('#draft-status')).toHaveText('기존 제출 이력 백업을 복원했습니다.');
+    assert.deepEqual(await history(bench), before);
+    assert.equal(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    assert.equal(await bench.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    if (qaDir) await p.screenshot({ path: path.join(qaDir, 'f02-real-cargo-mobile.png'), fullPage: true });
+    await p.evaluate(async () => {
+      await navigator.serviceWorker.ready;
+      if (!navigator.serviceWorker.controller) await new Promise(resolve =>
+        navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true }));
+    });
+    await bench.reload();
+    await f02Context.setOffline(true);
+    await bench.reload();
+    await bench.locator('#lesson-select').selectOption('rust-mut');
+    await expect(bench.locator('#grade-code')).toBeDisabled();
+    await expect(bench.locator('#code-input')).toHaveValue(starter);
+    assert.deepEqual(await history(bench), before);
+    await p.reload();
+    await expect(p.locator('#grade-code')).toBeDisabled();
+    await expect(p.locator('.mastery-state')).not.toContainText('전체 숙달');
+    await f02Context.setOffline(false);
+    await p.reload();
+    await expect(p.locator('#grade-code')).toBeEnabled();
+    await expect(p.locator('.mastery-state')).toContainText('전체 숙달');
+    console.log('PASS: REAL Cargo F02 browser: starter assertion failure → workbench correction 10/10, quiz retry and separate mastery, shared history/v1 restore, next lesson, offline disabled and 390px');
+  } finally {
+    await f02Context?.close();
+    await f02App.close();
+    const status = f02Service.inspect();
+    if (status.state === 'quarantined') throw Error('F02 browser service quarantined: ' + status.reason);
+    assert.deepEqual(await readdir(f02Parent), []);
+    await rm(f02Parent, { recursive: true, force: true });
   }
   const warningContext = await browser.newContext();
   warningContext.on('page', p => p.on('pageerror', e => errors.push(e.message)));

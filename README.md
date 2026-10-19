@@ -25,7 +25,7 @@ npm test
 ```
 
 브라우저 검사 설치·실행과 자세한 환경 안내는 [로컬 개발 안내](docs/LOCAL_DEVELOPMENT.md)를 참고하세요.
-Linux/macOS에서 선택적으로 Rust F01을 실행하려면 `npm run start:rust -- --help`와 위 안내의 명시적 시작 절차를 따르세요. 일반 `npm start`는 C 전용입니다.
+Linux/macOS에서 선택적으로 Rust F01(추가 `--include-f02` 지정 시 F02도)을 실행하려면 `npm run start:rust -- --help`와 위 안내의 명시적 시작 절차를 따르세요. 일반 `npm start`는 C 전용입니다.
 
 ## 기능 요약
 
@@ -36,7 +36,7 @@ Linux/macOS에서 선택적으로 Rust F01을 실행하려면 `npm run start:rus
 | 자료구조 | 3 | 3 |
 | 알고리즘 | 3 | 3 |
 
-- 총 33개 단원입니다. C06의 한 번 소비 계약, 자료구조 연결 리스트·배열 스택·원형 큐와 알고리즘 탐색·안정 삽입 정렬·병합 정렬은 C 함수형으로 실제 채점합니다. 표는 기본 C 서버 기준입니다. 선택적 Rust 명령의 F01은 Linux/macOS 신뢰 로컬 Cargo 범위로 인수했으며, Rust 가변성과 전체 플랫폼은 계속 개발 중입니다.
+- 총 33개 단원입니다. C06의 한 번 소비 계약, 자료구조 연결 리스트·배열 스택·원형 큐와 알고리즘 탐색·안정 삽입 정렬·병합 정렬은 C 함수형으로 실제 채점합니다. 표는 기본 C 서버 기준입니다. 선택적 Rust 명령의 F01은 Linux/macOS 신뢰 로컬 Cargo 범위로 인수했으며, F02 바인딩·가변성은 추가 플래그로 화면/연습장 채점 경로를 제공합니다. F02 개발 인수와 전체 플랫폼은 계속 진행 중입니다.
 - [D01 원고](content/ds/01-linked-list.md)·[D02 원고](content/ds/02-stack.md)·[D03 원고](content/ds/03-queue.md)·[E02 원고](content/algo/02-stable-insertion.md)·[E03 원고](content/algo/03-merge-sort.md)는 계약 준비 시점의 기록을 포함합니다. 현재 학습 화면·API 연결 상태와 검증 근거는 [로드맵](docs/ROADMAP.md)·[최근 일지](docs/DEVELOPMENT_LOG.md)를 확인하세요.
 - C는 전체 프로그램·함수 직접 호출·다중 파일 제출을 GCC로 채점합니다. 문제별 사례·경계값은 [C 문제 감사](docs/C_EXERCISE_AUDIT.md)에 모았습니다.
 - 단원별 설명·정적 도식·예제·개념 퀴즈와 코드 초안 저장을 제공합니다.
@@ -46,7 +46,7 @@ Linux/macOS에서 선택적으로 Rust F01을 실행하려면 `npm run start:rus
 
 ## 꼭 확인할 제한
 
-- 로컬 서버는 신뢰하는 본인의 C 코드와 명시적으로 활성화한 Rust F01만 실행하는 개발 도구입니다. 실행 격리·샌드박스가 아니므로 공용 네트워크에 공개하지 마세요. Rust 실행은 Windows 네이티브에서 지원하지 않습니다.
+- 로컬 서버는 신뢰하는 본인의 C 코드와 명시적으로 활성화한 Rust F01/F02만 실행하는 개발 도구입니다. 실행 격리·샌드박스가 아니므로 공용 네트워크에 공개하지 마세요. Rust 실행은 Windows 네이티브에서 지원하지 않습니다.
 - Linux/macOS의 시간·출력·프로세스 그룹·자원 제한은 격리를 대신하지 않습니다. 예산·설정 실패 처리·권한 예외는 [로컬 개발 안내](docs/LOCAL_DEVELOPMENT.md)에 있습니다.
 - Windows에서는 POSIX 프로세스 그룹과 CPU·가상 메모리·파일 크기·프로세스 수 제한이 적용되지 않습니다. 벽시계·출력 제한과 직접 자식 종료만 적용됩니다.
 - 파일 스트림(C05) 과제의 실제 오류 재현 하네스는 Linux/macOS·WSL용입니다. Windows 네이티브 GCC 채점은 지원하지 않으며 이론·퀴즈·초안 저장은 가능합니다.
