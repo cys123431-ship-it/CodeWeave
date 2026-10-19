@@ -74,6 +74,9 @@ test('C07 reference preserves failure outputs, closes transferred resources and 
   assert.equal(result.message, '10/10개 테스트 통과');
 });
 const mutants = [
+  ['ignores fclose failure', reference.replace('int closed = fclose(stream);', '(void)fclose(stream);\n    int closed = 0;')],
+  ['overwrites the first read error with the close error', reference.replace('closed != 0 && saved == 0', 'closed != 0')],
+  ['publishes the byte before close succeeds', reference.replace('int closed = fclose(stream);', 'if (status == 1) *out_byte = value;\n    int closed = fclose(stream);')],
   ['leaks the transferred stream', reference.replace('int closed = fclose(stream);', 'int closed = 0;')],
   ['publishes EOF as a byte', reference.replace('if (status == 1) *out_byte = value;', 'if (status != -1) *out_byte = value;')],
   ['loses the saved read error during cleanup', reference.replace('*out_error = saved;', '*out_error = errno;')],
