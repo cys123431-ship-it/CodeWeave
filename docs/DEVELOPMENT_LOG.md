@@ -1,10 +1,10 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 10:01 KST — D03 화면·실제 제출 학습 경로 연결
-- 시작/결과 SHA: 시작0d2864083ed4e6815e7dec6520128c128556acad; 구현 커밋 제목 feat: connect circular queue lesson and real grading flow.
+- 시작/결과 SHA: 시작0d2864083ed4e6815e7dec6520128c128556acad; 구현03376f654c8c8cc141e038e7bc0fafd33cf6d48c; 후속 docs: record verified D03 learner-path CI.
 - 목표: 준비된 D03 13절·접힌 심화·정적 도식·동일 예제/스타터 연결, 인증GCC 오답→수정10/10·퀴즈 재시도·이력/v1·숙달·390px/오프라인·다음 화면 인수.
 - 변경 파일 수: 총10개(화면·메타데이터·채점등록·browser검사·역사적Rust fixture·README·로드맵2개·활성/보관 일지).
 - 테스트 결과: 신규 화면/등록·인증HTTP2건 실패→통과 후 browser 비UI 사전 검사로 이동; README/매핑·Rust 기존5건 실패 재현→수정, 관련32/32·재검토22/22·전체688건669통과/실패0/skip19(Rust 부재)·JS/MJS5개/roadmap/diff/일지4건 통과, 기존 원격 검사 삭제0·기대값 완화0.
-- CI URL과 결과: 기준 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39180099341 성공 조회; 이번 결과 SHA CI 확인 전·D03 진행 중/next=D03 유지.
+- CI URL과 결과: 기준39180099341 성공; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39184166332 성공·Ubuntu688/688·실패0/skip0·macOS 회귀 성공·browser D03 사전 계약/인증HTTP/실제 학습 경로 PASS3건 확인. 화면·학습 경로 인수, 완료 상태/차례 승격은 보류; 후속 기록 SHA CI 별도 확인.
 - 발견한 문제: fetch 지연 중 FETCH_HEAD 참조 실패→완료/재조회 뒤 최신SHA 전환. 새 매핑을 미착수로 돌리는 과거Rust fixture 수정 이유: 완료 수는 고정하면서 현재 카탈로그의 미완료 표본을 유효한 진행 중으로 재생. 스택의 다음 화면 검사는 의도한 큐 경유 추가이며 퀴즈/저장키 불변.
 - 보안 영향: 서버 전용 준비 하네스를 기존 registry에 연결·loopback/토큰/JSON/GCC 한도 재사용; 신규 API/호스트 권한/링커 옵션/저장키 변경0.
 - 단계별 완료율: D03 화면 연결·개발 상태진행 중, 완료 수 A3/5·B10/11·C6/8·D/E2/8·F1/8·G0/8·H/I0/6 유지; 화면32·C문제25·DS3·알고리즘2.
