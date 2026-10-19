@@ -414,12 +414,16 @@
           "id": "D03",
           "title": "원형 큐: 삽입·삭제·순환 경계",
           "status": "진행 중",
-          "lessonIds": [],
+          "lessonIds": [
+            "ds-queue"
+          ],
           "manuscripts": [
             "content/ds/03-queue.md"
           ],
           "tests": [
-            "tests/queue-exercise.test.mjs"
+            "tests/queue-exercise.test.mjs",
+            "tests/roadmap.test.mjs",
+            "tests/browser-practice.mjs"
           ]
         },
         {

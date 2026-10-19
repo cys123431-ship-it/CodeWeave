@@ -11,7 +11,8 @@ export function historicalRustPending(source) {
   const data = structuredClone(source);
   for (const stage of data.stages) {
     for (const unit of stage.units) {
-      unit.status = completed.has(unit.id) ? '완료' : inProgress.has(unit.id) ? '진행 중' : '미착수';
+      // A later mapped lesson may be in progress, but never adds a historical completion.
+      unit.status = completed.has(unit.id) ? '완료' : inProgress.has(unit.id) || unit.lessonIds.length ? '진행 중' : '미착수';
       // Later delivery evidence belongs to live progress, not this historical replay.
       if (unit.id !== 'F01') delete unit.theoryDelivery;
       delete unit.practiceDelivery;

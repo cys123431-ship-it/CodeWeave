@@ -19,6 +19,53 @@ import { lessons as c06Lessons } from '../src/catalog.js';
 import { exerciseById as c06ExerciseById } from '../src/exercises.js';
 import { gradingExercises as c06Graders } from '../server/grading-exercises.mjs';
 import { preprocessorExercise, preprocessorStarter } from '../server/preprocessor-exercise.mjs';
+import { queueExercise, queueMetadata, queueStarter } from '../server/queue-exercise.mjs';
+
+const queueManuscript = await readFile(new URL('../content/ds/03-queue.md', import.meta.url), 'utf8');
+const queueCorrect = queueManuscript.match(/```c\n([\s\S]*?)\n```/)[1].split('int main(void)')[0];
+const queueLIFO = queueCorrect.replace('q->values[q->head];', 'q->values[(q->head + q->length - 1) % 4];');
+
+async function verifyQueueContract() {
+  const lesson = c06Lessons.find(item => item.id === 'ds-queue');
+  assert.ok(lesson, 'D03 must be reachable from the learner catalog');
+  assert.equal(lesson.track, 'ds');
+  assert.equal(lesson.figure, 'queue-circular-fifo');
+  assert.deepEqual(c06ExerciseById(lesson.id), { ...queueMetadata, requiredFiles: [] });
+  assert.deepEqual(c06Graders.get(lesson.id), queueExercise);
+  assert.equal(lesson.challenge.starter, queueStarter);
+  assert.equal(lesson.challenge.input, queueMetadata.publicExample.input);
+  assert.equal(lesson.challenge.expected, queueMetadata.publicExample.output);
+  const program = queueManuscript.match(/```c\n([\s\S]*?)\n```/)[1];
+  assert.ok(lesson.sections.some(section => section.code?.trim() === program.trim()));
+  assert.deepEqual(lesson.quiz.options, ['3', '0', '1', '4']);
+  assert.equal(lesson.quiz.answer, 1);
+  assert.equal(Object.hasOwn(c06ExerciseById(lesson.id), 'harness'), false);
+  console.log('PASS: D03 catalog, compiled manuscript, starter, public example and original private contract match');
+  const app = createLearningServer({ root: fileURLToPath(new URL('../', import.meta.url)) });
+  try {
+    const { port } = await app.listen(0);
+    const base = 'http://127.0.0.1:' + port;
+    const response = await fetch(base);
+    assert.equal(response.status, 200);
+    const token = (await response.text()).match(/name="codeweave-token" content="([a-f0-9]{64})"/)?.[1];
+    assert.match(token, /^[a-f0-9]{64}$/);
+    assert.notEqual(queueLIFO, queueCorrect);
+    for (const [code, ok] of [[queueLIFO, false], [queueCorrect, true]]) {
+      const response = await fetch(base + '/api/grade', { method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CodeWeave-Token': token },
+        body: JSON.stringify({ exerciseId: queueExercise.id, code }), signal: AbortSignal.timeout(10000) });
+      assert.equal(response.status, 200);
+      const result = await response.json();
+      assert.equal(result.ok, ok, JSON.stringify(result));
+      assert.equal(result.tests.length, 10);
+    }
+    console.log('PASS: D03 authenticated real GCC HTTP rejects LIFO then accepts FIFO correction 10/10');
+  } finally {
+    await app.close();
+  }
+}
+await verifyQueueContract();
+if (process.argv.includes('--queue-contract-only')) process.exit(0);
 
 const c06Correct = '#include <stddef.h>\nint take_nonnegative(int *cursor,int *out){if(!cursor||!out||cursor==out)return 0;int value=*cursor;if(value < -10000 || value > 10000)return 0;*out=value<0?0:value;*cursor=value+1;return 1;}';
 const c06Wrong = c06Correct.replace('*cursor=value+1;', '*cursor=value<0?value:value+1;');
@@ -1376,6 +1423,8 @@ try {
   }), true, 'D02 live stack diagram and document must fit 390px');
   if (qaDir) await page.screenshot({ path: path.join(qaDir, 'stack-mobile.png'), fullPage: true });
   await context.setOffline(false);
+  await page.locator('.next-action [data-route="lesson:ds-queue"]').click();
+  await expect(page.locator('.detail-head h1')).toHaveText('원형 큐: 먼저 온 값을 순환하며 꺼내기');
   await page.locator('.next-action [data-route="lesson:algo-binary"]').click();
   await expect(page.locator('.detail-head h1')).toHaveText('복잡도와 선형·이진 탐색의 전제');
   console.log('PASS: D02 legacy draft/quiz preserved, real FIFO failure/correction 10/10, mastery, backup, offline attempts, 390px and next lesson');
@@ -1484,6 +1533,62 @@ try {
   await page.locator('.next-action [data-route="lesson:c-file-stream-count"]').click();
   await expect(page.locator('.detail-head h1')).toHaveText('파일 스트림: 읽기·EOF·오류와 소유권');
   console.log('PASS: C06 real GCC 10-case failure/correction, quiz retry, separate mastery, shared history, v1, 390px/offline and next lesson');
+  await page.goto(base + '/#lesson:ds-queue');
+  await page.reload();
+  await expect(page.locator('meta[name="codeweave-token"]')).toHaveAttribute('content', /^[a-f0-9]{64}$/);
+  await expect(page.locator('.detail-head h1')).toHaveText('원형 큐: 먼저 온 값을 순환하며 꺼내기');
+  await expect(page.locator('.practice-zone')).toContainText('함수 직접 호출형');
+  await expect(page.locator('#code-input')).toHaveValue(queueStarter);
+  await page.locator('[data-quiz="ds-queue"][data-choice="0"]').click();
+  await expect(page.locator('.feedback.bad')).toBeVisible();
+  await page.locator('[data-retry="ds-queue"]').click();
+  await page.locator('[data-quiz="ds-queue"][data-choice="1"]').click();
+  await page.locator('#mark-theory').click();
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, queueLIFO);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, queueCorrect);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('10/10');
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await bench.reload();
+  await bench.locator('#lesson-select').selectOption('ds-queue');
+  await expect(bench.locator('#code-input')).toHaveValue(queueCorrect);
+  const queueDownloadEvent = bench.waitForEvent('download');
+  await bench.locator('#export-history').click();
+  const queueDownload = await queueDownloadEvent, queueChunks = [];
+  for await (const chunk of await queueDownload.createReadStream()) queueChunks.push(chunk);
+  const queueBackup = Buffer.concat(queueChunks), queueData = JSON.parse(queueBackup);
+  assert.equal(queueData.drafts['ds-queue'], queueCorrect);
+  assert.equal(queueData.iterations['ds-queue'].length, 2);
+  assert.equal(queueData.drafts['ds-stack'], stackFunctions);
+  assert.equal(queueData.drafts['c-preprocessor-once'], c06Correct);
+  assert.equal(queueData.drafts['rust-cargo'], rustDraft);
+  await bench.locator('#import-file').setInputFiles({ name: 'queue-backup.json', mimeType: 'application/json', buffer: queueBackup });
+  await expect(bench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.locator('#code-input')).toHaveValue(queueCorrect);
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('[data-restore-attempt="1"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(queueLIFO);
+  await page.locator('[data-restore-attempt="0"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(queueCorrect);
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('.figure-box svg')).toHaveAttribute('role', 'img');
+  assert.equal(await page.evaluate(() => {
+    const svg = document.querySelector('.figure-box svg'), view = svg.viewBox.baseVal;
+    return [...svg.querySelectorAll('text')].every(text => {
+      const box = text.getBBox();
+      return box.x >= 0 && box.y >= 0 && box.x + box.width <= view.width && box.y + box.height <= view.height;
+    }) && document.documentElement.scrollWidth <= innerWidth;
+  }), true, 'D03 queue diagram and learner page must fit 390px');
+  if (qaDir) await page.screenshot({ path: path.join(qaDir, 'circular-queue-mobile.png'), fullPage: true });
+  await context.setOffline(false);
+  await page.locator('.next-action [data-route="lesson:algo-binary"]').click();
+  await expect(page.locator('.detail-head h1')).toHaveText('복잡도와 선형·이진 탐색의 전제');
+  console.log('PASS: D03 real GCC LIFO failure/correction 10/10, quiz retry, separate mastery, shared history, v1, 390px diagram/offline and next lesson');
   assert.deepEqual(errors, []);
   console.log('PASS: 390px mobile layout and offline reload of drafts/history; no browser exceptions');
 } catch (error) {
