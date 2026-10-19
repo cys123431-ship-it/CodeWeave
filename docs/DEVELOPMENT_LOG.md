@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-19 19:03 KST — C07 소유 스트림·오류 정리 계약 준비
+- 시작/결과 SHA: 시작04751784fe9c4f5370b38452c37187cbb90902b6; RED 68aa9ea36340b62b3c3e125bc1600f41759386b8; 구현 feat: prepare C07 owned-stream error and cleanup contract; PR #3, 실제 결과 SHA/CI 후속 확인.
+- 목표: C05 borrowed와 대비되는 owned FILE의 한 바이트·EOF·오류/errno 스냅샷·정리10사례와 독자 원고/도식 준비; 화면/운영 채점은 미등록.
+- 변경 파일 수: 총8개(신규 C07 서버 모듈·13검사·원고·정적 도식·로드맵2개·활성/보관 일지).
+- 테스트 결과: PR RED CI744건731통과/실패13/skip0, 신규13건의 모듈/도식/원고 부재 확인; 구현 CI 대기. 로컬 npm/node/GCC/git/미커밋/브라우저 검사 미실행(409 environment_offline); V8 본문 구문 사전 확인은 node --check로 간주하지 않음.
+- CI URL과 결과: 기준 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39228126437 성공731/731; RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39235098471 의도된 실패13; 구현 결과 SHA CI 대기.
+- 발견한 문제: exec-server 연결 실패409 Conflict·environment_offline·Environment is not connected; 로컬 미완료 변경을 추정/덮어쓰지 않고 독립 PR/CI로 진행. 공식 POSIX 본문 직접 접근403은 재우회하지 않았고 독자 원고/실제 GCC 검사로 구분. fclose 단독 실패 주입은 후속 미검증 범위.
+- 보안 영향: 기존 함수형 GCC 검사에 독립 하네스·tmpfile/pipe 정리만 재사용; 실행 API/운영 registry/링커 인수/저장키 변경0, main 미수정·별도 PR로 보존.
+- 단계별 완료율: C07미착수→진행 중·next=C/C07 유지; 완료 A3/5·B10/11·C6/8·D/E3/8·F2/8·G0/8·H/I0/6, 화면33/기본 문제 수 불변.
+- 다음 작업: PR 결과 SHA CI로 정답10/10·오답8종/스타터 거부·완성 출력 확인; 다음 실행은 이 PR부터 읽고 화면/퀴즈/등록/실제 제출·백업·숙달 연결 또는 남은 오류 수정, 인수 전 순환 금지.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 17:59 KST — F02 제한 범위 인수와 C07 순환
 - 시작/결과 SHA: 시작0726bf04df84dea0a5af036ac1b632e580b92eaa; 검증기06833e549ea8cf4c60be9edef0601e419bbb685f; 인수081949d57ea663888a0f7cd3513e356fd12d13d4; 후속 docs: record verified F02 acceptance CI.
 - 목표: 검증된 F02 Linux 학습 경로만 인수하고 근거·명시 플래그·범위 검증을 보존해 C07로 순환; 새 단원/문제 추가0.
@@ -11,6 +24,7 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 다음 작업: 결과 SHA CI 성공 확인 뒤 C07 오류 반환·errno·자원 정리를 독립적이고 작은 GCC 실습 계약으로 준비; F02 macOS 자체 인수와 H/I 실기기 검증은 별도 미완료.
 
 ---
+
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 16:54 KST — F02 화면·연습장 학습 경로
 - 시작/결과 SHA: 시작2bf3c2696109cdb0fd0f74f55880d28e3a0cb176; 구현72009e9437d2367f4a8c6348fbb1c3860f98f65e; 후속 docs: record verified F02 learner flow CI; 실제 후속 SHA/CI 최종 보고.
@@ -50,17 +64,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 독립 서버 전용 정의를 검사에서만 기존 고정4파일·오프라인 Cargo·자원 한도에 전달; F01 registry/HTTP·기본 실행·제출 옵션/파일 권한/사용자 저장키 변경0.
 - 단계별 완료율: F02진행 중·next=F-G/F02 유지; 완료 A3/5·B10/11·C6/8·D/E3/8·F1/8·G0/8·H/I0/6 및 화면33/공개 문제 수 불변.
 - 다음 작업: 결과 SHA 실제 Cargo 성공 확인 뒤 F02 원고/퀴즈/새 함수 스타터·선택적 Rust 채점·기록/v1/숙달을 연결; F01 전용 경계를 확장할 지점은 명시적으로 검사하고 F02 인수 전 차례 승격 금지.
-
----
-
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-19 13:00 KST — E03 화면과 실제 제출 학습 경로
-- 시작/결과 SHA: 시작773283c4ca4a91951f89b8fd62ab346684200ffd; 구현bab4021b955c68531ca413e05cef9457905e16cf; 현재 docs: accept verified E03 and rotate to Rust F02; 실제 후속 SHA/CI 최종 보고.
-- 목표: E03 12절·접힌 심화·동일 예제/스타터 연결, 인증GCC 오답→수정10/10·퀴즈 재시도·분리숙달·이력/v1·390px/오프라인·E02 진입과 트랙 복귀 인수.
-- 변경 파일 수: 총10개(화면·메타데이터·채점등록·browser/roadmap검사·README·로드맵2개·활성/보관 일지).
-- 테스트 결과: 신규 화면 계약·README 집계·완료/전환3건 및 인증HTTP400≠200 실패→통과, 관련39/39·비UI 계약/인증HTTP 통과·구현706건/인수707건 각각 실패0·최종688통과/skip19(Rust 부재)·JS/MJS5개/roadmap/diff·일지4/4 통과; 기존 검사 삭제/성공 기대값 완화0.
-- CI URL과 결과: 기준 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39193324117 성공704/704; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39197860974 성공706/706·실패0/skip0·macOS/browser 성공·E03 PASS3건 확인. E03 제한 범위 인수·후속 기록/상태 SHA CI 별도 확인.
-- 발견한 문제: 첫 화면 삽입이 tracks 배열에 들어가 카탈로그/매핑 검사 실패→lessons 배열 끝으로 수정. E04 미구현이므로 다음 단원을 꾸미지 않고 E02→E03과 트랙 복귀 검증; 준비 원고의 역사적 미등록 기록은 README에서 구분. 게시용 diff의 추가 전용 hunk 위치 오차는 로컬/원격 tree 불일치로 ref 갱신 차단→계산 수정·tree 일치 후 게시, 원격 파일 오반영0.
-- 보안 영향: 서버 전용 기존10사례 계약 등록·loopback/JSON/토큰/GCC 한도 재사용; 신규 실행 API/파일 접근 권한/링커 옵션/사용자 저장키 변경0.
-- 단계별 완료율: E03 제한 범위 완료·next=F-G/F02, 완료 A3/5·B10/11·C6/8·D3/8·E3/8(37.5%)·F1/8·G0/8·H/I0/6; 화면33·C25/DS3/알고리즘3문제.
-- 다음 작업: 결과 SHA CI 확인 후 F02 변수 바인딩·가변성과 스칼라 형의 기존 샘플을 검토하고 좁은 Cargo 실습 계약부터 확장. F01 명시적 로컬 Rust 실행 경계·다른 트랙 기록 보존; E04는 미착수.

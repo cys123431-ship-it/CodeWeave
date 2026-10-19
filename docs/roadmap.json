@@ -359,10 +359,14 @@
         {
           "id": "C07",
           "title": "오류 반환·errno와 자원 정리 경로",
-          "status": "미착수",
+          "status": "진행 중",
           "lessonIds": [],
-          "manuscripts": [],
-          "tests": []
+          "manuscripts": [
+            "content/c/24-owned-stream-errors.md"
+          ],
+          "tests": [
+            "tests/owned-stream-exercise.test.mjs"
+          ]
         },
         {
           "id": "C08",
