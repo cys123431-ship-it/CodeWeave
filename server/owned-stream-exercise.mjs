@@ -93,7 +93,9 @@ export const ownedStreamCases = [
       "9"
     ],
     "expected": "1"
-  }
+  },
+  { input: '읽기 성공·정상 EOF 뒤 닫기 실패', args: ['10'], expected: '1' },
+  { input: '읽기 오류 EAGAIN을 닫기 오류 EIO보다 우선 보존', args: ['11'], expected: '1' }
 ];
 export const ownedStreamStarter = `#include <stdio.h>
 int read_owned_byte(FILE *stream, int *out_byte, int *out_error) {
@@ -104,7 +106,9 @@ int read_owned_byte(FILE *stream, int *out_byte, int *out_error) {
     return -1;
 }
 `;
-export const ownedStreamHarness = `#define _POSIX_C_SOURCE 200809L
+export const ownedStreamHarness = `#define _GNU_SOURCE
+#define _DARWIN_C_SOURCE
+#define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -156,6 +160,45 @@ static int invalid_outputs(int kind) {
     }
     return ok;
 }
+/* Custom streams inject real stdio read/close failures without linker hooks.
+   glibc uses fopencookie; macOS uses funopen. No OS descriptor is owned. */
+struct failing_stream { int mode; int reads; int closes; };
+#ifdef __APPLE__
+static int injected_read(void *cookie, char *buffer, int size) {
+#else
+static ssize_t injected_read(void *cookie, char *buffer, size_t size) {
+#endif
+    struct failing_stream *state = cookie;
+    if (size == 0) return 0;
+    state->reads++;
+    if (state->mode == 2) { errno = EAGAIN; return -1; }
+    if (state->mode == 1 || state->reads > 1) return 0;
+    buffer[0] = 42;
+    return 1;
+}
+static int injected_close(void *cookie) {
+    struct failing_stream *state = cookie;
+    state->closes++;
+    errno = EIO;
+    return -1;
+}
+static int close_failure(int mode) {
+    struct failing_stream state = {mode, 0, 0};
+#ifdef __APPLE__
+    FILE *fp = funopen(&state, injected_read, NULL, NULL, injected_close);
+#else
+    cookie_io_functions_t callbacks = {injected_read, NULL, NULL, injected_close};
+    FILE *fp = fopencookie(&state, "r", callbacks);
+#endif
+    if (fp == NULL || setvbuf(fp, NULL, _IONBF, 0) != 0) exit(2);
+    int byte = 777, error = 999;
+    errno = ERANGE;
+    int status = read_owned_byte(fp, &byte, &error);
+    int ok = status == -1 && byte == 777 && error == (mode == 2 ? EAGAIN : EIO)
+        && state.reads == 1 && state.closes == 1;
+    if (state.closes == 0) (void)fclose(fp);
+    return ok;
+}
 int main(int argc, char **argv) {
     if (argc != 2) return 2;
     const unsigned char star[] = {0x2a};
@@ -191,6 +234,8 @@ int main(int argc, char **argv) {
         case 9: ok = probe(data_stream(star, 0), 0, 777, 0, EDOM)
                      && probe(data_stream(ff, 1), 1, 255, 0, EDOM)
                      && probe(data_stream(pair, 2), 1, 'A', 0, 0); break;
+        case 10: ok = close_failure(0) && close_failure(1); break;
+        case 11: ok = close_failure(2); break;
         default: return 2;
     }
     printf("%d\\n", ok);

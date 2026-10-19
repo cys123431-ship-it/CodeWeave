@@ -47,15 +47,15 @@ async function grade(t, code) {
   assert.equal(built.status, 0, built.stderr);
   return buildResult(exercise, built, await runCases(workspace, exercise));
 }
-test('C07 preparation keeps ten immutable owned-resource cases outside production grading', async () => {
+test('C07 preparation keeps twelve immutable owned-resource cases outside production grading', async () => {
   for (const file of ['../server/owned-stream-exercise.mjs', '../src/figures.js', './owned-stream-exercise.test.mjs']) {
     const checked = spawnSync(process.execPath, ['--check', fileURLToPath(new URL(file, import.meta.url))],
       { encoding: 'utf8', timeout: 4500 });
     assert.equal(checked.status, 0, checked.stderr);
   }
   const { ownedStreamExercise: exercise, ownedStreamMetadata: metadata } = await load();
-  assert.equal(exercise.cases.length, 10);
-  assert.equal(new Set(exercise.cases.map(c => c.args.join())).size, 10);
+  assert.equal(exercise.cases.length, 12);
+  assert.equal(new Set(exercise.cases.map(c => c.args.join())).size, 12);
   assert.ok(Object.isFrozen(exercise.cases));
   assert.ok(exercise.cases.every(Object.isFrozen));
   assert.equal(gradingExercises.has(exercise.id), false);
@@ -71,7 +71,7 @@ test('C07 static ownership diagram has accessible image semantics and no executa
 test('C07 reference preserves failure outputs, closes transferred resources and ignores stale errno', { skip: !gcc || !posix }, async t => {
   const result = await grade(t, reference);
   assert.equal(result.ok, true, JSON.stringify(result));
-  assert.equal(result.message, '10/10개 테스트 통과');
+  assert.equal(result.message, '12/12개 테스트 통과');
 });
 const mutants = [
   ['ignores fclose failure', reference.replace('int closed = fclose(stream);', '(void)fclose(stream);\n    int closed = 0;')],
@@ -91,7 +91,7 @@ for (const [name, code] of mutants) {
     assert.notEqual(code, reference, 'mutation must change the actual source');
     const result = await grade(t, code);
     assert.equal(result.ok, false);
-    assert.equal(result.tests.length, 10);
+    assert.equal(result.tests.length, 12);
     assert.ok(result.tests.some(c => !c.passed));
   });
 }

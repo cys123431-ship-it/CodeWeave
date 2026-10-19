@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-19 20:04 KST — C07 닫기 실패 채점 누락 수정
+- 시작/결과 SHA: main04751784fe9c4f5370b38452c37187cbb90902b6; PR시작026450198765d1f0d31106eec4a777539f19bf18; RED af683acbccdb3a1b4a656fdb0fbcf8b4f8b59218; 결과 커밋 fix: reject C07 close-error and premature-output mutants.
+- 목표: 닫기 실패 무시·읽기 진단 덮어쓰기·닫기 전 출력 변경 오답이 기존10사례를 통과하는 회귀를 먼저 재현하고 거부.
+- 변경 파일 수: 6개(서버 하네스·검사·원고·macOS CI·활성/보관 일지); 신규 파일0·삭제 검사0.
+- 테스트 결과: 신규3건 수정 전3실패→수정 후3통과; 관련16/16·정답12/12·오답11종/스타터 거부·완성 예제 출력 통과; 전체747건724통과/실패0/skip23(Cargo 부재), node --check2개/roadmap/diff 통과.
+- CI URL과 결과: 기준 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39236024126 성공; 이번 결과 SHA CI 대기, 성공 전 완료로 기록하지 않음.
+- 발견한 문제: 닫기 단독 실패와 동시 실패를 실제 stdio 콜백으로 주입(glibc fopencookie/macOS funopen); 사례10→12·결과 개수 기대 동기화는 누락 행동 추가 때문이며 기존 성공/거부 기대 완화0.
+- 보안 영향: 독립 검사 하네스만 확장·서버 실행 API/registry/링커 허용값/사용자 저장키 변경0; macOS 실제 실패 주입 검사를 CI에 명시 추가.
+- 단계별 완료율: C07진행 중·next=C/C07 유지; A3/5·B10/11·C6/8·D/E3/8·F2/8·G0/8·H/I0/6, 완료 단원 수 불변.
+- 다음 작업: PR #3 결과 CI 확인 후 준비를 반복하지 말고 좁힌 한 바이트 소유권 계약의 화면·퀴즈·실제 제출/오류 수정·재제출·기록/v1·숙달 연결을 우선 완성; 이후 인수 근거 검토 전 순환 금지.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 19:03 KST — C07 소유 스트림·오류 정리 계약 준비
 - 시작/결과 SHA: 시작04751784fe9c4f5370b38452c37187cbb90902b6; RED 68aa9ea36340b62b3c3e125bc1600f41759386b8; 구현58b3d201de6c56e08237de528455c0a6c15d5be0; PR #3 후속 docs: record CI-verified C07 preparation and syntax checks; 실제 후속 SHA/CI 최종 보고.
 - 목표: C05 borrowed와 대비되는 owned FILE의 한 바이트·EOF·오류/errno 스냅샷·정리10사례와 독자 원고/도식 준비; 화면/운영 채점은 미등록.
@@ -50,17 +63,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 신규 실행 범위는 명시적 운영자 플래그의 F02 한 문제, 별도 frozen 정의 factory·고정된 HTTP 허용 목록으로 제한; loopback/JSON/토큰/Origin/자원·종료 한도 유지, 환경/HTTP로 활성화 불가·권한/저장키 변경0.
 - 단계별 완료율: F02진행 중·next=F-G/F02 유지, A3/5·B10/11·C6/8·D/E3/8·F1/8·G0/8·H/I0/6 및 화면33/기본 공개 문제 수 불변.
 - 다음 작업: 결과 SHA CI 확인 후 F02 화면·연습장·요청/숙달의 F01 하드코딩을 과제별 활성 목록으로 연결·원고/새 스타터/이력/v1/390px/오프라인 인수. 이번은 실행 기반 항목이며 화면·단원 완료나 다음 C 차례 전환 아님; 10파일 한도로 콘텐츠 인수 미완료를 명시.
-
----
-
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-19 14:04 KST — F02 바인딩·가변성·스칼라 채점 계약 준비
-- 시작/결과 SHA: 시작1454e1284f316fa2ca1ea759acf09e6706bfe6ab; 구현101a3d9684d4f9199664c93fb697dab97edd8e26; 후속 docs: record verified F02 preparation CI.
-- 목표: F02 첫 범위로 독자81줄 원고·정적 도식·next_count/is_nonnegative의 독립10사례 Cargo 계약 준비, F01 운영 허용 목록·F02 기존 화면/키 보존.
-- 변경 파일 수: 총8개(신규 원고·준비 정의·9검사·공용 도식·로드맵2개·활성/보관 일지).
-- 테스트 결과: 로컬 신규6건 실패→6통과·실제Rust3건 Cargo 부재skip(CI 필수)·전체716건694통과/실패0/skip22(기존19+신규Rust3)·JS/MJS3개/roadmap/diff 통과; CI Linux에서 원고/불변 정답2종 각10/10·오답8종/스타터 단언 거부·완성 출력·E0384 통과, 기존 검사 삭제0.
-- CI URL과 결과: 기준 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39198203747 성공707/707; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39203168339 성공716/716·실패0/skip0·실제F02 Rust3검사·macOS 기존 회귀/browser 성공. 원고/계약 준비 항목 완료·F02 화면 인수 아님; 후속 기록 SHA CI 별도 확인.
-- 발견한 문제: F02 준비 모듈/원고/도식/로드맵 근거 부재를 먼저 재현. 새 검사 초안의 compileOutput 빈값 기대는 성공 Cargo에도 진행 로그가 남는 기존 계약을 오해해 실제 전 사례 단언 실행으로 판정하도록 재검토; 기존 테스트 기대 변경0.
-- 보안 영향: 독립 서버 전용 정의를 검사에서만 기존 고정4파일·오프라인 Cargo·자원 한도에 전달; F01 registry/HTTP·기본 실행·제출 옵션/파일 권한/사용자 저장키 변경0.
-- 단계별 완료율: F02진행 중·next=F-G/F02 유지; 완료 A3/5·B10/11·C6/8·D/E3/8·F1/8·G0/8·H/I0/6 및 화면33/공개 문제 수 불변.
-- 다음 작업: 결과 SHA 실제 Cargo 성공 확인 뒤 F02 원고/퀴즈/새 함수 스타터·선택적 Rust 채점·기록/v1/숙달을 연결; F01 전용 경계를 확장할 지점은 명시적으로 검사하고 F02 인수 전 차례 승격 금지.

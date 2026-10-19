@@ -97,7 +97,7 @@ A) errno를 saved에 저장 B) FILE을 다시 읽기 C) 출력값0 기록 D) 호
 ## 직접 풀기 — 기초·응용·도전
 기초: 한 바이트와 빈 스트림을 비교한다. 응용: 오래된 errno가 있어도 성공을 반환하고 0x00/0xFF를 구별한다.
 도전: 새 읽기 오류·기존 오류·NULL/별칭 인수·독립 반복 호출에서도 출력 보존과 닫기가 맞는지 검사한다.
-이전 실패 코드를 정답으로 바꾸는 것만으로 끝내지 말고 모든10사례를 다시 실행한다.
+이전 실패 코드를 정답으로 바꾸는 것만으로 끝내지 말고 모든12사례를 다시 실행한다.
 
 ## Mini Project — 자원 책임 표 만들기
 파일을 여는 호출자와 읽고 닫는 함수의 책임을 두 열로 정리한다. 각 return 옆에 열린 FILE의 최종 소유자를 써 본다.
@@ -106,7 +106,7 @@ A) errno를 saved에 저장 B) FILE을 다시 읽기 C) 출력값0 기록 D) 호
 ## 심화 — ISO C와 POSIX 검사 범위
 <details><summary>심화: 오류 코드·실패 주입·닫기 실패</summary>
 FILE/fgetc/ferror/fclose 개념과 POSIX의 구체 errno를 구별한다. EIO/EAGAIN 및 pipe·fcntl·fdopen을 쓰는 하네스는 POSIX 범위다.
-현재10사례는 실제 읽기 오류와 닫힘을 검사하지만, 읽기 성공 뒤 fclose만 실패하는 경로를 별도로 주입하지 않는다. 그 인수는 후속 보강 범위다.
+12사례에는 읽기 성공·정상 EOF 뒤의 닫기 실패와 읽기 EAGAIN·닫기 EIO 동시 실패가 포함된다. glibc의 fopencookie, macOS의 funopen으로 stdio 콜백에 실패를 주입하고, 출력 보존·첫 진단 우선·닫기 콜백 1회를 확인한다. 이 확장 API는 ISO C 기능이 아니다.
 운영체제별 진단 문자열이나 errno 숫자를 고정 답으로 외우지 않는다.
 참조: https://pubs.opengroup.org/onlinepubs/9799919799/functions/fgetc.html
 참조: https://pubs.opengroup.org/onlinepubs/9799919799/functions/fclose.html
@@ -114,5 +114,5 @@ FILE/fgetc/ferror/fclose 개념과 POSIX의 구체 errno를 구별한다. EIO/EA
 
 ## 테스트·개선·복습 연결
 이번은 독립 원고·도식·서버 전용 계약 준비이며 화면/운영 registry에는 아직 등록하지 않는다.
-정답10/10·스타터 미통과·오답8종을 실제 GCC로 검사한 뒤 다음 실행에서 화면·퀴즈·제출·백업·숙달을 연결한다.
+정답12/12·스타터 미통과·오답11종을 실제 GCC로 검사한 뒤 화면·퀴즈·제출·백업·숙달을 연결한다.
 C05의 빌린 자원과 대비해 복습하고, 뒤에서 여러 자원을 얻었을 때 역순으로 정리하는 문제로 확장한다.
