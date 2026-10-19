@@ -10,8 +10,8 @@
     "C"
   ],
   "next": {
-    "track": "F-G",
-    "unit": "F02"
+    "track": "C",
+    "unit": "C07"
   },
   "limits": {
     "screenSections": [
@@ -622,12 +622,44 @@
         {
           "id": "F02",
           "title": "변수 바인딩·가변성과 스칼라 형",
-          "status": "진행 중",
+          "status": "완료",
           "lessonIds": [
             "rust-mut"
           ],
-          "manuscripts": ["content/rust/02-bindings.md"],
-          "tests": ["tests/rust-mut-preparation.test.mjs", "tests/f02-opt-in.test.mjs", "tests/f02-client.test.mjs", "tests/f02-delivery.test.mjs", "tests/browser-practice.mjs"]
+          "manuscripts": [
+            "content/rust/02-bindings.md"
+          ],
+          "tests": [
+            "tests/rust-mut-preparation.test.mjs",
+            "tests/f02-opt-in.test.mjs",
+            "tests/f02-client.test.mjs",
+            "tests/f02-delivery.test.mjs",
+            "tests/browser-practice.mjs"
+          ],
+          "practiceDelivery": {
+            "scope": "trusted-local-cargo",
+            "exerciseId": "rust-mut",
+            "commit": "0726bf04df84dea0a5af036ac1b632e580b92eaa",
+            "ci": "https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39221228817",
+            "checks": [
+              "theory",
+              "example-tests",
+              "quiz-retry",
+              "actual-grading",
+              "correction-retry",
+              "backup",
+              "mastery-next",
+              "explicit-start",
+              "offline"
+            ],
+            "platforms": [
+              "linux"
+            ],
+            "review": "docs/F02_ACCEPTANCE.md",
+            "operatorFlags": [
+              "--include-f02"
+            ]
+          }
         },
         {
           "id": "F03",

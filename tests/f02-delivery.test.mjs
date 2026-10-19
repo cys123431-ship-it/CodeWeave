@@ -73,3 +73,11 @@ test('F02 renders its own review link without activating the default or boolean 
   assert.throws(() => gradingRequestFor('rust-mut', true));
   assert.equal(gradingRequestFor('rust-mut', ['rust-cargo', 'rust-mut']).expectedTests, 10);
 });
+
+test('published F02 completion retains independently reviewed Linux proof instead of only a green CI label', async () => {
+  const data = await load();
+  assert.equal(find(data).status, '완료');
+  const { unitId, ...delivery } = evidence;
+  assert.deepEqual(find(data).practiceDelivery, delivery);
+  assert.equal(validateRoadmap(data), true);
+});

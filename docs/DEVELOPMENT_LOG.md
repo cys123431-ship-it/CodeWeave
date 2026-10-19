@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-19 17:59 KST — F02 제한 범위 인수와 C07 순환
+- 시작/결과 SHA: 시작0726bf04df84dea0a5af036ac1b632e580b92eaa; 항목 fix: validate scoped F02 Cargo acceptance without broadening execution / docs: accept verified F02 and rotate to C07; 실제 SHA/CI 후속 확인.
+- 목표: 검증된 F02 Linux 학습 경로만 인수하고 근거·명시 플래그·범위 검증을 보존해 C07로 순환; 새 단원/문제 추가0.
+- 변경 파일 수: 총9개(로드맵 검증기·신규5검사·F01 과거 fixture 연결·인수 문서·README·로드맵2개·활성/보관 일지).
+- 테스트 결과: 신규5건 중4건 실패→통과·기존 F01 이론4건 재현→통과·관련38/38·JS/MJS3개/roadmap/diff 통과; 전체731건708통과/실패0/skip23(Cargo 부재)·CPU 제한 검사 통과·기존 검사 삭제/성공 기대 변경0.
+- CI URL과 결과: 기준 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39221228817 성공726/726·실패0/skip0·실제F02 Cargo/browser 로그 재조회; 이번 변경 결과 SHA CI 대기.
+- 발견한 문제: F01 전용 인수/고정 검토 링크를 명시적 F01/F02 프로필로 분리. 과거 F01 이론 fixture에 현재 F02 완료가 섞여4검사 실패→기존 historicalRustPending 재사용, 기대값 완화0. 패치 문맥/역순 hunk 실패는 쓰기 전 검출 후 교정. 직전 로컬 CPU 실패는 이번 전체 검사에서 통과했으며 실행기 수정으로 해결했다고 주장하지 않음.
+- 보안 영향: 로드맵 근거 검증만 변경·실행/API/파일 접근/사용자 저장키 변경0; F02 플래그·10사례·기본 비활성·Linux 범위를 고정하고 미검증 macOS/Windows 인수 주장 거부.
+- 단계별 완료율: F02 Linux 제한 범위2/8(25%)·next=C/C07; A3/5·B10/11·C6/8·D/E3/8·G0/8·H/I0/6, 분모/화면33/기본 문제 수 불변.
+- 다음 작업: 결과 SHA CI 성공 확인 뒤 C07 오류 반환·errno·자원 정리를 독립적이고 작은 GCC 실습 계약으로 준비; F02 macOS 자체 인수와 H/I 실기기 검증은 별도 미완료.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 16:54 KST — F02 화면·연습장 학습 경로
 - 시작/결과 SHA: 시작2bf3c2696109cdb0fd0f74f55880d28e3a0cb176; 구현72009e9437d2367f4a8c6348fbb1c3860f98f65e; 후속 docs: record verified F02 learner flow CI; 실제 후속 SHA/CI 최종 보고.
 - 목표: 명시적 F02 활성 목록만 Cargo 제출·숙달 허용, 준비 원고/스타터와 화면·연습장·이력/v1·390px·오프라인 연결.
@@ -11,6 +24,7 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 다음 작업: 결과 SHA CI 확인 후 F02 인수 근거·로드맵 optional Rust delivery 검증 확장 및 C07 순환을 별도 항목으로 반영; 10파일 한도로 상태 승격 보류.
 
 ---
+
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 15:07 KST — F02 명시적 운영자 실행 경로
 - 시작/결과 SHA: 시작3f0fb7d3360357525e7aae6f29e5c2bb59e20dcc; 구현e0d0fc7378fa55dbdf4789a87c96dde41fd8a693; 후속 docs: record verified F02 operator opt-in CI.
@@ -50,17 +64,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 서버 전용 기존10사례 계약 등록·loopback/JSON/토큰/GCC 한도 재사용; 신규 실행 API/파일 접근 권한/링커 옵션/사용자 저장키 변경0.
 - 단계별 완료율: E03 제한 범위 완료·next=F-G/F02, 완료 A3/5·B10/11·C6/8·D3/8·E3/8(37.5%)·F1/8·G0/8·H/I0/6; 화면33·C25/DS3/알고리즘3문제.
 - 다음 작업: 결과 SHA CI 확인 후 F02 변수 바인딩·가변성과 스칼라 형의 기존 샘플을 검토하고 좁은 Cargo 실습 계약부터 확장. F01 명시적 로컬 Rust 실행 경계·다른 트랙 기록 보존; E04는 미착수.
-
----
-
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-19 11:58 KST — E03 병합 정렬 원고·채점 계약 준비
-- 시작/결과 SHA: 시작88e89bbce77f07e012d89633b3992c9d209d5efc; 구현b9a544aa2798949c86134bb1d18d9fce36894830; 후속 docs: record verified E03 preparation CI.
-- 목표: E03 첫 범위로 최대64개 int·호출자 보조 공간·실패 보존의 10사례 함수형 계약과 독자 원고/정적 도식 준비.
-- 변경 파일 수: 총8개(신규 원고·준비 하네스·14검사·공용 도식·로드맵2개·활성/보관 일지).
-- 테스트 결과: 신규14건 수정 전 실패→수정 후14/14·관련28/28·전체704건685통과/실패0/skip19(Rust 부재); MJS/JS3개·roadmap/diff·일지4/4 통과·완성 예제 GCC 출력 검증·정답10/10·오답8종·스타터 미통과, 기존 검사 삭제/성공 기대값 변경0.
-- CI URL과 결과: 기준 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39188627736 성공690/690; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39193071125 성공·Ubuntu704/704·실패0/skip0·macOS 기존 회귀/browser 성공. 원고/계약 준비 항목 완료·화면 인수 아님; 후속 기록 SHA CI 별도 확인.
-- 발견한 문제: 원고/채점 모듈/도식 부재와 E03 미착수를 먼저 재현. 오답 변형은 두 나머지 복사 루프를 각각 직접 변경하도록 재검토; 정렬 결과만으로 시간 복잡도·레코드 안정성을 증명하지 않음. 게시 준비 중 대형 로컬 읽기 출력 제한으로 JSON 파싱 실패→도식은 원격 기준+정확한 diff 복원·로컬/원격 tree 일치 검증; 이 실패 시 원격 쓰기0.
-- 보안 영향: 기존 GCC 함수형 파이프라인만 검사에 재사용·서버 전용 하네스·정적 SVG; 운영 registry/실행 API/링커 옵션/파일 접근 권한/사용자 저장키 변경0.
-- 단계별 완료율: E03미착수→진행 중·next=E/E03 유지; 완료 A3/5·B10/11·C6/8·D3/8·E2/8·F1/8·G0/8·H/I0/6 및 화면32/공개 문제 수 불변.
-- 다음 작업: 결과 SHA CI 성공 확인 뒤 다음 콘텐츠 실행에 E03 화면10~15절·퀴즈·준비 계약 등록·인증HTTP 오답→수정·이력/v1/숙달·390px/오프라인·다음 화면 연결; 성공 후 Rust 차례 인수.

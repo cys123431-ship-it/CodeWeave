@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { exerciseById } from '../src/exercises.js';
 import { gradingExercises } from '../server/grading-exercises.mjs';
+import { historicalRustPending } from './fixtures/rust-delivery-state.mjs';
 
 const api = () => import('../scripts/roadmap.mjs');
 const load = async () => JSON.parse(await readFile(new URL('../docs/roadmap.json', import.meta.url), 'utf8'));
@@ -13,7 +14,7 @@ const evidence = {
 };
 const find = data => data.stages.find(s => s.id === 'F').units.find(u => u.id === 'F01');
 async function pending() {
-  const data = await load();
+  const data = historicalRustPending(await load());
   // Reconstruct the historical theory-only state independently of later acceptance.
   find(data).status = '진행 중';
   delete find(data).practiceDelivery;

@@ -36,7 +36,7 @@ Linux/macOS에서 선택적으로 Rust F01(추가 `--include-f02` 지정 시 F02
 | 자료구조 | 3 | 3 |
 | 알고리즘 | 3 | 3 |
 
-- 총 33개 단원입니다. C06의 한 번 소비 계약, 자료구조 연결 리스트·배열 스택·원형 큐와 알고리즘 탐색·안정 삽입 정렬·병합 정렬은 C 함수형으로 실제 채점합니다. 표는 기본 C 서버 기준입니다. 선택적 Rust 명령의 F01은 Linux/macOS 신뢰 로컬 Cargo 범위로 인수했으며, F02 바인딩·가변성은 추가 플래그로 화면/연습장 채점 경로를 제공합니다. F02 개발 인수와 전체 플랫폼은 계속 진행 중입니다.
+- 총 33개 단원입니다. C06의 한 번 소비 계약, 자료구조 연결 리스트·배열 스택·원형 큐와 알고리즘 탐색·안정 삽입 정렬·병합 정렬은 C 함수형으로 실제 채점합니다. 표는 기본 C 서버 기준입니다. 선택적 Rust 명령의 F01은 Linux/macOS 신뢰 로컬 Cargo 범위로, 추가 플래그의 F02 바인딩·가변성은 [Linux 검증 범위](docs/F02_ACCEPTANCE.md)로 인수했습니다. F02 자체의 macOS 인수와 전체 플랫폼은 아직 미완료입니다.
 - [D01 원고](content/ds/01-linked-list.md)·[D02 원고](content/ds/02-stack.md)·[D03 원고](content/ds/03-queue.md)·[E02 원고](content/algo/02-stable-insertion.md)·[E03 원고](content/algo/03-merge-sort.md)는 계약 준비 시점의 기록을 포함합니다. 현재 학습 화면·API 연결 상태와 검증 근거는 [로드맵](docs/ROADMAP.md)·[최근 일지](docs/DEVELOPMENT_LOG.md)를 확인하세요.
 - C는 전체 프로그램·함수 직접 호출·다중 파일 제출을 GCC로 채점합니다. 문제별 사례·경계값은 [C 문제 감사](docs/C_EXERCISE_AUDIT.md)에 모았습니다.
 - 단원별 설명·정적 도식·예제·개념 퀴즈와 코드 초안 저장을 제공합니다.
