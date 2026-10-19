@@ -1,10 +1,10 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 14:04 KST — F02 바인딩·가변성·스칼라 채점 계약 준비
-- 시작/결과 SHA: 시작1454e1284f316fa2ca1ea759acf09e6706bfe6ab; 현재 feat: prepare F02 binding and scalar Cargo contract; 실제 결과 SHA/CI 후속 기록.
+- 시작/결과 SHA: 시작1454e1284f316fa2ca1ea759acf09e6706bfe6ab; 구현101a3d9684d4f9199664c93fb697dab97edd8e26; 후속 docs: record verified F02 preparation CI.
 - 목표: F02 첫 범위로 독자81줄 원고·정적 도식·next_count/is_nonnegative의 독립10사례 Cargo 계약 준비, F01 운영 허용 목록·F02 기존 화면/키 보존.
 - 변경 파일 수: 총8개(신규 원고·준비 정의·9검사·공용 도식·로드맵2개·활성/보관 일지).
-- 테스트 결과: 로컬 신규6건 실패→6통과·실제Rust3건 Cargo 부재skip(CI 필수)·전체716건694통과/실패0/skip22(기존19+신규Rust3)·JS/MJS3개/roadmap/diff 통과; CI에서 원고 정답/불변 정답2종·오답8종·스타터·완성 출력·E0384 검증 예정, 기존 검사 삭제0.
-- CI URL과 결과: 기준 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39198203747 성공707/707; 이번 결과 SHA CI 대기, 실행 준비와 실제 화면 인수 구분.
+- 테스트 결과: 로컬 신규6건 실패→6통과·실제Rust3건 Cargo 부재skip(CI 필수)·전체716건694통과/실패0/skip22(기존19+신규Rust3)·JS/MJS3개/roadmap/diff 통과; CI Linux에서 원고/불변 정답2종 각10/10·오답8종/스타터 단언 거부·완성 출력·E0384 통과, 기존 검사 삭제0.
+- CI URL과 결과: 기준 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39198203747 성공707/707; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39203168339 성공716/716·실패0/skip0·실제F02 Rust3검사·macOS 기존 회귀/browser 성공. 원고/계약 준비 항목 완료·F02 화면 인수 아님; 후속 기록 SHA CI 별도 확인.
 - 발견한 문제: F02 준비 모듈/원고/도식/로드맵 근거 부재를 먼저 재현. 새 검사 초안의 compileOutput 빈값 기대는 성공 Cargo에도 진행 로그가 남는 기존 계약을 오해해 실제 전 사례 단언 실행으로 판정하도록 재검토; 기존 테스트 기대 변경0.
 - 보안 영향: 독립 서버 전용 정의를 검사에서만 기존 고정4파일·오프라인 Cargo·자원 한도에 전달; F01 registry/HTTP·기본 실행·제출 옵션/파일 권한/사용자 저장키 변경0.
 - 단계별 완료율: F02진행 중·next=F-G/F02 유지; 완료 A3/5·B10/11·C6/8·D/E3/8·F1/8·G0/8·H/I0/6 및 화면33/공개 문제 수 불변.
