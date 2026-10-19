@@ -3,6 +3,16 @@ const arrow=(x1,y1,x2,y2)=>`<path d="M${x1} ${y1} L${x2} ${y2}" stroke="#6b8d98"
 const wrap=inner=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 670 190" role="img" aria-label="학습 개념 그림"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 const wrapTall=(label,inner,viewBox='0 0 670 300',style='')=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"${style?` style="${style}"`:''} role="img" aria-label="${label}"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 export function figureFor(kind){
+ if(kind==='queue-circular-fifo')return wrapTall('원형 큐의 물리 인덱스3에서0으로 순환하고 논리적 FIFO 순서2,5를 보존하는 도식',
+  `<text x="170" y="25" text-anchor="middle" font-size="15" fill="#28485b">head=3 · enqueue 2 → 5</text>`+
+  [5,0,0,2].map((value,i)=>box(18+i*78,65,70,45,String(value),i===0||i===3?'#d7f4e6':'#e7f1ff')+
+   `<text x="${53+i*78}" y="54" text-anchor="middle" font-size="13" fill="#28485b">[${i}]</text>`).join('')+
+  `<path d="M287 116 V140 H53 V116" fill="none" stroke="#6b8d98" stroke-width="2.5" marker-end="url(#arr)"/>`+
+  `<text x="170" y="166" text-anchor="middle" font-size="14" fill="#28485b">논리 순서: 2 → 5</text>`+
+  box(35,190,270,44,'dequeue 2 · head 3 → 0')+arrow(170,240,170,260)+
+  box(35,267,270,44,'dequeue 5 · head 0 → 1')+
+  `<text x="170" y="345" text-anchor="middle" font-size="14" fill="#28485b">length=0 · 옛 배열 값은 유지</text>`,
+  '0 0 340 365','max-width:340px');
  if(kind==='stable-insertion-counts')return wrapTall('안정 삽입 정렬의 키 비교2회와 배열 쓰기3회, 같은 키 태그 순서 보존',
   `<text x="170" y="25" text-anchor="middle" font-size="15" fill="#28485b">입력 2:20 · 1:10 · 2:21</text>`+
   box(35,46,270,46,'i=1 · 2 &gt; 1 → 참','#e7f1ff')+arrow(170,98,170,121)+
