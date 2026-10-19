@@ -36,6 +36,12 @@ Ctrl+C/SIGTERM으로 종료하면 새 연결을 닫고 기존 요청과 끊어�
 
 factory 생성/import는 서버를 시작하지 않는다. 반환 객체의 `await app.listen(4173)`으로 열고 `app.address()`로 실제 포트를 확인하며 `await app.close()`로 닫는다. 포트0은 테스트용 임의 포트다. 바인딩은 항상127.0.0.1이며 두 번째 호스트 인수는 거부한다. 페이지의 시작별 토큰·Host/Origin/JSON 제한, C/Rust 공유 슬롯과 취소/정리는 계속 적용된다. Rust의 inspect/recover는 운영자 객체에만 있고 HTTP 경로로 제공하지 않는다. 이 구성도 신뢰하는 본인 코드용이며 샌드박스나 공개 배포 수단이 아니다.
 
+### F02 서버 계약의 명시적 추가 선택
+
+기존 `npm run start:rust -- --trusted-personal-code --sysroot ABSOLUTE_PATH --workspace-parent EXISTING_ABSOLUTE_DIRECTORY` 명령은 계속 F01만 실행한다. 같은 명령 끝에 `--include-f02`를 직접 추가한 경우에만 F02의 `next_count`/`is_nonnegative` 10사례 계약도 허용한다. 환경 변수나 요청 본문으로 이 선택을 켤 수 없다. 신뢰 경로·자원 제한·인증·loopback·종료 정리 조건은 동일하다.
+
+이 선택은 아직 F02 학습 화면·연습장·숙달 연결의 완료가 아니다. 현재 F02 화면은 종전 저장용 실습을 유지한다. 서버는 `codeweave-rust-exercises`에 두 ID를 알리고 HTTP에서도 그 목록을 검사하지만, HTML 표시는 실행 권한을 부여하지 않는다. 서버 전용 하네스·임의 Cargo 옵션·다른 Rust ID는 받을 수 없다. 기존 일반 C 서버와 F01 기본 명령의 동작은 유지한다.
+
 ## 브라우저 검증 경로
 
 F01의 실제 통합 인수는 browser 작업에서 고정 Rust 도구를 준비하고, 합성 fixture와 별도로 실제 로컬 어댑터·Cargo·HTTP·단원/연습장 두 탭을 연결한다. 스타터의 경고/전체 미실행→덧셈 오답의 실행된 단언 실패→수정10/10·공유 이력·이론/퀴즈 분리 숙달·v1 백업/기존 C 복원·390px·오프라인 복원 전용 경로를 검사한다. 로그의 `PASS: REAL Cargo F01 browser`와 `f01-real-cargo-workbench-mobile.png`가 해당 근거이며, 앞선 합성 fixture의 통과와 구분한다.

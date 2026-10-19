@@ -1,4 +1,5 @@
-// Existing F01 exercise only. Server-owned cases; importing this never enables execution.
+import { mutDefinition } from './rust-mut-exercise.mjs';
+// Default F01 only. Importing definitions never enables execution.
 const definition = Object.freeze({
   id: 'rust-cargo',
   language: 'rust',
@@ -104,5 +105,10 @@ fn case_09() {
 // A fresh registry prevents a trusted caller's Map mutation from affecting other instances.
 export function createRustGradingDefinitions() {
   return new Map([[definition.id, definition]]);
+}
+
+// A separate explicit operator choice; legacy callers keep the F01-only factory.
+export function createRustBindingDefinitions() {
+  return new Map([...createRustGradingDefinitions(), [mutDefinition.id, mutDefinition]]);
 }
 

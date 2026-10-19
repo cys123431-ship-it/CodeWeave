@@ -627,7 +627,7 @@
             "rust-mut"
           ],
           "manuscripts": ["content/rust/02-bindings.md"],
-          "tests": ["tests/rust-mut-preparation.test.mjs"]
+          "tests": ["tests/rust-mut-preparation.test.mjs", "tests/f02-opt-in.test.mjs"]
         },
         {
           "id": "F03",

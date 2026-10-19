@@ -21,12 +21,18 @@ function reject(res, code) {
   const [status, message] = failures[code] ?? failures.RUST_UNAVAILABLE;
   send(res, status, { ok: false, message });
 }
-export function createRustHttpHandler({ enabled = false, service, auth } = {}) {
+export function createRustHttpHandler({ enabled = false, service, auth, allowedIds } = {}) {
   if (typeof enabled !== 'boolean') throw new TypeError('HTTP Rust activation must be boolean');
   if (!auth || typeof auth.authorizeGrade !== 'function') throw new TypeError('Trusted local authentication is required');
   if (enabled && (!service || typeof service.submit !== 'function')) {
     throw new TypeError('An explicitly supplied trusted Rust service is required');
   }
+  if (allowedIds !== undefined && (!Array.isArray(allowedIds) || allowedIds.length === 0
+      || Array.from(allowedIds).some(id => typeof id !== 'string' || !/^[a-z][a-z0-9-]{0,79}$/.test(id))
+      || new Set(allowedIds).size !== allowedIds.length)) {
+    throw new TypeError('Explicit Rust HTTP IDs must be unique trusted identifiers');
+  }
+  const allowed = allowedIds === undefined ? undefined : Object.freeze([...allowedIds]);
   return async function handleRustGrade(req, res) {
     if (req.method !== 'POST') return send(res, 405, { ok: false, message: 'POST 요청만 가능합니다.' });
     if (!auth.authorizeGrade(req, res)) return;
@@ -45,6 +51,7 @@ export function createRustHttpHandler({ enabled = false, service, auth } = {}) {
       let value;
       try { value = JSON.parse(Buffer.concat(chunks).toString('utf8')); }
       catch { return reject(res, 'RUST_INVALID'); }
+      if (allowed && !allowed.includes(value?.exerciseId)) return reject(res, 'RUST_INVALID');
       // Service rechecks the shared lease after asynchronous body parsing and owns cleanup.
       const result = await service.submit(value, { signal: lifetime.signal });
       lifetime.signal.throwIfAborted();

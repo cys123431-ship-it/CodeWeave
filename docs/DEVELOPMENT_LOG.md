@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-19 15:07 KST — F02 명시적 운영자 실행 경로
+- 시작/결과 SHA: 시작3f0fb7d3360357525e7aae6f29e5c2bb59e20dcc; 현재 feat: add explicit operator opt-in for F02 Cargo execution; 실제 결과 SHA/CI 후속 기록.
+- 목표: --include-f02를 명시한 신뢰 로컬 Rust 서버만 F02 계약을 허용하고 기본 F01/C 경계·허용 목록·인증·정리 보존.
+- 변경 파일 수: 총10개(기존 registry/CLI/learning-server/Rust HTTP·7검사·로컬 안내·로드맵2개·활성/보관 일지).
+- 테스트 결과: 신규6건 실패→통과·F01 누락 설정1건 추가 실패→통과·관련29건25통과/skip4·전체723건700통과/실패0/skip23(Cargo 부재)·실제 Cargo 운영자 HTTP1건 로컬skip(CI필수); 기존 검사 삭제/기대값 완화0.
+- CI URL과 결과: 기준 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39203525343 성공716/716; 이번 결과 SHA CI 대기.
+- 발견한 문제: 작업 환경 정리로 이전 clone 부재→최신 저장소 재clone. 시험용 grade 콜백을 plan으로 오인한 503은 실제 request 계약으로 교정(200 기대 유지), app.address API와 문서 패치 문맥 교정. 기본 F01 표시와 F02 단독 목록 불일치를 재현해 거부; 새 목록은 snapshot·중복/미등록/희소 값 거부.
+- 보안 영향: 신규 실행 범위는 명시적 운영자 플래그의 F02 한 문제, 별도 frozen 정의 factory·고정된 HTTP 허용 목록으로 제한; loopback/JSON/토큰/Origin/자원·종료 한도 유지, 환경/HTTP로 활성화 불가·권한/저장키 변경0.
+- 단계별 완료율: F02진행 중·next=F-G/F02 유지, A3/5·B10/11·C6/8·D/E3/8·F1/8·G0/8·H/I0/6 및 화면33/기본 공개 문제 수 불변.
+- 다음 작업: 결과 SHA CI 확인 후 F02 화면·연습장·요청/숙달의 F01 하드코딩을 과제별 활성 목록으로 연결·원고/새 스타터/이력/v1/390px/오프라인 인수. 이번은 실행 기반 항목이며 화면·단원 완료나 다음 C 차례 전환 아님; 10파일 한도로 콘텐츠 인수 미완료를 명시.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 14:04 KST — F02 바인딩·가변성·스칼라 채점 계약 준비
 - 시작/결과 SHA: 시작1454e1284f316fa2ca1ea759acf09e6706bfe6ab; 구현101a3d9684d4f9199664c93fb697dab97edd8e26; 후속 docs: record verified F02 preparation CI.
 - 목표: F02 첫 범위로 독자81줄 원고·정적 도식·next_count/is_nonnegative의 독립10사례 Cargo 계약 준비, F01 운영 허용 목록·F02 기존 화면/키 보존.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 개발 상태·검사 fixture·인수 근거만 변경, 외부 입력/코드 실행/파일 접근 권한/API/사용자 저장키 변경0.
 - 단계별 완료율: A3/5 60%·B10/11 90.9%·C6/8 75%·D3/8 37.5%·E2/8 25%·F1/8 12.5%·G0/8·H/I0/6; 분모·화면32·공개 문제 수 불변, D03 범위 근거 docs/D03_ACCEPTANCE.md.
 - 다음 작업: 결과 SHA CI 성공 확인 후 E/E03 분할 정복: 병합 정렬과 보조 공간을 좁은 C 함수형 계약으로 설계·원고/경계 사례 준비; 이번 새 단원/문제 추가 없음.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-19 10:01 KST — D03 화면·실제 제출 학습 경로 연결
-- 시작/결과 SHA: 시작0d2864083ed4e6815e7dec6520128c128556acad; 구현03376f654c8c8cc141e038e7bc0fafd33cf6d48c; 후속 docs: record verified D03 learner-path CI.
-- 목표: 준비된 D03 13절·접힌 심화·정적 도식·동일 예제/스타터 연결, 인증GCC 오답→수정10/10·퀴즈 재시도·이력/v1·숙달·390px/오프라인·다음 화면 인수.
-- 변경 파일 수: 총10개(화면·메타데이터·채점등록·browser검사·역사적Rust fixture·README·로드맵2개·활성/보관 일지).
-- 테스트 결과: 신규 화면/등록·인증HTTP2건 실패→통과 후 browser 비UI 사전 검사로 이동; README/매핑·Rust 기존5건 실패 재현→수정, 관련32/32·재검토22/22·전체688건669통과/실패0/skip19(Rust 부재)·JS/MJS5개/roadmap/diff/일지4건 통과, 기존 원격 검사 삭제0·기대값 완화0.
-- CI URL과 결과: 기준39180099341 성공; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39184166332 성공·Ubuntu688/688·실패0/skip0·macOS 회귀 성공·browser D03 사전 계약/인증HTTP/실제 학습 경로 PASS3건 확인. 화면·학습 경로 인수, 완료 상태/차례 승격은 보류; 후속 기록 SHA CI 별도 확인.
-- 발견한 문제: fetch 지연 중 FETCH_HEAD 참조 실패→완료/재조회 뒤 최신SHA 전환. 새 매핑을 미착수로 돌리는 과거Rust fixture 수정 이유: 완료 수는 고정하면서 현재 카탈로그의 미완료 표본을 유효한 진행 중으로 재생. 스택의 다음 화면 검사는 의도한 큐 경유 추가이며 퀴즈/저장키 불변.
-- 보안 영향: 서버 전용 준비 하네스를 기존 registry에 연결·loopback/토큰/JSON/GCC 한도 재사용; 신규 API/호스트 권한/링커 옵션/저장키 변경0.
-- 단계별 완료율: D03 화면 연결·개발 상태진행 중, 완료 수 A3/5·B10/11·C6/8·D/E2/8·F1/8·G0/8·H/I0/6 유지; 화면32·C문제25·DS3·알고리즘2.
-- 다음 작업: 결과 SHA CI와 D03 실제browser 인수 확인 후 별도 항목으로 완료/next=E/E03 전환; 기존 roadmap 순환 검사의 D03 고정 fixture도 당시 상태로 재현/분리. 이번10파일 한도로 상태 승격 보류, 새 단원/문제 추가 없음.

@@ -11,15 +11,23 @@ import { createRustHttpHandler } from './rust-http.mjs';
 
 // Trusted local development only, never a public code-execution service.
 const HOST = '127.0.0.1';
-export function createLearningServer({ root = process.cwd(), rustService } = {}) {
+export function createLearningServer({ root = process.cwd(), rustService, rustExerciseIds } = {}) {
   if (typeof root !== 'string' || !root.trim()) throw new TypeError('A trusted learning root is required');
   if (rustService !== undefined && (!rustService || typeof rustService.submit !== 'function')) {
     throw new TypeError('Rust requires an explicitly supplied trusted service');
   }
+  if (rustExerciseIds !== undefined && (rustService === undefined || !Array.isArray(rustExerciseIds)
+      || rustExerciseIds.length === 0 || rustExerciseIds.length > 2
+      || !rustExerciseIds.includes('rust-cargo')
+      || Array.from(rustExerciseIds).some(id => !['rust-cargo', 'rust-mut'].includes(id))
+      || new Set(rustExerciseIds).size !== rustExerciseIds.length)) {
+    throw new TypeError('Rust exercise announcement requires explicit known service IDs');
+  }
+  const announced = rustExerciseIds === undefined ? undefined : Object.freeze([...rustExerciseIds]);
   const ROOT = path.resolve(root);
   const { tokenMeta, hasLocalHost, authorizeGrade } = createLocalGradeAuth(() => server.address().port);
   const rustGrade = createRustHttpHandler({ auth: { authorizeGrade },
-    enabled: rustService !== undefined, service: rustService });
+    enabled: rustService !== undefined, service: rustService, allowedIds: announced });
   function send(res, status, data) {
     res.writeHead(status, {
       'Content-Type': 'application/json; charset=utf-8',
@@ -106,7 +114,8 @@ export function createLearningServer({ root = process.cwd(), rustService } = {})
       if (file.contentType.startsWith('text/html')) {
         const html = await file.handle.readFile('utf8');
         await file.handle.close();
-        const rustMeta = rustService === undefined ? '' : '  <meta name="codeweave-rust" content="rust-cargo">\n';
+        const rustMeta = rustService === undefined ? '' : '  <meta name="codeweave-rust" content="rust-cargo">\n'
+          + (announced ? '  <meta name="codeweave-rust-exercises" content="' + announced.join(' ') + '">\n' : '');
         const page = Buffer.from(html.replace('</head>', tokenMeta + rustMeta + '</head>'));
         res.writeHead(200, {
           'Content-Type': file.contentType,

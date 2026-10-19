@@ -3,19 +3,20 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createLearningServer } from '../server/learning-server.mjs';
 import { createLocalRustGradingService } from '../server/rust-executor.mjs';
-import { createRustGradingDefinitions } from '../server/rust-exercises.mjs';
+import { createRustGradingDefinitions, createRustBindingDefinitions } from '../server/rust-exercises.mjs';
 import { RUST_TOOLCHAIN_VERSION } from '../server/rust-preparation.mjs';
 import { gradingAdmission } from '../server/grading-admission.mjs';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const HELP = `CodeWeave 선택적 Rust 로컬 서버 (Linux/macOS, Rust ${RUST_TOOLCHAIN_VERSION})
-node scripts/start-rust.mjs --trusted-personal-code --sysroot ABSOLUTE_PATH --workspace-parent EXISTING_ABSOLUTE_DIRECTORY [--port 4173]
+node scripts/start-rust.mjs --trusted-personal-code --sysroot ABSOLUTE_PATH --workspace-parent EXISTING_ABSOLUTE_DIRECTORY [--port 4173] [--include-f02]
+--include-f02를 명시한 경우에만 F02 서버 계약도 실행합니다. F02 학습 화면 연결은 아직 준비 중입니다.
 신뢰하는 본인 코드만 실행하세요. 샌드박스가 아니며 공개 서버로 배포할 수 없습니다.
 일반 npm start는 C 전용입니다. 환경 변수로 Rust를 켜거나 호스트를 바꿀 수 없습니다.
 `;
 
 export function parseRustArgs(args) {
-  if (!Array.isArray(args) || args.length > 7 || args.some(arg => typeof arg !== 'string')) {
+  if (!Array.isArray(args) || args.length > 8 || args.some(arg => typeof arg !== 'string')) {
     throw new TypeError('Explicit Rust CLI arguments are required');
   }
   const seen = new Set();
@@ -25,6 +26,10 @@ export function parseRustArgs(args) {
     if (seen.has(flag)) throw new TypeError('Duplicate Rust CLI argument');
     seen.add(flag);
     if (flag === '--trusted-personal-code') continue;
+    if (flag === '--include-f02') {
+      values.includeF02 = true;
+      continue;
+    }
     if (!['--sysroot', '--workspace-parent', '--port'].includes(flag)) {
       throw new TypeError('Unsupported Rust CLI argument');
     }
@@ -51,8 +56,10 @@ export function parseRustArgs(args) {
 export async function startRustServer(args) {
   const options = parseRustArgs(args);
   const rustService = await createLocalRustGradingService({ enabled: true,
-    definitions: createRustGradingDefinitions(), sysroot: options.sysroot, parent: options.parent });
-  const app = createLearningServer({ root: ROOT, rustService });
+    definitions: options.includeF02 ? createRustBindingDefinitions() : createRustGradingDefinitions(),
+    sysroot: options.sysroot, parent: options.parent });
+  const app = createLearningServer({ root: ROOT, rustService,
+    ...(options.includeF02 ? { rustExerciseIds: ['rust-cargo', 'rust-mut'] } : {}) });
   try {
     await app.listen(options.port);
     return Object.freeze({ app, rustService });
