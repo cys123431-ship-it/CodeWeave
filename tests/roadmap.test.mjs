@@ -39,6 +39,24 @@ test('README algorithm counts match delivered lessons and runnable grading contr
   assert.ok(readme.split('\n').includes(`| 알고리즘 | ${algorithm.length} | ${runnable.length} |`));
 });
 
+test('accepted E03 preserves the original ten cases and hands the E turn to unfinished Rust work', async () => {
+  const { data, api } = await load();
+  const unit = data.stages.find(stage => stage.id === 'E').units.find(item => item.id === 'E03');
+  assert.equal(unit.status, '완료');
+  assert.deepEqual(unit.lessonIds, ['algo-merge']);
+  assert.ok(unit.manuscripts.includes('content/algo/03-merge-sort.md'));
+  for (const file of ['tests/merge-exercise.test.mjs', 'tests/roadmap.test.mjs', 'tests/browser-practice.mjs']) {
+    assert.ok(unit.tests.includes(file));
+  }
+  assert.deepEqual(gradingExercises.get('algo-merge'), mergeExercise);
+  assert.equal(mergeExercise.cases.length, 10);
+  const handoff = structuredClone(data);
+  const track = api.nextTurn('E');
+  assert.equal(track, 'F-G');
+  handoff.next = { track, unit: api.selectUnit(handoff, track).id };
+  assert.equal(api.validateRoadmap(handoff), true);
+});
+
 function historicalDSRotation(source) {
   const changed = structuredClone(source);
   changed.stages.find(stage => stage.id === 'D').units[0].status = '완료';

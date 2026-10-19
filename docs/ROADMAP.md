@@ -6,7 +6,7 @@
 | B | C 핵심 | 10/11 | 0 | 1 | 90.9% |
 | C | C 심화 | 6/8 | 0 | 2 | 75.0% |
 | D | 자료구조 — C | 3/8 | 0 | 5 | 37.5% |
-| E | 알고리즘 — C | 2/8 | 1 | 5 | 25.0% |
+| E | 알고리즘 — C | 3/8 | 0 | 5 | 37.5% |
 | F | Rust 기초 | 1/8 | 1 | 6 | 12.5% |
 | G | Rust 응용 | 0/8 | 0 | 8 | 0.0% |
 | H | C와 Rust 연결 학습·재구현 | 0/6 | 0 | 6 | 0.0% |
@@ -84,7 +84,7 @@
 |---|---|---|---|
 | E01 | 복잡도와 선형·이진 탐색의 전제 | 완료 | `algo-binary` · [원고](../content/algo/01-search.md) · [검사](../tests/algo-search.test.mjs) · [검사](../tests/exercises.test.mjs) · [검사](../tests/browser-practice.mjs) |
 | E02 | 안정 정렬과 비교·이동 횟수 | 완료 | `algo-stable-insertion` · [원고](../content/algo/02-stable-insertion.md) · [검사](../tests/sort-exercise.test.mjs) · [검사](../tests/roadmap.test.mjs) · [검사](../tests/browser-practice.mjs) |
-| E03 | 분할 정복: 병합 정렬과 보조 공간 | 진행 중 | `algo-merge` · [원고](../content/algo/03-merge-sort.md) · [검사](../tests/merge-exercise.test.mjs) · [검사](../tests/roadmap.test.mjs) · [검사](../tests/browser-practice.mjs) |
+| E03 | 분할 정복: 병합 정렬과 보조 공간 | 완료 | `algo-merge` · [원고](../content/algo/03-merge-sort.md) · [검사](../tests/merge-exercise.test.mjs) · [검사](../tests/roadmap.test.mjs) · [검사](../tests/browser-practice.mjs) |
 | E04 | 재귀 트리·백트래킹과 되돌리기 | 미착수 | — |
 | E05 | 탐욕 선택과 반례로 명세 검증 | 미착수 | — |
 | E06 | 동적 계획: 상태·점화식·기저 사례 | 미착수 | — |
@@ -143,7 +143,7 @@
 
 - C·자료구조·알고리즘·Rust 모두 v0.x 지원 목표다. 기본 서버는 C 전용이며 F01만 명시적 Linux/macOS 개인 Cargo 서버에서 선택적으로 채점한다. 다른 Rust 샘플과 Windows Rust 실행·Rust 트랙 전체는 미완료다.
 - 기반 정리 0~2단계 종료 후 새 단원은 **D → E → Rust(F~G) → C**로 순환한다. 기반 CI 실패·보안·데이터 손실 회귀 수정은 먼저 처리하되 순환 차례를 소비하지 않는다.
-- 다음 차례는 **E / E03**: 분할 정복: 병합 정렬과 보조 공간다. 해당 단원의 기존 근거와 최근 일지를 읽고 가장 앞선 미완료 인수 조건 하나를 진행한다.
+- 다음 차례는 **F-G / F02**: 변수 바인딩·가변성과 스칼라 형다. 해당 단원의 기존 근거와 최근 일지를 읽고 가장 앞선 미완료 인수 조건 하나를 진행한다.
 - E 차례는 E01을 확장한다. C 구조체 정렬·이진 탐색 실습은 선수 예제로 연결하되 알고리즘 트랙 완성으로 중복 집계하지 않는다.
 - Rust 첫 작업은 cargo test 채점기 설계다. 입력 스키마·스타터·별도 테스트 하네스·종료 상태·출력·실패/재제출 기록·보안 경계를 먼저 명세한다. 설계만으로 실제 Rust 채점 성공을 표시하지 않는다.
 - Rust 채점기 구현 전에는 이론·퀴즈만 있는 단원을 허용하되 실습 통과/전체 숙달은 잠근다. 설계 문서만 작성한 경우 차례를 넘기지 않는다. 이론·퀴즈 범위를 실제 전달·검증한 경우는 그 제한을 일지에 명시하고 C 차례로 갈 수 있지만 로드맵 상태는 진행 중으로 유지한다.

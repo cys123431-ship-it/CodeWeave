@@ -10,8 +10,8 @@
     "C"
   ],
   "next": {
-    "track": "E",
-    "unit": "E03"
+    "track": "F-G",
+    "unit": "F02"
   },
   "limits": {
     "screenSections": [
@@ -507,7 +507,7 @@
         {
           "id": "E03",
           "title": "분할 정복: 병합 정렬과 보조 공간",
-          "status": "진행 중",
+          "status": "완료",
           "lessonIds": ["algo-merge"],
           "manuscripts": ["content/algo/03-merge-sort.md"],
           "tests": ["tests/merge-exercise.test.mjs", "tests/roadmap.test.mjs", "tests/browser-practice.mjs"]
