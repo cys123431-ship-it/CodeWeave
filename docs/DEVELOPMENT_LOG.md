@@ -1,10 +1,10 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 17:59 KST — F02 제한 범위 인수와 C07 순환
-- 시작/결과 SHA: 시작0726bf04df84dea0a5af036ac1b632e580b92eaa; 항목 fix: validate scoped F02 Cargo acceptance without broadening execution / docs: accept verified F02 and rotate to C07; 실제 SHA/CI 후속 확인.
+- 시작/결과 SHA: 시작0726bf04df84dea0a5af036ac1b632e580b92eaa; 검증기06833e549ea8cf4c60be9edef0601e419bbb685f; 인수081949d57ea663888a0f7cd3513e356fd12d13d4; 후속 docs: record verified F02 acceptance CI.
 - 목표: 검증된 F02 Linux 학습 경로만 인수하고 근거·명시 플래그·범위 검증을 보존해 C07로 순환; 새 단원/문제 추가0.
 - 변경 파일 수: 총9개(로드맵 검증기·신규5검사·F01 과거 fixture 연결·인수 문서·README·로드맵2개·활성/보관 일지).
-- 테스트 결과: 신규5건 중4건 실패→통과·기존 F01 이론4건 재현→통과·관련38/38·JS/MJS3개/roadmap/diff 통과; 전체731건708통과/실패0/skip23(Cargo 부재)·CPU 제한 검사 통과·기존 검사 삭제/성공 기대 변경0.
-- CI URL과 결과: 기준 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39221228817 성공726/726·실패0/skip0·실제F02 Cargo/browser 로그 재조회; 이번 변경 결과 SHA CI 대기.
+- 테스트 결과: 신규5건 중4건 실패→통과·기존 F01 이론4건 재현→통과·관련38/38·JS/MJS3개/roadmap/diff 통과; 전체731건708통과/실패0/skip23(Cargo 부재)·CPU 제한 검사 통과·CI Linux731/731·실패0/skip0·실제F02 browser/macOS 공통 회귀 성공; 기존 검사 삭제/성공 기대 변경0.
+- CI URL과 결과: 기준 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39221228817 성공726/726·실패0/skip0·실제F02 Cargo/browser 로그 재조회; 인수 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39227790093 성공731/731·실패0/skip0·실제F02 browser/macOS 공통 회귀 성공. 제한 범위 인수 완료·후속 기록 SHA CI 별도 확인.
 - 발견한 문제: F01 전용 인수/고정 검토 링크를 명시적 F01/F02 프로필로 분리. 과거 F01 이론 fixture에 현재 F02 완료가 섞여4검사 실패→기존 historicalRustPending 재사용, 기대값 완화0. 패치 문맥/역순 hunk 실패는 쓰기 전 검출 후 교정. 직전 로컬 CPU 실패는 이번 전체 검사에서 통과했으며 실행기 수정으로 해결했다고 주장하지 않음.
 - 보안 영향: 로드맵 근거 검증만 변경·실행/API/파일 접근/사용자 저장키 변경0; F02 플래그·10사례·기본 비활성·Linux 범위를 고정하고 미검증 macOS/Windows 인수 주장 거부.
 - 단계별 완료율: F02 Linux 제한 범위2/8(25%)·next=C/C07; A3/5·B10/11·C6/8·D/E3/8·G0/8·H/I0/6, 분모/화면33/기본 문제 수 불변.
