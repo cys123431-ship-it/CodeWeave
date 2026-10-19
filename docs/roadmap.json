@@ -10,8 +10,8 @@
     "C"
   ],
   "next": {
-    "track": "D",
-    "unit": "D03"
+    "track": "E",
+    "unit": "E03"
   },
   "limits": {
     "screenSections": [
@@ -413,7 +413,7 @@
         {
           "id": "D03",
           "title": "원형 큐: 삽입·삭제·순환 경계",
-          "status": "진행 중",
+          "status": "완료",
           "lessonIds": [
             "ds-queue"
           ],

@@ -26,6 +26,7 @@ test('historical DS rotation keeps its D03 handoff while live selection respects
   const { data, api } = await load();
   const progressed = structuredClone(data);
   progressed.stages.find(stage => stage.id === 'D').units.find(unit => unit.id === 'D03').status = '완료';
+  progressed.stages.find(stage => stage.id === 'D').units.find(unit => unit.id === 'D04').status = '진행 중';
   const before = structuredClone(progressed);
   assert.equal(api.selectUnit(progressed, 'D').id, 'D04');
   const historical = historicalDSRotation(progressed);
@@ -44,6 +45,24 @@ test('confirmed roadmap validates all nine stages and counts only evidenced comp
     assert.equal(row.percent, Number((100 * row.completed / row.total).toFixed(1)));
     assert.equal(row.total, row.completed + row.inProgress + row.notStarted);
   }
+});
+
+test('accepted D03 keeps its prepared evidence and rotates the D turn to unfinished algorithm work', async () => {
+  const { data, api } = await load();
+  const unit = data.stages.find(stage => stage.id === 'D').units.find(item => item.id === 'D03');
+  assert.equal(unit.status, '완료');
+  assert.deepEqual(unit.lessonIds, ['ds-queue']);
+  assert.ok(unit.manuscripts.includes('content/ds/03-queue.md'));
+  for (const file of ['tests/queue-exercise.test.mjs', 'tests/roadmap.test.mjs', 'tests/browser-practice.mjs']) {
+    assert.ok(unit.tests.includes(file));
+  }
+  assert.equal(gradingExercises.get('ds-queue').cases.length, 10);
+  assert.equal(exerciseById('ds-queue').grader, 'c-function');
+  const handoff = structuredClone(data);
+  const track = api.nextTurn('D');
+  assert.equal(track, 'E');
+  handoff.next = { track, unit: api.selectUnit(handoff, track).id };
+  assert.equal(api.validateRoadmap(handoff), true);
 });
 
 test('accepted C06 retains its grading evidence and the C turn hands off to the next unfinished DS unit', async () => {
