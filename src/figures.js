@@ -3,6 +3,14 @@ const arrow=(x1,y1,x2,y2)=>`<path d="M${x1} ${y1} L${x2} ${y2}" stroke="#6b8d98"
 const wrap=inner=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 670 190" role="img" aria-label="학습 개념 그림"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 const wrapTall=(label,inner,viewBox='0 0 670 300',style='')=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"${style?` style="${style}"`:''} role="img" aria-label="${label}"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 export function figureFor(kind){
+ if(kind==='merge-auxiliary')return wrapTall('병합 정렬의 두 정렬 구간과 보조 배열 복사 도식',
+  box(35,20,270,44,'5 · 1 · 4 · 2 · 3','#e7f1ff')+arrow(170,70,170,91)+
+  box(15,98,140,44,'1 · 5')+box(175,98,150,44,'2 · 3 · 4')+
+  arrow(85,148,145,174)+arrow(250,148,195,174)+
+  box(35,181,270,44,'scratch: 1 · 2 · 3 · 4 · 5','#fff3d8')+arrow(170,231,170,252)+
+  box(35,259,270,44,'values: 1 · 2 · 3 · 4 · 5','#d7f4e6')+
+  '<text x="170" y="336" text-anchor="middle" font-size="14" fill="#28485b">남은 구간까지 병합 → 원본에 복사</text>',
+  '0 0 340 355','max-width:340px');
  if(kind==='queue-circular-fifo')return wrapTall('원형 큐의 물리 인덱스3에서0으로 순환하고 논리적 FIFO 순서2,5를 보존하는 도식',
   `<text x="170" y="25" text-anchor="middle" font-size="15" fill="#28485b">head=3 · enqueue 2 → 5</text>`+
   [5,0,0,2].map((value,i)=>box(18+i*78,65,70,45,String(value),i===0||i===3?'#d7f4e6':'#e7f1ff')+
