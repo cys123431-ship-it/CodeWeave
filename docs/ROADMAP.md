@@ -97,7 +97,7 @@
 |---|---|---|---|
 | F01 | Cargo 프로젝트·cargo test와 채점 계약 | 완료 | `rust-cargo` · [원고](../content/rust/01-cargo.md) · [검사](../tests/f01-manuscript.test.mjs) · [검사](../tests/rust-delivery.test.mjs) · [검사](../tests/rust-exercises.test.mjs) · [검사](../tests/rust-http.test.mjs) · [검사](../tests/rust-executor.test.mjs) · [검사](../tests/rust-client.test.mjs) · [검사](../tests/rust-workbench.test.mjs) · [검사](../tests/start-rust.test.mjs) · [검사](../tests/browser-practice.mjs) · [검사](../tests/rust-contract.test.mjs) · [검사](../tests/rust-preparation.test.mjs) · [검사](../tests/rust-results.test.mjs) · [검사](../tests/rust-cargo-lesson.test.mjs) · [검사](../tests/theory-handoff.test.mjs) · [이론·퀴즈 인수 CI](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38843874384) · [로컬 Cargo 인수](F01_ACCEPTANCE.md) · [실제 채점 CI](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39157149118) |
 | F02 | 변수 바인딩·가변성과 스칼라 형 | 완료 | `rust-mut` · [원고](../content/rust/02-bindings.md) · [검사](../tests/rust-mut-preparation.test.mjs) · [검사](../tests/f02-opt-in.test.mjs) · [검사](../tests/f02-client.test.mjs) · [검사](../tests/f02-delivery.test.mjs) · [검사](../tests/browser-practice.mjs) · [로컬 Cargo 인수](F02_ACCEPTANCE.md) · [실제 채점 CI](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39221228817) |
-| F03 | 조건·반복·식과 범위 | 진행 중 | [원고](../content/rust/03-control-flow.md) · [검사](../tests/f03-control-flow.test.mjs) |
+| F03 | 조건·반복·식과 범위 | 진행 중 | `rust-control-flow` · [원고](../content/rust/03-control-flow.md) · [검사](../tests/f03-control-flow.test.mjs) · [검사](../tests/browser-practice.mjs) |
 | F04 | 함수·반환값과 단위 테스트 | 미착수 | — |
 | F05 | 소유권·이동·복사와 자원 해제 | 미착수 | — |
 | F06 | 공유 참조·가변 빌림과 슬라이스 | 미착수 | — |
@@ -139,9 +139,16 @@
 | I05 | C/Rust 종합 프로젝트의 회귀·성능·리팩터링 | 미착수 | — |
 | I06 | 통합 PWA 학습·백업·접근성·실기기 인수 검사 | 미착수 | — |
 
+## F03 로컬 Cargo 인수 범위
+
+- F03은 `--include-control-flow`를 명시한 Linux 신뢰 로컬 서버에서만 F01·F02와 함께 실행한다. `--include-f03` 별칭과 F02 플래그 동시 사용은 거부한다.
+- 공개 하네스 없이 서버 전용 10사례로 스타터·중단점 포함 오답을 거부하고 수정 답안 10/10을 확인한다. 경고는 실패하며 Cargo는 edition 2021·오프라인·고정 sysroot를 사용한다.
+- 학습 화면에서 이론·정적 도식·퀴즈 오답/재시도·코드 수정/재제출·분리 숙달·공유 이력·v1 백업 복원·390px·오프라인 읽기를 검증한다.
+- 이 인수는 Linux CI 범위다. macOS·Windows·Android·태블릿 실기기, 공개 코드 실행, 샌드박스 격리를 완료로 뜻하지 않는다.
+
 ## v0.x 지원 결정과 다음 실행
 
-- C·자료구조·알고리즘·Rust 모두 v0.x 지원 목표다. 기본 서버는 C 전용이며 F01은 명시적 Linux/macOS 개인 Cargo 서버, F02는 추가 --include-f02 선택으로 채점한다. F02 실제 인수 환경은 Linux다. 다른 Rust 단원과 Windows Rust 실행·Rust 트랙 전체는 미완료다.
+- C·자료구조·알고리즘·Rust 모두 v0.x 지원 목표다. 기본 서버는 C 전용이며 F01은 명시적 Linux/macOS 개인 Cargo 서버, F02는 추가 --include-f02, F03은 추가 --include-control-flow 선택으로 채점한다. F02·F03 실제 인수 환경은 Linux다. 다른 Rust 단원과 Windows Rust 실행·Rust 트랙 전체는 미완료다.
 - 기반 정리 0~2단계 종료 후 새 단원은 **D → E → Rust(F~G) → C**로 순환한다. 기반 CI 실패·보안·데이터 손실 회귀 수정은 먼저 처리하되 순환 차례를 소비하지 않는다.
 - 다음 차례는 **F-G / F03**: 조건·반복·식과 범위다. 해당 단원의 기존 근거와 최근 일지를 읽고 가장 앞선 미완료 인수 조건 하나를 진행한다.
 - E 차례는 E01을 확장한다. C 구조체 정렬·이진 탐색 실습은 선수 예제로 연결하되 알고리즘 트랙 완성으로 중복 집계하지 않는다.
