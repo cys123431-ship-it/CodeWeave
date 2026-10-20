@@ -184,7 +184,7 @@ test('F03 actual Cargo accepts for and while implementations including inclusive
 const mutants = [
   ['excludes the inclusive limit', s => s.replace('0..=end', '0..end')],
   ['includes the exclusive stop', s => s.replace('n >= stop', 'n > stop')],
-  ['ignores stop', s => s.replace('n >= stop', 'n > 1001')],
+  ['ignores stop', s => s.replace('let mut sum = 0;', 'let _ = stop;\n    let mut sum = 0;').replace('n >= stop', 'n > 1001')],
   ['sums odd values', s => s.replace('n % 2 != 0', 'n % 2 == 0')],
   ['breaks instead of continuing', s => s.replace('continue;', 'break;')],
   ['counts instead of accumulating', s => s.replace('sum += n;', 'sum += 1;')],

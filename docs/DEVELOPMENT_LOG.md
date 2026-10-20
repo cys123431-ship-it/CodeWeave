@@ -3,7 +3,7 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 시작/결과 SHA: main 46604df10ee57093d5be65928bad977f2a592cda; RED1 72a6c315de25c1e90b29f9146106b70050c4e8ea; RED2 342fe9d194f922051df420deff0b4fb15f2a64de; 구현 커밋 제목 feat: prepare F03 bounded control flow and explicit capabilities.
 - 목표: 모든u32 입력을1000 이하로 먼저 제한하고 stop 미만 짝수를 누적하는 Cargo10사례·원고94줄/14절·정적 도식과 명시적 API 허용 계약 준비.
 - 변경 파일 수: 10개(신규 정의·검사·원고3, 기존 서버/클라이언트·도식3, 로드맵2·활성/보관 일지2); 카탈로그/기본 실행 명령 변경0.
-- 테스트 결과: 신규21건 RED811건790통과/21실패/skip0. 로컬811건776통과/0실패/Cargo부재35skip, Node syntax5·roadmap/diff·일지4검사 성공. 구현 CI811건800통과/11실패/skip0: Cargo 정상 Compiling/Finished 로그를 빈 출력으로 오인한 신규 검사 수정, 실제 사례 모두 실행+경고/오류 거부로 성공 판정(기대 수정 사유); 검사 삭제0.
+- 테스트 결과: 신규21건 RED811건790통과/21실패/skip0. 로컬811건776통과/0실패/Cargo부재35skip, Node syntax5·roadmap/diff·일지4검사 성공. 구현 CI800통과/11실패/skip0: 정상 Cargo 상태 출력을 빈 출력으로 오인해 실제 사례 실행+경고/오류 거부로 수정; stop 무시 오답은 미사용 경고 대신 논리 실패를 검사하도록 let _=stop 추가(정당한 fixture/기대 수정 사유); 검사 삭제0.
 - CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39448741308 성공; RED1 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39453915959 신규17실패; RED2 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39454822818 신규21실패; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39455522174 단위11실패·macOS 취소 반복27/40에서3실패, 다음 SHA 결과 후속 보고.
 - 발견한 문제: Git push Username 부재/미생성 브랜치 PR422 후 연결 API 쓰기 성공. HTTP fixture에 F01 허용 목록 누락503을 명시 구성으로 수정(400 기대값 불변). macOS 반복27에서 SIGKILL 뒤 signal0 EPERM→process-cleanup 격리→RUST_UNAVAILABLE(기대CANCELLED), 뒤2건BUSY 연쇄 실패; 실패 재실행으로 은폐/보안 완화하지 않음·미해결.
 - 보안 영향: 운영자가 서비스/정의/허용 목록을 명시한 경우만 F03 API 선택 허용; 기본 C/F01/F02와 기존 CLI·인증·실행 제한·저장키/v1 형식 보존, 짧은 성공 결과는 저장 전 거부.
