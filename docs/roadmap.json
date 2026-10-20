@@ -569,10 +569,14 @@
         {
           "id": "E04",
           "title": "재귀 트리·백트래킹과 되돌리기",
-          "status": "미착수",
+          "status": "진행 중",
           "lessonIds": [],
-          "manuscripts": [],
-          "tests": []
+          "manuscripts": [
+            "content/algo/04-backtracking-permutations.md"
+          ],
+          "tests": [
+            "tests/permutations-exercise.test.mjs"
+          ]
         },
         {
           "id": "E05",

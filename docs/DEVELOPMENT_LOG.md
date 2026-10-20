@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-20 22:58 KST — E04 재귀 순열·복원 계약 준비
+- 시작/결과 SHA: main f263d0aee00cf5d334d8b72d308b99a30e1377eb; RED f8daad9453b697e6a6c183a0e65e9c683a16ad35; 구현 커밋 제목 feat: prepare E04 recursive permutations and undo learning contract.
+- 목표: 원소0~4개의 교환 DFS 순열·입력 원상 복원·출력 용량/여분 칸 보존을 실제 GCC로 검증하고 독자 원고/도식 준비.
+- 변경 파일 수: 8개(채점 모듈·회귀 검사·원고·도식·로드맵2개·활성/보관 일지); 공개 카탈로그/실행 등록 변경0.
+- 테스트 결과: 시작771/771 성공; 신규16건 RED787건771통과/16실패/skip0 확인. 정답10사례·오답9종·스타터·완성 예제·node --check/roadmap --check는 구현 CI 대기; 기대값 변경/검사 삭제0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39427981225 성공; RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39435530683 의도된16실패; 구현 결과 후속 기록/보고.
+- 발견한 문제: 기존 관련 구현/AGENTS/열린 PR0 확인 후 PR #6 사용. 로컬 실행 환경 연결 불가로 미커밋/Git/npm/GCC/diff 미확인·미실행; 원격 읽기·atomic tree/ref·CI로 진행. 순열 방문 순서는 과제 계약이며 정렬 순서가 아님을 설명.
+- 보안 영향: 독립 미등록 c-function 정의만 준비·기존 실행 파이프라인 재사용; 원소4/출력24행 범위 검증·새 실행 API/파일 접근/인증/저장키/백업 변경0.
+- 단계별 완료율: E04 준비 진행 중·next=E/E04 유지; A3/5·B10/11·C7/8·D4/8·E3/8·F2/8·G0/8·H/I0/6, 화면35·문제 수 불변; 원고133줄·채점10사례.
+- 다음 작업: 결과 SHA CI 성공과 원격 반영 확인 후 다음1회에서 E04 화면10~15절·퀴즈·실제 채점/수정/재제출·숙달·v1복원·390px/오프라인 연결; 단원 인수 전 Rust 차례로 넘기지 않음.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-20 22:04 KST — D04 최종 CI 확인과 병합 마무리
 - 시작/결과 SHA: main 7ab4abc89b739d3190d692f4aff75b272eec0a54; PR #5 1c79011f35d08b87d74349b10399c94fbb337f34; 결과 커밋 제목 docs: record verified D04 final CI before merge.
 - 목표: 이전 실행의 D04 최종 검사와 원격 반영 상태를 확인하고 PR #5를 비강제 병합; 새 기능/단원 추가0.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 인수 기록/차례만 갱신·기존 신뢰 로컬 GCC12사례/인증/실행 한도 보존; 외부 입력/실행 API/파일 접근/사용자 저장키 변경0.
 - 단계별 완료율: C07 제한 범위 완료·C7/8(87.5%)·next=D/D04; A3/5·B10/11·D/E3/8·F2/8·G0/8·H/I0/6, 화면34·기본 C26/DS3/알고리즘3 불변.
 - 다음 작업: 결과 SHA CI 성공 후 최신 main/PR HEAD를 다시 확인해 PR #3 비강제 병합·main CI 확인; 다음 실행은 D04 동적 배열 리스트 삽입/삭제/이동 비용의 좁은 GCC 계약부터 구현.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-20 16:55 KST — C07 문서 수치 회귀 수정
-- 시작/결과 SHA: main04751784fe9c4f5370b38452c37187cbb90902b6; PR시작6802098541decdf7843db67f7b4eb93e189cef2a; 수정7957203fcb84420fcf7e51ced00364532d4c84d9; 후속 docs: record verified C07 documentation recovery CI.
-- 목표: 최신 CI의 유일한 실패인 README C25/실제26 불일치를 먼저 수정하고 C07 원고의 미등록 설명을 현재화.
-- 변경 파일 수: 4개(README·C07 원고·활성/보관 일지); 코드/검사 변경0·신규 단원/문제0.
-- 테스트 결과: 기존 README track counts reflect lessons and actual runnable grading definitions 실패→통과; 전체749건748통과/실패1→749/749·실패0/skip0, 실제 C07 browser·macOS18/18 성공; 기대값/검사 삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39385771256 전체 실패1·browser/macOS 성공; 수정 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39389964131 전체749/749·browser/macOS 성공. 문서 수치 회귀 수정 완료·후속 기록 SHA CI 최종 보고.
-- 발견한 문제: README C26·총34·C07 실행 범위를 실제 등록과 일치시킴. 원고의 준비 전용 설명을 화면/연습장·재제출/복원/분리 숙달 안내로 교체; 예제 C 코드와 채점 계약은 그대로.
-- 보안 영향: 문서만 변경·외부 입력/코드 실행/파일 접근/저장키 변경0; 로컬 환경409 environment_offline로 로컬 Git/npm/GCC/diff 검사는 미실행, GitHub 읽기·atomic tree/ref 쓰기로 반영.
-- 단계별 완료율: C07진행 중·next=C/C07 유지; A3/5·B10/11·C6/8·D/E3/8·F2/8·G0/8·H/I0/6. 화면34·C26/DS3/알고리즘3문제, 분모/완료 수 불변.
-- 다음 작업: 후속 기록 SHA CI 확인 후 C07 제한 범위 인수와 PR #3 병합을 검토; 성공한 기존 원고/실습을 다시 준비하지 않고 다음 자료구조 차례로 연결.
