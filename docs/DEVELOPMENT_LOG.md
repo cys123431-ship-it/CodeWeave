@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-20 22:04 KST — D04 최종 CI 확인과 병합 마무리
+- 시작/결과 SHA: main 7ab4abc89b739d3190d692f4aff75b272eec0a54; PR #5 1c79011f35d08b87d74349b10399c94fbb337f34; 결과 커밋 제목 docs: record verified D04 final CI before merge.
+- 목표: 이전 실행의 D04 최종 검사와 원격 반영 상태를 확인하고 PR #5를 비강제 병합; 새 기능/단원 추가0.
+- 변경 파일 수: 이번 기록2개(활성/보관 일지); PR 전체10개 유지.
+- 테스트 결과: 최종771/771·실패0/skip0; 신규 연결2건과 인수1건 실패→통과 재조회. 실제 GCC 스타터/역방향 오답 거부·수정10/10, browser 퀴즈/분리 숙달/공유 이력/삭제 후v1복원/390px/오프라인/다음 단원 성공; macOS 공통 회귀 성공.
+- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39414907927 결과 SHA 1c79011f35d08b87d74349b10399c94fbb337f34 성공; 일지 고정 필드 실패도 해소. 이번 기록/병합 SHA의 CI는 최종 보고에 실제 결과로 기재.
+- 발견한 문제: main은 준비 단계에 머물고 PR #5가 미병합이었음. 로컬 실행 환경 연결 불가로 미커밋/Git/npm/GCC/diff 미확인·미실행; 원격 HEAD/트리·PR·CI 로그로 확인. 기존 원고/채점/검사 재작성0.
+- 보안 영향: 이번 변경은 인수 기록만 추가·기존 인증/실행 제한/파일 접근/저장키/백업 형식 보존; D04 실행 인수는 Linux 범위.
+- 단계별 완료율: D04 제한 범위 완료·D4/8(50%)·next=E/E04; A3/5·B10/11·C7/8·E3/8·F2/8·G0/8·H/I0/6, 화면35·기본C26/DS4/알고리즘3 불변.
+- 다음 작업: 기록 SHA 성공 확인 후 최신 main/PR HEAD를 재조회해 PR #5 병합·main CI 확인; 이어 E04 재귀 트리·백트래킹과 되돌리기의 좁은 계약부터 진행.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-20 20:03 KST — D04 학습·실제 채점 인수
 - 시작/결과 SHA: main 7ab4abc89b739d3190d692f4aff75b272eec0a54; 연결RED 3ff364e803103b005d4c9b2efff7f982de79bca7; 검증 ae5760f52cf813946248875c6e932fcd7fa1bdda; 인수RED 72ba6b9623de17e0a618f443cdcf5ccd7b2f4102; 결과 커밋 제목 docs: accept verified D04 delivery and rotate to E04.
 - 목표: D04 확보 용량 안 삽입/삭제·이동 비용의 화면13절·퀴즈·실제 GCC 수정/재제출·백업·분리 숙달 경로를 인수.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 문서만 변경·외부 입력/코드 실행/파일 접근/저장키 변경0; 로컬 환경409 environment_offline로 로컬 Git/npm/GCC/diff 검사는 미실행, GitHub 읽기·atomic tree/ref 쓰기로 반영.
 - 단계별 완료율: C07진행 중·next=C/C07 유지; A3/5·B10/11·C6/8·D/E3/8·F2/8·G0/8·H/I0/6. 화면34·C26/DS3/알고리즘3문제, 분모/완료 수 불변.
 - 다음 작업: 후속 기록 SHA CI 확인 후 C07 제한 범위 인수와 PR #3 병합을 검토; 성공한 기존 원고/실습을 다시 준비하지 않고 다음 자료구조 차례로 연결.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-20 16:03 KST — C07 소유 스트림 학습 경로 연결
-- 시작/결과 SHA: main04751784fe9c4f5370b38452c37187cbb90902b6; PR시작cf57793e9918d09b22eddbb71206b5e607a0e28f; RED 0649499deb30ccd8c1da660ccd4654f8ce84f4a8; 구현5188abfef29b9f50b08b0a7c13e491013cb59536; 재수정3bcd62da0f9c758f8ec0c676178135ba7fcd78c3; 후속 docs: record C07 browser proof and remaining README failure.
-- 목표: 준비된 한 바이트 소유권 계약을 화면·퀴즈·실제 제출/오류 수정·재제출·백업·숙달에 연결.
-- 변경 파일 수: 시작 대비 최종10개(화면·메타데이터·registry·C07 검사·browser·로드맵2개·감사표·활성/보관 일지); 신규2검사는 기존 파일로 통합·검사 삭제0.
-- 테스트 결과: 신규2건 RED 실패→통과; 전체 RED749건747통과/실패2/skip0→1차728통과/21실패→재수정748통과/1실패/skip0. JS/MJS5개 node --check·roadmap·실제 GCC 정답12/12·오답11종/스타터 거부·macOS C07 통과.
-- CI URL과 결과: RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39384334474 ; 재수정 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39385319641 전체 실패1·browser/macOS 성공.C07 실제 화면·퀴즈 재시도·오답→수정12/12·이력/v1·숙달·390px·오프라인 통과, 전체 완료 아님.
-- 발견한 문제: exec-server409 environment_offline로 로컬 읽기/쓰기/npm/GCC/git/browser 미실행; GitHub 읽기·atomic tree/ref 쓰기 성공.매핑/감사표 누락·C05 다음 경로 실패를 재현→수정.남은 README 수치25/실제26 회귀는 최종10파일 한도로 다음 실행 최우선.
-- 보안 영향: 서버 전용12사례 재사용·공개 메타데이터에 하네스 제외·기존 JSON/Host/Origin/토큰·GCC 한도 적용; 신규 실행 API/링커 권한/사용자 저장키 변경0.
-- 단계별 완료율: C07진행 중·next=C/C07 유지; A3/5·B10/11·C6/8·D/E3/8·F2/8·G0/8·H/I0/6.화면34·C26/DS3/알고리즘3문제, 개발 완료 단원 수 유지.
-- 다음 작업: 첫 작업 README C26/전체34 수치 수정과 원고 준비 시점 설명 현재화→전체 CI 성공 확인→C07 제한 범위 인수/PR 병합 검토.새 원고 준비 반복 금지.미등록 기대/다음 경로 검사는 운영 전환으로만 갱신하고 성공 판정 완화0.
