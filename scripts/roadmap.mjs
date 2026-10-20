@@ -92,7 +92,7 @@ function validateRustDelivery(stage, unit) {
       !unit.manuscripts.includes(profile.manuscript) ||
       profile.tests.some(file => !unit.tests.includes(file)) ||
       !definition || definition.grader !== 'cargo-test' || definition.cases.length !== 10 ||
-      !lesson?.quiz || definition.starter.trimEnd() !== lesson.challenge.starter ||
+      !lesson?.quiz || (unit.id === 'F03' ? definition.starter.trimEnd() : definition.starter) !== lesson.challenge.starter ||
       gradingRequestFor(profile.exerciseId, profile.enabled).expectedTests !== definition.cases.length ||
       exercises.find(exercise => exercise.id === profile.exerciseId)?.grader !== null ||
       gradingExercises.has(profile.exerciseId)) fail('invalid local Rust graded handoff / 채점 인수');
