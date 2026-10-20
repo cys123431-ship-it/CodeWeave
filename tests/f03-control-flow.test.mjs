@@ -10,6 +10,7 @@ import { createRustGradingDefinitions, createRustBindingDefinitions } from '../s
 import { createRustGradingService } from '../server/rust-service.mjs';
 import { createLearningServer } from '../server/learning-server.mjs';
 import { figureFor } from '../src/figures.js';
+import { rustGradingIds, gradingRequestFor, recordGradedSubmission } from '../src/practice.js';
 
 const load = () => import('../server/rust-control-flow-exercise.mjs');
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -74,7 +75,7 @@ test('F03 remains rejected before the HTTP grading callback and private definiti
   let calls = 0;
   const definitions = new Map([...createRustGradingDefinitions(), [d.id, d]]);
   const service = createRustGradingService({ enabled: true, definitions, grade: () => { calls++; throw Error('must not execute'); } });
-  const app = createLearningServer({ root, rustService: service });
+  const app = createLearningServer({ root, rustService: service, rustExerciseIds: ['rust-cargo'] });
   t.after(() => app.close());
   const { port } = await app.listen(0), base = 'http://127.0.0.1:' + port;
   const html = await (await fetch(base)).text();
@@ -85,6 +86,62 @@ test('F03 remains rejected before the HTTP grading callback and private definiti
   assert.equal(response.status, 400);
   assert.equal(calls, 0);
   assert.equal((await fetch(base + '/server/rust-control-flow-exercise.mjs')).status, 404);
+});
+
+test('F03 explicit prepared registry is fresh and never widens default F01 or F02 factories', async () => {
+  const { createRustControlDefinitions, controlDefinition: d } = await load();
+  const first = createRustControlDefinitions(), second = createRustControlDefinitions();
+  assert.deepEqual([...first.keys()], ['rust-cargo', 'rust-mut', d.id]);
+  assert.equal(first.get(d.id), d);
+  first.clear();
+  assert.equal(second.size, 3);
+  assert.deepEqual([...createRustGradingDefinitions().keys()], ['rust-cargo']);
+  assert.deepEqual([...createRustBindingDefinitions().keys()], ['rust-cargo', 'rust-mut']);
+});
+
+test('F03 explicit trusted HTTP capability preserves authentication allowlisting and exact advertisement', async t => {
+  let calls = 0;
+  const rustService = { async submit() {
+    calls++;
+    return { ok: true, message: '10/10', compileOutput: '', tests: Array.from({ length: 10 }, () => ({ passed: true, detail: '테스트 통과' })) };
+  } };
+  const ids = ['rust-cargo', 'rust-mut', 'rust-control-flow'];
+  const app = createLearningServer({ root, rustService, rustExerciseIds: ids });
+  t.after(() => app.close());
+  ids.pop();
+  const { port } = await app.listen(0), base = 'http://127.0.0.1:' + port;
+  const html = await (await fetch(base)).text();
+  assert.match(html, /name="codeweave-rust-exercises" content="rust-cargo rust-mut rust-control-flow"/);
+  const token = html.match(/name="codeweave-token" content="([a-f0-9]{64})"/)[1];
+  const post = (headers = {}, exerciseId = 'rust-control-flow') => fetch(base + '/api/grade/rust', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CodeWeave-Token': token, ...headers },
+    body: JSON.stringify({ exerciseId, code: reference })
+  });
+  assert.equal((await post({ 'Content-Type': 'text/plain' })).status, 415);
+  assert.equal((await post({ Origin: 'https://outside.invalid' })).status, 403);
+  assert.equal((await post({ 'X-CodeWeave-Token': '' })).status, 403);
+  assert.equal((await post({}, 'rust-unknown')).status, 400);
+  assert.equal(calls, 0);
+  assert.equal((await post()).status, 200);
+  assert.equal(calls, 1);
+});
+
+test('F03 client capability requires exact authenticated IDs and rejects short successful results before storage', () => {
+  const doc = content => ({ querySelector(selector) {
+    return { content: { 'codeweave-token': 'a'.repeat(64), 'codeweave-rust': 'rust-cargo',
+      'codeweave-rust-exercises': content }[selector.match(/name="([^"]+)"/)[1]] };
+  } });
+  const ids = rustGradingIds(doc('rust-cargo rust-mut rust-control-flow'));
+  assert.deepEqual(ids, ['rust-cargo', 'rust-mut', 'rust-control-flow']);
+  assert.equal(gradingRequestFor('rust-control-flow', ids).expectedTests, 10);
+  assert.throws(() => gradingRequestFor('rust-control-flow', true));
+  assert.throws(() => gradingRequestFor('rust-control-flow', []));
+  assert.deepEqual(rustGradingIds(doc('rust-cargo rust-control-flow rust-unknown')), []);
+  let writes = 0;
+  const storage = { getItem: () => '{}', setItem() { writes++; } };
+  assert.throws(() => recordGradedSubmission(storage, ['rust-control-flow'], 'rust-control-flow', reference,
+    { ok: true, message: 'forged', compileOutput: '', tests: [{ passed: true, detail: '테스트 통과' }] }));
+  assert.equal(writes, 0);
 });
 
 async function grade(t, code) {
@@ -147,6 +204,33 @@ test('F03 starter is warning-free executable Rust but not a solved exercise', ru
   assert.equal((await grade(t, d.starter)).ok, false);
 });
 
+test('F03 explicitly configured HTTP grades real Cargo correction and cleans every workspace', rustOptions, async t => {
+  const { controlDefinition: d, createRustControlDefinitions } = await load();
+  const { trustedRustTools } = await import('./helpers/rust-tools.mjs');
+  const { createLocalRustGradingService } = await import('../server/rust-executor.mjs');
+  const tools = await trustedRustTools();
+  const parent = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'codeweave-f03-http-')));
+  t.after(() => fs.rm(parent, { recursive: true, force: true }));
+  const service = await createLocalRustGradingService({ enabled: true, definitions: createRustControlDefinitions(),
+    sysroot: path.dirname(path.dirname(tools.rustc)), parent });
+  const app = createLearningServer({ root, rustService: service, rustExerciseIds: ['rust-cargo', 'rust-mut', d.id] });
+  t.after(() => app.close());
+  const { port } = await app.listen(0), base = 'http://127.0.0.1:' + port;
+  const html = await (await fetch(base)).text();
+  const token = html.match(/name="codeweave-token" content="([a-f0-9]{64})"/)[1];
+  for (const [code, ok] of [[reference.replace('n >= stop', 'n > stop'), false], [reference, true]]) {
+    const response = await fetch(base + '/api/grade/rust', { method: 'POST', headers: {
+      'Content-Type': 'application/json', 'X-CodeWeave-Token': token
+    }, body: JSON.stringify({ exerciseId: d.id, code }), signal: AbortSignal.timeout(30000) });
+    assert.equal(response.status, 200);
+    const result = await response.json();
+    assert.equal(result.ok, ok);
+    assert.equal(result.compileOutput, '');
+    assert.equal(result.tests.length, 10);
+    assert.deepEqual(await fs.readdir(parent), []);
+  }
+});
+
 test('F03 manuscript retains required teaching headings and distinguishes the compiled complete program', async () => {
   const text = await fs.readFile(new URL('../content/rust/03-control-flow.md', import.meta.url), 'utf8');
   for (const heading of ['개요', '이론', '도식', '완성 프로그램', '출력', '오류', '퀴즈', '직접 풀기', 'Mini Project', '복습']) {
@@ -180,7 +264,7 @@ test('F03 original static diagram is accessible and contains no executable marku
 });
 
 test('F03 changed JS modules have valid Node syntax and roadmap is synchronized', () => {
-  for (const file of ['server/rust-control-flow-exercise.mjs', 'src/figures.js', 'tests/f03-control-flow.test.mjs']) {
+  for (const file of ['server/rust-control-flow-exercise.mjs', 'server/learning-server.mjs', 'src/practice.js', 'src/figures.js', 'tests/f03-control-flow.test.mjs']) {
     const result = spawnSync(process.execPath, ['--check', path.join(root, file)], { encoding: 'utf8' });
     assert.equal(result.status, 0, result.stderr);
   }
