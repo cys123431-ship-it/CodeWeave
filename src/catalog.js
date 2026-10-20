@@ -1666,7 +1666,7 @@ export const lessons = [
     },
     {
       "heading": "테스트·개선·복습 연결",
-      "text": "실패한 사례의 구간 길이와 i/j/k, 남은 쪽을 표로 추적하고 수정·재제출하세요. 정렬·역순·전부 같은 값도 다시 확인합니다. 이론 읽기·퀴즈 통과·실습 통과·복습은 따로 기록됩니다. 다음 주제인 재귀 트리·백트래킹(E04)은 아직 미구현입니다. 트랙으로 돌아가 탐색·삽입 정렬과 보조 공간을 비교해 복습하세요."
+      "text": "실패한 사례의 구간 길이와 i/j/k, 남은 쪽을 표로 추적하고 수정·재제출하세요. 정렬·역순·전부 같은 값도 다시 확인합니다. 이론 읽기·퀴즈 통과·실습 통과·복습은 따로 기록됩니다. 다음 단원 E04에서 재귀 트리·백트래킹의 선택과 복원을 직접 구현하세요. 트랙으로 돌아가 탐색·삽입 정렬과 보조 공간을 비교해 복습할 수도 있습니다."
     }
   ],
   "quiz": {
@@ -1769,7 +1769,7 @@ export const lessons = [
   "challenge": {
     "id": "algo-permutations",
     "title": "선택→재귀→복원으로 순열 생성",
-    "description": "main 없는 함수 제출입니다. enumerate_permutations(values,count,rows,capacity,out_count)를 구현하세요. count는0~4, 행 폭은4, capacity는 count! 이상이어야 합니다. rows와 out_count는 항상 non-NULL이며 values는 빈 입력에만 NULL을 허용합니다. i=pos부터 증가하는 교환 DFS 순서로 첫 count!행의 앞 count열만 쓰고 입력·여분 행/열을 보존하세요. 빈 입력은 배열 칸을 쓰지 않고 행 개수1을 반환합니다. 중복 값도 원래 위치를 구별해 중복 행을 유지합니다. 실패0에서는 입력·전체 행·유효 out_count를 보존하고, 성공1에서는 out_count를 기록합니다. 실제 유효한 비중첩 저장소는 호출자가 제공합니다. 전역 가변 상태·할당·파일 접근 없이 함수를 작성하세요. 실패 사례의 선택/복원 짝을 추적하고 수정 후 재제출하세요.",
+    "description": "main 없는 함수 제출입니다. 위 선언의 enumerate_permutations 함수를 구현하세요. count는0~4, 행 폭은4, capacity는 count! 이상이어야 합니다. rows와 out_count는 항상 non-NULL이며 values는 빈 입력에만 NULL을 허용합니다. i=pos부터 증가하는 교환 DFS 순서로 첫 count!행의 앞 count열만 쓰고 입력·여분 행/열을 보존하세요. 빈 입력은 배열 칸을 쓰지 않고 행 개수1을 반환합니다. 중복 값도 원래 위치를 구별해 중복 행을 유지합니다. 실패0에서는 입력·전체 행·유효 out_count를 보존하고, 성공1에서는 out_count를 기록합니다. 실제 유효한 비중첩 저장소는 호출자가 제공합니다. 전역 가변 상태·할당·파일 접근 없이 함수를 작성하세요. 실패 사례의 선택/복원 짝을 추적하고 수정 후 재제출하세요.",
     "starter": "#include <stddef.h>\nint enumerate_permutations(int values[], size_t count,\n                           int rows[][4], size_t capacity,\n                           size_t *out_count) {\n    (void)values;\n    (void)count;\n    (void)rows;\n    (void)capacity;\n    (void)out_count;\n    /* TODO: 용량 검증 뒤 선택, 재귀, 원상 복원 */\n    return 0;\n}\n",
     "input": "{1,2,3}: swap DFS",
     "expected": "6 123 132 213 231 321 312"
