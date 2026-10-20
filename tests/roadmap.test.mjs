@@ -335,7 +335,7 @@ test('D02 live API rejects FIFO code then accepts corrected code and the publish
   assert.equal(starter.compileOutput, '', 'starter must be valid C11, not a compiler-error puzzle');
 });
 
-test('accepted C07 retains its owned-stream contract and advances the current turn to D04', async () => {
+test('accepted C07 retains its owned-stream contract and replays its historical D04 handoff', async () => {
   const { data, api } = await load();
   const unit = data.stages.find(stage => stage.id === 'C').units.find(item => item.id === 'C07');
   assert.equal(unit.status, '완료');
@@ -349,7 +349,11 @@ test('accepted C07 retains its owned-stream contract and advances the current tu
   const { ownedStreamExercise } = await import('../server/owned-stream-exercise.mjs');
   assert.deepEqual(gradingExercises.get('c-owned-stream-byte'), ownedStreamExercise);
   assert.equal(ownedStreamExercise.cases.length, 12);
-  assert.deepEqual(data.next, { track: 'D', unit: 'D04' });
+  const historical = structuredClone(data);
+  historical.stages.find(stage => stage.id === 'D').units.find(item => item.id === 'D04').status = '진행 중';
+  historical.next = { track: 'D', unit: 'D04' };
+  assert.equal(api.selectUnit(historical, 'D').id, 'D04');
+  assert.equal(api.validateRoadmap(historical), true);
   assert.equal(api.validateRoadmap(data), true);
   const checked = spawnSync(process.execPath, ['--check', (await import('node:url')).fileURLToPath(import.meta.url)], { encoding: 'utf8' });
   assert.equal(checked.status, 0, checked.stderr);
@@ -367,4 +371,58 @@ test('historical C07 replay remains pending while live C selection advances to C
   historical.stages.find(stage => stage.id === 'C').units.find(unit => unit.id === 'C07').status = '진행 중';
   assert.equal(api.selectUnit(historical, 'C').id, 'C07');
   assert.deepEqual(live, before);
+});
+
+test('D04 delivers the prepared array list contract through catalog without leaking harness cases', async () => {
+  const { arrayListExercise, arrayListMetadata, arrayListStarter } = await import('../server/array-list-exercise.mjs');
+  const lesson = lessons.find(item => item.id === 'ds-array-list');
+  assert.ok(lesson, 'D04 must be learner-facing');
+  assert.equal(lesson.track, 'ds');
+  assert.equal(lesson.figure, 'array-list-shifts');
+  assert.deepEqual(exerciseById(lesson.id), { ...arrayListMetadata, requiredFiles: [] });
+  assert.deepEqual(gradingExercises.get(lesson.id), arrayListExercise);
+  assert.equal(Object.hasOwn(exerciseById(lesson.id), 'harness'), false);
+  assert.equal(lesson.challenge.starter, arrayListStarter);
+  assert.equal(lesson.challenge.input, arrayListMetadata.publicExample.input);
+  assert.equal(lesson.challenge.expected, arrayListMetadata.publicExample.output);
+  const manuscript = await readFile(new URL('../content/ds/04-array-list.md', import.meta.url), 'utf8');
+  const program = manuscript.match(/\x60\x60\x60c\n([\s\S]*?)\n\x60\x60\x60/)[1];
+  assert.ok(lesson.sections.some(section => section.code?.trim() === program.trim()));
+  assert.deepEqual(lesson.quiz.options, ['0', '2', '3', '4']);
+  assert.equal(lesson.quiz.answer, 1);
+  const { data, api } = await load();
+  const unit = data.stages.find(stage => stage.id === 'D').units.find(item => item.id === 'D04');
+  assert.deepEqual(unit.lessonIds, [lesson.id]);
+  for (const file of ['tests/array-list-exercise.test.mjs', 'tests/roadmap.test.mjs', 'tests/browser-practice.mjs']) assert.ok(unit.tests.includes(file));
+  assert.equal(api.validateRoadmap(data), true);
+  for (const file of ['src/catalog.js', 'src/exercises.js', 'server/grading-exercises.mjs', 'tests/browser-practice.mjs', 'tests/roadmap.test.mjs']) {
+    const result = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+  }
+});
+
+test('D04 authenticated API grades actual starter wrong shift and corrected code against all ten cases', () => {
+  const result = spawnSync(process.execPath, ['tests/browser-practice.mjs', '--array-list-http-only'], { encoding: 'utf8', timeout: 30000 });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /PASS: D04 authenticated actual GCC/);
+});
+
+test('accepted D04 records verified delivery and preserves its E04 handoff through later rotations', async () => {
+  const { data, api } = await load();
+  const unit = data.stages.find(stage => stage.id === 'D').units.find(item => item.id === 'D04');
+  assert.equal(unit.status, '완료');
+  assert.deepEqual(unit.lessonIds, ['ds-array-list']);
+  assert.equal(unit.acceptance.scope, 'existing-capacity-insert-erase');
+  assert.equal(unit.acceptance.sourceSha, 'ae5760f52cf813946248875c6e932fcd7fa1bdda');
+  assert.equal(unit.acceptance.ci, 'https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39413773136');
+  assert.deepEqual(unit.acceptance.checks, ['theory', 'compiled-example', 'quiz-retry', 'actual-grading', 'correction-retry', 'shared-history', 'backup-restore', 'mastery-next', 'offline', '390px']);
+  assert.equal(gradingExercises.get('ds-array-list').cases.length, 10);
+  const historical = structuredClone(data);
+  historical.stages.find(stage => stage.id === 'E').units.find(item => item.id === 'E04').status = '진행 중';
+  const track = api.nextTurn('D');
+  assert.equal(track, 'E');
+  assert.equal(api.selectUnit(historical, track).id, 'E04');
+  historical.next = { track, unit: 'E04' };
+  assert.equal(api.validateRoadmap(historical), true);
+  assert.equal(api.validateRoadmap(data), true);
 });

@@ -4,6 +4,7 @@ import { streamExercise } from './stream-exercise.mjs';
 import { preprocessorExercise } from './preprocessor-exercise.mjs';
 import { queueExercise } from './queue-exercise.mjs';
 import { ownedStreamExercise } from './owned-stream-exercise.mjs';
+import { arrayListExercise } from './array-list-exercise.mjs';
 import { mergeExercise } from './merge-exercise.mjs';
 import { stackCases, stackHarness } from './stack-exercise.mjs';
 import { sortCases, sortHarness } from './sort-exercise.mjs';
@@ -1209,7 +1210,7 @@ const LINK_ARGS = {
 
 // Reuse C05's independently compiled contract rather than duplicating its cases.
 export const gradingExercises = buildGradingExercises(
-  exercises.filter(exercise => exercise.id !== streamExercise.id && exercise.id !== preprocessorExercise.id && exercise.id !== queueExercise.id && exercise.id !== mergeExercise.id && exercise.id !== ownedStreamExercise.id), CASES, HARNESSES, LINK_ARGS
+  exercises.filter(exercise => exercise.id !== arrayListExercise.id && exercise.id !== streamExercise.id && exercise.id !== preprocessorExercise.id && exercise.id !== queueExercise.id && exercise.id !== mergeExercise.id && exercise.id !== ownedStreamExercise.id), CASES, HARNESSES, LINK_ARGS
 );
 gradingExercises.set(streamExercise.id, streamExercise);
 gradingExercises.set(preprocessorExercise.id, preprocessorExercise);
@@ -1217,3 +1218,5 @@ gradingExercises.set(queueExercise.id, queueExercise);
 gradingExercises.set(mergeExercise.id, mergeExercise);
 
 gradingExercises.set(ownedStreamExercise.id, ownedStreamExercise);
+
+gradingExercises.set(arrayListExercise.id, arrayListExercise);
