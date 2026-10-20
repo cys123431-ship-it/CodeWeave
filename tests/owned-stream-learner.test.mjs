@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { spawnSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -8,6 +9,8 @@ import { gradingExercises } from '../server/grading-exercises.mjs';
 import { ownedStreamExercise, ownedStreamMetadata, ownedStreamStarter } from '../server/owned-stream-exercise.mjs';
 import { createLearningServer } from '../server/learning-server.mjs';
 
+const gcc = spawnSync('gcc', ['--version']).status === 0;
+const posix = ['linux', 'darwin'].includes(process.platform);
 const id = ownedStreamExercise.id;
 const manuscript = await readFile(new URL('../content/c/24-owned-stream-errors.md', import.meta.url), 'utf8');
 const program = manuscript.match(/\x60\x60\x60c\n([\s\S]*?)\n\x60\x60\x60/)[1];
@@ -15,6 +18,10 @@ const correct = program.split('int main(void)')[0];
 const wrong = correct.replace('int closed = fclose(stream);', '(void)fclose(stream);\n    int closed = 0;');
 
 test('C07 learner catalog and public exercise reuse the compiled program and private grading contract', () => {
+  for (const path of ['../src/catalog.js', '../src/exercises.js', '../server/grading-exercises.mjs', './owned-stream-exercise.test.mjs', './owned-stream-learner.test.mjs', './browser-practice.mjs']) {
+    const checked = spawnSync(process.execPath, ['--check', fileURLToPath(new URL(path, import.meta.url))], { encoding: 'utf8', timeout: 4500 });
+    assert.equal(checked.status, 0, checked.stderr);
+  }
   const lesson = lessons.find(item => item.id === id);
   assert.ok(lesson, 'C07 must be reachable');
   assert.equal(lesson.track, 'c');
@@ -28,7 +35,7 @@ test('C07 learner catalog and public exercise reuse the compiled program and pri
   assert.equal(Object.hasOwn(exerciseById(id), 'harness'), false);
 });
 
-test('C07 authenticated HTTP rejects ignored close failure then accepts the corrected twelve-case submission', { timeout: 60000 }, async () => {
+test('C07 authenticated HTTP rejects ignored close failure then accepts the corrected twelve-case submission', { timeout: 60000, skip: !gcc || !posix }, async () => {
   const app = createLearningServer({ root: fileURLToPath(new URL('../', import.meta.url)) });
   try {
     const { port } = await app.listen(0);

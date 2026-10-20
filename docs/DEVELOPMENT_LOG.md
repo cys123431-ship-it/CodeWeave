@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-20 16:03 KST — C07 소유 스트림 학습 경로 연결
+- 시작/결과 SHA: main04751784fe9c4f5370b38452c37187cbb90902b6; PR시작cf57793e9918d09b22eddbb71206b5e607a0e28f; RED 0649499deb30ccd8c1da660ccd4654f8ce84f4a8; 결과 커밋 feat: connect C07 owned-stream learner and resubmission flow.
+- 목표: 준비된 한 바이트 소유권 계약을 화면·퀴즈·실제 제출/오류 수정·재제출·백업·숙달에 연결.
+- 변경 파일 수: 10개(화면·메타데이터·registry·원고·README·신규 검사·계약 검사·browser·활성/보관 일지); 검사 삭제0.
+- 테스트 결과: 신규2건 RED CI749건747통과/실패2/skip0(목록 부재·HTTP400); 구현 전체/브라우저 CI 대기. 변경 JS/MJS6개 node --check는 신규 검사에 포함.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39242787915 성공·Linux747/747·macOS C07/브라우저 성공; RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39384334474 의도된2실패; 이번 결과 CI 확인 전 완료 기록 금지.
+- 발견한 문제: 로컬 exec-server409 environment_offline로 읽기/쓰기/npm/GCC/git/browser 미실행; 원격 파일 읽기·신규/기존 파일 쓰기는 GitHub atomic tree/ref로 진행. 준비 전용 미등록 기대를 승인된 운영 등록 동일성 검사로 전환(성공 판정 완화0).
+- 보안 영향: 서버 전용12사례 재사용·공개 메타데이터에 하네스 제외·기존 JSON/Host/Origin/토큰·GCC 한도 적용; 신규 실행 API/링커 권한/사용자 저장키 변경0.
+- 단계별 완료율: C07진행 중·next=C/C07 유지; A3/5·B10/11·C6/8·D/E3/8·F2/8·G0/8·H/I0/6. 화면34·C26/DS3/알고리즘3문제, 개발 완료 단원 수 유지.
+- 다음 작업: 결과 SHA의 전체·실제 C07 browser/390px/오프라인 CI 성공을 확인하고 C07 제한 범위 인수 근거와 차례 전환만 별도 검토; 새 원고 준비 반복 금지.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-19 20:04 KST — C07 닫기 실패 채점 누락 수정
 - 시작/결과 SHA: main04751784fe9c4f5370b38452c37187cbb90902b6; PR시작026450198765d1f0d31106eec4a777539f19bf18; RED af683acbccdb3a1b4a656fdb0fbcf8b4f8b59218; 결과 커밋 fix: reject C07 close-error and premature-output mutants.
 - 목표: 닫기 실패 무시·읽기 진단 덮어쓰기·닫기 전 출력 변경 오답이 기존10사례를 통과하는 회귀를 먼저 재현하고 거부.
@@ -49,17 +62,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 서버가 주입한 고정 과제 목록+토큰 존재 시만 UI 활성화; 서버 인증/실행 한도/파일 접근/저장키 불변, 기본 F01·C·오프라인은 F02 미활성.
 - 단계별 완료율: F02진행 중·next=F-G/F02 유지, A3/5·B10/11·C6/8·D/E3/8·F1/8·G0/8·H/I0/6 및 화면33/기본 문제 수 불변.
 - 다음 작업: 결과 SHA CI 확인 후 F02 인수 근거·로드맵 optional Rust delivery 검증 확장 및 C07 순환을 별도 항목으로 반영; 10파일 한도로 상태 승격 보류.
-
----
-
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-19 15:07 KST — F02 명시적 운영자 실행 경로
-- 시작/결과 SHA: 시작3f0fb7d3360357525e7aae6f29e5c2bb59e20dcc; 구현e0d0fc7378fa55dbdf4789a87c96dde41fd8a693; 후속 docs: record verified F02 operator opt-in CI.
-- 목표: --include-f02를 명시한 신뢰 로컬 Rust 서버만 F02 계약을 허용하고 기본 F01/C 경계·허용 목록·인증·정리 보존.
-- 변경 파일 수: 총10개(기존 registry/CLI/learning-server/Rust HTTP·7검사·로컬 안내·로드맵2개·활성/보관 일지).
-- 테스트 결과: 신규6건 실패→통과·F01 누락 설정1건 추가 실패→통과·관련29건25통과/skip4·전체723건700통과/실패0/skip23(Cargo 부재)·실제 Cargo 운영자 HTTP1건 로컬skip→CI에서 기본 F02거부/명시적 F02오답→수정10/10·작업폴더 정리 통과; 기존 검사 삭제/기대값 완화0.
-- CI URL과 결과: 기준 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39203525343 성공716/716; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39208726998 성공723/723·실패0/skip0·실제F02 운영자 HTTP·macOS 기존 회귀/browser 성공. 명시적 실행 경로 항목 완료·F02 단원 인수 아님; 후속 기록 SHA CI 별도 확인.
-- 발견한 문제: 작업 환경 정리로 이전 clone 부재→최신 저장소 재clone. 시험용 grade 콜백을 plan으로 오인한 503은 실제 request 계약으로 교정(200 기대 유지), app.address API와 문서 패치 문맥 교정. 기본 F01 표시와 F02 단독 목록 불일치를 재현해 거부; 새 목록은 snapshot·중복/미등록/희소 값 거부.
-- 보안 영향: 신규 실행 범위는 명시적 운영자 플래그의 F02 한 문제, 별도 frozen 정의 factory·고정된 HTTP 허용 목록으로 제한; loopback/JSON/토큰/Origin/자원·종료 한도 유지, 환경/HTTP로 활성화 불가·권한/저장키 변경0.
-- 단계별 완료율: F02진행 중·next=F-G/F02 유지, A3/5·B10/11·C6/8·D/E3/8·F1/8·G0/8·H/I0/6 및 화면33/기본 공개 문제 수 불변.
-- 다음 작업: 결과 SHA CI 확인 후 F02 화면·연습장·요청/숙달의 F01 하드코딩을 과제별 활성 목록으로 연결·원고/새 스타터/이력/v1/390px/오프라인 인수. 이번은 실행 기반 항목이며 화면·단원 완료나 다음 C 차례 전환 아님; 10파일 한도로 콘텐츠 인수 미완료를 명시.

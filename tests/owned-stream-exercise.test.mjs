@@ -47,7 +47,7 @@ async function grade(t, code) {
   assert.equal(built.status, 0, built.stderr);
   return buildResult(exercise, built, await runCases(workspace, exercise));
 }
-test('C07 preparation keeps twelve immutable owned-resource cases outside production grading', async () => {
+test('C07 preparation keeps twelve immutable owned-resource cases identical in production grading', async () => {
   for (const file of ['../server/owned-stream-exercise.mjs', '../src/figures.js', './owned-stream-exercise.test.mjs']) {
     const checked = spawnSync(process.execPath, ['--check', fileURLToPath(new URL(file, import.meta.url))],
       { encoding: 'utf8', timeout: 4500 });
@@ -58,7 +58,7 @@ test('C07 preparation keeps twelve immutable owned-resource cases outside produc
   assert.equal(new Set(exercise.cases.map(c => c.args.join())).size, 12);
   assert.ok(Object.isFrozen(exercise.cases));
   assert.ok(exercise.cases.every(Object.isFrozen));
-  assert.equal(gradingExercises.has(exercise.id), false);
+  assert.deepEqual(gradingExercises.get(exercise.id), exercise);
   assert.ok(exercise.cases.some(c => c.input === metadata.publicExample.input && c.expected === metadata.publicExample.output));
   assert.deepEqual(exercise.linkArgs, []);
 });
