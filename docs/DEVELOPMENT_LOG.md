@@ -3,9 +3,9 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 시작/결과 SHA: main f263d0aee00cf5d334d8b72d308b99a30e1377eb; 준비 1bbb3165011a2175d7037c4365d9827e42a6edbe; RED fb5cd10bf70ff3781cc191df80172da537ab1a5c; 구현 커밋 제목 feat: connect E04 permutation learning and correction workflow.
 - 목표: 준비된10사례 계약을 보존해13절·25분 화면/퀴즈와 실제 오답→수정→재제출·v1복원·숙달을 연결.
 - 변경 파일 수: 이번10개(카탈로그·메타데이터·실행등록·검사2·README·로드맵2·일지2); 이전 준비8개와 PR 누적14개.
-- 테스트 결과: 준비787/787·실패0/skip0; 신규 연결2건과 브라우저 경로를 먼저 작성, RED789건786통과/3실패/skip0·browser 카탈로그 부재 확인(D04 HTTP도 신규 공통 사전검사에서 동일 원인 실패). 구현 검사는 CI 대기; 검사 삭제0.
+- 테스트 결과: 준비787/787·실패0/skip0; 신규 연결2건과 브라우저 경로를 먼저 작성, RED789건786통과/3실패/skip0·browser 카탈로그 부재 확인(D04 HTTP도 신규 공통 사전검사에서 동일 원인 실패). 구현789/789·실패0/skip0; browser SVG 경계 통과/페이지493>390px 실패 재현, 긴 선언을 줄 나눈 코드 블록으로 표시 수정·재검사 대기; 검사 삭제0.
 - CI URL과 결과: 준비 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39436162093 전체 성공; RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39444877683 의도된 실패. 구현/결과 CI는 후속 기록·보고.
-- 발견한 문제: 로컬 실행 환경 unavailable로 미커밋/Git/npm/GCC/diff 실행 불가; GitHub 원자적 tree/ref·CI 사용. E03의 E04 미제공 설명만 새 실제 연결에 맞춰 갱신; 기존 검사 기대값/학습 문장 맞추기0.
+- 발견한 문제: 로컬 실행 환경 unavailable로 미커밋/Git/npm/GCC/diff 실행 불가; GitHub 원자적 tree/ref·CI 사용. E03 미제공 설명 갱신. E04 긴 인수 나열은 모바일 실제493px 넘침 때문에 선언 코드 블록으로 표시만 변경(의미/계약 보존); 경계 기대값 완화0.
 - 보안 영향: 새 외부 입력 경로 없이 기존 인증·c-function·길이/실행 제한을 재사용; 비공개 하네스는 서버에만 보존·기존 저장키/백업 형식 변경0.
 - 단계별 완료율: E04 진행 중·next=E/E04; A3/5·B10/11·C7/8·D4/8·E3/8·F2/8·G0/8·H/I0/6; 화면36·기본C26/DS4/알고리즘4, Rust2 선택 실행 유지.
 - 다음 작업: 결과 SHA의 실제GCC/퀴즈재시도/공유이력/삭제 후v1복원/분리숙달/390px도식/오프라인/다음 진입 CI 성공 뒤 E04 인수·F-G/F03 순환, 미검증이면 진행 중 유지.

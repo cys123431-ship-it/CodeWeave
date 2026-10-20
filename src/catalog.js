@@ -1722,7 +1722,8 @@ export const lessons = [
     },
     {
       "heading": "계약: 행 용량·순서·보존",
-      "text": "enumerate_permutations(values,count,rows,capacity,out_count)는 성공1·거부0이다. rows의 행 폭은 항상4이며 capacity는 행 수다.\ncount는0~4, rows와 out_count는 NULL이 아니어야 한다. count>0이면 values도 NULL이 아니어야 한다. capacity는 count! 이상이다.\n호출자는 count개의 int 입력과 capacity행의 실제 쓰기 가능한 저장소, 별도의 size_t 출력 객체를 제공한다. 세 영역은 겹치면 안 된다. 함수가 임의 주소의 유효성이나 실제 할당 크기를 알아내지는 못한다.\n성공 시 첫 count!행의 앞 count열만 쓰고 입력·나머지 열·여분 행을 보존한다. 빈 순열은 행 개수1만 기록하고 배열 칸은 쓰지 않는다. 거부 시 입력·모든 행·유효 out_count를 보존한다.\n교환 DFS의 i를 pos부터 증가시키는 순서가 이번 과제의 출력 계약이다. 정렬된 순서가 아니다. 중복 값도 원래 위치를 구별하므로 {2,2,1}은 중복 행을 포함해6행이다."
+      "text": "아래는 제출 함수의 선언 조각이다. 함수는 성공1·거부0을 반환한다. rows의 행 폭은 항상4이며 capacity는 행 수다.\ncount는0~4, rows와 out_count는 NULL이 아니어야 한다. count>0이면 values도 NULL이 아니어야 한다. capacity는 count! 이상이다.\n호출자는 count개의 int 입력과 capacity행의 실제 쓰기 가능한 저장소, 별도의 size_t 출력 객체를 제공한다. 세 영역은 겹치면 안 된다. 함수가 임의 주소의 유효성이나 실제 할당 크기를 알아내지는 못한다.\n성공 시 첫 count!행의 앞 count열만 쓰고 입력·나머지 열·여분 행을 보존한다. 빈 순열은 행 개수1만 기록하고 배열 칸은 쓰지 않는다. 거부 시 입력·모든 행·유효 out_count를 보존한다.\n교환 DFS의 i를 pos부터 증가시키는 순서가 이번 과제의 출력 계약이다. 정렬된 순서가 아니다. 중복 값도 원래 위치를 구별하므로 {2,2,1}은 중복 행을 포함해6행이다.",
+      "code": "int enumerate_permutations(int values[], size_t count,\n                           int rows[][4], size_t capacity,\n                           size_t *out_count);"
     },
     {
       "heading": "완성 프로그램: 직접 컴파일",
