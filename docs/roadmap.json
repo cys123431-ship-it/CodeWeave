@@ -10,8 +10,8 @@
     "C"
   ],
   "next": {
-    "track": "C",
-    "unit": "C07"
+    "track": "D",
+    "unit": "D04"
   },
   "limits": {
     "screenSections": [
@@ -359,7 +359,7 @@
         {
           "id": "C07",
           "title": "오류 반환·errno와 자원 정리 경로",
-          "status": "진행 중",
+          "status": "완료",
           "lessonIds": [
             "c-owned-stream-byte"
           ],
@@ -368,8 +368,19 @@
           ],
           "tests": [
             "tests/owned-stream-exercise.test.mjs",
-            "tests/browser-practice.mjs"
-          ]
+            "tests/browser-practice.mjs",
+            "tests/roadmap.test.mjs"
+          ],
+          "acceptance": {
+            "scope": "owned-file-single-byte",
+            "platforms": [
+              "linux-glibc",
+              "macos"
+            ],
+            "sourceSha": "f57b8b520b0b6a6a4a5375d6008e22e71dbad876",
+            "ci": "https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39390328907",
+            "review": "docs/C07_ACCEPTANCE.md"
+          }
         },
         {
           "id": "C08",

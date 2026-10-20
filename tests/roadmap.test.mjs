@@ -342,6 +342,7 @@ test('accepted C07 retains its owned-stream contract and advances the current tu
   assert.deepEqual(unit.lessonIds, ['c-owned-stream-byte']);
   assert.ok(unit.tests.includes('tests/roadmap.test.mjs'));
   assert.equal(unit.acceptance.review, 'docs/C07_ACCEPTANCE.md');
+  await readFile(new URL('../' + unit.acceptance.review, import.meta.url), 'utf8');
   assert.deepEqual(unit.acceptance.platforms, ['linux-glibc', 'macos']);
   assert.equal(unit.acceptance.sourceSha, 'f57b8b520b0b6a6a4a5375d6008e22e71dbad876');
   assert.equal(unit.acceptance.ci, 'https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39390328907');
@@ -350,7 +351,7 @@ test('accepted C07 retains its owned-stream contract and advances the current tu
   assert.equal(ownedStreamExercise.cases.length, 12);
   assert.deepEqual(data.next, { track: 'D', unit: 'D04' });
   assert.equal(api.validateRoadmap(data), true);
-  const checked = spawnSync(process.execPath, ['--check', new URL(import.meta.url).pathname], { encoding: 'utf8' });
+  const checked = spawnSync(process.execPath, ['--check', (await import('node:url')).fileURLToPath(import.meta.url)], { encoding: 'utf8' });
   assert.equal(checked.status, 0, checked.stderr);
   const rendered = spawnSync(process.execPath, ['scripts/roadmap.mjs', '--check'], { encoding: 'utf8' });
   assert.equal(rendered.status, 0, rendered.stderr);
