@@ -334,3 +334,36 @@ test('D02 live API rejects FIFO code then accepts corrected code and the publish
   assert.equal(starter.ok, false);
   assert.equal(starter.compileOutput, '', 'starter must be valid C11, not a compiler-error puzzle');
 });
+
+test('accepted C07 retains its owned-stream contract and advances the current turn to D04', async () => {
+  const { data, api } = await load();
+  const unit = data.stages.find(stage => stage.id === 'C').units.find(item => item.id === 'C07');
+  assert.equal(unit.status, '완료');
+  assert.deepEqual(unit.lessonIds, ['c-owned-stream-byte']);
+  assert.ok(unit.tests.includes('tests/roadmap.test.mjs'));
+  assert.equal(unit.acceptance.review, 'docs/C07_ACCEPTANCE.md');
+  assert.deepEqual(unit.acceptance.platforms, ['linux-glibc', 'macos']);
+  assert.equal(unit.acceptance.sourceSha, 'f57b8b520b0b6a6a4a5375d6008e22e71dbad876');
+  assert.equal(unit.acceptance.ci, 'https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39390328907');
+  const { ownedStreamExercise } = await import('../server/owned-stream-exercise.mjs');
+  assert.deepEqual(gradingExercises.get('c-owned-stream-byte'), ownedStreamExercise);
+  assert.equal(ownedStreamExercise.cases.length, 12);
+  assert.deepEqual(data.next, { track: 'D', unit: 'D04' });
+  assert.equal(api.validateRoadmap(data), true);
+  const checked = spawnSync(process.execPath, ['--check', new URL(import.meta.url).pathname], { encoding: 'utf8' });
+  assert.equal(checked.status, 0, checked.stderr);
+  const rendered = spawnSync(process.execPath, ['scripts/roadmap.mjs', '--check'], { encoding: 'utf8' });
+  assert.equal(rendered.status, 0, rendered.stderr);
+});
+
+test('historical C07 replay remains pending while live C selection advances to C08 without mutating progress', async () => {
+  const { data, api } = await load();
+  const live = structuredClone(data);
+  live.stages.find(stage => stage.id === 'C').units.find(unit => unit.id === 'C08').status = '진행 중';
+  const before = structuredClone(live);
+  assert.equal(api.selectUnit(live, 'C').id, 'C08');
+  const historical = structuredClone(live);
+  historical.stages.find(stage => stage.id === 'C').units.find(unit => unit.id === 'C07').status = '진행 중';
+  assert.equal(api.selectUnit(historical, 'C').id, 'C07');
+  assert.deepEqual(live, before);
+});
