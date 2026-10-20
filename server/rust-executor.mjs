@@ -59,6 +59,7 @@ function run(invocation, cwd, signal) {
     let readiness = '', readinessBytes = 0;
     let bytes = 0, status = null, termination = null, error, finished = false, stopping = false;
     let timer, cleanupTimer, settlementTimer;
+    let killAcknowledged = false, observationFailure;
     function finish() {
       if (finished) return;
       finished = true;
@@ -78,12 +79,15 @@ function run(invocation, cwd, signal) {
       if (stopping) return;
       stopping = true;
       if (child.pid) {
-        try { process.kill(-child.pid, 'SIGKILL'); }
+        try {
+          process.kill(-child.pid, 'SIGKILL');
+          killAcknowledged = true;
+        }
         catch (failure) { if (failure.code !== 'ESRCH') cleanupFailure(failure); }
       }
       cleanupTimer ??= setTimeout(() => {
         // An abort or limit must not hide incomplete process/pipe cleanup.
-        cleanupFailure();
+        cleanupFailure(observationFailure);
         child.stdout.destroy();
         child.stderr.destroy();
         child.stdio[3]?.destroy();
@@ -110,8 +114,15 @@ function run(invocation, cwd, signal) {
       try {
         if (!groupHasLiveMembers(child.pid)) return finish();
       } catch (failure) {
-        cleanupFailure(failure);
-        return finish();
+        // Only an acknowledged owned-group kill permits bounded read-only observation.
+        // EPERM proves neither life nor exit: retain the lease and original deadline,
+        // and require later ESRCH or an independently terminal process snapshot.
+        if (failure.code === 'EPERM' && killAcknowledged) {
+          observationFailure ??= failure;
+        } else {
+          cleanupFailure(failure);
+          return finish();
+        }
       }
       // SIGKILL delivery and pipe EOF are not proof that every descendant has exited.
       // Keep the existing 500ms cleanup deadline and shared lease; never signal again.
