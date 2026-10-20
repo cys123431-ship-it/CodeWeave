@@ -844,6 +844,92 @@ export const lessons = [
     }
   },
   {
+  "id": "c-owned-stream-byte",
+  "track": "c",
+  "level": "중급",
+  "title": "소유 스트림: 오류 진단을 보존하며 닫기",
+  "minutes": 25,
+  "source": "C07 독자 원고·정적 도식·소유권과 오류 반환 함수형 실습",
+  "summary": "한 바이트·정상 EOF·읽기와 닫기 오류를 구별하고 소유한 FILE을 정리합니다.",
+  "figure": "owned-stream-cleanup",
+  "sections": [
+    {
+      "heading": "개요·필요성·선수·목표",
+      "text": "C05에서는 빌린 FILE을 읽고도 닫지 않았다. 이번에는 호출자가 소유권을 넘긴 FILE을 함수가 책임지고 닫는다.\n파일 읽기에 실패했을 때 바로 return하면 열린 자원이 남을 수 있고, 닫은 뒤 errno를 읽으면 읽기 실패의 원인을 잃을 수 있다.\n선수: 함수·포인터·C05의 int/fgetc·EOF/ferror. 예상25분. 목표는 결과·진단·소유권·정리를 따로 추적하는 것이다.\n이번 첫 범위는 한 바이트 읽기다. 경로 열기, 여러 자원, 동적 메모리와 복구 재시도는 후속 범위다."
+    },
+    {
+      "heading": "이론 — 반환 상태와 출력값을 분리하기",
+      "text": "read_owned_byte(FILE *stream, int *out_byte, int *out_error)를 작성한다. 1은 한 바이트 성공, 0은 정상 EOF, -1은 오류다.\n1일 때만 out_byte를 변경한다. 정상 EOF와 오류에서는 기존 값을 보존한다. out_error는 정상 읽기/EOF에0, 오류에는 저장한 진단 코드다.\nNULL 스트림·NULL 출력 인수·두 출력 포인터의 같은 객체는 -1이며 출력과 스트림을 모두 건드리지 않는다. 이 경우 소유권도 넘어오지 않았다."
+    },
+    {
+      "heading": "이론 — 소유권이 넘어오는 시점",
+      "text": "인수 검증을 모두 통과하면 스트림 소유권이 함수로 넘어온다. 그 뒤에는 읽기 성공·EOF·오류 어느 경로든 한 번 fclose한다.\n반환 후 호출자는 그 FILE 포인터로 읽기·닫기를 반복하지 않는다. fclose가 실패한 뒤에도 이미 닫기를 시도한 FILE을 재사용하지 않는다.\nC05의 borrowed 계약과 이번 owned 계약은 어느 쪽이 더 좋다는 뜻이 아니라 누가 정리할지 정한 서로 다른 약속이다."
+    },
+    {
+      "heading": "이론 — errno는 실패 판정기가 아니다",
+      "text": "먼저 fgetc의 반환과 ferror를 확인한다. 이전 작업이 남긴 errno가0이 아니어도 이번 읽기는 성공할 수 있다.\n실패한 작업 직후 필요한 errno를 지역 saved에 복사한다. 이후 fclose가 errno를 바꾸어도 읽기 진단은 saved에 남는다.\n이 API는 기존 스트림 오류 또는 실패 시 진단0이면 EIO를 쓰기로 정했다. 이 fallback은 이 실습의 정책이지 모든 C 함수의 언어 규칙이 아니다.\n읽기와 닫기가 모두 실패하면 먼저 저장한 읽기 오류를 우선한다. 읽기는 정상인데 닫기만 실패하면 -1이며 바이트 출력은 보존한다."
+    },
+    {
+      "heading": "도식 — 저장한 진단을 들고 정리 지점으로",
+      "text": "독자 정적 도식 키: owned-stream-cleanup. 유효 인수→소유권 이전→읽기 결과/진단 저장→fclose→최종 상태와 출력 확정.\n실패와 정상 EOF가 모두 fclose로 이어지는 선을 종이에 그려 보자. 인수 검증 실패만 호출자에게 소유권이 남는다."
+    },
+    {
+      "heading": "완성 프로그램 — 읽기와 정상 EOF",
+      "text": "아래는 완성 프로그램이다. 실습 제출에는 main을 제외한 read_owned_byte 함수와 필요한 include만 작성한다.",
+      "code": "#include <stdio.h>\n#include <errno.h>\nint read_owned_byte(FILE *stream, int *out_byte, int *out_error) {\n    if (stream == NULL || out_byte == NULL || out_error == NULL || out_byte == out_error) return -1;\n    int status = -1, value = 0, saved = 0;\n    if (ferror(stream)) saved = EIO;\n    else {\n        errno = 0;\n        value = fgetc(stream);\n        if (value == EOF) {\n            if (ferror(stream)) saved = errno != 0 ? errno : EIO;\n            else status = 0;\n        } else status = 1;\n    }\n    errno = 0;\n    int closed = fclose(stream);\n    if (closed != 0 && saved == 0) {\n        saved = errno != 0 ? errno : EIO;\n        status = -1;\n    }\n    if (saved != 0) status = -1;\n    if (status == 1) *out_byte = value;\n    *out_error = saved;\n    return status;\n}\nint main(void) {\n    FILE *stream = tmpfile();\n    if (stream == NULL) return 2;\n    if (fputc('A', stream) == EOF || fseek(stream, 0, SEEK_SET) != 0) {\n        (void)fclose(stream);\n        return 2;\n    }\n    int byte = 777, error = 999;\n    int status = read_owned_byte(stream, &byte, &error);\n    printf(\"%d %d %d\\n\", status, byte, error);\n    stream = tmpfile();\n    if (stream == NULL) return 2;\n    byte = 777;\n    status = read_owned_byte(stream, &byte, &error);\n    printf(\"%d %d %d\\n\", status, byte, error);\n    return 0;\n}"
+    },
+    {
+      "heading": "실제 출력과 단계별 이유",
+      "text": "첫 스트림은 A를 읽고 닫아1과65를 얻는다. 두 번째 빈 스트림은 정상 EOF이므로0이며 기존 바이트 출력777을 보존한다.\n표시65는 CI의 ASCII 호환 환경에서 A의 값이다. C가 모든 문자 집합에서 A의 숫자값65를 보장한다는 뜻은 아니다.\ngcc -std=c11 -Wall -Wextra -Wpedantic -Werror example.c -o example 뒤 실행한다. tmpfile 준비 실패는 main의 별도 오류 경로다.",
+      "code": "1 65 0\n0 777 0"
+    },
+    {
+      "heading": "흔한 오류 — 정리와 진단의 순서",
+      "text": "fgetc 결과를 char로 저장하면 0xFF와 EOF를 혼동하기 쉽다. int를 유지한다.\nerrno만 보고 실패로 판단하지 말자. fclose 뒤의 errno를 읽기 오류라고 보고하지 말자.\n정상 EOF를 오류로 취급하거나 출력값부터 덮어쓰지 않는다. 소유권을 받은 뒤 중간 return으로 닫기를 건너뛰지 않는다.\n반대로 잘못된 출력 인수를 받은 단계에서 호출자의 스트림까지 닫는 것도 계약 위반이다."
+    },
+    {
+      "heading": "중간 점검·퀴즈·핵심 요약",
+      "text": "퀴즈: 읽기 오류를 발견했지만 fclose도 호출해야 한다. 무엇을 먼저 할까?\nA) errno를 saved에 저장 B) FILE을 다시 읽기 C) 출력값0 기록 D) 호출자가 닫기를 추측하게 두기. 정답A.\n점검: 빈 스트림의 out_byte는? 기존 값이다. 인수 검증 실패 뒤 누가 닫나? 호출자다. 유효 인수로 호출한 뒤 누가 닫나? 함수다.\n요약: 상태와 출력 분리→소유자 확인→실패 직후 진단 저장→정리→최종 출력 확정."
+    },
+    {
+      "heading": "직접 풀기 — 기초·응용·도전",
+      "text": "기초: 한 바이트와 빈 스트림을 비교한다. 응용: 오래된 errno가 있어도 성공을 반환하고 0x00/0xFF를 구별한다.\n도전: 새 읽기 오류·기존 오류·NULL/별칭 인수·독립 반복 호출에서도 출력 보존과 닫기가 맞는지 검사한다.\n이전 실패 코드를 정답으로 바꾸는 것만으로 끝내지 말고 모든12사례를 다시 실행한다."
+    },
+    {
+      "heading": "Mini Project — 자원 책임 표 만들기",
+      "text": "파일을 여는 호출자와 읽고 닫는 함수의 책임을 두 열로 정리한다. 각 return 옆에 열린 FILE의 최종 소유자를 써 본다.\n같은 읽기 작업을 C05 borrowed 계약으로 바꾸면 어느 fclose를 호출자로 옮겨야 하는지 설명한다."
+    },
+    {
+      "heading": "심화 — ISO C와 POSIX 검사 범위",
+      "text": "FILE/fgetc/ferror/fclose 개념과 POSIX의 구체 errno를 구별한다. EIO/EAGAIN 및 pipe·fcntl·fdopen을 쓰는 하네스는 POSIX 범위다.\n12사례에는 읽기 성공·정상 EOF 뒤의 닫기 실패와 읽기 EAGAIN·닫기 EIO 동시 실패가 포함된다. glibc의 fopencookie, macOS의 funopen으로 stdio 콜백에 실패를 주입하고, 출력 보존·첫 진단 우선·닫기 콜백 1회를 확인한다. 이 확장 API는 ISO C 기능이 아니다.\n운영체제별 진단 문자열이나 errno 숫자를 고정 답으로 외우지 않는다.\n참조: https://pubs.opengroup.org/onlinepubs/9799919799/functions/fgetc.html\n참조: https://pubs.opengroup.org/onlinepubs/9799919799/functions/fclose.html",
+      "advanced": true
+    },
+    {
+      "heading": "테스트·개선·복습 연결",
+      "text": "12사례는 성공·정상 EOF·NUL/FF·현재 오류·오래된 errno·인수 오류·반복 호출과 닫기 실패를 구별합니다. 실패 사례에서 반환값·출력값·닫기 책임을 먼저 표로 적고 수정한 뒤 전체를 재제출하세요. 이론 읽기·퀴즈·실습·복습은 따로 기록합니다. 제출 이력에서 이전 코드를 복원하고 통합 백업으로 보관할 수 있습니다. C05의 빌린 FILE과 비교해 복습하고, 이후 여러 자원의 역순 정리로 확장합니다."
+    }
+  ],
+  "quiz": {
+    "question": "읽기 오류를 발견했지만 fclose도 호출해야 합니다. 무엇을 먼저 할까요?",
+    "options": [
+      "errno를 지역 saved에 저장한다",
+      "FILE을 한 번 더 읽는다",
+      "출력 바이트를 0으로 덮어쓴다",
+      "호출자가 닫을 것이라고 추측한다"
+    ],
+    "answer": 0,
+    "explanation": "실패 직후 읽기 진단을 저장해야 fclose가 errno를 바꾸어도 첫 오류를 보존할 수 있습니다. 정리를 마친 뒤 최종 상태를 결정합니다."
+  },
+  "challenge": {
+    "id": "c-owned-stream-byte",
+    "title": "소유한 스트림에서 한 바이트 읽고 닫기",
+    "description": "read_owned_byte(FILE *stream, int *out_byte, int *out_error)를 main·출력 없이 작성하세요. 반환1=한 바이트,0=정상 EOF,-1=오류이며 out_byte는 읽기와 닫기가 모두 성공한1일 때만 변경합니다. 정상 읽기/EOF의 out_error는0. NULL 인수·같은 두 출력 객체는 -1로 출력과 스트림을 보존하고 소유권을 받지 않습니다. 유효 인수라면 정확히 한 바이트만 시도하고 성공·EOF·오류 모두 fclose를 한 번 호출합니다. 기존 ferror는 읽지 않고 EIO, 새 읽기 오류는 즉시 저장한 errno(0이면 EIO)입니다. 읽기 오류는 뒤의 닫기 오류보다 우선하며 닫기만 실패해도 -1/출력 바이트 보존입니다. 오래된 errno로 성공을 실패로 바꾸지 않습니다. 호출자는 유효한 스트림과 서로 다른 쓰기 가능한 int 객체를 제공합니다. 이 하네스의 실행 범위는 glibc Linux·macOS·WSL이며 Windows 네이티브는 지원하지 않습니다.",
+    "starter": "#include <stdio.h>\nint read_owned_byte(FILE *stream, int *out_byte, int *out_error) {\n    (void)stream;\n    (void)out_byte;\n    (void)out_error;\n    /* TODO: 유효한 인수이면 소유권을 받아 한 번 읽고 닫은 뒤 결과 기록 */\n    return -1;\n}\n",
+    "input": "소유 스트림 {0x2A}",
+    "expected": "1 42 0 1"
+  }
+},
+  {
 
   "id": "rust-cargo",
   "track": "rust",

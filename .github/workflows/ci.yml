@@ -140,6 +140,8 @@ jobs:
         run: node --test tests/submission-resources.test.mjs
       - name: POSIX stream contract and read-error probes
         run: node --test tests/stream-exercise.test.mjs
+      - name: C07 owned-stream read and close failure probes
+        run: node --test tests/owned-stream-exercise.test.mjs
       - name: E02 stable insertion contract and complete example
         run: node --test tests/sort-exercise.test.mjs
       - name: Trusted Rust execution resource probes

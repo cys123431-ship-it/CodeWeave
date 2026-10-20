@@ -10,8 +10,8 @@
     "C"
   ],
   "next": {
-    "track": "C",
-    "unit": "C07"
+    "track": "D",
+    "unit": "D04"
   },
   "limits": {
     "screenSections": [
@@ -359,10 +359,28 @@
         {
           "id": "C07",
           "title": "오류 반환·errno와 자원 정리 경로",
-          "status": "미착수",
-          "lessonIds": [],
-          "manuscripts": [],
-          "tests": []
+          "status": "완료",
+          "lessonIds": [
+            "c-owned-stream-byte"
+          ],
+          "manuscripts": [
+            "content/c/24-owned-stream-errors.md"
+          ],
+          "tests": [
+            "tests/owned-stream-exercise.test.mjs",
+            "tests/browser-practice.mjs",
+            "tests/roadmap.test.mjs"
+          ],
+          "acceptance": {
+            "scope": "owned-file-single-byte",
+            "platforms": [
+              "linux-glibc",
+              "macos"
+            ],
+            "sourceSha": "f57b8b520b0b6a6a4a5375d6008e22e71dbad876",
+            "ci": "https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39390328907",
+            "review": "docs/C07_ACCEPTANCE.md"
+          }
         },
         {
           "id": "C08",
@@ -508,9 +526,17 @@
           "id": "E03",
           "title": "분할 정복: 병합 정렬과 보조 공간",
           "status": "완료",
-          "lessonIds": ["algo-merge"],
-          "manuscripts": ["content/algo/03-merge-sort.md"],
-          "tests": ["tests/merge-exercise.test.mjs", "tests/roadmap.test.mjs", "tests/browser-practice.mjs"]
+          "lessonIds": [
+            "algo-merge"
+          ],
+          "manuscripts": [
+            "content/algo/03-merge-sort.md"
+          ],
+          "tests": [
+            "tests/merge-exercise.test.mjs",
+            "tests/roadmap.test.mjs",
+            "tests/browser-practice.mjs"
+          ]
         },
         {
           "id": "E04",

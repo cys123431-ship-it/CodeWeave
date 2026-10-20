@@ -3,6 +3,13 @@ const arrow=(x1,y1,x2,y2)=>`<path d="M${x1} ${y1} L${x2} ${y2}" stroke="#6b8d98"
 const wrap=inner=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 670 190" role="img" aria-label="학습 개념 그림"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 const wrapTall=(label,inner,viewBox='0 0 670 300',style='')=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"${style?` style="${style}"`:''} role="img" aria-label="${label}"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 export function figureFor(kind){
+ if(kind==='owned-stream-cleanup')return wrapTall('소유권 이전 뒤 읽기 진단 저장과 스트림 정리 도식',
+  box(35,20,270,44,'유효 인수 → 소유권 이전','#e7f1ff')+arrow(170,70,170,91)+
+  box(35,98,270,44,'읽기 결과 · errno 저장')+arrow(170,148,170,169)+
+  box(35,176,270,44,'성공 · EOF · 오류 → fclose','#fff3d8')+arrow(170,226,170,247)+
+  box(35,254,270,44,'닫기 뒤 최종 상태 · 출력 확정','#d7f4e6')+
+  '<text x="170" y="333" text-anchor="middle" fill="#28485b" font-size="14">인수 오류면 소유권은 호출자에게</text>', '0 0 340 355');
+
  if(kind==='rust-binding-copy')return wrapTall('Rust 바인딩의 호출자 before3 보존과 지역 current의3에서-2로 변경 도식',
   box(35,20,270,44,'before: i32 = 3','#e7f1ff')+arrow(170,70,170,91)+
   box(35,98,270,44,'let mut current = start')+arrow(170,148,170,169)+

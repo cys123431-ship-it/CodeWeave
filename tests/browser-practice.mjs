@@ -22,6 +22,11 @@ import { preprocessorExercise, preprocessorStarter } from '../server/preprocesso
 import { queueExercise, queueMetadata, queueStarter } from '../server/queue-exercise.mjs';
 import { mergeExercise, mergeMetadata, mergeStarter } from '../server/merge-exercise.mjs';
 
+import { ownedStreamStarter } from '../server/owned-stream-exercise.mjs';
+const ownedManuscript = await readFile(new URL('../content/c/24-owned-stream-errors.md', import.meta.url), 'utf8');
+const ownedCorrect = ownedManuscript.match(/\x60\x60\x60c\n([\s\S]*?)\n\x60\x60\x60/)[1].split('int main(void)')[0];
+const ownedWrong = ownedCorrect.replace('int closed = fclose(stream);', '(void)fclose(stream);\n    int closed = 0;');
+
 const mergeManuscript = await readFile(new URL('../content/algo/03-merge-sort.md', import.meta.url), 'utf8');
 const mergeProgram = mergeManuscript.match(/```c\n([\s\S]*?)\n```/)[1];
 const mergeCorrect = mergeProgram.split('int main(void)')[0];
@@ -1515,7 +1520,9 @@ try {
   }), true, 'C05 stream diagram and document must fit 390px');
   if (qaDir) await page.screenshot({ path: path.join(qaDir, 'file-stream-mobile.png'), fullPage: true });
   await context.setOffline(false);
-  await page.locator('.next-action [data-route="lesson:rust-cargo"]').click();
+  await page.locator('.next-action [data-route="lesson:c-owned-stream-byte"]').click();
+  await expect(page.locator('.detail-head h1')).toHaveText('소유 스트림: 오류 진단을 보존하며 닫기');
+  await page.goto(base + '/#lesson:rust-cargo');
   await expect(page.locator('.detail-head h1')).toHaveText('Cargo 프로젝트와 실패하는 테스트 읽기');
   await expect(page.locator('#code-input')).toHaveValue(rustDraft);
   console.log('PASS: C05 quiz correction, real 10-case GCC API failure/retry, mastery, backup, offline attempts, 390px and next lesson');
@@ -1803,6 +1810,61 @@ try {
   await page.locator('[data-route="track:algo"]').first().click();
   await expect(page.locator('[data-route="lesson:algo-merge"]')).toHaveCount(1);
   console.log('PASS: E03 E02-next entry, real GCC missing-remainder failure/correction 10/10, quiz retry, separate mastery, shared history, v1, 390px/offline and track return; E04 remains unavailable');
+
+  await page.goto(base + '/#lesson:c-file-stream-count');
+  await page.reload();
+  await page.locator('.next-action [data-route="lesson:c-owned-stream-byte"]').click();
+  await expect(page.locator('.detail-head h1')).toHaveText('소유 스트림: 오류 진단을 보존하며 닫기');
+  await expect(page.locator('#code-input')).toHaveValue(ownedStreamStarter);
+  await page.locator('[data-quiz="c-owned-stream-byte"][data-choice="1"]').click();
+  await expect(page.locator('.feedback.bad')).toBeVisible();
+  await page.locator('[data-retry="c-owned-stream-byte"]').click();
+  await page.locator('[data-quiz="c-owned-stream-byte"][data-choice="0"]').click();
+  await page.locator('#mark-theory').click();
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, ownedWrong);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, ownedCorrect);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('12/12');
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await bench.reload();
+  await bench.locator('#lesson-select').selectOption('c-owned-stream-byte');
+  await expect(bench.locator('#code-input')).toHaveValue(ownedCorrect);
+  const ownedDownloadEvent = bench.waitForEvent('download');
+  await bench.locator('#export-history').click();
+  const ownedDownload = await ownedDownloadEvent, ownedChunks = [];
+  for await (const chunk of await ownedDownload.createReadStream()) ownedChunks.push(chunk);
+  const ownedBackup = Buffer.concat(ownedChunks), ownedData = JSON.parse(ownedBackup);
+  assert.equal(ownedData.drafts['c-owned-stream-byte'], ownedCorrect);
+  assert.equal(ownedData.iterations['c-owned-stream-byte'].length, 2);
+  assert.equal(ownedData.drafts['algo-merge'], mergeCorrect);
+  assert.equal(ownedData.drafts['rust-cargo'], rustDraft);
+  await bench.locator('#import-file').setInputFiles({ name: 'owned-stream-backup.json', mimeType: 'application/json', buffer: ownedBackup });
+  await expect(bench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.locator('#code-input')).toHaveValue(ownedCorrect);
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('[data-restore-attempt="1"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(ownedWrong);
+  await page.locator('[data-restore-attempt="0"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(ownedCorrect);
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('.figure-box svg')).toHaveAttribute('role', 'img');
+  assert.equal(await page.evaluate(() => {
+    const svg = document.querySelector('.figure-box svg'), view = svg.viewBox.baseVal;
+    return [...svg.querySelectorAll('text')].every(text => {
+      const box = text.getBBox();
+      return box.x >= 0 && box.y >= 0 && box.x + box.width <= view.width && box.y + box.height <= view.height;
+    }) && document.documentElement.scrollWidth <= innerWidth;
+  }), true, 'C07 ownership diagram and learner page must fit 390px');
+  if (qaDir) await page.screenshot({ path: path.join(qaDir, 'owned-stream-mobile.png'), fullPage: true });
+  await context.setOffline(false);
+  await page.locator('[data-route="track:c"]').first().click();
+  await expect(page.locator('[data-route="lesson:c-owned-stream-byte"]')).toHaveCount(1);
+  console.log('PASS: C07 C05-next entry, real GCC ignored-close failure/correction 12/12, quiz retry, separate mastery, shared history/v1 restore, offline attempts and 390px');
   assert.deepEqual(errors, []);
   console.log('PASS: 390px mobile layout and offline reload of drafts/history; no browser exceptions');
 } catch (error) {
