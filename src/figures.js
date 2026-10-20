@@ -3,6 +3,14 @@ const arrow=(x1,y1,x2,y2)=>`<path d="M${x1} ${y1} L${x2} ${y2}" stroke="#6b8d98"
 const wrap=inner=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 670 190" role="img" aria-label="학습 개념 그림"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 const wrapTall=(label,inner,viewBox='0 0 670 300',style='')=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"${style?` style="${style}"`:''} role="img" aria-label="${label}"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 export function figureFor(kind){
+ if(kind==='array-list-shifts')return wrapTall('배열 리스트 삽입은 오른쪽으로 두 번, 삭제는 왼쪽으로 한 번 이동',
+  box(30,15,280,42,'10 · 20 · 30 | 길이3 / 용량6','#e7f1ff')+arrow(170,63,170,87)+
+  box(30,94,280,42,'위치1 삽입: 30 → 20 순서 이동','#fff3d8')+arrow(170,142,170,166)+
+  box(30,173,280,42,'10 · 15 · 20 · 30 | 이동2')+arrow(170,221,170,245)+
+  box(30,252,280,42,'위치2 삭제: 10 · 15 · 30 | 이동1','#d7f4e6')+
+  '<text x="170" y="329" text-anchor="middle" font-size="14" fill="#28485b">끝 편집 이동0 · 확보한 용량 안에서</text>',
+  '0 0 340 350','max-width:340px');
+
  if(kind==='owned-stream-cleanup')return wrapTall('소유권 이전 뒤 읽기 진단 저장과 스트림 정리 도식',
   box(35,20,270,44,'유효 인수 → 소유권 이전','#e7f1ff')+arrow(170,70,170,91)+
   box(35,98,270,44,'읽기 결과 · errno 저장')+arrow(170,148,170,169)+
