@@ -37,6 +37,61 @@ const arrayListManuscript = await readFile(new URL('../content/ds/04-array-list.
 const arrayListProgram = arrayListManuscript.match(/\x60\x60\x60c\n([\s\S]*?)\n\x60\x60\x60/)[1];
 const arrayListCorrect = arrayListProgram.split('int main(void)')[0];
 const arrayListWrong = arrayListCorrect.replace('list->values[i] = list->values[i - 1];', 'list->values[i - 1] = list->values[i];');
+import { permutationsExercise, permutationsMetadata, permutationsStarter } from '../server/permutations-exercise.mjs';
+const permutationsManuscript = await readFile(new URL('../content/algo/04-backtracking-permutations.md', import.meta.url), 'utf8');
+const permutationsProgram = permutationsManuscript.match(/\x60\x60\x60c\n([\s\S]*?)\n\x60\x60\x60/)[1];
+const permutationsCorrect = permutationsProgram.split('int main(void)')[0];
+const permutationsWrong = permutationsCorrect.replace('exchange(values + pos, values + i); /* undo */', '(void)0; /* undo omitted */');
+function verifyPermutationsContract() {
+  const lesson = c06Lessons.find(item => item.id === 'algo-permutations');
+  assert.ok(lesson, 'E04 must be reachable from the learner catalog');
+  assert.equal(lesson.track, 'algo');
+  assert.equal(lesson.figure, 'permutation-backtrack');
+  assert.deepEqual(c06ExerciseById(lesson.id), { ...permutationsMetadata, requiredFiles: [] });
+  assert.deepEqual(c06Graders.get(lesson.id), permutationsExercise);
+  assert.equal(lesson.challenge.starter, permutationsStarter);
+  assert.equal(lesson.challenge.input, permutationsMetadata.publicExample.input);
+  assert.equal(lesson.challenge.expected, permutationsMetadata.publicExample.output);
+  assert.ok(lesson.sections.some(section => section.code?.trim() === permutationsProgram.trim()));
+  assert.deepEqual(lesson.quiz.options, ['행 개수 증가', '재귀 뒤 같은 두 칸 재교환', 'pos를 전역에 저장', '출력을 정렬']);
+  assert.equal(lesson.quiz.answer, 1);
+  assert.equal(Object.hasOwn(c06ExerciseById(lesson.id), 'harness'), false);
+  console.log('PASS: E04 learner catalog, compiled original example, starter and private ten-case definition match');
+}
+async function verifyPermutationsHTTP() {
+  const app = createLearningServer({ root: fileURLToPath(new URL('../', import.meta.url)) });
+  try {
+    const { port } = await app.listen(0);
+    const base = 'http://127.0.0.1:' + port;
+    const response = await fetch(base);
+    assert.equal(response.status, 200);
+    const token = (await response.text()).match(/name="codeweave-token" content="([a-f0-9]{64})"/)?.[1];
+    assert.match(token, /^[a-f0-9]{64}$/);
+    assert.notEqual(permutationsWrong, permutationsCorrect);
+    for (const [code, ok] of [[permutationsStarter, false], [permutationsWrong, false], [permutationsCorrect, true]]) {
+      const response = await fetch(base + '/api/grade', { method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CodeWeave-Token': token },
+        body: JSON.stringify({ exerciseId: permutationsExercise.id, code }), signal: AbortSignal.timeout(10000) });
+      assert.equal(response.status, 200);
+      const result = await response.json();
+      assert.equal(result.ok, ok, JSON.stringify(result));
+      assert.equal(result.tests.length, 10);
+      assert.equal(result.compileOutput, '');
+      if (ok) assert.equal(result.message, '10/10개 테스트 통과');
+    }
+    console.log('PASS: E04 authenticated actual GCC rejects starter/missing undo and accepts correction 10/10');
+  } finally {
+    await app.close();
+  }
+}
+if (process.argv.includes('--permutations-http-only')) {
+  await verifyPermutationsHTTP();
+  process.exit(0);
+}
+verifyPermutationsContract();
+await verifyPermutationsHTTP();
+if (process.argv.includes('--permutations-contract-only')) process.exit(0);
+
 function verifyArrayListContract() {
   const lesson = c06Lessons.find(item => item.id === 'ds-array-list');
   assert.ok(lesson, 'D04 must be reachable from the learner catalog');
@@ -1879,7 +1934,7 @@ try {
   await page.locator('.next-action [data-route="lesson:algo-binary"]').click();
   await expect(page.locator('.detail-head h1')).toHaveText('복잡도와 선형·이진 탐색의 전제');
   console.log('PASS: D04 D03-next entry, real GCC wrong-shift failure/correction 10/10, quiz retry, separate mastery, shared history, v1, 390px diagram/offline and next lesson');
-  // E02's actual next action now enters E03; no synthetic E04 is advertised.
+  // E02's actual next action now enters E03; E04's real next entry is checked below.
   await page.goto(base + '/#lesson:algo-stable-insertion');
   await page.locator('.next-action [data-route="lesson:algo-merge"]').click();
   await page.reload();
@@ -1936,7 +1991,84 @@ try {
   await context.setOffline(false);
   await page.locator('[data-route="track:algo"]').first().click();
   await expect(page.locator('[data-route="lesson:algo-merge"]')).toHaveCount(1);
-  console.log('PASS: E03 E02-next entry, real GCC missing-remainder failure/correction 10/10, quiz retry, separate mastery, shared history, v1, 390px/offline and track return; E04 remains unavailable');
+  console.log('PASS: E03 E02-next entry, real GCC missing-remainder failure/correction 10/10, quiz retry, separate mastery, shared history, v1, 390px/offline and track return; E04 delivery is checked next');
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(base + '/#lesson:algo-merge');
+  await page.locator('.next-action [data-route="lesson:algo-permutations"]').click();
+  await page.reload();
+  await expect(page.locator('meta[name="codeweave-token"]')).toHaveAttribute('content', /^[a-f0-9]{64}$/);
+  await expect(page.locator('.detail-head h1')).toHaveText('재귀 순열: 선택하고 돌아와 원상 복원하기');
+  await expect(page.locator('.practice-zone')).toContainText('함수 직접 호출형');
+  await expect(page.locator('#code-input')).toHaveValue(permutationsStarter);
+  await page.locator('[data-quiz="algo-permutations"][data-choice="0"]').click();
+  await expect(page.locator('.feedback.bad')).toBeVisible();
+  await page.locator('[data-retry="algo-permutations"]').click();
+  await page.locator('[data-quiz="algo-permutations"][data-choice="1"]').click();
+  await page.locator('#mark-theory').click();
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, permutationsWrong);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, permutationsCorrect);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('10/10');
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await bench.reload();
+  await bench.locator('#lesson-select').selectOption('algo-permutations');
+  await expect(bench.locator('#code-input')).toHaveValue(permutationsCorrect);
+  const permutationsDownloadEvent = bench.waitForEvent('download');
+  await bench.locator('#export-history').click();
+  const permutationsDownload = await permutationsDownloadEvent, permutationsChunks = [];
+  for await (const chunk of await permutationsDownload.createReadStream()) permutationsChunks.push(chunk);
+  const permutationsBackup = Buffer.concat(permutationsChunks), permutationsData = JSON.parse(permutationsBackup);
+  assert.equal(permutationsData.drafts['algo-permutations'], permutationsCorrect);
+  assert.equal(permutationsData.iterations['algo-permutations'].length, 2);
+  assert.equal(permutationsData.drafts['algo-merge'], mergeCorrect);
+  assert.equal(permutationsData.drafts['c-preprocessor-once'], c06Correct);
+  assert.equal(permutationsData.drafts['rust-cargo'], rustDraft);
+  await bench.evaluate(() => {
+    for (const key of ['codeweave.drafts.v1', 'codeweave.iterations.v1']) {
+      const values = JSON.parse(localStorage.getItem(key) || '{}');
+      delete values['algo-permutations'];
+      localStorage.setItem(key, JSON.stringify(values));
+    }
+  });
+  await bench.reload();
+  await bench.locator('#lesson-select').selectOption('algo-permutations');
+  await expect(bench.locator('#code-input')).toHaveValue(permutationsStarter);
+  assert.deepEqual((await history(bench))['algo-permutations'] ?? [], [], 'E04 actual attempt records must be absent before restore');
+  await expect(bench.locator('#attempt-list')).toContainText('아직 제출 기록이 없습니다.');
+  await bench.locator('#import-file').setInputFiles({ name: 'permutations-backup.json', mimeType: 'application/json', buffer: permutationsBackup });
+  await expect(bench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.locator('#code-input')).toHaveValue(permutationsCorrect);
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('[data-restore-attempt="1"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(permutationsWrong);
+  await page.locator('[data-restore-attempt="0"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(permutationsCorrect);
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('.figure-box svg')).toHaveAttribute('role', 'img');
+  const permutationsBounds = await page.evaluate(() => {
+    const svg = document.querySelector('.figure-box svg'), view = svg.viewBox.baseVal;
+    const overflow = [...svg.querySelectorAll('text')].flatMap(text => {
+      const box = text.getBBox();
+      return box.x >= 0 && box.y >= 0 && box.x + box.width <= view.width && box.y + box.height <= view.height
+        ? [] : [{ text: text.textContent, x: box.x, y: box.y, width: box.width, height: box.height }];
+    });
+    return { overflow, width: document.documentElement.scrollWidth, viewport: innerWidth,
+      wideElements: [...document.querySelectorAll('*')].filter(el => el.getBoundingClientRect().right > innerWidth + 1)
+        .slice(0, 8).map(el => ({ tag: el.tagName, class: el.className, text: el.textContent.slice(0, 80) })) };
+  });
+  assert.deepEqual(permutationsBounds.overflow, [], 'E04 SVG text overflow: ' + JSON.stringify(permutationsBounds));
+  assert.ok(permutationsBounds.width <= permutationsBounds.viewport, 'E04 page overflow: ' + JSON.stringify(permutationsBounds));
+  if (qaDir) await page.screenshot({ path: path.join(qaDir, 'permutations-mobile.png'), fullPage: true });
+  await context.setOffline(false);
+  await page.locator('[data-route="track:algo"]').first().click();
+  await expect(page.locator('[data-route="lesson:algo-permutations"]')).toHaveCount(1);
+  console.log('PASS: E04 E03-next entry, real GCC missing-undo failure/correction 10/10, quiz retry, separate mastery, shared history, v1, 390px diagram/offline and next lesson');
 
   await page.goto(base + '/#lesson:c-file-stream-count');
   await page.reload();

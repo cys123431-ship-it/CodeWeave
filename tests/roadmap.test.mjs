@@ -426,3 +426,59 @@ test('accepted D04 records verified delivery and preserves its E04 handoff throu
   assert.equal(api.validateRoadmap(historical), true);
   assert.equal(api.validateRoadmap(data), true);
 });
+
+test('E04 delivers original permutation contract through catalog and roadmap without leaking cases', async () => {
+  const { permutationsExercise, permutationsMetadata, permutationsStarter } = await import('../server/permutations-exercise.mjs');
+  const lesson = lessons.find(item => item.id === 'algo-permutations');
+  assert.ok(lesson, 'E04 must be learner-facing');
+  assert.equal(lesson.track, 'algo');
+  assert.equal(lesson.figure, 'permutation-backtrack');
+  assert.deepEqual(exerciseById(lesson.id), { ...permutationsMetadata, requiredFiles: [] });
+  assert.deepEqual(gradingExercises.get(lesson.id), permutationsExercise);
+  assert.equal(Object.hasOwn(exerciseById(lesson.id), 'harness'), false);
+  assert.equal(lesson.challenge.starter, permutationsStarter);
+  assert.equal(lesson.challenge.input, permutationsMetadata.publicExample.input);
+  assert.equal(lesson.challenge.expected, permutationsMetadata.publicExample.output);
+  const manuscript = await readFile(new URL('../content/algo/04-backtracking-permutations.md', import.meta.url), 'utf8');
+  const program = manuscript.match(/\x60\x60\x60c\n([\s\S]*?)\n\x60\x60\x60/)[1];
+  assert.ok(lesson.sections.some(section => section.code?.trim() === program.trim()));
+  assert.deepEqual(lesson.quiz.options, ['행 개수 증가', '재귀 뒤 같은 두 칸 재교환', 'pos를 전역에 저장', '출력을 정렬']);
+  assert.equal(lesson.quiz.answer, 1);
+  assert.equal(lessons[lessons.findIndex(item => item.id === 'algo-merge') + 1].id, lesson.id);
+  const { data, api } = await load();
+  const unit = data.stages.find(stage => stage.id === 'E').units.find(item => item.id === 'E04');
+  assert.deepEqual(unit.lessonIds, [lesson.id]);
+  for (const file of ['tests/permutations-exercise.test.mjs', 'tests/roadmap.test.mjs', 'tests/browser-practice.mjs']) assert.ok(unit.tests.includes(file));
+  assert.equal(api.validateRoadmap(data), true);
+  for (const file of ['src/catalog.js', 'src/exercises.js', 'server/grading-exercises.mjs', 'tests/browser-practice.mjs', 'tests/roadmap.test.mjs']) {
+    const result = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+  }
+});
+
+test('E04 authenticated API rejects starter and missing undo then accepts correction across ten cases', () => {
+  const result = spawnSync(process.execPath, ['tests/browser-practice.mjs', '--permutations-http-only'], { encoding: 'utf8', timeout: 30000 });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /PASS: E04 authenticated actual GCC/);
+});
+
+test('accepted E04 records verified permutation delivery and preserves its F03 handoff through later rotations', async () => {
+  const { data, api } = await load();
+  const unit = data.stages.find(stage => stage.id === 'E').units.find(item => item.id === 'E04');
+  assert.equal(unit.status, '완료');
+  assert.deepEqual(unit.lessonIds, ['algo-permutations']);
+  assert.equal(unit.acceptance.scope, 'swap-dfs-permutations-and-restoration');
+  assert.equal(unit.acceptance.sourceSha, '1b58a5d2a71a56b0759a0f0c6c0639bd4928d48b');
+  assert.equal(unit.acceptance.ci, 'https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39446801185/job/118710743631');
+  assert.deepEqual(unit.acceptance.platforms, ['linux']);
+  assert.deepEqual(unit.acceptance.checks, ['theory', 'compiled-example', 'quiz-retry', 'actual-grading', 'correction-retry', 'shared-history', 'backup-restore', 'mastery-next', 'offline', '390px']);
+  assert.equal(gradingExercises.get('algo-permutations').cases.length, 10);
+  const historical = structuredClone(data);
+  historical.stages.find(stage => stage.id === 'F').units.find(item => item.id === 'F03').status = '진행 중';
+  const track = api.nextTurn('E');
+  assert.equal(track, 'F-G');
+  assert.equal(api.selectUnit(historical, track).id, 'F03');
+  historical.next = { track, unit: 'F03' };
+  assert.equal(api.validateRoadmap(historical), true);
+  assert.equal(api.validateRoadmap(data), true);
+});

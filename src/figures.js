@@ -3,6 +3,16 @@ const arrow=(x1,y1,x2,y2)=>`<path d="M${x1} ${y1} L${x2} ${y2}" stroke="#6b8d98"
 const wrap=inner=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 670 190" role="img" aria-label="학습 개념 그림"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 const wrapTall=(label,inner,viewBox='0 0 670 300',style='')=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"${style?` style="${style}"`:''} role="img" aria-label="${label}"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 export function figureFor(kind){
+ if(kind==='permutation-backtrack')return wrapTall('순열 재귀 트리와 선택 뒤 입력 복원 도식',
+  box(35,15,270,40,'1 · 2 · 3 | pos0','#e7f1ff')+
+  arrow(110,62,60,94)+arrow(170,62,170,94)+arrow(230,62,280,94)+
+  box(10,101,100,40,'1 _ _')+box(120,101,100,40,'2 _ _')+box(230,101,100,40,'3 _ _')+
+  arrow(60,148,60,174)+arrow(170,148,170,174)+arrow(280,148,280,174)+
+  box(10,181,100,40,'123 · 132','#fff3d8')+box(120,181,100,40,'213 · 231','#fff3d8')+box(230,181,100,40,'321 · 312','#fff3d8')+
+  box(35,251,270,40,'교환 → 재귀 → 같은 교환','#d7f4e6')+
+  '<text x="170" y="326" text-anchor="middle" font-size="14" fill="#28485b">입력123으로 복원 · 잎6행</text>',
+  '0 0 340 350','max-width:340px');
+
  if(kind==='array-list-shifts')return wrapTall('배열 리스트 삽입은 오른쪽으로 두 번, 삭제는 왼쪽으로 한 번 이동',
   box(30,15,280,42,'10 · 20 · 30 | 길이3 / 용량6','#e7f1ff')+arrow(170,63,170,87)+
   box(30,94,280,42,'위치1 삽입: 30 → 20 순서 이동','#fff3d8')+arrow(170,142,170,166)+

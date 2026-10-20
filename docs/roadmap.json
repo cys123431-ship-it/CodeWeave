@@ -10,8 +10,8 @@
     "C"
   ],
   "next": {
-    "track": "E",
-    "unit": "E04"
+    "track": "F-G",
+    "unit": "F03"
   },
   "limits": {
     "screenSections": [
@@ -569,10 +569,38 @@
         {
           "id": "E04",
           "title": "재귀 트리·백트래킹과 되돌리기",
-          "status": "미착수",
-          "lessonIds": [],
-          "manuscripts": [],
-          "tests": []
+          "status": "완료",
+          "lessonIds": [
+            "algo-permutations"
+          ],
+          "manuscripts": [
+            "content/algo/04-backtracking-permutations.md"
+          ],
+          "tests": [
+            "tests/permutations-exercise.test.mjs",
+            "tests/roadmap.test.mjs",
+            "tests/browser-practice.mjs"
+          ],
+          "acceptance": {
+            "scope": "swap-dfs-permutations-and-restoration",
+            "sourceSha": "1b58a5d2a71a56b0759a0f0c6c0639bd4928d48b",
+            "ci": "https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39446801185/job/118710743631",
+            "platforms": [
+              "linux"
+            ],
+            "checks": [
+              "theory",
+              "compiled-example",
+              "quiz-retry",
+              "actual-grading",
+              "correction-retry",
+              "shared-history",
+              "backup-restore",
+              "mastery-next",
+              "offline",
+              "390px"
+            ]
+          }
         },
         {
           "id": "E05",
