@@ -553,7 +553,7 @@ for (const mode of ['transient-live', 'transient-unavailable', 'permanent', 'sig
         childProcess.spawnSync = snapshot;
         syncBuiltinESMExports();
         controller.abort();
-        if (group) { try { kill(group, 'SIGKILL'); } catch (error) { if (error.code !== 'ESRCH') throw error; } }
+        if (group && mode === 'signal-denied') { try { kill(group, 'SIGKILL'); } catch (error) { if (error.code !== 'ESRCH') throw error; } }
         await pending;
       }
     `;
