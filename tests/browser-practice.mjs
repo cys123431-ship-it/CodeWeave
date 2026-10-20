@@ -1853,7 +1853,8 @@ try {
   await bench.reload();
   await bench.locator('#lesson-select').selectOption('ds-array-list');
   await expect(bench.locator('#code-input')).toHaveValue(arrayListStarter);
-  await expect(bench.locator('#attempt-list li')).toHaveCount(0);
+  assert.deepEqual((await history(bench))['ds-array-list'] ?? [], [], 'D04 actual attempt records must be absent before restore');
+  await expect(bench.locator('#attempt-list')).toContainText('아직 제출 기록이 없습니다.');
   await bench.locator('#import-file').setInputFiles({ name: 'array-list-backup.json', mimeType: 'application/json', buffer: arrayListBackup });
   await expect(bench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
   await context.setOffline(true);
