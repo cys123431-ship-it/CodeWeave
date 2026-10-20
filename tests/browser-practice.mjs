@@ -1643,6 +1643,8 @@ try {
   await context.setOffline(false);
   await page.locator('.next-action [data-route="lesson:ds-queue"]').click();
   await expect(page.locator('.detail-head h1')).toHaveText('원형 큐: 먼저 온 값을 순환하며 꺼내기');
+  await page.locator('.next-action [data-route="lesson:ds-array-list"]').click();
+  await expect(page.locator('.detail-head h1')).toHaveText('배열 리스트: 중간 삽입·삭제와 이동 비용');
   await page.locator('.next-action [data-route="lesson:algo-binary"]').click();
   await expect(page.locator('.detail-head h1')).toHaveText('복잡도와 선형·이진 탐색의 전제');
   console.log('PASS: D02 legacy draft/quiz preserved, real FIFO failure/correction 10/10, mastery, backup, offline attempts, 390px and next lesson');

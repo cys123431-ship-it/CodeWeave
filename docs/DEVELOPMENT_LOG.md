@@ -3,9 +3,9 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 시작/결과 SHA: main 7ab4abc89b739d3190d692f4aff75b272eec0a54; RED 3ff364e803103b005d4c9b2efff7f982de79bca7; 구현 제목 feat: connect D04 array list learning and actual grading.
 - 목표: 준비된10사례 계약을 화면13절·퀴즈·GCC 수정/재제출·공유 이력·v1 복원·390px/오프라인에 연결; CI 확인 전 완료 인수 보류.
 - 변경 파일 수: 10개(카탈로그·공개 메타·서버 등록·브라우저/로드맵 검사·README·로드맵2개·활성/보관 일지).
-- 테스트 결과: 시작 CI768/768 성공; 신규2건 RED770건768통과/2실패/skip0·browser D04 미등록 실패 확인. 기존17검사/10사례 유지·구현 전체/실제 browser CI 대기; 삭제/기대 완화0.
+- 테스트 결과: 시작 CI768/768 성공; 신규2건 RED770건768통과/2실패/skip0·browser D04 미등록 실패 확인. 기존17검사/10사례 유지·구현770/770·macOS 성공, browser D02→D03→알고리즘 고정 경로 실패 재현·D04 경유로 수정 후 CI 대기; 삭제/기대 완화0.
 - CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39406808037 성공; RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39412549764 신규2실패; 구현 결과 후속 기록/보고.
-- 발견한 문제: 로컬 환경 연결 불가로 미커밋/Git/npm/GCC/diff 미확인·미실행; 원격 main/트리/열린 PR0 확인 후 PR #5 사용. D03 다음 화면을 새 D04로 연결하는 기존 경로 기대 수정은 실제 단원 추가에 따른 변경.
+- 발견한 문제: 로컬 환경 연결 불가로 미커밋/Git/npm/GCC/diff 미확인·미실행; 원격 main/트리/열린 PR0 확인 후 PR #5 사용. D03→D04 새 단원 삽입으로 D02 경유 검사도 D03→D04→알고리즘 실제 버튼 순서로 갱신(기대 완화 아님).
 - 보안 영향: 기존 인증·길이 제한·신뢰 로컬 c-function 재사용·허용 목록에 ds-array-list만 추가; 하네스/비공개 사례는 클라이언트에 노출하지 않고 저장키/백업/실행 경계 보존.
 - 단계별 완료율: D04 진행 중·next=D/D04, A3/5·B10/11·C7/8·D/E3/8·F2/8·G0/8·H/I0/6 유지; 화면35·기본C26/DS4/알고리즘3문제, 분모 불변.
 - 다음 작업: 결과 SHA의 실제 browser/GCC·770건 검사 성공 후 같은 실행에서 D04 제한 범위 완료와 E04 순환을 기록하고 최종 SHA CI·원격 반영 확인.
