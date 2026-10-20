@@ -1,14 +1,14 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-20 16:55 KST — C07 문서 수치 회귀 수정
-- 시작/결과 SHA: main04751784fe9c4f5370b38452c37187cbb90902b6; PR시작6802098541decdf7843db67f7b4eb93e189cef2a; 결과 커밋 fix: synchronize C07 published learning documentation.
+- 시작/결과 SHA: main04751784fe9c4f5370b38452c37187cbb90902b6; PR시작6802098541decdf7843db67f7b4eb93e189cef2a; 수정7957203fcb84420fcf7e51ced00364532d4c84d9; 후속 docs: record verified C07 documentation recovery CI.
 - 목표: 최신 CI의 유일한 실패인 README C25/실제26 불일치를 먼저 수정하고 C07 원고의 미등록 설명을 현재화.
 - 변경 파일 수: 4개(README·C07 원고·활성/보관 일지); 코드/검사 변경0·신규 단원/문제0.
-- 테스트 결과: 기존 README track counts reflect lessons and actual runnable grading definitions 실패를 시작 SHA CI에서 확인(전체749건748통과/실패1/skip0); 문서 수정 뒤 전체/브라우저/macOS CI 대기, 기대값/검사 삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39385771256 전체 실패1·browser/macOS 성공; 결과 SHA CI 성공 확인 전 완료로 기록하지 않음.
+- 테스트 결과: 기존 README track counts reflect lessons and actual runnable grading definitions 실패→통과; 전체749건748통과/실패1→749/749·실패0/skip0, 실제 C07 browser·macOS18/18 성공; 기대값/검사 삭제0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39385771256 전체 실패1·browser/macOS 성공; 수정 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39389964131 전체749/749·browser/macOS 성공. 문서 수치 회귀 수정 완료·후속 기록 SHA CI 최종 보고.
 - 발견한 문제: README C26·총34·C07 실행 범위를 실제 등록과 일치시킴. 원고의 준비 전용 설명을 화면/연습장·재제출/복원/분리 숙달 안내로 교체; 예제 C 코드와 채점 계약은 그대로.
 - 보안 영향: 문서만 변경·외부 입력/코드 실행/파일 접근/저장키 변경0; 로컬 환경409 environment_offline로 로컬 Git/npm/GCC/diff 검사는 미실행, GitHub 읽기·atomic tree/ref 쓰기로 반영.
 - 단계별 완료율: C07진행 중·next=C/C07 유지; A3/5·B10/11·C6/8·D/E3/8·F2/8·G0/8·H/I0/6. 화면34·C26/DS3/알고리즘3문제, 분모/완료 수 불변.
-- 다음 작업: 결과 SHA CI 성공 확인 후 C07 제한 범위 인수와 PR #3 병합을 검토; 성공한 기존 원고/실습을 다시 준비하지 않고 다음 자료구조 차례로 연결.
+- 다음 작업: 후속 기록 SHA CI 확인 후 C07 제한 범위 인수와 PR #3 병합을 검토; 성공한 기존 원고/실습을 다시 준비하지 않고 다음 자료구조 차례로 연결.
 
 ---
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
