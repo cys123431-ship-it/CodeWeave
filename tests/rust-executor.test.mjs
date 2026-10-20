@@ -456,3 +456,112 @@ test('real local Rust executor grades normal, wrong, syntax and warning submissi
     assert.deepEqual(await fs.readdir(parent), ['case-pid']);
   } finally { controller.abort(); await cancelled; }
 });
+
+
+for (const mode of ['transient-live', 'transient-unavailable', 'permanent', 'signal-denied']) {
+  test('Rust owned cleanup observation: ' + mode, { skip: !posix, timeout: 15000 }, async t => {
+    // Deliberate quarantine must never poison the other tests' shared admission.
+    const fixture = await fakeTools(t);
+    const marker = path.join(fixture.root, 'settlement-pids');
+    const cargo = path.join(fixture.sysroot, 'bin', 'cargo');
+    const source = await fs.readFile(cargo, 'utf8');
+    await fs.writeFile(cargo, source.replace('echo "error: trusted fixture compile failure" >&2\nexit 101', () =>
+      `sleep 30 &\nprintf '%s %s\\n' "$$" "$!" > ${JSON.stringify(marker)}\nwait`));
+    const helper = `
+      import assert from 'node:assert/strict';
+      import fs from 'node:fs/promises';
+      import { readdirSync } from 'node:fs';
+      import childProcess from 'node:child_process';
+      import { syncBuiltinESMExports } from 'node:module';
+      import { createLocalRustGradingService } from ${JSON.stringify(new URL('../server/rust-executor.mjs', import.meta.url).href)};
+      import { gradingAdmission } from ${JSON.stringify(new URL('../server/grading-admission.mjs', import.meta.url).href)};
+      const mode = ${JSON.stringify(mode)}, fixture = ${JSON.stringify(fixture)};
+      const marker = ${JSON.stringify(marker)}, request = ${JSON.stringify(request)};
+      const definitions = new Map(${JSON.stringify([...definitions])});
+      const service = await createLocalRustGradingService({ enabled: true, definitions, ...fixture });
+      const kill = process.kill.bind(process), snapshot = childProcess.spawnSync;
+      const controller = new AbortController();
+      let group, signals = 0, probes = 0, snapshots = 0, settled = false;
+      process.kill = (pid, signal) => {
+        if (pid < 0 && signal === 'SIGKILL') {
+          assert.equal(++signals, 1, 'no repeated signal to a possibly departed group');
+          group = pid;
+          if (mode === 'signal-denied') throw Object.assign(Error('owned signal denied'), { code: 'EPERM' });
+          return kill(pid, signal);
+        }
+        if (pid === group && signal === 0) {
+          probes++;
+          assert.equal(gradingAdmission.busy, true, 'lease held during uncertain observation');
+          assert.equal(settled, false);
+          assert.ok(readdirSync(fixture.parent).length > 0, 'workspace retained during observation');
+          if (mode === 'permanent' || probes <= 2) {
+            throw Object.assign(Error('read-only observation denied'), { code: 'EPERM' });
+          }
+        }
+        return kill(pid, signal);
+      };
+      childProcess.spawnSync = (command, ...args) => {
+        if (command === '/bin/ps' && group && (mode === 'permanent' || snapshots < 2)) {
+          snapshots++;
+          if (mode === 'transient-unavailable') return { status: 1, stdout: '', stderr: '' };
+          return { status: 0, stdout: String(-group) + ' S\\n', stderr: '' };
+        }
+        return snapshot(command, ...args);
+      };
+      syncBuiltinESMExports();
+      const pending = service.submit(request, { signal: controller.signal })
+        .then(value => ({ value }), error => ({ error })).finally(() => { settled = true; });
+      try {
+        const end = Date.now() + 4000;
+        let pids;
+        while (Date.now() < end) {
+          try {
+            const text = await fs.readFile(marker, 'utf8');
+            if (text.trim()) { pids = text.trim().split(/\\s+/).map(Number); break; }
+          } catch (error) { if (error.code !== 'ENOENT') throw error; }
+          await new Promise(resolve => setTimeout(resolve, 10));
+        }
+        assert.ok(pids?.length === 2 && pids.every(pid => Number.isSafeInteger(pid) && pid > 1));
+        const start = Date.now();
+        controller.abort();
+        const result = await pending;
+        assert.ok(Date.now() - start < 2000, 'cleanup remains bounded');
+        assert.equal(signals, 1);
+        if (mode.startsWith('transient-')) {
+          assert.equal(result.error?.code, 'RUST_CANCELLED');
+          assert.ok(probes >= 3 && snapshots >= 2, 'uncertain observations were actually exercised');
+          assert.equal(service.inspect().state, 'ready');
+          assert.equal(gradingAdmission.busy, false);
+          for (const pid of pids) {
+            const state = snapshot('/bin/ps', ['-o', 'stat=', '-p', String(pid)], { encoding: 'utf8' });
+            assert.ok(state.status === 1 || (state.status === 0 && /^Z/.test(state.stdout.trim())),
+              'no surviving owned compiler task: ' + pid + ' ' + state.stdout);
+          }
+          assert.deepEqual(await fs.readdir(fixture.parent), []);
+        } else {
+          assert.equal(result.error?.code, 'RUST_UNAVAILABLE');
+          assert.equal(service.inspect().state, 'quarantined');
+          assert.equal(service.inspect().reason, 'process-cleanup');
+          assert.equal(gradingAdmission.busy, true);
+          assert.equal(await service.recover(), false);
+          await assert.rejects(service.submit(request), { code: 'RUST_UNAVAILABLE' });
+          if (mode === 'permanent') assert.ok(probes >= 1);
+        }
+        console.log('SETTLEMENT_CONTRACT_VERIFIED');
+      } finally {
+        process.kill = kill;
+        childProcess.spawnSync = snapshot;
+        syncBuiltinESMExports();
+        controller.abort();
+        if (group) { try { kill(group, 'SIGKILL'); } catch (error) { if (error.code !== 'ESRCH') throw error; } }
+        await pending;
+      }
+    `;
+    const child = spawnSync(process.execPath, ['--input-type=module', '-e', helper], {
+      encoding: 'utf8', timeout: 10000, maxBuffer: 80000
+    });
+    assert.ifError(child.error);
+    assert.equal(child.status, 0, child.stderr + child.stdout);
+    assert.match(child.stdout, /SETTLEMENT_CONTRACT_VERIFIED/);
+  });
+}
