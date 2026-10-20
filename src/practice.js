@@ -4,6 +4,8 @@ import { formatSubmissionForDisplay } from './multi-file.js';
 import { formatCompilerFeedback, normalizeCompilerFeedback } from './compiler-feedback.js';
 import { exerciseById } from './exercises.js';
 
+const RUST_GRADING_IDS = Object.freeze(['rust-cargo', 'rust-mut', 'rust-control-flow']);
+
 // This marker selects a local UI route, never grants server-side authority.
 // Offline shells have neither marker nor token. Other Rust IDs remain ungraded.
 export function hasRustGrading(document) {
@@ -17,13 +19,13 @@ export function rustGradingIds(document) {
   if (typeof marker?.content !== 'string') return Object.freeze(['rust-cargo']);
   const ids = marker.content.split(' ');
   if (!ids.includes('rust-cargo') || new Set(ids).size !== ids.length ||
-      ids.some(id => !['rust-cargo', 'rust-mut'].includes(id))) return Object.freeze([]);
+      ids.some(id => !RUST_GRADING_IDS.includes(id))) return Object.freeze([]);
   return Object.freeze(ids);
 }
 
 export function gradingRequestFor(id, rustEnabled = false) {
   const enabled = Array.isArray(rustEnabled)
-    ? ['rust-cargo', 'rust-mut'].includes(id) && rustEnabled.includes(id)
+    ? RUST_GRADING_IDS.includes(id) && rustEnabled.includes(id)
     : id === 'rust-cargo' && rustEnabled === true;
   if (enabled) {
     return { endpoint: './api/grade/rust', timeout: 45000, expectedTests: 10 };
@@ -53,7 +55,7 @@ export function validateGradingResult(result, expectedTests) {
 }
 
 export function recordGradedSubmission(storage, knownIds, id, code, result, at) {
-  validateGradingResult(result, ['rust-cargo', 'rust-mut'].includes(id) ? 10 : undefined);
+  validateGradingResult(result, RUST_GRADING_IDS.includes(id) ? 10 : undefined);
   if (!knownIds.includes(id) || typeof code !== 'string' || code.length > MAX_CODE_LENGTH) {
     throw new Error('지원하지 않는 문제 또는 코드 길이입니다.');
   }

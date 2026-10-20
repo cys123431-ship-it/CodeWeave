@@ -746,10 +746,10 @@
         {
           "id": "F03",
           "title": "조건·반복·식과 범위",
-          "status": "미착수",
+          "status": "진행 중",
           "lessonIds": [],
-          "manuscripts": [],
-          "tests": []
+          "manuscripts": ["content/rust/03-control-flow.md"],
+          "tests": ["tests/f03-control-flow.test.mjs"]
         },
         {
           "id": "F04",

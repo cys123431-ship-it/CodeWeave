@@ -7,7 +7,7 @@
 | C | C 심화 | 7/8 | 0 | 1 | 87.5% |
 | D | 자료구조 — C | 4/8 | 0 | 4 | 50.0% |
 | E | 알고리즘 — C | 4/8 | 0 | 4 | 50.0% |
-| F | Rust 기초 | 2/8 | 0 | 6 | 25.0% |
+| F | Rust 기초 | 2/8 | 1 | 5 | 25.0% |
 | G | Rust 응용 | 0/8 | 0 | 8 | 0.0% |
 | H | C와 Rust 연결 학습·재구현 | 0/6 | 0 | 6 | 0.0% |
 | I | 종합 프로젝트·플랫폼 마무리 | 0/6 | 0 | 6 | 0.0% |
@@ -97,7 +97,7 @@
 |---|---|---|---|
 | F01 | Cargo 프로젝트·cargo test와 채점 계약 | 완료 | `rust-cargo` · [원고](../content/rust/01-cargo.md) · [검사](../tests/f01-manuscript.test.mjs) · [검사](../tests/rust-delivery.test.mjs) · [검사](../tests/rust-exercises.test.mjs) · [검사](../tests/rust-http.test.mjs) · [검사](../tests/rust-executor.test.mjs) · [검사](../tests/rust-client.test.mjs) · [검사](../tests/rust-workbench.test.mjs) · [검사](../tests/start-rust.test.mjs) · [검사](../tests/browser-practice.mjs) · [검사](../tests/rust-contract.test.mjs) · [검사](../tests/rust-preparation.test.mjs) · [검사](../tests/rust-results.test.mjs) · [검사](../tests/rust-cargo-lesson.test.mjs) · [검사](../tests/theory-handoff.test.mjs) · [이론·퀴즈 인수 CI](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/38843874384) · [로컬 Cargo 인수](F01_ACCEPTANCE.md) · [실제 채점 CI](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39157149118) |
 | F02 | 변수 바인딩·가변성과 스칼라 형 | 완료 | `rust-mut` · [원고](../content/rust/02-bindings.md) · [검사](../tests/rust-mut-preparation.test.mjs) · [검사](../tests/f02-opt-in.test.mjs) · [검사](../tests/f02-client.test.mjs) · [검사](../tests/f02-delivery.test.mjs) · [검사](../tests/browser-practice.mjs) · [로컬 Cargo 인수](F02_ACCEPTANCE.md) · [실제 채점 CI](https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39221228817) |
-| F03 | 조건·반복·식과 범위 | 미착수 | — |
+| F03 | 조건·반복·식과 범위 | 진행 중 | [원고](../content/rust/03-control-flow.md) · [검사](../tests/f03-control-flow.test.mjs) |
 | F04 | 함수·반환값과 단위 테스트 | 미착수 | — |
 | F05 | 소유권·이동·복사와 자원 해제 | 미착수 | — |
 | F06 | 공유 참조·가변 빌림과 슬라이스 | 미착수 | — |

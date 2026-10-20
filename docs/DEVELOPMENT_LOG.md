@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-21 00:57 KST — F03 조건·반복·범위 채점 준비
+- 시작/결과 SHA: main 46604df10ee57093d5be65928bad977f2a592cda; RED1 72a6c315de25c1e90b29f9146106b70050c4e8ea; RED2 342fe9d194f922051df420deff0b4fb15f2a64de; 구현 커밋 제목 feat: prepare F03 bounded control flow and explicit capabilities.
+- 목표: 모든u32 입력을1000 이하로 먼저 제한하고 stop 미만 짝수를 누적하는 Cargo10사례·원고94줄/14절·정적 도식과 명시적 API 허용 계약 준비.
+- 변경 파일 수: 10개(신규 정의·검사·원고3, 기존 서버/클라이언트·도식3, 로드맵2·활성/보관 일지2); 카탈로그/기본 실행 명령 변경0.
+- 테스트 결과: 신규17건 RED CI807건790통과/17실패/skip0; 허용 목록/결과 검증4건 추가 뒤 RED811건790통과/21실패/skip0. 로컬 전체811건776통과/0실패/Cargo부재35skip, 신규21건9통과/12skip. 변경 JS/MJS5개 node --check·roadmap --check·git diff --check 통과; 구현 CI 후속 확인·검사 삭제0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39448741308 성공; RED1 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39453915959 신규17실패; RED2 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39454822818 신규21실패 확인; 구현 결과는 후속 기록/보고.
+- 발견한 문제: 로컬 clean/fetch 성공·Cargo/rustc 부재. Git push는 could not read Username 실패·미생성 브랜치 PR422 후 연결 GitHub API 원자적 tree/ref로 읽기·새 파일 쓰기 성공. 광범위 테스트 서비스에 HTTP허용 목록을 빠뜨려503이어서 F01 목록을 명시해 미등록400/호출0을 검사하도록 fixture 수정(기대값 불변).
+- 보안 영향: 운영자가 서비스/정의/허용 목록을 명시한 경우만 F03 API 선택 허용; 기본 C/F01/F02와 기존 CLI·인증·실행 제한·저장키/v1 형식 보존, 짧은 성공 결과는 저장 전 거부.
+- 단계별 완료율: F03 준비 진행 중·next=F-G/F03 유지; A3/5·B10/11·C7/8·D/E4/8·F2/8·G0/8·H/I0/6, 화면36 불변; 실제 학습·숙달 미인수.
+- 다음 작업: 결과 SHA CI 성공 후 다음1회에 CLI명시 선택·화면/퀴즈·실제 제출/수정/재제출·숙달/v1복원/390px/오프라인·F03 인수를10파일로 연결; 분리 registry 공장 재사용·PR #7의 파일 예산/검증 계획 참조.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-20 23:56 KST — E04 학습·실제 제출·복원 인수
 - 시작/결과 SHA: main f263d0aee00cf5d334d8b72d308b99a30e1377eb; 준비 1bbb3165011a2175d7037c4365d9827e42a6edbe; 검증 5c2b5af84e093e12e5dff6927dd6ec1983ed497f; 후속 커밋 제목 docs: record successful E04 acceptance before merge.
 - 목표: 준비된 순열10사례 계약을 보존해13절·25분 화면/퀴즈·실제 오답→수정→재제출·v1복원·분리 숙달을 인수.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 기존 인증·길이 제한·신뢰 로컬 c-function 재사용·허용 목록에 ds-array-list만 추가; 비공개 하네스 노출/사용자 저장키/백업/실행 경계 변경0.
 - 단계별 완료율: D04 제한 범위 완료·D4/8(50%)·next=E/E04; A3/5·B10/11·C7/8·E3/8·F2/8·G0/8·H/I0/6. 화면35·기본C26/DS4/알고리즘3문제, 분모 불변.
 - 다음 작업: 결과 SHA CI 성공 후 PR #5를 최신 main/HEAD 확인·비강제 병합하고 main CI 재확인; 다음 개발은 E04 재귀 트리·백트래킹과 되돌리기의 좁은 단원.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-20 19:03 KST — D04 배열 리스트 채점·원고 준비
-- 시작/결과 SHA: main b53a47f56d1b98b3f24597828e4a53803e78d6ff; RED e12528fb686c5b8a59406a8fb913842a1c999142; 구현 004b16a2d2fd13abc1ee9eb02df7220e9668701c; 후속 test: isolate D04 erase mutation and record verified preparation.
-- 목표: 확보된 용량 안의 삽입/삭제·정확한 이동 수·거부 상태 보존을 실제 GCC로 검증; 화면 연결은 두 번째 실행에서 진행.
-- 변경 파일 수: 8개(독립 채점 모듈·회귀 검사·원고·도식·로드맵2개·활성/보관 일지).
-- 테스트 결과: 시작 main CI751/751 성공; 신규17건 RED 전체768건751통과/17실패/skip0 확인. 구현 CI768/768·실패0/skip0·동일 신규17건 통과·10사례·10오답·예제 GCC·node --check/roadmap --check 통과; 기대값 완화/삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39398354563 성공; RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39405701897 의도된17실패; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39406085352 전체/browser/macOS 성공; 준비 범위 검증 완료·후속 SHA CI 최종 보고.
-- 발견한 문제: 로컬 환경 연결 불가로 미커밋 상태/Git/npm/GCC/diff 미확인·미실행; 원격 최신 HEAD·트리·열린 PR0 확인 후 독립 PR #4에서 작업. 신규 콘텐츠 독립 작성. 재검토로 삭제 오답을 삽입과 분리·fileURLToPath로 Windows 경로 처리 보완(기대값 불변).
-- 보안 영향: 기존 신뢰 로컬 GCC 함수형 파이프라인 재사용·미등록 정의만 준비; 새 실행 API/파일 접근/인증/사용자 저장키 변경0.
-- 단계별 완료율: D04 준비 진행 중·next=D/D04 유지; A3/5·B10/11·C7/8·D/E3/8·F2/8·G0/8·H/I0/6. 화면34·문제 수 불변; 원고116줄·채점10사례.
-- 다음 작업: 후속 결과 SHA CI 확인·PR #4 안전 병합 후 D04 화면10~15절/퀴즈/실제 제출·수정·재제출/백업/분리 숙달·390px/오프라인 연결을 다음 1회 안에 검증; 단원 전체 완료 전 E04로 넘기지 않음.
