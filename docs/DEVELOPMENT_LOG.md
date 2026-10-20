@@ -1,14 +1,15 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-20 20:03 KST — D04 학습·실제 채점 흐름 연결
-- 시작/결과 SHA: main 7ab4abc89b739d3190d692f4aff75b272eec0a54; RED 3ff364e803103b005d4c9b2efff7f982de79bca7; 구현 제목 feat: connect D04 array list learning and actual grading.
-- 목표: 준비된10사례 계약을 화면13절·퀴즈·GCC 수정/재제출·공유 이력·v1 복원·390px/오프라인에 연결; CI 확인 전 완료 인수 보류.
-- 변경 파일 수: 10개(카탈로그·공개 메타·서버 등록·브라우저/로드맵 검사·README·로드맵2개·활성/보관 일지).
-- 테스트 결과: 시작 CI768/768 성공; 신규2건 RED770건768통과/2실패/skip0·browser D04 미등록 실패 확인. 기존17검사/10사례 유지·구현770/770·macOS 성공, browser 기존 경로와 신규 빈 목록 검사 실패 재현·수정 후 CI 대기; 삭제/기대 완화0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39406808037 성공; RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39412549764 신규2실패; 구현 결과 후속 기록/보고.
-- 발견한 문제: 로컬 환경 연결 불가로 미커밋/Git/npm/GCC/diff 미확인·미실행; 원격 main/트리/열린 PR0 확인 후 PR #5 사용. D02 경유 검사는 D04 삽입에 맞게 갱신. 새 검사 li수0 기대는 기존 빈 안내 li를 실제 기록으로 오인한 오류여서 저장 배열0건+빈 안내로 교체(삭제기록 복원 검증 유지).
-- 보안 영향: 기존 인증·길이 제한·신뢰 로컬 c-function 재사용·허용 목록에 ds-array-list만 추가; 하네스/비공개 사례는 클라이언트에 노출하지 않고 저장키/백업/실행 경계 보존.
-- 단계별 완료율: D04 진행 중·next=D/D04, A3/5·B10/11·C7/8·D/E3/8·F2/8·G0/8·H/I0/6 유지; 화면35·기본C26/DS4/알고리즘3문제, 분모 불변.
-- 다음 작업: 결과 SHA의 실제 browser/GCC·770건 검사 성공 후 같은 실행에서 D04 제한 범위 완료와 E04 순환을 기록하고 최종 SHA CI·원격 반영 확인.
+## 2026-10-20 20:03 KST — D04 학습·실제 채점 인수
+- 시작/결과 SHA: main 7ab4abc89b739d3190d692f4aff75b272eec0a54; 연결RED 3ff364e803103b005d4c9b2efff7f982de79bca7; 검증 ae5760f52cf813946248875c6e932fcd7fa1bdda; 인수RED 72ba6b9623de17e0a618f443cdcf5ccd7b2f4102; 결과 커밋 제목 docs: accept verified D04 delivery and rotate to E04.
+- 목표: D04 확보 용량 안 삽입/삭제·이동 비용의 화면13절·퀴즈·실제 GCC 수정/재제출·백업·분리 숙달 경로를 인수.
+- 변경 파일 수: 10개(카탈로그·공개 메타·서버 등록·브라우저/로드맵 검사·README·로드맵2개·활성/보관 일지); 기존10사례/저장키 보존.
+- 테스트 결과: 신규 연결2건 RED770건768통과/2실패/skip0→770/770; 실제 browser D03→D04·오답→수정10/10·퀴즈 재시도·숙달 분리·이력 공유·삭제 후v1복원·390px/오프라인/다음 단원 성공. 인수1건RED771건770통과/1실패/skip0→결과 CI 확인.
+- CI URL과 결과: 연결RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39412549764 신규2실패; 검증 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39413773136 전체770/770·browser/macOS 성공; 인수RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39414199184 신규1실패. 검증 범위 인수 완료·결과 SHA CI 최종 보고.
+- 발견한 문제: D02 경유의 D03→알고리즘 고정 검사는 D04 경유로 수정. 신규 li수0 기대는 기존 빈 안내 li 오인이어서 저장 배열0건+빈 안내로 교체하고 실제 삭제 후 복원을 검증(정당한 기대 수정). C07 고정 차례 검사는 인수 당시 복사본으로 분리해 과거 계약과 이후 순환 모두 보존.
+- 보안 영향: 기존 인증·길이 제한·신뢰 로컬 c-function 재사용·허용 목록에 ds-array-list만 추가; 비공개 하네스 노출/사용자 저장키/백업/실행 경계 변경0.
+- 단계별 완료율: D04 제한 범위 완료·D4/8(50%)·next=E/E04; A3/5·B10/11·C7/8·E3/8·F2/8·G0/8·H/I0/6. 화면35·기본C26/DS4/알고리즘3문제, 분모 불변.
+- 미실행: 로컬 실행 환경 연결 불가로 미커밋/Git/npm/GCC/diff 미확인·미실행; GitHub 원격 읽기·atomic tree/ref와 CI로 검증. D04 실제 실행 인수는 Linux이며 macOS는 기존 공통 회귀 성공.
+- 다음 작업: 결과 SHA CI 성공 후 PR #5를 최신 main/HEAD 확인·비강제 병합하고 main CI 재확인; 다음 개발은 E04 재귀 트리·백트래킹과 되돌리기의 좁은 단원.
 
 ---
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함

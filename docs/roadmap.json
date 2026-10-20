@@ -10,8 +10,8 @@
     "C"
   ],
   "next": {
-    "track": "D",
-    "unit": "D04"
+    "track": "E",
+    "unit": "E04"
   },
   "limits": {
     "screenSections": [
@@ -447,7 +447,7 @@
         {
           "id": "D04",
           "title": "동적 배열 리스트: 삽입·삭제·이동 비용",
-          "status": "진행 중",
+          "status": "완료",
           "lessonIds": [
             "ds-array-list"
           ],
@@ -458,7 +458,27 @@
             "tests/array-list-exercise.test.mjs",
             "tests/roadmap.test.mjs",
             "tests/browser-practice.mjs"
-          ]
+          ],
+          "acceptance": {
+            "scope": "existing-capacity-insert-erase",
+            "sourceSha": "ae5760f52cf813946248875c6e932fcd7fa1bdda",
+            "ci": "https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39413773136",
+            "platforms": [
+              "linux"
+            ],
+            "checks": [
+              "theory",
+              "compiled-example",
+              "quiz-retry",
+              "actual-grading",
+              "correction-retry",
+              "shared-history",
+              "backup-restore",
+              "mastery-next",
+              "offline",
+              "390px"
+            ]
+          }
         },
         {
           "id": "D05",
