@@ -2051,13 +2051,19 @@ try {
   await expect(page.locator('#code-input')).toHaveValue(permutationsCorrect);
   await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
   await expect(page.locator('.figure-box svg')).toHaveAttribute('role', 'img');
-  assert.equal(await page.evaluate(() => {
+  const permutationsBounds = await page.evaluate(() => {
     const svg = document.querySelector('.figure-box svg'), view = svg.viewBox.baseVal;
-    return [...svg.querySelectorAll('text')].every(text => {
+    const overflow = [...svg.querySelectorAll('text')].flatMap(text => {
       const box = text.getBBox();
-      return box.x >= 0 && box.y >= 0 && box.x + box.width <= view.width && box.y + box.height <= view.height;
-    }) && document.documentElement.scrollWidth <= innerWidth;
-  }), true, 'E04 permutations diagram and learner page must fit 390px');
+      return box.x >= 0 && box.y >= 0 && box.x + box.width <= view.width && box.y + box.height <= view.height
+        ? [] : [{ text: text.textContent, x: box.x, y: box.y, width: box.width, height: box.height }];
+    });
+    return { overflow, width: document.documentElement.scrollWidth, viewport: innerWidth,
+      wideElements: [...document.querySelectorAll('*')].filter(el => el.getBoundingClientRect().right > innerWidth + 1)
+        .slice(0, 8).map(el => ({ tag: el.tagName, class: el.className, text: el.textContent.slice(0, 80) })) };
+  });
+  assert.deepEqual(permutationsBounds.overflow, [], 'E04 SVG text overflow: ' + JSON.stringify(permutationsBounds));
+  assert.ok(permutationsBounds.width <= permutationsBounds.viewport, 'E04 page overflow: ' + JSON.stringify(permutationsBounds));
   if (qaDir) await page.screenshot({ path: path.join(qaDir, 'permutations-mobile.png'), fullPage: true });
   await context.setOffline(false);
   await page.locator('[data-route="track:algo"]').first().click();
