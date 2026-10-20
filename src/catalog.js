@@ -1358,6 +1358,90 @@ export const lessons = [
     }
   },
   {
+  "id": "ds-array-list",
+  "track": "ds",
+  "level": "기초",
+  "title": "배열 리스트: 중간 삽입·삭제와 이동 비용",
+  "minutes": 25,
+  "source": "D04 독자 원고·정적 도식·C 함수형 실습",
+  "summary": "이미 확보한 용량 안에서 순서를 보존해 삽입·삭제하고 이동 비용을 셉니다.",
+  "figure": "array-list-shifts",
+  "sections": [
+    {
+      "heading": "개요·필요성·선수·목표",
+      "text": "배열 끝에 추가하는 push를 배웠다면 이제 중간에 끼우고 지워 보자. 길이와 용량을 구별하고 순서를 지키는 이동 방향과 횟수를 설명하는 것이 목표다.\n선수는 배열, 포인터, 구조체, 함수다. 예상 25분. B09/B10의 메모리 확보·확대와 연결하지만 여기서는 **호출자가 이미 확보한 용량 안의 편집**만 구현한다. 자동 확장·할당·해제는 하지 않는다."
+    },
+    {
+      "heading": "이론: 길이와 용량",
+      "text": "values는 저장소, length는 살아 있는 원소 수, capacity는 확보된 칸 수다. 항상 length <= capacity여야 한다.\n길이3·용량6이라면 인덱스0~2만 목록이다. 여분 칸은 원소가 아니다. 배열 리스트는 논리적 목록이고 동적 할당 여부와는 구별된다.\n실제 동적 배열의 저장소는 malloc/realloc으로 확보할 수도 있다. 예제는 이동 원리를 분리하기 위해 지역 배열을 빌린다. 함수는 소유권을 받지 않는다."
+    },
+    {
+      "heading": "이론: 삽입",
+      "text": "삽입 위치는 0부터 length까지다. 자리가 있으면 마지막 원소부터 오른쪽으로 한 칸씩 복사하고 빈 위치에 새 값을 쓴다.\n길이 n, 위치 p에서 기존 원소 이동은 **n-p회**다. 새 값 쓰기와 길이 변경은 이동 횟수에 포함하지 않는다. 앞에서 복사하면 아직 필요한 원소를 덮어쓴다."
+    },
+    {
+      "heading": "이론: 삭제",
+      "text": "삭제 위치는 0부터 length-1까지다. 삭제할 값을 먼저 보관하고 다음 원소부터 왼쪽으로 한 칸씩 복사한다.\n기존 원소 이동은 **n-p-1회**다. 길이를 줄여도 저장소 용량은 그대로다. 마지막 남은 물리 칸을 0으로 지우지 않는다. 그 칸은 목록 밖이라 읽을 원소가 아니다."
+    },
+    {
+      "heading": "도식: 순서와 이동",
+      "text": "독자 정적 도식 array-list-shifts는 [10,20,30]에서 위치1에15를 삽입할 때 30→20 순으로 이동하는 모습과, 위치2의20 삭제 뒤30을 왼쪽으로 옮기는 모습을 보여 준다.\n| 연산 | 결과 목록 | 이동 수 |\n|---|---|---:|\n| insert(1,15) | 10,15,20,30 | 2 |\n| erase(2) | 10,15,30 | 1 |\n| 끝 삽입·끝 삭제 | 앞 원소는 그대로 | 0 |"
+    },
+    {
+      "heading": "계약: 성공·거부·호출자의 책임",
+      "text": "함수 서명은 아래 완성 프로그램과 같다. 성공1, 거부0. 성공 때 moved에 이동 수를 쓴다. 삭제는 out에 지운 값을 쓴다.\nNULL 리스트·필수 출력·저장소, length>capacity, 잘못된 위치, 꽉 찬 삽입은 거부한다. 거부 때 구조체·모든 저장 칸·출력 값은 그대로다.\n저장소는 capacity개 int를 실제로 담을 수 있어야 하며 구조체와 출력 포인터는 유효해야 한다. out/moved는 서로 및 리스트·저장소와 겹치지 않는 별도 객체다. C 함수가 임의 주소의 유효성이나 실제 할당 크기를 알아낼 수는 없다.\nNULL 저장소·용량0 목록은 거부하고, 용량 양수의 빈 목록은 삽입할 수 있다. SIZE_MAX 위치도 비교로 거부하고 +1부터 계산하지 않는다."
+    },
+    {
+      "heading": "완성 프로그램: 직접 컴파일",
+      "text": "아래는 main을 포함한 독립 프로그램이다. 제출에는 main·stdio 출력 없이 두 함수와 구조체만 넣는다.\n\n컴파일: gcc -std=c11 -Wall -Wextra -Wpedantic -Werror example.c -o example。실행: Linux/macOS ./example, Windows .\\example.exe.",
+      "code": "#include <stdio.h>\n#include <stddef.h>\nstruct IntList { int *values; size_t length; size_t capacity; };\nint list_insert(struct IntList *list, size_t pos, int value, size_t *moved) {\n    if (list == NULL || moved == NULL || list->values == NULL\n        || list->length > list->capacity || pos > list->length\n        || list->length == list->capacity) return 0;\n    size_t count = 0;\n    for (size_t i = list->length; i > pos; --i) {\n        list->values[i] = list->values[i - 1];\n        ++count;\n    }\n    list->values[pos] = value;\n    ++list->length;\n    *moved = count;\n    return 1;\n}\nint list_erase(struct IntList *list, size_t pos, int *out, size_t *moved) {\n    if (list == NULL || moved == NULL || out == NULL || list->values == NULL\n        || list->length > list->capacity || pos >= list->length) return 0;\n    int removed = list->values[pos];\n    size_t count = 0;\n    for (size_t i = pos; i + 1 < list->length; ++i) {\n        list->values[i] = list->values[i + 1];\n        ++count;\n    }\n    --list->length;\n    *out = removed;\n    *moved = count;\n    return 1;\n}\n\nint main(void) {\n    int values[6] = {10, 20, 30, 94, 95, 96};\n    struct IntList list = {values, 3, 6};\n    size_t moved = 777;\n    int removed = 888;\n    int status = list_insert(&list, 1, 15, &moved);\n    printf(\"insert=%d moved=%zu:\", status, moved);\n    for (size_t i = 0; i < list.length; ++i) printf(\" %d\", list.values[i]);\n    putchar('\\n');\n    status = list_erase(&list, 2, &removed, &moved);\n    printf(\"erase=%d removed=%d moved=%zu:\", status, removed, moved);\n    for (size_t i = 0; i < list.length; ++i) printf(\" %d\", list.values[i]);\n    putchar('\\n');\n    return 0;\n}"
+    },
+    {
+      "heading": "출력과 이유",
+      "text": "insert=1 moved=2: 10 15 20 30\nerase=1 removed=20 moved=1: 10 15 30\n\n첫 연산은 30과20 두 값을 옮긴다. 다음 연산은 삭제 전20을 저장한 뒤30 하나를 옮긴다. 호출자는 반환값을 먼저 확인한 다음 결과 출력을 사용한다. 공개 하네스의 1 2 20 1 1은 삽입 성공·삽입 이동2·지운 값20·삭제 이동1·전체 상태 검사 통과1입니다. 제출 함수가 직접 printf하는 출력이 아닙니다."
+    },
+    {
+      "heading": "흔한 오류·중간 점검",
+      "text": "앞에서부터 오른쪽으로 밀기, length와 capacity 혼동, 위치length 삭제 허용, unsigned 인덱스를 0 아래로 줄이기가 흔한 오류다.\n길이0에서 끝 삭제 이동 수를 먼저 계산하면 unsigned 뺄셈이 순환한다. 반드시 상태와 범위를 먼저 검사한다.\n중간 점검: 길이5에서 위치2에 삽입하면3회, 위치2를 삭제하면2회다. 두 수의 차이는 새 원소가 들어갈 틈을 만드는지 기존 한 원소를 없애는지에 있다."
+    },
+    {
+      "heading": "핵심 요약·퀴즈",
+      "text": "앞 삽입/삭제는 원소 수에 비례하므로 O(n), 끝 편집은 용량이 이미 있으면 O(1)이다. 자동 용량 확대를 포함한 비용 분석은 별도다.\n퀴즈: 길이4 목록의 위치1을 삭제하면 기존 원소 이동은? ①0 ②2 ③3 ④4. 정답②: 인덱스2·3 두 값만 왼쪽으로 간다."
+    },
+    {
+      "heading": "직접 풀기·실제 테스트·개선",
+      "text": "기초: list_insert와 list_erase를 구현하세요. 응용: 빈 목록·마지막 칸·앞/뒤 편집의 moved를 예측하세요. 도전: 모든 유효 위치에서 순서와 여분 칸 보존을 확인하세요. 10사례는 극값·중복·거부 상태 보존·독립 목록 재사용도 검사합니다. 스타터는 컴파일되지만 정답이 아닙니다. 실패 사례→이동 방향/범위 추적→수정→전체 재제출로 개선하고 이력에서 이전 코드를 복원하세요. 이론 읽기·퀴즈·실습·복습·전체 숙달은 별도 상태이며 JSON v1 백업으로 함께 보존합니다."
+    },
+    {
+      "heading": "Mini Project",
+      "text": "용량6의 작은 할 일 목록을 만든다. 인덱스 삽입·완료 항목 삭제를 함수로 나누고 각 편집의 moved를 합산한다. 실제 문자열 입력·할당은 범위 밖이다.\n같은 항목을 앞/끝에 추가할 때 총 이동 수가 어떻게 달라지는지 비교하라. 기존 실습 계약의 물리 칸 보존은 그대로 유지한다."
+    },
+    {
+      "heading": "복습·다음 연결",
+      "text": "왜 삽입은 뒤에서, 삭제는 앞에서 이동하는지 설명하고 길이1과 꽉 찬 상태를 다시 풀자.\nB09 realloc·B10 push와 비교해 용량 확보와 목록 편집의 책임을 구별하라. 연결 리스트 삽입/삭제는 D05에서 별도의 소유권·해제 계약으로 배운다."
+    }
+  ],
+  "quiz": {
+    "question": "길이4 목록의 위치1을 삭제할 때 기존 원소는 몇 번 이동할까요?",
+    "options": [
+      "0",
+      "2",
+      "3",
+      "4"
+    ],
+    "answer": 1,
+    "explanation": "인덱스2와3의 두 원소를 왼쪽으로 옮깁니다. 이동 수는 n-p-1=4-1-1=2이며 지운 값 저장과 길이 변경은 세지 않습니다."
+  },
+  "challenge": {
+    "id": "ds-array-list",
+    "title": "배열 리스트의 list_insert/list_erase",
+    "description": "IntList 구조체와 두 함수를 작성하세요. 성공1·거부0입니다. 확보한 capacity 안에서 삽입 위치0..length, 삭제 위치0..length-1을 처리합니다. 삽입은 기존 원소 length-pos개, 삭제는 length-pos-1개를 이동하고 moved에 기록하며 삭제 out에는 지운 값을 씁니다. NULL 리스트/필수 출력/저장소·length>capacity·범위 밖 위치·가득 찬 삽입은 거부하고 구조체·저장소·유효 출력 모두 보존합니다. 삭제 후 목록 밖 마지막 칸은 지우지 않습니다. 호출자는 capacity개 int의 유효 저장소와 서로/리스트/저장소에 겹치지 않는 출력 객체를 제공합니다. main·printf·malloc·realloc·free를 작성하지 않습니다.",
+    "starter": "#include <stddef.h>\nstruct IntList { int *values; size_t length; size_t capacity; };\nint list_insert(struct IntList *list, size_t pos, int value, size_t *moved) {\n    (void)list;\n    (void)pos;\n    (void)value;\n    (void)moved;\n    /* TODO: 거부 조건을 먼저 확인한 뒤 뒤에서 앞으로 이동 */\n    return 0;\n}\nint list_erase(struct IntList *list, size_t pos, int *out, size_t *moved) {\n    (void)list;\n    (void)pos;\n    (void)out;\n    (void)moved;\n    /* TODO: 삭제할 값을 보관하고 앞에서 뒤로 이동 */\n    return 0;\n}\n",
+    "input": "10 20 30: insert(1,15), erase(2)",
+    "expected": "1 2 20 1 1"
+  }
+},
+  {
     "id": "algo-binary",
     "track": "algo",
     "level": "기초",

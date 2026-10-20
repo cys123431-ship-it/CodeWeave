@@ -1807,6 +1807,7 @@ try {
   await page.locator('.next-action [data-route="lesson:ds-array-list"]').click();
   await expect(page.locator('.detail-head h1')).toHaveText('배열 리스트: 중간 삽입·삭제와 이동 비용');
   console.log('PASS: D03 real GCC LIFO failure/correction 10/10, quiz retry, separate mastery, shared history, v1, 390px diagram/offline and next lesson');
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(base + '/#lesson:ds-queue');
   await page.locator('.next-action [data-route="lesson:ds-array-list"]').click();
   await page.reload();
@@ -1840,6 +1841,17 @@ try {
   assert.equal(arrayListData.drafts['ds-queue'], queueCorrect);
   assert.equal(arrayListData.drafts['c-preprocessor-once'], c06Correct);
   assert.equal(arrayListData.drafts['rust-cargo'], rustDraft);
+  await bench.evaluate(() => {
+    for (const key of ['codeweave.drafts.v1', 'codeweave.iterations.v1']) {
+      const values = JSON.parse(localStorage.getItem(key) || '{}');
+      delete values['ds-array-list'];
+      localStorage.setItem(key, JSON.stringify(values));
+    }
+  });
+  await bench.reload();
+  await bench.locator('#lesson-select').selectOption('ds-array-list');
+  await expect(bench.locator('#code-input')).toHaveValue(arrayListStarter);
+  await expect(bench.locator('#attempt-list li')).toHaveCount(0);
   await bench.locator('#import-file').setInputFiles({ name: 'array-list-backup.json', mimeType: 'application/json', buffer: arrayListBackup });
   await expect(bench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
   await context.setOffline(true);

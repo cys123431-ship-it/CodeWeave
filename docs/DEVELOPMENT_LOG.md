@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-20 20:03 KST — D04 학습·실제 채점 흐름 연결
+- 시작/결과 SHA: main 7ab4abc89b739d3190d692f4aff75b272eec0a54; RED 3ff364e803103b005d4c9b2efff7f982de79bca7; 구현 제목 feat: connect D04 array list learning and actual grading.
+- 목표: 준비된10사례 계약을 화면13절·퀴즈·GCC 수정/재제출·공유 이력·v1 복원·390px/오프라인에 연결; CI 확인 전 완료 인수 보류.
+- 변경 파일 수: 10개(카탈로그·공개 메타·서버 등록·브라우저/로드맵 검사·README·로드맵2개·활성/보관 일지).
+- 테스트 결과: 시작 CI768/768 성공; 신규2건 RED770건768통과/2실패/skip0·browser D04 미등록 실패 확인. 기존17검사/10사례 유지·구현 전체/실제 browser CI 대기; 삭제/기대 완화0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39406808037 성공; RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39412549764 신규2실패; 구현 결과 후속 기록/보고.
+- 발견한 문제: 로컬 환경 연결 불가로 미커밋/Git/npm/GCC/diff 미확인·미실행; 원격 main/트리/열린 PR0 확인 후 PR #5 사용. D03 다음 화면을 새 D04로 연결하는 기존 경로 기대 수정은 실제 단원 추가에 따른 변경.
+- 보안 영향: 기존 인증·길이 제한·신뢰 로컬 c-function 재사용·허용 목록에 ds-array-list만 추가; 하네스/비공개 사례는 클라이언트에 노출하지 않고 저장키/백업/실행 경계 보존.
+- 단계별 완료율: D04 진행 중·next=D/D04, A3/5·B10/11·C7/8·D/E3/8·F2/8·G0/8·H/I0/6 유지; 화면35·기본C26/DS4/알고리즘3문제, 분모 불변.
+- 다음 작업: 결과 SHA의 실제 browser/GCC·770건 검사 성공 후 같은 실행에서 D04 제한 범위 완료와 E04 순환을 기록하고 최종 SHA CI·원격 반영 확인.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-20 19:03 KST — D04 배열 리스트 채점·원고 준비
 - 시작/결과 SHA: main b53a47f56d1b98b3f24597828e4a53803e78d6ff; RED e12528fb686c5b8a59406a8fb913842a1c999142; 구현 004b16a2d2fd13abc1ee9eb02df7220e9668701c; 후속 test: isolate D04 erase mutation and record verified preparation.
 - 목표: 확보된 용량 안의 삽입/삭제·정확한 이동 수·거부 상태 보존을 실제 GCC로 검증; 화면 연결은 두 번째 실행에서 진행.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 서버 전용12사례 재사용·공개 메타데이터에 하네스 제외·기존 JSON/Host/Origin/토큰·GCC 한도 적용; 신규 실행 API/링커 권한/사용자 저장키 변경0.
 - 단계별 완료율: C07진행 중·next=C/C07 유지; A3/5·B10/11·C6/8·D/E3/8·F2/8·G0/8·H/I0/6.화면34·C26/DS3/알고리즘3문제, 개발 완료 단원 수 유지.
 - 다음 작업: 첫 작업 README C26/전체34 수치 수정과 원고 준비 시점 설명 현재화→전체 CI 성공 확인→C07 제한 범위 인수/PR 병합 검토.새 원고 준비 반복 금지.미등록 기대/다음 경로 검사는 운영 전환으로만 갱신하고 성공 판정 완화0.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-19 20:04 KST — C07 닫기 실패 채점 누락 수정
-- 시작/결과 SHA: main04751784fe9c4f5370b38452c37187cbb90902b6; PR시작026450198765d1f0d31106eec4a777539f19bf18; RED af683acbccdb3a1b4a656fdb0fbcf8b4f8b59218; 결과 커밋 fix: reject C07 close-error and premature-output mutants.
-- 목표: 닫기 실패 무시·읽기 진단 덮어쓰기·닫기 전 출력 변경 오답이 기존10사례를 통과하는 회귀를 먼저 재현하고 거부.
-- 변경 파일 수: 6개(서버 하네스·검사·원고·macOS CI·활성/보관 일지); 신규 파일0·삭제 검사0.
-- 테스트 결과: 신규3건 수정 전3실패→수정 후3통과; 관련16/16·정답12/12·오답11종/스타터 거부·완성 예제 출력 통과; 전체747건724통과/실패0/skip23(Cargo 부재), node --check2개/roadmap/diff 통과.
-- CI URL과 결과: 기준 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39236024126 성공; 이번 결과 SHA CI 대기, 성공 전 완료로 기록하지 않음.
-- 발견한 문제: 닫기 단독 실패와 동시 실패를 실제 stdio 콜백으로 주입(glibc fopencookie/macOS funopen); 사례10→12·결과 개수 기대 동기화는 누락 행동 추가 때문이며 기존 성공/거부 기대 완화0.
-- 보안 영향: 독립 검사 하네스만 확장·서버 실행 API/registry/링커 허용값/사용자 저장키 변경0; macOS 실제 실패 주입 검사를 CI에 명시 추가.
-- 단계별 완료율: C07진행 중·next=C/C07 유지; A3/5·B10/11·C6/8·D/E3/8·F2/8·G0/8·H/I0/6, 완료 단원 수 불변.
-- 다음 작업: PR #3 결과 CI 확인 후 준비를 반복하지 말고 좁힌 한 바이트 소유권 계약의 화면·퀴즈·실제 제출/오류 수정·재제출·기록/v1·숙달 연결을 우선 완성; 이후 인수 근거 검토 전 순환 금지.
