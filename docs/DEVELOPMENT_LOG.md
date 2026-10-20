@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-20 19:03 KST — D04 배열 리스트 채점·원고 준비
+- 시작/결과 SHA: main b53a47f56d1b98b3f24597828e4a53803e78d6ff; RED e12528fb686c5b8a59406a8fb913842a1c999142; 구현 커밋 제목 feat: prepare D04 indexed array list grading and manuscript.
+- 목표: 확보된 용량 안의 삽입/삭제·정확한 이동 수·거부 상태 보존을 실제 GCC로 검증; 화면 연결은 두 번째 실행에서 진행.
+- 변경 파일 수: 8개(독립 채점 모듈·회귀 검사·원고·도식·로드맵2개·활성/보관 일지).
+- 테스트 결과: 시작 main CI751/751 성공; 신규17건 RED 전체768건751통과/17실패/skip0 확인. 구현은 동일17검사·10사례·10오답 변형·예제 컴파일·node --check/roadmap --check CI 대기; 기대값 완화/삭제0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39398354563 성공; RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39405701897 의도된17실패; 구현 결과 후속 기록/보고.
+- 발견한 문제: 로컬 환경 연결 불가로 미커밋 상태/Git/npm/GCC/diff 미확인·미실행; 원격 최신 HEAD·트리·열린 PR0 확인 후 독립 PR #4에서 작업. 신규 콘텐츠는 독립 작성.
+- 보안 영향: 기존 신뢰 로컬 GCC 함수형 파이프라인 재사용·미등록 정의만 준비; 새 실행 API/파일 접근/인증/사용자 저장키 변경0.
+- 단계별 완료율: D04 준비 진행 중·next=D/D04 유지; A3/5·B10/11·C7/8·D/E3/8·F2/8·G0/8·H/I0/6. 화면34·문제 수 불변; 원고116줄·채점10사례.
+- 다음 작업: 결과 SHA CI 확인 후 D04 화면10~15절/퀴즈/실제 제출·수정·재제출/백업/분리 숙달·390px/오프라인 연결을 다음 1회 안에 검증; 단원 전체 완료 전 E04로 넘기지 않음.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-20 17:56 KST — C07 제한 범위 인수와 D04 순환
 - 시작/결과 SHA: main04751784fe9c4f5370b38452c37187cbb90902b6; PR시작f57b8b520b0b6a6a4a5375d6008e22e71dbad876; RED 54a34c81a25141831a872b89c298a4d55ef2ba2e; 인수d4d304cb5e0e2390e54e8c510a0b051c5eca72b8; 후속 docs: record verified C07 acceptance before merge.
 - 목표: 실제 검증된 한 바이트 소유 스트림·errno 보존·정리 경로를 인수하고 다음 자료구조 D04로 전환; 새 단원/문제0.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 독립 검사 하네스만 확장·서버 실행 API/registry/링커 허용값/사용자 저장키 변경0; macOS 실제 실패 주입 검사를 CI에 명시 추가.
 - 단계별 완료율: C07진행 중·next=C/C07 유지; A3/5·B10/11·C6/8·D/E3/8·F2/8·G0/8·H/I0/6, 완료 단원 수 불변.
 - 다음 작업: PR #3 결과 CI 확인 후 준비를 반복하지 말고 좁힌 한 바이트 소유권 계약의 화면·퀴즈·실제 제출/오류 수정·재제출·기록/v1·숙달 연결을 우선 완성; 이후 인수 근거 검토 전 순환 금지.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-19 19:03 KST — C07 소유 스트림·오류 정리 계약 준비
-- 시작/결과 SHA: 시작04751784fe9c4f5370b38452c37187cbb90902b6; RED 68aa9ea36340b62b3c3e125bc1600f41759386b8; 구현58b3d201de6c56e08237de528455c0a6c15d5be0; PR #3 후속 docs: record CI-verified C07 preparation and syntax checks; 실제 후속 SHA/CI 최종 보고.
-- 목표: C05 borrowed와 대비되는 owned FILE의 한 바이트·EOF·오류/errno 스냅샷·정리10사례와 독자 원고/도식 준비; 화면/운영 채점은 미등록.
-- 변경 파일 수: 총8개(신규 C07 서버 모듈·13검사·원고·정적 도식·로드맵2개·활성/보관 일지).
-- 테스트 결과: PR RED CI744건731통과/실패13/skip0, 신규13건의 모듈/도식/원고 부재 확인; 구현 CI744/744·실패0/skip0·정답10/10·오답8종/스타터 거부·완성 출력 통과; 후속 CI에서 변경 JS/MJS3개 node --check 명시 검사 추가(기존 기대 유지). 로컬 npm/node/GCC/git/미커밋/브라우저 검사 미실행(409 environment_offline); V8 본문 구문 사전 확인은 node --check로 간주하지 않음.
-- CI URL과 결과: 기준 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39228126437 성공731/731; RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39235098471 의도된 실패13; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39235618568 성공744/744·실패0/skip0·browser/macOS 기존 회귀 성공. C07 준비 항목 완료·화면/단원 인수 아님, 후속 SHA CI 별도 확인.
-- 발견한 문제: exec-server 연결 실패409 Conflict·environment_offline·Environment is not connected; 로컬 미완료 변경을 추정/덮어쓰지 않고 독립 PR/CI로 진행. 공식 POSIX 본문 직접 접근403은 재우회하지 않았고 독자 원고/실제 GCC 검사로 구분. fclose 단독 실패 주입은 후속 미검증 범위.
-- 보안 영향: 기존 함수형 GCC 검사에 독립 하네스·tmpfile/pipe 정리만 재사용; 실행 API/운영 registry/링커 인수/저장키 변경0, main 미수정·별도 PR로 보존.
-- 단계별 완료율: C07미착수→진행 중·next=C/C07 유지; 완료 A3/5·B10/11·C6/8·D/E3/8·F2/8·G0/8·H/I0/6, 화면33/기본 문제 수 불변.
-- 다음 작업: PR 결과 SHA CI로 정답10/10·오답8종/스타터 거부·완성 출력 확인; 다음 실행은 이 PR부터 읽고 화면/퀴즈/등록/실제 제출·백업·숙달 연결 또는 남은 오류 수정, 인수 전 순환 금지.
