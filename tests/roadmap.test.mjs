@@ -468,8 +468,8 @@ test('accepted E04 records verified permutation delivery and preserves its F03 h
   assert.equal(unit.status, '완료');
   assert.deepEqual(unit.lessonIds, ['algo-permutations']);
   assert.equal(unit.acceptance.scope, 'swap-dfs-permutations-and-restoration');
-  assert.equal(unit.acceptance.sourceSha, '078335109966268fabc6490a5453cd3b3f9d39a6');
-  assert.equal(unit.acceptance.ci, 'https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39446294725');
+  assert.equal(unit.acceptance.sourceSha, '1b58a5d2a71a56b0759a0f0c6c0639bd4928d48b');
+  assert.equal(unit.acceptance.ci, 'https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39446801185/job/118710743631');
   assert.deepEqual(unit.acceptance.platforms, ['linux']);
   assert.deepEqual(unit.acceptance.checks, ['theory', 'compiled-example', 'quiz-retry', 'actual-grading', 'correction-retry', 'shared-history', 'backup-restore', 'mastery-next', 'offline', '390px']);
   assert.equal(gradingExercises.get('algo-permutations').cases.length, 10);
