@@ -3,12 +3,12 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 시작/결과 SHA: main 46604df10ee57093d5be65928bad977f2a592cda; RED1 72a6c315de25c1e90b29f9146106b70050c4e8ea; RED2 342fe9d194f922051df420deff0b4fb15f2a64de; 구현 커밋 제목 feat: prepare F03 bounded control flow and explicit capabilities.
 - 목표: 모든u32 입력을1000 이하로 먼저 제한하고 stop 미만 짝수를 누적하는 Cargo10사례·원고94줄/14절·정적 도식과 명시적 API 허용 계약 준비.
 - 변경 파일 수: 10개(신규 정의·검사·원고3, 기존 서버/클라이언트·도식3, 로드맵2·활성/보관 일지2); 카탈로그/기본 실행 명령 변경0.
-- 테스트 결과: 신규17건 RED CI807건790통과/17실패/skip0; 허용 목록/결과 검증4건 추가 뒤 RED811건790통과/21실패/skip0. 로컬 전체811건776통과/0실패/Cargo부재35skip, 신규21건9통과/12skip. 변경 JS/MJS5개 node --check·roadmap --check·git diff --check 통과; 구현 CI 후속 확인·검사 삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39448741308 성공; RED1 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39453915959 신규17실패; RED2 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39454822818 신규21실패 확인; 구현 결과는 후속 기록/보고.
-- 발견한 문제: 로컬 clean/fetch 성공·Cargo/rustc 부재. Git push는 could not read Username 실패·미생성 브랜치 PR422 후 연결 GitHub API 원자적 tree/ref로 읽기·새 파일 쓰기 성공. 광범위 테스트 서비스에 HTTP허용 목록을 빠뜨려503이어서 F01 목록을 명시해 미등록400/호출0을 검사하도록 fixture 수정(기대값 불변).
+- 테스트 결과: 신규21건 RED811건790통과/21실패/skip0. 로컬811건776통과/0실패/Cargo부재35skip, Node syntax5·roadmap/diff·일지4검사 성공. 구현 CI811건800통과/11실패/skip0: Cargo 정상 Compiling/Finished 로그를 빈 출력으로 오인한 신규 검사 수정, 실제 사례 모두 실행+경고/오류 거부로 성공 판정(기대 수정 사유); 검사 삭제0.
+- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39448741308 성공; RED1 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39453915959 신규17실패; RED2 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39454822818 신규21실패; 구현 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39455522174 단위11실패·macOS 취소 반복27/40에서3실패, 다음 SHA 결과 후속 보고.
+- 발견한 문제: Git push Username 부재/미생성 브랜치 PR422 후 연결 API 쓰기 성공. HTTP fixture에 F01 허용 목록 누락503을 명시 구성으로 수정(400 기대값 불변). macOS 반복27에서 SIGKILL 뒤 signal0 EPERM→process-cleanup 격리→RUST_UNAVAILABLE(기대CANCELLED), 뒤2건BUSY 연쇄 실패; 실패 재실행으로 은폐/보안 완화하지 않음·미해결.
 - 보안 영향: 운영자가 서비스/정의/허용 목록을 명시한 경우만 F03 API 선택 허용; 기본 C/F01/F02와 기존 CLI·인증·실행 제한·저장키/v1 형식 보존, 짧은 성공 결과는 저장 전 거부.
 - 단계별 완료율: F03 준비 진행 중·next=F-G/F03 유지; A3/5·B10/11·C7/8·D/E4/8·F2/8·G0/8·H/I0/6, 화면36 불변; 실제 학습·숙달 미인수.
-- 다음 작업: 결과 SHA CI 성공 후 다음1회에 CLI명시 선택·화면/퀴즈·실제 제출/수정/재제출·숙달/v1복원/390px/오프라인·F03 인수를10파일로 연결; 분리 registry 공장 재사용·PR #7의 파일 예산/검증 계획 참조.
+- 다음 작업: macOS 취소/정리 실패를 먼저 재현·수정하고 원래27/40 실패 근거 보존; 다음 결과가 성공해도 원인 수정으로 주장하지 않음. 이후 F03 CLI/화면/숙달 인수를 PR #7의10파일 계획으로 연결, 단원 완료/차례 전환 보류.
 
 ---
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함

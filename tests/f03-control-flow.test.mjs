@@ -156,7 +156,9 @@ async function grade(t, code) {
   const result = await service.submit({ exerciseId: d.id, code });
   assert.deepEqual(await fs.readdir(parent), [], 'every submission workspace must be cleaned');
   assert.equal(result.tests.length, 10);
-  assert.equal(result.compileOutput, '', 'assertion behavior, not compilation failure, distinguishes answers');
+  // Cargo writes normal Compiling/Finished status to stderr even on success.
+  // Preserve those diagnostics; actual executed-case verdicts prove compilation.
+  assert.doesNotMatch(result.compileOutput, /(?:^|\n)(?:error|warning)(?:\[|:)/i);
   assert.ok(result.tests.every(c => c.passed ? c.detail === '테스트 통과' : c.detail.startsWith('단언 실패 · ')));
   return result;
 }
@@ -225,8 +227,9 @@ test('F03 explicitly configured HTTP grades real Cargo correction and cleans eve
     assert.equal(response.status, 200);
     const result = await response.json();
     assert.equal(result.ok, ok);
-    assert.equal(result.compileOutput, '');
+    assert.doesNotMatch(result.compileOutput, /(?:^|\n)(?:error|warning)(?:\[|:)/i);
     assert.equal(result.tests.length, 10);
+    assert.ok(result.tests.every(c => c.passed ? c.detail === '테스트 통과' : c.detail.startsWith('단언 실패 · ')));
     assert.deepEqual(await fs.readdir(parent), []);
   }
 });
