@@ -368,3 +368,37 @@ test('historical C07 replay remains pending while live C selection advances to C
   assert.equal(api.selectUnit(historical, 'C').id, 'C07');
   assert.deepEqual(live, before);
 });
+
+test('D04 delivers the prepared array list contract through catalog without leaking harness cases', async () => {
+  const { arrayListExercise, arrayListMetadata, arrayListStarter } = await import('../server/array-list-exercise.mjs');
+  const lesson = lessons.find(item => item.id === 'ds-array-list');
+  assert.ok(lesson, 'D04 must be learner-facing');
+  assert.equal(lesson.track, 'ds');
+  assert.equal(lesson.figure, 'array-list-shifts');
+  assert.deepEqual(exerciseById(lesson.id), { ...arrayListMetadata, requiredFiles: [] });
+  assert.deepEqual(gradingExercises.get(lesson.id), arrayListExercise);
+  assert.equal(Object.hasOwn(exerciseById(lesson.id), 'harness'), false);
+  assert.equal(lesson.challenge.starter, arrayListStarter);
+  assert.equal(lesson.challenge.input, arrayListMetadata.publicExample.input);
+  assert.equal(lesson.challenge.expected, arrayListMetadata.publicExample.output);
+  const manuscript = await readFile(new URL('../content/ds/04-array-list.md', import.meta.url), 'utf8');
+  const program = manuscript.match(/\x60\x60\x60c\n([\s\S]*?)\n\x60\x60\x60/)[1];
+  assert.ok(lesson.sections.some(section => section.code?.trim() === program.trim()));
+  assert.deepEqual(lesson.quiz.options, ['0', '2', '3', '4']);
+  assert.equal(lesson.quiz.answer, 1);
+  const { data, api } = await load();
+  const unit = data.stages.find(stage => stage.id === 'D').units.find(item => item.id === 'D04');
+  assert.deepEqual(unit.lessonIds, [lesson.id]);
+  for (const file of ['tests/array-list-exercise.test.mjs', 'tests/roadmap.test.mjs', 'tests/browser-practice.mjs']) assert.ok(unit.tests.includes(file));
+  assert.equal(api.validateRoadmap(data), true);
+  for (const file of ['src/catalog.js', 'src/exercises.js', 'server/grading-exercises.mjs', 'tests/browser-practice.mjs', 'tests/roadmap.test.mjs']) {
+    const result = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+  }
+});
+
+test('D04 authenticated API grades actual starter wrong shift and corrected code against all ten cases', () => {
+  const result = spawnSync(process.execPath, ['tests/browser-practice.mjs', '--array-list-http-only'], { encoding: 'utf8', timeout: 30000 });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /PASS: D04 authenticated actual GCC/);
+});

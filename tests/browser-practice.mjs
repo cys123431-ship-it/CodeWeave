@@ -32,6 +32,61 @@ const mergeProgram = mergeManuscript.match(/```c\n([\s\S]*?)\n```/)[1];
 const mergeCorrect = mergeProgram.split('int main(void)')[0];
 const mergeWrong = mergeCorrect.replace('while (j < right) scratch[k++] = values[j++];', 'while (j < right) { ++k; ++j; }');
 
+import { arrayListExercise, arrayListMetadata, arrayListStarter } from '../server/array-list-exercise.mjs';
+const arrayListManuscript = await readFile(new URL('../content/ds/04-array-list.md', import.meta.url), 'utf8');
+const arrayListProgram = arrayListManuscript.match(/\x60\x60\x60c\n([\s\S]*?)\n\x60\x60\x60/)[1];
+const arrayListCorrect = arrayListProgram.split('int main(void)')[0];
+const arrayListWrong = arrayListCorrect.replace('list->values[i] = list->values[i - 1];', 'list->values[i - 1] = list->values[i];');
+function verifyArrayListContract() {
+  const lesson = c06Lessons.find(item => item.id === 'ds-array-list');
+  assert.ok(lesson, 'D04 must be reachable from the learner catalog');
+  assert.equal(lesson.track, 'ds');
+  assert.equal(lesson.figure, 'array-list-shifts');
+  assert.deepEqual(c06ExerciseById(lesson.id), { ...arrayListMetadata, requiredFiles: [] });
+  assert.deepEqual(c06Graders.get(lesson.id), arrayListExercise);
+  assert.equal(lesson.challenge.starter, arrayListStarter);
+  assert.equal(lesson.challenge.input, arrayListMetadata.publicExample.input);
+  assert.equal(lesson.challenge.expected, arrayListMetadata.publicExample.output);
+  assert.ok(lesson.sections.some(section => section.code?.trim() === arrayListProgram.trim()));
+  assert.deepEqual(lesson.quiz.options, ['0', '2', '3', '4']);
+  assert.equal(lesson.quiz.answer, 1);
+  assert.equal(Object.hasOwn(c06ExerciseById(lesson.id), 'harness'), false);
+  console.log('PASS: D04 learner catalog, compiled original example, starter and private ten-case definition match');
+}
+async function verifyArrayListHTTP() {
+  const app = createLearningServer({ root: fileURLToPath(new URL('../', import.meta.url)) });
+  try {
+    const { port } = await app.listen(0);
+    const base = 'http://127.0.0.1:' + port;
+    const response = await fetch(base);
+    assert.equal(response.status, 200);
+    const token = (await response.text()).match(/name="codeweave-token" content="([a-f0-9]{64})"/)?.[1];
+    assert.match(token, /^[a-f0-9]{64}$/);
+    assert.notEqual(arrayListWrong, arrayListCorrect);
+    for (const [code, ok] of [[arrayListStarter, false], [arrayListWrong, false], [arrayListCorrect, true]]) {
+      const response = await fetch(base + '/api/grade', { method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CodeWeave-Token': token },
+        body: JSON.stringify({ exerciseId: arrayListExercise.id, code }), signal: AbortSignal.timeout(10000) });
+      assert.equal(response.status, 200);
+      const result = await response.json();
+      assert.equal(result.ok, ok, JSON.stringify(result));
+      assert.equal(result.tests.length, 10);
+      assert.equal(result.compileOutput, '');
+      if (ok) assert.equal(result.message, '10/10개 테스트 통과');
+    }
+    console.log('PASS: D04 authenticated actual GCC rejects starter/wrong shift and accepts correction 10/10');
+  } finally {
+    await app.close();
+  }
+}
+if (process.argv.includes('--array-list-http-only')) {
+  await verifyArrayListHTTP();
+  process.exit(0);
+}
+verifyArrayListContract();
+await verifyArrayListHTTP();
+if (process.argv.includes('--array-list-contract-only')) process.exit(0);
+
 function verifyMergeContract() {
   const lesson = c06Lessons.find(item => item.id === 'algo-merge');
   assert.ok(lesson, 'E03 must be reachable from the learner catalog');
@@ -1749,9 +1804,66 @@ try {
   }), true, 'D03 queue diagram and learner page must fit 390px');
   if (qaDir) await page.screenshot({ path: path.join(qaDir, 'circular-queue-mobile.png'), fullPage: true });
   await context.setOffline(false);
+  await page.locator('.next-action [data-route="lesson:ds-array-list"]').click();
+  await expect(page.locator('.detail-head h1')).toHaveText('배열 리스트: 중간 삽입·삭제와 이동 비용');
+  console.log('PASS: D03 real GCC LIFO failure/correction 10/10, quiz retry, separate mastery, shared history, v1, 390px diagram/offline and next lesson');
+  await page.goto(base + '/#lesson:ds-queue');
+  await page.locator('.next-action [data-route="lesson:ds-array-list"]').click();
+  await page.reload();
+  await expect(page.locator('meta[name="codeweave-token"]')).toHaveAttribute('content', /^[a-f0-9]{64}$/);
+  await expect(page.locator('.detail-head h1')).toHaveText('배열 리스트: 중간 삽입·삭제와 이동 비용');
+  await expect(page.locator('.practice-zone')).toContainText('함수 직접 호출형');
+  await expect(page.locator('#code-input')).toHaveValue(arrayListStarter);
+  await page.locator('[data-quiz="ds-array-list"][data-choice="0"]').click();
+  await expect(page.locator('.feedback.bad')).toBeVisible();
+  await page.locator('[data-retry="ds-array-list"]').click();
+  await page.locator('[data-quiz="ds-array-list"][data-choice="1"]').click();
+  await page.locator('#mark-theory').click();
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, arrayListWrong);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, arrayListCorrect);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('10/10');
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await bench.reload();
+  await bench.locator('#lesson-select').selectOption('ds-array-list');
+  await expect(bench.locator('#code-input')).toHaveValue(arrayListCorrect);
+  const arrayListDownloadEvent = bench.waitForEvent('download');
+  await bench.locator('#export-history').click();
+  const arrayListDownload = await arrayListDownloadEvent, arrayListChunks = [];
+  for await (const chunk of await arrayListDownload.createReadStream()) arrayListChunks.push(chunk);
+  const arrayListBackup = Buffer.concat(arrayListChunks), arrayListData = JSON.parse(arrayListBackup);
+  assert.equal(arrayListData.drafts['ds-array-list'], arrayListCorrect);
+  assert.equal(arrayListData.iterations['ds-array-list'].length, 2);
+  assert.equal(arrayListData.drafts['ds-queue'], queueCorrect);
+  assert.equal(arrayListData.drafts['c-preprocessor-once'], c06Correct);
+  assert.equal(arrayListData.drafts['rust-cargo'], rustDraft);
+  await bench.locator('#import-file').setInputFiles({ name: 'array-list-backup.json', mimeType: 'application/json', buffer: arrayListBackup });
+  await expect(bench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.locator('#code-input')).toHaveValue(arrayListCorrect);
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('[data-restore-attempt="1"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(arrayListWrong);
+  await page.locator('[data-restore-attempt="0"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(arrayListCorrect);
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('.figure-box svg')).toHaveAttribute('role', 'img');
+  assert.equal(await page.evaluate(() => {
+    const svg = document.querySelector('.figure-box svg'), view = svg.viewBox.baseVal;
+    return [...svg.querySelectorAll('text')].every(text => {
+      const box = text.getBBox();
+      return box.x >= 0 && box.y >= 0 && box.x + box.width <= view.width && box.y + box.height <= view.height;
+    }) && document.documentElement.scrollWidth <= innerWidth;
+  }), true, 'D04 array-list diagram and learner page must fit 390px');
+  if (qaDir) await page.screenshot({ path: path.join(qaDir, 'array-list-mobile.png'), fullPage: true });
+  await context.setOffline(false);
   await page.locator('.next-action [data-route="lesson:algo-binary"]').click();
   await expect(page.locator('.detail-head h1')).toHaveText('복잡도와 선형·이진 탐색의 전제');
-  console.log('PASS: D03 real GCC LIFO failure/correction 10/10, quiz retry, separate mastery, shared history, v1, 390px diagram/offline and next lesson');
+  console.log('PASS: D04 D03-next entry, real GCC wrong-shift failure/correction 10/10, quiz retry, separate mastery, shared history, v1, 390px diagram/offline and next lesson');
   // E02's actual next action now enters E03; no synthetic E04 is advertised.
   await page.goto(base + '/#lesson:algo-stable-insertion');
   await page.locator('.next-action [data-route="lesson:algo-merge"]').click();
