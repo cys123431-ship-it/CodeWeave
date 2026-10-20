@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { gradingExercises } from '../server/grading-exercises.mjs';
 import { writeSources, compile, runCases, buildResult } from '../server/grading-pipeline.mjs';
 import { figureFor } from '../src/figures.js';
@@ -75,7 +76,7 @@ const mutants = [
   ['wrong insertion shift direction', reference.replace('list->values[i] = list->values[i - 1];', 'list->values[i - 1] = list->values[i];')],
   ['rejects final available slot', reference.replace('list->length == list->capacity)', 'list->length + 1 >= list->capacity)')],
   ['insertion off by one movement count', reference.replace('*moved = count;', '*moved = count + 1;')],
-  ['erasure off by one movement count', reference.replaceAll('*moved = count;', '*moved = count + 1;')],
+  ['erasure off by one movement count', reference.replace('*out = removed;\n    *moved = count;', '*out = removed;\n    *moved = count + 1;')],
   ['erases without shifting', reference.replace('list->values[i] = list->values[i + 1];', '(void)i;')],
   ['returns shifted value as removed output', reference.replace('*out = removed;', '*out = list->values[pos];\n    (void)removed;')],
   ['clears unused erased tail', reference.replace('--list->length;', '--list->length;\n    list->values[list->length] = 0;')],
@@ -132,9 +133,9 @@ test('D04 preparation records manuscript and executable evidence while keeping t
 
 test('D04 changed modules pass node syntax checks and generated roadmap remains synchronized', async () => {
   for (const file of ['../server/array-list-exercise.mjs', '../src/figures.js', './array-list-exercise.test.mjs']) {
-    const checked = spawnSync(process.execPath, ['--check', new URL(file, import.meta.url).pathname], { encoding: 'utf8' });
+    const checked = spawnSync(process.execPath, ['--check', fileURLToPath(new URL(file, import.meta.url))], { encoding: 'utf8' });
     assert.equal(checked.status, 0, checked.stderr);
   }
-  const checked = spawnSync(process.execPath, [new URL('../scripts/roadmap.mjs', import.meta.url).pathname, '--check'], { encoding: 'utf8' });
+  const checked = spawnSync(process.execPath, [fileURLToPath(new URL('../scripts/roadmap.mjs', import.meta.url)), '--check'], { encoding: 'utf8' });
   assert.equal(checked.status, 0, checked.stderr);
 });
