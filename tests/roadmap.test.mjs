@@ -461,3 +461,24 @@ test('E04 authenticated API rejects starter and missing undo then accepts correc
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.match(result.stdout, /PASS: E04 authenticated actual GCC/);
 });
+
+test('accepted E04 records verified permutation delivery and preserves its F03 handoff through later rotations', async () => {
+  const { data, api } = await load();
+  const unit = data.stages.find(stage => stage.id === 'E').units.find(item => item.id === 'E04');
+  assert.equal(unit.status, '완료');
+  assert.deepEqual(unit.lessonIds, ['algo-permutations']);
+  assert.equal(unit.acceptance.scope, 'swap-dfs-permutations-and-restoration');
+  assert.equal(unit.acceptance.sourceSha, '078335109966268fabc6490a5453cd3b3f9d39a6');
+  assert.equal(unit.acceptance.ci, 'https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39446294725');
+  assert.deepEqual(unit.acceptance.platforms, ['linux']);
+  assert.deepEqual(unit.acceptance.checks, ['theory', 'compiled-example', 'quiz-retry', 'actual-grading', 'correction-retry', 'shared-history', 'backup-restore', 'mastery-next', 'offline', '390px']);
+  assert.equal(gradingExercises.get('algo-permutations').cases.length, 10);
+  const historical = structuredClone(data);
+  historical.stages.find(stage => stage.id === 'F').units.find(item => item.id === 'F03').status = '진행 중';
+  const track = api.nextTurn('E');
+  assert.equal(track, 'F-G');
+  assert.equal(api.selectUnit(historical, track).id, 'F03');
+  historical.next = { track, unit: 'F03' };
+  assert.equal(api.validateRoadmap(historical), true);
+  assert.equal(api.validateRoadmap(data), true);
+});
