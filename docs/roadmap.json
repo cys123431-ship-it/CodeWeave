@@ -360,12 +360,15 @@
           "id": "C07",
           "title": "오류 반환·errno와 자원 정리 경로",
           "status": "진행 중",
-          "lessonIds": [],
+          "lessonIds": [
+            "c-owned-stream-byte"
+          ],
           "manuscripts": [
             "content/c/24-owned-stream-errors.md"
           ],
           "tests": [
-            "tests/owned-stream-exercise.test.mjs"
+            "tests/owned-stream-exercise.test.mjs",
+            "tests/browser-practice.mjs"
           ]
         },
         {
@@ -512,9 +515,17 @@
           "id": "E03",
           "title": "분할 정복: 병합 정렬과 보조 공간",
           "status": "완료",
-          "lessonIds": ["algo-merge"],
-          "manuscripts": ["content/algo/03-merge-sort.md"],
-          "tests": ["tests/merge-exercise.test.mjs", "tests/roadmap.test.mjs", "tests/browser-practice.mjs"]
+          "lessonIds": [
+            "algo-merge"
+          ],
+          "manuscripts": [
+            "content/algo/03-merge-sort.md"
+          ],
+          "tests": [
+            "tests/merge-exercise.test.mjs",
+            "tests/roadmap.test.mjs",
+            "tests/browser-practice.mjs"
+          ]
         },
         {
           "id": "E04",

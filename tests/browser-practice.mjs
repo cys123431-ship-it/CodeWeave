@@ -1520,7 +1520,9 @@ try {
   }), true, 'C05 stream diagram and document must fit 390px');
   if (qaDir) await page.screenshot({ path: path.join(qaDir, 'file-stream-mobile.png'), fullPage: true });
   await context.setOffline(false);
-  await page.locator('.next-action [data-route="lesson:rust-cargo"]').click();
+  await page.locator('.next-action [data-route="lesson:c-owned-stream-byte"]').click();
+  await expect(page.locator('.detail-head h1')).toHaveText('소유 스트림: 오류 진단을 보존하며 닫기');
+  await page.goto(base + '/#lesson:rust-cargo');
   await expect(page.locator('.detail-head h1')).toHaveText('Cargo 프로젝트와 실패하는 테스트 읽기');
   await expect(page.locator('#code-input')).toHaveValue(rustDraft);
   console.log('PASS: C05 quiz correction, real 10-case GCC API failure/retry, mastery, backup, offline attempts, 390px and next lesson');

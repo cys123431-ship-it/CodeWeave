@@ -2,13 +2,13 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-20 16:03 KST — C07 소유 스트림 학습 경로 연결
 - 시작/결과 SHA: main04751784fe9c4f5370b38452c37187cbb90902b6; PR시작cf57793e9918d09b22eddbb71206b5e607a0e28f; RED 0649499deb30ccd8c1da660ccd4654f8ce84f4a8; 결과 커밋 feat: connect C07 owned-stream learner and resubmission flow.
 - 목표: 준비된 한 바이트 소유권 계약을 화면·퀴즈·실제 제출/오류 수정·재제출·백업·숙달에 연결.
-- 변경 파일 수: 10개(화면·메타데이터·registry·원고·README·신규 검사·계약 검사·browser·활성/보관 일지); 검사 삭제0.
-- 테스트 결과: 신규2건 RED CI749건747통과/실패2/skip0(목록 부재·HTTP400); 구현 전체/브라우저 CI 대기. 변경 JS/MJS6개 node --check는 신규 검사에 포함.
+- 변경 파일 수: 10개(화면·메타데이터·registry·계약 검사에 신규2건 통합·browser·로드맵2개·감사표·활성/보관 일지); 검사 삭제0.
+- 테스트 결과: 신규2건 RED CI749건747통과/실패2/skip0(목록 부재·HTTP400); 1차 구현 CI749건728통과/실패21/skip0·browser 다음 경로 실패 재현; 매핑/감사표/목록 순서 수정 후 재검사 대기. 변경 JS/MJS5개 node --check 포함.
 - CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39242787915 성공·Linux747/747·macOS C07/브라우저 성공; RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39384334474 의도된2실패; 이번 결과 CI 확인 전 완료 기록 금지.
-- 발견한 문제: 로컬 exec-server409 environment_offline로 읽기/쓰기/npm/GCC/git/browser 미실행; 원격 파일 읽기·신규/기존 파일 쓰기는 GitHub atomic tree/ref로 진행. 준비 전용 미등록 기대를 승인된 운영 등록 동일성 검사로 전환(성공 판정 완화0).
+- 발견한 문제: 로컬 exec-server409 environment_offline로 읽기/쓰기/npm/GCC/git/browser 미실행; 원격 파일 읽기·신규/기존 파일 쓰기는 GitHub atomic tree/ref로 진행. 준비 전용 미등록 기대를 운영 동일성 검사로 전환. 매핑/감사표 누락과 전역 순서의 C05→Rust 진입을 재현해 C07을 C05 직후에 배치; C05 다음 화면 기대도 새 C07로 갱신하고 Rust 초안 검사는 직접 진입으로 유지(검사 완화0).
 - 보안 영향: 서버 전용12사례 재사용·공개 메타데이터에 하네스 제외·기존 JSON/Host/Origin/토큰·GCC 한도 적용; 신규 실행 API/링커 권한/사용자 저장키 변경0.
 - 단계별 완료율: C07진행 중·next=C/C07 유지; A3/5·B10/11·C6/8·D/E3/8·F2/8·G0/8·H/I0/6. 화면34·C26/DS3/알고리즘3문제, 개발 완료 단원 수 유지.
-- 다음 작업: 결과 SHA의 전체·실제 C07 browser/390px/오프라인 CI 성공을 확인하고 C07 제한 범위 인수 근거와 차례 전환만 별도 검토; 새 원고 준비 반복 금지.
+- 다음 작업: 결과 SHA의 전체·실제 C07 browser/390px/오프라인 CI 성공을 확인하고 C07 제한 범위 인수 근거와 차례 전환만 별도 검토; 새 원고 준비 반복 금지. README 수치/원고 준비 시점 설명의 현재화는 파일 한도로 후속 인수에서 처리.
 
 ---
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
