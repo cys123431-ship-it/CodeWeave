@@ -1,4 +1,46 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-21 05:58 KST — F03 준비 브랜치 최신 main 통합
+- 시작/결과 SHA: main 9ea723f2984b542d8022bb5866b3200925439372; PR #7 f65e93e3079a3a46a29c3f856f39307329c2c7c7; 후속 병합 커밋 제목 chore: merge verified Rust settlement into F03 preparation.
+- 목표: 보안 우선 Rust 종료 확인 수정과 양쪽 일지를 F03 준비 브랜치에 보존 통합; 신규 콘텐츠·인수·완료율 상승0.
+- 변경 파일 수: 이번 기반 동기화4개(런타임/검사2·병합 일지2); 기존 F03 준비10파일·21검사·원고/도식/로드맵 상태 보존.
+- 테스트 결과: 기존 main 794/794·PR 준비811/811 각각 실패0/skip0 및 browser/macOS 성공; 통합 SHA 전체 검사는 CI에서 확인 후 최종 보고. 신규 검사·삭제·기대값 수정0.
+- CI URL과 결과: main https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39489078341 성공; PR 준비 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39457043161 성공; 통합 결과는 실제 조회 후 보고.
+- 발견한 문제: PR #7이 main보다5커밋 뒤져 일지 충돌로 mergeable=dirty였음. 로컬 environment_offline로 미커밋/Git/npm/Cargo/diff/직접 roadmap --check 미실행; 원격 트리·CI로 검증.
+- 보안 영향: main의 종료 확인·500ms·lease/격리/복구거부와 F03의 명시적 서비스/인증/10사례 결과 검증을 모두 유지; 공개 실행·인증/저장키/v1 변경0.
+- 단계별 완료율: A3/5·B10/11·C7/8·D/E4/8·F2/8·G0/8·H/I0/6, 화면36·next=F-G/F03 불변; F03/플랫폼 인수 미완료.
+- 다음 작업: 통합 SHA CI 성공 확인 후 기존 준비를 재작성하지 않고 F03 CLI/화면·오답→수정·재제출·분리 숙달·v1복원·390px/오프라인 인수. 기반 통합은 콘텐츠2회 한도 미소비.
+
+---
+
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-21 05:04 KST — Rust 종료 확인 수정 통합
+- 시작/결과 SHA: main 46604df10ee57093d5be65928bad977f2a592cda; 검증 5dbdae22accdaef737706c6063ab8e8505bc0367; PR #8 병합 20bb28acb575a2516009c9f2b9eab0b6ef366ff3; 후속 커밋 제목 docs: record verified Rust cleanup integration and preserve F03 handoff.
+- 목표: 대기 중이던 마지막 SHA의 CI를 실제 확인하고 검증된 기반 수정만 main에 안전 통합; 새 단원 작업0.
+- 변경 파일 수: 이번2개(활성/보관 일지); 병합된 PR #8은 기존4파일·3커밋, 코드/검사 재작성0.
+- 테스트 결과: PR 마지막 Linux794/794·실패0/skip0, macOS 신규4건/취소40회·browser 성공 재조회. transient-live/transient-unavailable 과거RED2실패→통과·permanent/signal-denied 전후통과; 기존 검사 삭제/기대값 변경0.
+- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39481006041 SHA5dbdae22 전체 성공 확인; 병합/이번 기록 SHA의 CI는 실제 조회 후 최종 보고.
+- 발견한 문제: 이전 macOS queued는 해소됨. 커널EPERM 발생 원인은 여전히 미확정·원래실패39455522174 보존. 로컬 환경 연결 불가로 미커밋/Git/npm/GCC/diff/직접roadmap --check 미확인·미실행; GitHub 연결/CI 사용.
+- 보안 영향: 검증된 종료확인 수정만 통합; 실제SIGKILL1회·기존500ms·불확실성격리·복구거부·인증/저장키/v1 계약 보존.
+- 단계별 완료율: A3/5·B10/11·C7/8·D/E4/8·F2/8·G0/8·H/I0/6, 화면36·next=F-G/F03 불변; 플랫폼/F03 인수 미완료.
+- 다음 작업: 이번 결과 SHA CI 성공 확인; PR #7에 최신 main 기반 수정과 양쪽 일지를 보존해 통합 검토한 뒤 F03 CLI/화면·오답→수정·재제출·분리 숙달·v1복원·390px/오프라인 인수. 기반 통합은 콘텐츠2회 한도 미소비.
+
+---
+
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-21 03:59 KST — Rust 종료 확인 EPERM 회귀 수정
+- 시작/결과 SHA: main 46604df10ee57093d5be65928bad977f2a592cda; RED 3cd7443ad41c09f2a08b00529f4be87f303a7068; 검증 63041838f9cefb0f7703e47a532073cd758e80a3; 후속 커밋 제목 test: avoid redundant fixture signals and record verified Rust settlement.
+- 목표: 원래 macOS27/40 취소 실패 경로를 결정적으로 재현하고 종료 확인을 보수적으로 정정; F03 신규 콘텐츠 작업0.
+- 변경 파일 수: 4개(실행기·기존 실행기 검사·활성/보관 일지); 기존 PR #7 준비 보존.
+- 테스트 결과: 신규4건 transient-live/transient-unavailable RED실패→통과, permanent/signal-denied 전후통과; Linux 전체794/794·실패0/skip0, macOS lifecycle115통과/실패0/Linux전용1skip·취소40회 및 browser 성공. 검사 삭제/기대값 완화0.
+- CI URL과 결과: 검증 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39480332467 전체 성공 확인·제한된 종료확인 수정 완료; RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39479875877 의도된2실패. 원래 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39455522174 실패 보존; 후속 기록/병합 CI 최종 보고.
+- 발견한 문제: signal0 EPERM→즉시ECLEANUP 경로를 재현·수정했으나 커널 EPERM 발생 원인은 미확정. 로컬 environment_offline로 미커밋/Git/npm/GCC/diff 실행 불가·연결 API/CI 사용. 재검토로 fixture 최종 정리는 실제SIGKILL 거부 모드에서만 수행(기대값 불변·이미 종료한 그룹 재신호 방지).
+- 보안 영향: 실제SIGKILL 성공 뒤 읽기 전용 재확인만 허용·기존500ms/공유lease/영구오류격리/복구거부 유지; 재신호/인증·공개실행·저장키 변경0.
+- 단계별 완료율: 콘텐츠 불변 A3/5·B10/11·C7/8·D/E4/8·F2/8·G0/8·H/I0/6; 화면36·next=F-G/F03, PR #7 draft/미인수 유지.
+- 다음 작업: 기록 SHA CI 성공·최신 main/PR HEAD 확인 후 PR #8 안전 병합/main CI 확인; PR #7은 기반 수정과 일지 충돌을 검토해 이어받고 F03 화면/재제출/복원 인수로 진행. F03 콘텐츠2회 한도는 소비하지 않음.
+
+---
+
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-21 00:57 KST — F03 조건·반복·범위 채점 준비
 - 시작/결과 SHA: main 46604df10ee57093d5be65928bad977f2a592cda; RED1 72a6c315de25c1e90b29f9146106b70050c4e8ea; RED2 342fe9d194f922051df420deff0b4fb15f2a64de; 검증 6f0fd3a33fd3dba1bd87b013cc48d62ba086c6c2; 후속 커밋 제목 docs: preserve F03 verification and unresolved macOS cleanup incident.
 - 목표: 모든u32 입력을1000 이하로 먼저 제한하고 stop 미만 짝수를 누적하는 Cargo10사례·원고94줄/14절·정적 도식과 명시적 API 허용 계약 준비.
@@ -11,6 +53,7 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 다음 작업: macOS 취소/정리 실패를 먼저 재현·수정하고 원래27/40 실패 근거 보존; 다음 결과가 성공해도 원인 수정으로 주장하지 않음. 이후 F03 CLI/화면/숙달 인수를 PR #7의10파일 계획으로 연결, 단원 완료/차례 전환 보류.
 
 ---
+
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-20 23:56 KST — E04 학습·실제 제출·복원 인수
 - 시작/결과 SHA: main f263d0aee00cf5d334d8b72d308b99a30e1377eb; 준비 1bbb3165011a2175d7037c4365d9827e42a6edbe; 검증 5c2b5af84e093e12e5dff6927dd6ec1983ed497f; 후속 커밋 제목 docs: record successful E04 acceptance before merge.
@@ -22,42 +65,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 기존 인증·c-function·길이/실행 제한 재사용; 비공개 하네스 서버 보존·외부 입력 경로/공개 실행 API/저장키/백업 형식 변경0.
 - 단계별 완료율: E04 제한 범위 완료·E4/8(50%)·next=F-G/F03; A3/5·B10/11·C7/8·D4/8·F2/8·G0/8·H/I0/6; 화면36·기본C26/DS4/알고리즘4, Rust2 선택 실행 유지.
 - 다음 작업: 후속 기록 SHA CI 성공 후 최신 main/PR HEAD 확인·비강제 병합·main CI 재확인; 다음 개발은 F03 조건·반복·식과 범위의 좁은 Rust 단원.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-20 22:58 KST — E04 재귀 순열·복원 계약 준비
-- 시작/결과 SHA: main f263d0aee00cf5d334d8b72d308b99a30e1377eb; RED f8daad9453b697e6a6c183a0e65e9c683a16ad35; 구현 커밋 제목 feat: prepare E04 recursive permutations and undo learning contract.
-- 목표: 원소0~4개의 교환 DFS 순열·입력 원상 복원·출력 용량/여분 칸 보존을 실제 GCC로 검증하고 독자 원고/도식 준비.
-- 변경 파일 수: 8개(채점 모듈·회귀 검사·원고·도식·로드맵2개·활성/보관 일지); 공개 카탈로그/실행 등록 변경0.
-- 테스트 결과: 시작771/771 성공; 신규16건 RED787건771통과/16실패/skip0 확인. 정답10사례·오답9종·스타터·완성 예제·node --check/roadmap --check는 구현 CI 대기; 기대값 변경/검사 삭제0.
-- CI URL과 결과: 시작 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39427981225 성공; RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39435530683 의도된16실패; 구현 결과 후속 기록/보고.
-- 발견한 문제: 기존 관련 구현/AGENTS/열린 PR0 확인 후 PR #6 사용. 로컬 실행 환경 연결 불가로 미커밋/Git/npm/GCC/diff 미확인·미실행; 원격 읽기·atomic tree/ref·CI로 진행. 순열 방문 순서는 과제 계약이며 정렬 순서가 아님을 설명.
-- 보안 영향: 독립 미등록 c-function 정의만 준비·기존 실행 파이프라인 재사용; 원소4/출력24행 범위 검증·새 실행 API/파일 접근/인증/저장키/백업 변경0.
-- 단계별 완료율: E04 준비 진행 중·next=E/E04 유지; A3/5·B10/11·C7/8·D4/8·E3/8·F2/8·G0/8·H/I0/6, 화면35·문제 수 불변; 원고133줄·채점10사례.
-- 다음 작업: 결과 SHA CI 성공과 원격 반영 확인 후 다음1회에서 E04 화면10~15절·퀴즈·실제 채점/수정/재제출·숙달·v1복원·390px/오프라인 연결; 단원 인수 전 Rust 차례로 넘기지 않음.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-20 22:04 KST — D04 최종 CI 확인과 병합 마무리
-- 시작/결과 SHA: main 7ab4abc89b739d3190d692f4aff75b272eec0a54; PR #5 1c79011f35d08b87d74349b10399c94fbb337f34; 결과 커밋 제목 docs: record verified D04 final CI before merge.
-- 목표: 이전 실행의 D04 최종 검사와 원격 반영 상태를 확인하고 PR #5를 비강제 병합; 새 기능/단원 추가0.
-- 변경 파일 수: 이번 기록2개(활성/보관 일지); PR 전체10개 유지.
-- 테스트 결과: 최종771/771·실패0/skip0; 신규 연결2건과 인수1건 실패→통과 재조회. 실제 GCC 스타터/역방향 오답 거부·수정10/10, browser 퀴즈/분리 숙달/공유 이력/삭제 후v1복원/390px/오프라인/다음 단원 성공; macOS 공통 회귀 성공.
-- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39414907927 결과 SHA 1c79011f35d08b87d74349b10399c94fbb337f34 성공; 일지 고정 필드 실패도 해소. 이번 기록/병합 SHA의 CI는 최종 보고에 실제 결과로 기재.
-- 발견한 문제: main은 준비 단계에 머물고 PR #5가 미병합이었음. 로컬 실행 환경 연결 불가로 미커밋/Git/npm/GCC/diff 미확인·미실행; 원격 HEAD/트리·PR·CI 로그로 확인. 기존 원고/채점/검사 재작성0.
-- 보안 영향: 이번 변경은 인수 기록만 추가·기존 인증/실행 제한/파일 접근/저장키/백업 형식 보존; D04 실행 인수는 Linux 범위.
-- 단계별 완료율: D04 제한 범위 완료·D4/8(50%)·next=E/E04; A3/5·B10/11·C7/8·E3/8·F2/8·G0/8·H/I0/6, 화면35·기본C26/DS4/알고리즘3 불변.
-- 다음 작업: 기록 SHA 성공 확인 후 최신 main/PR HEAD를 재조회해 PR #5 병합·main CI 확인; 이어 E04 재귀 트리·백트래킹과 되돌리기의 좁은 계약부터 진행.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-20 20:03 KST — D04 학습·실제 채점 인수
-- 시작/결과 SHA: main 7ab4abc89b739d3190d692f4aff75b272eec0a54; 연결RED 3ff364e803103b005d4c9b2efff7f982de79bca7; 검증 ae5760f52cf813946248875c6e932fcd7fa1bdda; 인수RED 72ba6b9623de17e0a618f443cdcf5ccd7b2f4102; 결과 커밋 제목 docs: accept verified D04 delivery and rotate to E04.
-- 목표: D04 확보 용량 안 삽입/삭제·이동 비용의 화면13절·퀴즈·실제 GCC 수정/재제출·백업·분리 숙달 경로를 인수.
-- 변경 파일 수: 10개(카탈로그·공개 메타·서버 등록·브라우저/로드맵 검사·README·로드맵2개·활성/보관 일지); 기존10사례/저장키 보존.
-- 테스트 결과: 신규 연결2건 RED770건768통과/2실패/skip0→770/770; 실제 browser D03→D04·오답→수정10/10·퀴즈 재시도·숙달 분리·이력 공유·삭제 후v1복원·390px/오프라인/다음 단원 성공. 인수1건RED771건770통과/1실패/skip0→통과; 결과771건770통과/일지1실패/skip0를 고정 필드로 수정 후 CI 확인.
-- CI URL과 결과: 연결RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39412549764 신규2실패; 검증 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39413773136 전체770/770·browser/macOS 성공; 인수RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39414199184 신규1실패. 검증 범위 인수 완료·인수 CI https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39414599346 일지 필드1실패·수정 SHA CI 최종 보고.
-- 발견한 문제: 로컬 실행 환경 연결 불가로 미커밋/Git/npm/GCC/diff 미확인·미실행; GitHub 원격 읽기·atomic tree/ref와 CI로 검증. D04 실제 실행 인수는 Linux이며 macOS는 기존 공통 회귀 성공. D02 경유의 D03→알고리즘 고정 검사는 D04 경유로 수정. 신규 li수0 기대는 기존 빈 안내 li 오인이어서 저장 배열0건+빈 안내로 교체하고 실제 삭제 후 복원을 검증(정당한 기대 수정). C07 고정 차례 검사는 인수 당시 복사본으로 분리해 과거 계약과 이후 순환 모두 보존.
-- 보안 영향: 기존 인증·길이 제한·신뢰 로컬 c-function 재사용·허용 목록에 ds-array-list만 추가; 비공개 하네스 노출/사용자 저장키/백업/실행 경계 변경0.
-- 단계별 완료율: D04 제한 범위 완료·D4/8(50%)·next=E/E04; A3/5·B10/11·C7/8·E3/8·F2/8·G0/8·H/I0/6. 화면35·기본C26/DS4/알고리즘3문제, 분모 불변.
-- 다음 작업: 결과 SHA CI 성공 후 PR #5를 최신 main/HEAD 확인·비강제 병합하고 main CI 재확인; 다음 개발은 E04 재귀 트리·백트래킹과 되돌리기의 좁은 단원.
