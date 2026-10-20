@@ -117,7 +117,8 @@ export const exercises = Object.freeze(validateExerciseMetadata([
   { id:'rust-cargo', kind:'concept', language:'rust', grader:null, concepts:['cargo-project','integration-test','assertion','compile-versus-execute'], prerequisites:[], publicExample:{input:'total(2, 250)',output:'500'} },
   { id:'rust-mut', kind:'concept', language:'rust', grader:null, concepts:['binding','mutability'], prerequisites:['rust-cargo'], publicExample:{input:"next_count(3, -5), is_nonnegative(-2)",output:"-2 false"} },
   { id:'ds-stack', kind:'practice', language:'c', grader:'c-function', concepts:['stack','lifo','array-implementation','capacity','failure-preservation'], prerequisites:['c-array','c-functions'], publicExample:{input:'push(2), push(5), pop',output:'1 5 1'} },
-  {"id":"algo-binary","kind":"practice","language":"c","grader":"c-function","concepts":["linear-search","binary-search","sorted-precondition","half-open-range","first-match","complexity"],"prerequisites":["c-array","c-loops","c-array-max-function"],"publicExample":{"input":"중복: {1,3,3,3,9}, target=3","output":"1 1 1"}}
+  {"id":"algo-binary","kind":"practice","language":"c","grader":"c-function","concepts":["linear-search","binary-search","sorted-precondition","half-open-range","first-match","complexity"],"prerequisites":["c-array","c-loops","c-array-max-function"],"publicExample":{"input":"중복: {1,3,3,3,9}, target=3","output":"1 1 1"}},
+  {"id":"algo-permutations","kind":"practice","language":"c","grader":"c-function","concepts":["recursion-tree","backtracking","choice-state","undo","permutation","capacity"],"prerequisites":["c-array","c-functions","c-pointer","c-recursion-factorial"],"publicExample":{"input":"{1,2,3}: swap DFS","output":"6 123 132 213 231 321 312"}}
 ]));
 
 const exercisesById = new Map(exercises.map(exercise => [exercise.id, exercise]));

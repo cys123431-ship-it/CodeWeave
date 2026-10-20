@@ -1,4 +1,17 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-20 23:56 KST — E04 화면·실제 제출·복원 연결
+- 시작/결과 SHA: main f263d0aee00cf5d334d8b72d308b99a30e1377eb; 준비 1bbb3165011a2175d7037c4365d9827e42a6edbe; RED fb5cd10bf70ff3781cc191df80172da537ab1a5c; 구현 커밋 제목 feat: connect E04 permutation learning and correction workflow.
+- 목표: 준비된10사례 계약을 보존해13절·25분 화면/퀴즈와 실제 오답→수정→재제출·v1복원·숙달을 연결.
+- 변경 파일 수: 이번10개(카탈로그·메타데이터·실행등록·검사2·README·로드맵2·일지2); 이전 준비8개와 PR 누적14개.
+- 테스트 결과: 준비787/787·실패0/skip0; 신규 연결2건과 브라우저 경로를 먼저 작성, RED789건786통과/3실패/skip0·browser 카탈로그 부재 확인(D04 HTTP도 신규 공통 사전검사에서 동일 원인 실패). 구현 검사는 CI 대기; 검사 삭제0.
+- CI URL과 결과: 준비 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39436162093 전체 성공; RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39444877683 의도된 실패. 구현/결과 CI는 후속 기록·보고.
+- 발견한 문제: 로컬 실행 환경 unavailable로 미커밋/Git/npm/GCC/diff 실행 불가; GitHub 원자적 tree/ref·CI 사용. E03의 E04 미제공 설명만 새 실제 연결에 맞춰 갱신; 기존 검사 기대값/학습 문장 맞추기0.
+- 보안 영향: 새 외부 입력 경로 없이 기존 인증·c-function·길이/실행 제한을 재사용; 비공개 하네스는 서버에만 보존·기존 저장키/백업 형식 변경0.
+- 단계별 완료율: E04 진행 중·next=E/E04; A3/5·B10/11·C7/8·D4/8·E3/8·F2/8·G0/8·H/I0/6; 화면36·기본C26/DS4/알고리즘4, Rust2 선택 실행 유지.
+- 다음 작업: 결과 SHA의 실제GCC/퀴즈재시도/공유이력/삭제 후v1복원/분리숙달/390px도식/오프라인/다음 진입 CI 성공 뒤 E04 인수·F-G/F03 순환, 미검증이면 진행 중 유지.
+
+---
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-20 22:58 KST — E04 재귀 순열·복원 계약 준비
 - 시작/결과 SHA: main f263d0aee00cf5d334d8b72d308b99a30e1377eb; RED f8daad9453b697e6a6c183a0e65e9c683a16ad35; 구현 커밋 제목 feat: prepare E04 recursive permutations and undo learning contract.
 - 목표: 원소0~4개의 교환 DFS 순열·입력 원상 복원·출력 용량/여분 칸 보존을 실제 GCC로 검증하고 독자 원고/도식 준비.
@@ -48,16 +61,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 기존 신뢰 로컬 GCC 함수형 파이프라인 재사용·미등록 정의만 준비; 새 실행 API/파일 접근/인증/사용자 저장키 변경0.
 - 단계별 완료율: D04 준비 진행 중·next=D/D04 유지; A3/5·B10/11·C7/8·D/E3/8·F2/8·G0/8·H/I0/6. 화면34·문제 수 불변; 원고116줄·채점10사례.
 - 다음 작업: 후속 결과 SHA CI 확인·PR #4 안전 병합 후 D04 화면10~15절/퀴즈/실제 제출·수정·재제출/백업/분리 숙달·390px/오프라인 연결을 다음 1회 안에 검증; 단원 전체 완료 전 E04로 넘기지 않음.
-
----
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-20 17:56 KST — C07 제한 범위 인수와 D04 순환
-- 시작/결과 SHA: main04751784fe9c4f5370b38452c37187cbb90902b6; PR시작f57b8b520b0b6a6a4a5375d6008e22e71dbad876; RED 54a34c81a25141831a872b89c298a4d55ef2ba2e; 인수d4d304cb5e0e2390e54e8c510a0b051c5eca72b8; 후속 docs: record verified C07 acceptance before merge.
-- 목표: 실제 검증된 한 바이트 소유 스트림·errno 보존·정리 경로를 인수하고 다음 자료구조 D04로 전환; 새 단원/문제0.
-- 변경 파일 수: 6개(로드맵2개·인수 문서·신규2검사를 추가한 roadmap 검사·활성/보관 일지); 기존 코드/계약/저장키 변경0.
-- 테스트 결과: 시작CI749/749·실패0/skip0·C07 macOS18/18·실제 browser 경로 성공 로그 재조회; 신규2건 RED751건749통과/실패2/skip0, 상태/차례 미반영 재현. 인수 CI751/751·실패0/skip0·browser/macOS 성공; 신규2건 실패→통과·node --check/roadmap --check 통과·테스트 삭제/기대 완화0.
-- CI URL과 결과: 인수 근거 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39390328907 성공; RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39397316608 의도된2실패. 인수 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39397668112 성공751/751·browser/macOS 성공. 후속 기록/병합 SHA CI 최종 보고.
-- 발견한 문제: 미래 C08 진행이 과거 C07 대기 재현에 섞이지 않는 별도 복사 검사를 추가. 로컬409 environment_offline로 Git/npm/GCC/diff 미실행; GitHub 원격 읽기·atomic tree/ref 쓰기와 CI로 진행.
-- 보안 영향: 인수 기록/차례만 갱신·기존 신뢰 로컬 GCC12사례/인증/실행 한도 보존; 외부 입력/실행 API/파일 접근/사용자 저장키 변경0.
-- 단계별 완료율: C07 제한 범위 완료·C7/8(87.5%)·next=D/D04; A3/5·B10/11·D/E3/8·F2/8·G0/8·H/I0/6, 화면34·기본 C26/DS3/알고리즘3 불변.
-- 다음 작업: 결과 SHA CI 성공 후 최신 main/PR HEAD를 다시 확인해 PR #3 비강제 병합·main CI 확인; 다음 실행은 D04 동적 배열 리스트 삽입/삭제/이동 비용의 좁은 GCC 계약부터 구현.
