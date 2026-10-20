@@ -1192,7 +1192,7 @@ export const lessons = [
       "input": "sum_even_before(10, 7)",
       "expected": "12"
     }
-  }
+  },
   {
   "id": "ds-list-find",
   "track": "ds",
