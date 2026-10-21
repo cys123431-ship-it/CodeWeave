@@ -76,7 +76,7 @@ test('D05 accepts prepend first-match removal failure preservation and complete 
 const mutants = [
   ['drops the old head during prepend', reference.replace('node->next = *head;', 'node->next = NULL;')],
   ['publishes allocation before initialization', reference.replace('node->value = value;\n    node->next = *head;', '*head = node;\n    node->value = value;\n    node->next = NULL;')],
-  ['removes every matching value', reference.replace('if (*link == NULL) return 0;', 'while (*link != NULL && (*link)->next != NULL && (*link)->next->value == target) *link = (*link)->next;\n    if (*link == NULL) return 0;')],
+  ['removes the last duplicate instead of first', reference.replace('while (*link != NULL && (*link)->value != target) link = &(*link)->next;', 'struct Node **found = NULL; while (*link != NULL) { if ((*link)->value == target) found = link; link = &(*link)->next; } link = found;')],
   ['returns success without freeing removed ownership', reference.replace('free(victim);', '(void)victim;', 1)],
   ['frees the successor instead of the victim', reference.replace('free(victim);', 'free(victim->next);', 1)],
   ['overwrites output for a missing target', reference.replace('if (*link == NULL) return 0;', 'if (*link == NULL) { *removed = target; return 0; }')],
