@@ -4,8 +4,13 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { gradingExercises } from '../server/grading-exercises.mjs';
 import { writeSources, compile, runCases, buildResult } from '../server/grading-pipeline.mjs';
+import { figureFor } from '../src/figures.js';
+import { lessons } from '../src/catalog.js';
+import { exerciseById } from '../src/exercises.js';
+import { createLearningServer } from '../server/learning-server.mjs';
 
 const gcc = spawnSync('gcc', ['--version']).status === 0;
 const load = () => import('../server/callback-sort-exercise.mjs');
@@ -29,7 +34,7 @@ async function grade(t, code) {
   return buildResult(exercise, built, await runCases(workspace, exercise));
 }
 
-test('C08 preparation fixes twelve immutable callback-sort cases without production registration', async () => {
+test('C08 delivery keeps twelve immutable callback-sort cases registered unchanged', async () => {
   const { callbackSortExercise: exercise, callbackSortMetadata: metadata } = await load();
   assert.equal(exercise.id, 'c-qsort-callback');
   assert.equal(exercise.cases.length, 12);
@@ -38,8 +43,32 @@ test('C08 preparation fixes twelve immutable callback-sort cases without product
   assert.ok(exercise.cases.every(Object.isFrozen));
   assert.ok(exercise.cases.some(tc => tc.input === metadata.publicExample.input
     && tc.expected === metadata.publicExample.output));
-  assert.equal(gradingExercises.has(exercise.id), false);
+  assert.deepEqual(gradingExercises.get(exercise.id), exercise);
   assert.deepEqual(exercise.linkArgs, []);
+});
+
+test('C08 learner catalog exposes the compiled example, public contract and bounded lesson', async () => {
+  const { callbackSortExercise: exercise, callbackSortMetadata: metadata, callbackSortStarter: starter } = await load();
+  const markdown = await fs.readFile(new URL('../content/c/25-qsort-function-pointers.md', import.meta.url), 'utf8');
+  const program = markdown.match(/```c\n([\s\S]*?)\n```/)[1];
+  const lesson = lessons.find(item => item.id === exercise.id);
+  assert.ok(lesson, 'C08 must be reachable from the learner catalog');
+  assert.equal(lesson.track, 'c');
+  assert.equal(lesson.figure, 'function-call');
+  assert.ok(lesson.sections.length >= 10 && lesson.sections.length <= 15);
+  assert.ok(lesson.sections.some(section => section.code?.trim() === program.trim()));
+  assert.equal(lesson.challenge.starter, starter);
+  assert.equal(lesson.challenge.input, metadata.publicExample.input);
+  assert.equal(lesson.challenge.expected, metadata.publicExample.output);
+  assert.deepEqual(exerciseById(exercise.id), { ...metadata, requiredFiles: [] });
+  assert.equal(Object.hasOwn(exerciseById(exercise.id), 'harness'), false);
+});
+
+test('C08 reuses the accessible static function-call diagram without executable markup', () => {
+  const svg = figureFor('function-call');
+  assert.match(svg, /aria-label="[^"]*학습 개념 그림/);
+  assert.match(svg, /role="img"/);
+  assert.doesNotMatch(svg, /<script|<animate|foreignObject|onload=/i);
 });
 
 test('C08 reference delegates ordering to callbacks and preserves invalid inputs', { skip: !gcc }, async t => {
@@ -93,4 +122,27 @@ test('C08 manuscript program compiles, runs callback orders, and documents a Mak
   const ran = spawnSync(binary, [], { encoding: 'utf8', timeout: 2000 });
   assert.equal(ran.status, 0, ran.stderr);
   assert.equal(ran.stdout.replaceAll('\r\n', '\n'), '-1 2 3\n3 2 -1\n');
+});
+
+test('C08 authenticated HTTP rejects a shortened range then accepts the corrected twelve-case submission', { timeout: 60000, skip: !gcc }, async () => {
+  const { callbackSortExercise: exercise } = await load();
+  const wrong = reference.replace('qsort(values, count,', 'qsort(values, count - 1,');
+  const app = createLearningServer({ root: fileURLToPath(new URL('../', import.meta.url)) });
+  try {
+    const { port } = await app.listen(0);
+    const base = 'http://127.0.0.1:' + port;
+    const response = await fetch(base);
+    const token = (await response.text()).match(/name="codeweave-token" content="([a-f0-9]{64})"/)?.[1];
+    assert.match(token, /^[a-f0-9]{64}$/);
+    for (const [code, ok] of [[wrong, false], [reference, true]]) {
+      const graded = await fetch(base + '/api/grade', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CodeWeave-Token': token },
+        body: JSON.stringify({ exerciseId: exercise.id, code }), signal: AbortSignal.timeout(15000)
+      });
+      assert.equal(graded.status, 200);
+      const result = await graded.json();
+      assert.equal(result.ok, ok, JSON.stringify(result));
+      assert.equal(result.tests.length, 12);
+    }
+  } finally { await app.close(); }
 });
