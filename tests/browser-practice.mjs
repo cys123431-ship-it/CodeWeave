@@ -84,6 +84,10 @@ function verifyControlFlowAcceptanceContract() {
   assert.equal(Object.hasOwn(c06ExerciseById(lesson.id), 'harness'), false);
 
   const prepared = JSON.parse(JSON.stringify(roadmapData));
+  // Freeze this historical F03 handoff at its delivery-time state. The live roadmap
+  // now has C08 completed and rotates to D05, but F03 originally handed off to C08.
+  const c08 = prepared.stages.find(stage => stage.id === 'C').units.find(unit => unit.id === 'C08');
+  c08.status = '진행 중';
   const f03 = prepared.stages.find(stage => stage.id === 'F').units.find(unit => unit.id === 'F03');
   f03.status = '진행 중';
   delete f03.practiceDelivery;
