@@ -17,9 +17,9 @@ export function createLearningServer({ root = process.cwd(), rustService, rustEx
     throw new TypeError('Rust requires an explicitly supplied trusted service');
   }
   if (rustExerciseIds !== undefined && (rustService === undefined || !Array.isArray(rustExerciseIds)
-      || rustExerciseIds.length === 0 || rustExerciseIds.length > 2
+      || rustExerciseIds.length === 0 || rustExerciseIds.length > 3
       || !rustExerciseIds.includes('rust-cargo')
-      || Array.from(rustExerciseIds).some(id => !['rust-cargo', 'rust-mut'].includes(id))
+      || Array.from(rustExerciseIds).some(id => !['rust-cargo', 'rust-mut', 'rust-control-flow'].includes(id))
       || new Set(rustExerciseIds).size !== rustExerciseIds.length)) {
     throw new TypeError('Rust exercise announcement requires explicit known service IDs');
   }

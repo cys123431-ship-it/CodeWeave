@@ -12,6 +12,9 @@ import { serializeMultiFileSubmission } from '../src/multi-file.js';
 import { createLearningServer } from '../server/learning-server.mjs';
 import { createRustGradingService } from '../server/rust-service.mjs';
 import { createRustGradingDefinitions, createRustBindingDefinitions } from '../server/rust-exercises.mjs';
+import { controlDefinition, controlMetadata, createRustControlDefinitions } from '../server/rust-control-flow-exercise.mjs';
+import { parseRustArgs } from '../scripts/start-rust.mjs';
+import { recordRustPracticeDelivery, renderRoadmap } from '../scripts/roadmap.mjs';
 import { createAttemptBackup } from '../src/attempt-backup.js';
 import { createLocalRustGradingService } from '../server/rust-executor.mjs';
 import { trustedRustTools } from './helpers/rust-tools.mjs';
@@ -42,6 +45,66 @@ const permutationsManuscript = await readFile(new URL('../content/algo/04-backtr
 const permutationsProgram = permutationsManuscript.match(/\x60\x60\x60c\n([\s\S]*?)\n\x60\x60\x60/)[1];
 const permutationsCorrect = permutationsProgram.split('int main(void)')[0];
 const permutationsWrong = permutationsCorrect.replace('exchange(values + pos, values + i); /* undo */', '(void)0; /* undo omitted */');
+const controlManuscript = await readFile(new URL('../content/rust/03-control-flow.md', import.meta.url), 'utf8');
+const controlProgram = controlManuscript.match(/```rust\n([\s\S]*?)\n```/)[1];
+const controlCorrect = controlProgram.split('fn main()')[0].trim();
+const controlWrong = controlCorrect.replace('0..=end', '0..end');
+const roadmapData = JSON.parse(await readFile(new URL('../docs/roadmap.json', import.meta.url), 'utf8'));
+
+function verifyControlFlowAcceptanceContract() {
+  const cliBase = ['--trusted-personal-code', '--sysroot', '/trusted/tools',
+    '--workspace-parent', '/trusted/work'];
+  assert.deepEqual(parseRustArgs([...cliBase, '--include-control-flow']), {
+    port: 4173, sysroot: '/trusted/tools', parent: '/trusted/work', includeControlFlow: true
+  });
+  assert.throws(() => parseRustArgs([...cliBase, '--include-f03']), TypeError);
+  assert.throws(() => parseRustArgs([...cliBase, '--include-f02', '--include-control-flow']), TypeError);
+  const lesson = c06Lessons.find(item => item.id === controlMetadata.id);
+  assert.ok(lesson, 'F03 must be reachable from the learner catalog');
+  assert.equal(lesson.track, 'rust');
+  assert.equal(lesson.figure, 'rust-control-flow');
+  assert.equal(lesson.sections.length, 14);
+  assert.deepEqual(c06ExerciseById(lesson.id), {
+    ...controlMetadata, kind: 'concept', language: 'rust', grader: null, requiredFiles: []
+  });
+  assert.equal(lesson.challenge.starter, controlDefinition.starter.trimEnd());
+  assert.equal(lesson.challenge.input, controlMetadata.publicExample.input);
+  assert.equal(lesson.challenge.expected, controlMetadata.publicExample.output);
+  assert.ok(lesson.sections.some(section => section.code?.trim() === controlProgram.trim()));
+  assert.deepEqual(lesson.quiz.options, ['2', '2·4', '1·3', '2·4·6·8·10']);
+  assert.equal(lesson.quiz.answer, 0);
+  assert.deepEqual(createRustControlDefinitions().get(lesson.id), controlDefinition);
+  assert.equal(Object.hasOwn(c06ExerciseById(lesson.id), 'harness'), false);
+
+  const prepared = JSON.parse(JSON.stringify(roadmapData));
+  const f03 = prepared.stages.find(stage => stage.id === 'F').units.find(unit => unit.id === 'F03');
+  f03.status = '진행 중';
+  delete f03.practiceDelivery;
+  f03.lessonIds = ['rust-control-flow'];
+  if (!f03.tests.includes('tests/browser-practice.mjs')) f03.tests.push('tests/browser-practice.mjs');
+  prepared.next = { track: 'F-G', unit: 'F03' };
+  const evidence = {
+    unitId: 'F03', scope: 'trusted-local-cargo', exerciseId: 'rust-control-flow',
+    commit: 'a'.repeat(40),
+    ci: 'https://github.com/cys123431-ship-it/CodeWeave/actions/runs/1',
+    checks: ['theory', 'example-tests', 'quiz-retry', 'actual-grading', 'correction-retry',
+      'backup', 'mastery-next', 'explicit-start', 'offline'],
+    platforms: ['linux'], review: 'docs/ROADMAP.md',
+    operatorFlags: ['--include-control-flow']
+  };
+  const accepted = recordRustPracticeDelivery(prepared, evidence);
+  const acceptedF03 = accepted.stages.find(stage => stage.id === 'F').units.find(unit => unit.id === 'F03');
+  assert.equal(acceptedF03.status, '완료');
+  assert.deepEqual(accepted.next, { track: 'C', unit: 'C08' });
+  assert.match(renderRoadmap(accepted), /F03 로컬 Cargo 인수 범위/);
+  assert.throws(() => recordRustPracticeDelivery(prepared, {
+    ...evidence, checks: evidence.checks.filter(check => check !== 'backup')
+  }), /채점 인수/);
+  assert.throws(() => recordRustPracticeDelivery(prepared, {
+    ...evidence, operatorFlags: ['--include-f03']
+  }), /채점 인수/);
+  console.log('PASS: F03 catalog, explicit CLI flag and evidence-gated acceptance contract match');
+}
 function verifyPermutationsContract() {
   const lesson = c06Lessons.find(item => item.id === 'algo-permutations');
   assert.ok(lesson, 'E04 must be reachable from the learner catalog');
@@ -88,6 +151,7 @@ if (process.argv.includes('--permutations-http-only')) {
   await verifyPermutationsHTTP();
   process.exit(0);
 }
+verifyControlFlowAcceptanceContract();
 verifyPermutationsContract();
 await verifyPermutationsHTTP();
 if (process.argv.includes('--permutations-contract-only')) process.exit(0);
@@ -705,7 +769,9 @@ try {
     await p.locator('[data-retry="rust-mut"]').click();
     await p.locator('[data-quiz="rust-mut"][data-choice="0"]').click();
     await expect(p.locator('.mastery-state')).toContainText('전체 숙달');
-    await p.locator('.next-action [data-route="lesson:ds-list-find"]').click();
+    await p.locator('.next-action [data-route="lesson:rust-control-flow"]').click();
+    await expect(p.locator('.detail-head h1')).toHaveText('조건·반복·식과 범위: 멈추기 전 짝수 누적');
+    await expect(p.locator('#grade-code')).toBeDisabled();
     await p.goto(f02Base + '/#lesson:rust-mut');
     await expect(p.locator('.mastery-state')).toContainText('전체 숙달');
     await bench.locator('#attempt-list li').nth(1).getByRole('button').click();
@@ -755,7 +821,145 @@ try {
     assert.deepEqual(await readdir(f02Parent), []);
     await rm(f02Parent, { recursive: true, force: true });
   }
-  const warningContext = await browser.newContext();
+  const f03Parent = await realpath(await mkdtemp(path.join(os.tmpdir(), 'codeweave-browser-f03-')));
+  const f03Script = fileURLToPath(new URL('../scripts/start-rust.mjs', import.meta.url));
+  const f03Child = spawn(process.execPath, [f03Script, '--trusted-personal-code',
+    '--sysroot', path.dirname(path.dirname(actualTools.rustc)), '--workspace-parent', f03Parent,
+    '--port', '0', '--include-control-flow'], { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] });
+  let f03Output = '';
+  f03Child.stdout.on('data', chunk => { f03Output += chunk; });
+  f03Child.stderr.on('data', chunk => { f03Output += chunk; });
+  const f03Closed = once(f03Child, 'close');
+  const f03Deadline = Date.now() + 15000;
+  while (!/http:\/\/127\.0\.0\.1:\d+/.test(f03Output)) {
+    if (f03Child.exitCode !== null || f03Child.signalCode !== null || Date.now() > f03Deadline) {
+      throw Error('F03 CLI did not start: ' + f03Output);
+    }
+    await new Promise(resolve => setTimeout(resolve, 20));
+  }
+  const f03Base = f03Output.match(/http:\/\/127\.0\.0\.1:\d+/)[0];
+  let f03Context;
+  try {
+    f03Context = await browser.newContext({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
+    const p = await f03Context.newPage(), bench = await f03Context.newPage();
+    for (const screen of [p, bench]) {
+      screen.on('pageerror', error => errors.push(error.message));
+      screen.on('dialog', dialog => dialog.accept());
+    }
+    await p.goto(f03Base + '/#lesson:rust-control-flow');
+    await expect(p.locator('meta[name="codeweave-rust-exercises"]'))
+      .toHaveAttribute('content', 'rust-cargo rust-mut rust-control-flow');
+    await expect(p.locator('.detail-head h1')).toHaveText('조건·반복·식과 범위: 멈추기 전 짝수 누적');
+    await expect(p.locator('.figure-box svg')).toHaveAttribute('role', 'img');
+    await expect(p.locator('#grade-code')).toBeEnabled();
+    const starter = await p.locator('#code-input').inputValue();
+    assert.equal(starter, controlDefinition.starter.trimEnd());
+    const submit = async (screen, code) => {
+      await screen.locator('#code-input').fill(code);
+      const response = screen.waitForResponse(r => r.url().endsWith('/api/grade/rust'), { timeout: 45000 });
+      await screen.locator('#grade-code').click();
+      const result = await response;
+      assert.equal(result.status(), 200);
+      assert.deepEqual(result.request().postDataJSON(), { exerciseId: 'rust-control-flow', code });
+      assert.equal(result.request().headers()['x-codeweave-token'],
+        await screen.locator('meta[name="codeweave-token"]').getAttribute('content'));
+      const value = await result.json();
+      assert.equal(value.tests.length, 10);
+      await ready(screen);
+      assert.deepEqual(await readdir(f03Parent), []);
+      return value;
+    };
+    assert.equal((await submit(p, starter)).ok, false);
+    await bench.goto(f03Base + '/workbench.html');
+    await bench.locator('#lesson-select').selectOption('rust-control-flow');
+    await expect(bench.locator('#code-label')).toHaveText('Rust 코드 작성');
+    assert.equal((await submit(bench, controlWrong)).ok, false);
+    assert.equal((await submit(bench, controlCorrect)).ok, true);
+    await expect(bench.locator('#grade-result')).toContainText('10/10');
+    await expect(p.locator('#attempt-history-container .attempt-list li')).toHaveCount(3);
+    await expect(p.locator('.mastery-state')).not.toContainText('전체 숙달');
+    await p.reload();
+    await p.locator('#mark-theory').click();
+    await p.locator('[data-quiz="rust-control-flow"][data-choice="1"]').click();
+    await expect(p.locator('.feedback.bad')).toBeVisible();
+    await p.locator('[data-retry="rust-control-flow"]').click();
+    await p.locator('[data-quiz="rust-control-flow"][data-choice="0"]').click();
+    await expect(p.locator('.mastery-state')).toContainText('전체 숙달');
+    await bench.reload();
+    await bench.locator('#lesson-select').selectOption('rust-control-flow');
+    await expect(bench.locator('#code-input')).toHaveValue(controlCorrect);
+    const downloadEvent = bench.waitForEvent('download');
+    await bench.locator('#export-history').click();
+    const download = await downloadEvent, chunks = [];
+    for await (const chunk of await download.createReadStream()) chunks.push(chunk);
+    const backup = Buffer.concat(chunks), backupData = JSON.parse(backup);
+    assert.equal(backupData.drafts['rust-control-flow'], controlCorrect);
+    assert.equal(backupData.iterations['rust-control-flow'].length, 3);
+    await bench.evaluate(() => {
+      for (const key of ['codeweave.drafts.v1', 'codeweave.iterations.v1']) {
+        const values = JSON.parse(localStorage.getItem(key) || '{}');
+        delete values['rust-control-flow'];
+        localStorage.setItem(key, JSON.stringify(values));
+      }
+    });
+    await bench.reload();
+    await bench.locator('#lesson-select').selectOption('rust-control-flow');
+    await expect(bench.locator('#code-input')).toHaveValue(starter);
+    await expect(bench.locator('#attempt-list')).toContainText('아직 제출 기록이 없습니다.');
+    await bench.locator('#import-file').setInputFiles({
+      name: 'f03.json', mimeType: 'application/json', buffer: backup
+    });
+    await expect(bench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
+    await p.reload();
+    await expect(p.locator('#code-input')).toHaveValue(controlCorrect);
+    await expect(p.locator('#attempt-history-container .attempt-list li')).toHaveCount(3);
+    await p.locator('[data-restore-attempt="1"]').click();
+    await expect(p.locator('#code-input')).toHaveValue(controlWrong);
+    await p.locator('[data-restore-attempt="0"]').click();
+    await expect(p.locator('#code-input')).toHaveValue(controlCorrect);
+    const bounds = await p.evaluate(() => {
+      const svg = document.querySelector('.figure-box svg'), view = svg.viewBox.baseVal;
+      return {
+        overflow: [...svg.querySelectorAll('text')].flatMap(text => {
+          const box = text.getBBox();
+          return box.x >= 0 && box.y >= 0 && box.x + box.width <= view.width && box.y + box.height <= view.height
+            ? [] : [text.textContent];
+        }),
+        width: document.documentElement.scrollWidth, viewport: innerWidth
+      };
+    });
+    assert.deepEqual(bounds.overflow, []);
+    assert.ok(bounds.width <= bounds.viewport, JSON.stringify(bounds));
+    if (qaDir) await p.screenshot({ path: path.join(qaDir, 'f03-control-flow-mobile.png'), fullPage: true });
+    await p.evaluate(async () => {
+      await navigator.serviceWorker.ready;
+      if (!navigator.serviceWorker.controller) await new Promise(resolve =>
+        navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true }));
+    });
+    await bench.reload();
+    await f03Context.setOffline(true);
+    await bench.reload();
+    await bench.locator('#lesson-select').selectOption('rust-control-flow');
+    await expect(bench.locator('#grade-code')).toBeDisabled();
+    await expect(bench.locator('#code-input')).toHaveValue(controlCorrect);
+    await expect(bench.locator('#attempt-list li')).toHaveCount(3);
+    await f03Context.setOffline(false);
+    await p.reload();
+    await expect(p.locator('#grade-code')).toBeEnabled();
+    await expect(p.locator('.mastery-state')).toContainText('전체 숙달');
+    await p.locator('.next-action [data-route="lesson:ds-list-find"]').click();
+    await expect(p.locator('.detail-head h1')).toHaveText('단일 연결 리스트: 순회와 첫 일치 검색');
+    console.log('PASS: REAL Cargo F03 browser: explicit CLI, starter/inclusive-range failure, correction 10/10, quiz retry, separate mastery, shared history/v1 restore, 390px diagram, offline and next lesson');
+  } finally {
+    await f03Context?.close();
+    if (f03Child.exitCode === null && f03Child.signalCode === null) f03Child.kill('SIGTERM');
+    const [status, signal] = await f03Closed;
+    assert.equal(status, 0, f03Output);
+    assert.equal(signal, null);
+    assert.deepEqual(await readdir(f03Parent), []);
+    await rm(f03Parent, { recursive: true, force: true });
+  }
+    const warningContext = await browser.newContext();
   warningContext.on('page', p => p.on('pageerror', e => errors.push(e.message)));
   try {
     for (const [route, terminal, workbench] of [

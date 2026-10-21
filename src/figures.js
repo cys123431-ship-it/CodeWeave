@@ -3,6 +3,14 @@ const arrow=(x1,y1,x2,y2)=>`<path d="M${x1} ${y1} L${x2} ${y2}" stroke="#6b8d98"
 const wrap=inner=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 670 190" role="img" aria-label="학습 개념 그림"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 const wrapTall=(label,inner,viewBox='0 0 670 300',style='')=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"${style?` style="${style}"`:''} role="img" aria-label="${label}"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 export function figureFor(kind){
+ if(kind==='rust-control-flow')return wrapTall('Rust 조건 선택과 반복의 중단·건너뛰기 도식',
+  box(35,15,270,40,'end = limit과1000 중 작은 값','#e7f1ff')+arrow(170,61,170,80)+
+  box(35,87,270,40,'0..=end의 다음 n')+arrow(170,133,170,152)+
+  box(35,159,270,40,'n ≥ stop? 참 → 반복 끝','#fff3d8')+arrow(170,205,170,224)+
+  box(35,231,270,40,'홀수? 참 → 다음 후보')+arrow(170,277,170,296)+
+  box(35,303,270,40,'짝수만 sum += n','#d7f4e6')+
+  '<text x="170" y="378" text-anchor="middle" font-size="14" fill="#28485b">limit10 · stop7 → 0+2+4+6 = 12</text>',
+  '0 0 340 400','max-width:340px');
  if(kind==='permutation-backtrack')return wrapTall('순열 재귀 트리와 선택 뒤 입력 복원 도식',
   box(35,15,270,40,'1 · 2 · 3 | pos0','#e7f1ff')+
   arrow(110,62,60,94)+arrow(170,62,170,94)+arrow(230,62,280,94)+

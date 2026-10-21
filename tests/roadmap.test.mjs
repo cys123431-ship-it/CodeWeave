@@ -474,7 +474,9 @@ test('accepted E04 records verified permutation delivery and preserves its F03 h
   assert.deepEqual(unit.acceptance.checks, ['theory', 'compiled-example', 'quiz-retry', 'actual-grading', 'correction-retry', 'shared-history', 'backup-restore', 'mastery-next', 'offline', '390px']);
   assert.equal(gradingExercises.get('algo-permutations').cases.length, 10);
   const historical = structuredClone(data);
-  historical.stages.find(stage => stage.id === 'F').units.find(item => item.id === 'F03').status = '진행 중';
+  const historicalF03 = historical.stages.find(stage => stage.id === 'F').units.find(item => item.id === 'F03');
+  historicalF03.status = '진행 중';
+  delete historicalF03.practiceDelivery;
   const track = api.nextTurn('E');
   assert.equal(track, 'F-G');
   assert.equal(api.selectUnit(historical, track).id, 'F03');

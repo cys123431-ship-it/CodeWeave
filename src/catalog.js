@@ -1105,6 +1105,95 @@ export const lessons = [
   }
 },
   {
+    "id": "rust-control-flow",
+    "track": "rust",
+    "level": "기초",
+    "title": "조건·반복·식과 범위: 멈추기 전 짝수 누적",
+    "minutes": 25,
+    "source": "독자 작성 F03 원고·정적 SVG·실제 Cargo 테스트",
+    "summary": "bool 조건, if 식, 포함 범위, break·continue를 연결해 중단점 전 짝수를 누적합니다.",
+    "figure": "rust-control-flow",
+    "sections": [
+      {
+        "heading": "개요·필요성·선수·목표",
+        "text": "횟수가 달라지는 자료를 손으로 더하지 않고 조건과 반복으로 처리합니다. 선수는 F01의 Cargo 테스트와 F02의 let·mut·u32·bool입니다. 예상 25분. 목표는 bool 조건, 값을 만드는 if, 포함 범위, break와 continue를 추적하고 작은 함수로 구현하는 것입니다."
+      },
+      {
+        "heading": "이론 — 조건에는 bool이 필요하다",
+        "text": "Rust의 if 조건에는 bool이 필요합니다. n != 0, n >= stop처럼 비교 결과를 사용합니다. n >= stop은 중단 경계인지, n % 2 != 0은 홀수인지 묻습니다. 참일 때 이동할 블록을 먼저 말로 읽어 보세요."
+      },
+      {
+        "heading": "이론 — if 식과 마지막 식",
+        "text": "let end = if limit > 1000 { 1000 } else { limit };처럼 if는 값을 만들 수 있습니다. 두 갈래는 같은 u32 값을 내야 합니다. 함수 마지막의 sum은 반환값이고, sum;은 반환형과 맞지 않습니다."
+      },
+      {
+        "heading": "이론 — for와 끝을 포함하는 범위",
+        "text": "0..end는 end를 제외하고 0..=end는 포함합니다. 먼저 limit을 1000 이하로 제한해 최대 1001개 후보만 방문합니다. while은 반복 변수를 직접 갱신하고 loop는 종료 조건을 따로 써야 하므로, 이번에는 범위가 보이는 for로 시작합니다."
+      },
+      {
+        "heading": "이론 — break와 continue",
+        "text": "break는 반복 전체를 끝내고 continue는 현재 회차의 나머지만 건너뜁니다. n >= stop이면 먼저 break하고, 홀수이면 continue합니다. 두 검사를 모두 통과한 짝수만 합계에 더합니다."
+      },
+      {
+        "heading": "도식 — 선택하고 건너뛰고 끝내기",
+        "text": "정적 도식에서 limit=10, stop=7의 흐름을 읽습니다. 0을 더하고 1을 건너뛰며 2·4·6을 더해 12가 됩니다. 7에서는 stop에 도달해 반복 전체가 끝나므로 8도 방문하지 않습니다."
+      },
+      {
+        "heading": "계약 — 포함 상한과 제외 중단점",
+        "text": "sum_even_before(limit, stop)은 0부터 min(limit, 1000)까지 포함해 보되 stop 미만인 짝수의 합을 반환합니다. 모든 u32 입력을 받고 결과 최댓값은 250500입니다. stop-1을 계산하지 않고 n >= stop으로 직접 비교합니다."
+      },
+      {
+        "heading": "완성 프로그램 — 직접 컴파일",
+        "text": "main을 포함한 관찰용 프로그램입니다. 제출할 때는 main과 println!을 빼고 pub 함수만 작성합니다. rustc --edition=2021 -Dwarnings example.rs -o example로 컴파일할 수 있습니다.",
+        "code": "pub fn sum_even_before(limit: u32, stop: u32) -> u32 {\n    let end = if limit > 1000 { 1000 } else { limit };\n    let mut sum = 0;\n    for n in 0..=end {\n        if n >= stop {\n            break;\n        }\n        if n % 2 != 0 {\n            continue;\n        }\n        sum += n;\n    }\n    sum\n}\nfn main() {\n    let limit = 10;\n    let stop = 7;\n    println!(\"{}\", sum_even_before(limit, stop));\n    println!(\"{}\", sum_even_before(4, 10));\n    println!(\"{}\", sum_even_before(u32::MAX, u32::MAX));\n    println!(\"{limit} {stop}\");\n}"
+      },
+      {
+        "heading": "실제 출력과 이유",
+        "text": "출력은 차례로 12, 6, 250500, 10 7입니다. 첫 값은 0+2+4+6, 둘째는 포함 상한 4까지의 합, 셋째는 큰 입력을 먼저 1000으로 제한한 합입니다. 마지막 줄은 함수 호출 뒤 호출자의 값이 그대로임을 보여 줍니다.",
+        "code": "12\n6\n250500\n10 7"
+      },
+      {
+        "heading": "흔한 오류·중간 점검",
+        "text": "0..end로 끝값을 빠뜨리기, stop까지 더하기, continue를 break로 바꾸기, 합 대신 개수를 세기, 1000 제한을 잊기, 반환 식 뒤에 세미콜론 붙이기가 흔합니다. (4,10)은 6이고 (10,4)는 2입니다."
+      },
+      {
+        "heading": "핵심 요약·개념 확인",
+        "text": "끝 선택 → 후보 반복 → 중단 비교 → 홀수 건너뛰기 → 누적 → 마지막 식 반환 순서로 설명해 보세요. limit=10, stop=4에서는 양의 정수 2만 합계에 들어갑니다."
+      },
+      {
+        "heading": "직접 풀기·실제 테스트·개선",
+        "text": "먼저 end와 가변 sum을 만들고 포함 범위와 두 조건을 연결하세요. 스타터와 경계가 틀린 답을 실제 Cargo 테스트로 확인한 뒤, 실패 사례의 후보·현재 합·분기 결과를 기록하며 수정해 전체 10사례를 다시 제출합니다."
+      },
+      {
+        "heading": "Mini Project",
+        "text": "0부터 작업 번호 limit까지 짝수 번호 비용을 누적하되 마감 번호 stop 전에 끝나는 계산기를 만듭니다. (4,10), (10,4), (10,7)의 예상값을 종이에 적고 함수 결과와 비교합니다."
+      },
+      {
+        "heading": "복습·다음 연결",
+        "text": "C와 비교해 Rust 조건은 bool이고 if가 값이 될 수 있으며 마지막 식이 반환값이라는 점을 다시 말해 봅니다. F02의 가변 바인딩은 누적 상태가 됩니다. 다음 F04에서는 함수 분리와 단위 테스트를 확장합니다."
+      }
+    ],
+    "quiz": {
+      "question": "limit=10, stop=4에서 합계에 들어가는 양의 정수는?",
+      "options": [
+        "2",
+        "2·4",
+        "1·3",
+        "2·4·6·8·10"
+      ],
+      "answer": 0,
+      "explanation": "limit은 포함하지만 stop은 제외하므로 4에서 반복이 끝나고 2만 더합니다."
+    },
+    "challenge": {
+      "id": "rust-control-flow",
+      "title": "중단점 전 짝수 누적 함수 구현",
+      "description": "limit과 1000 중 작은 값까지 포함해 검사하되 stop 미만의 짝수만 합산하는 pub fn sum_even_before(limit: u32, stop: u32) -> u32를 작성하세요. 명시적으로 선택한 신뢰 로컬 Cargo 서버에서 10개 사례로 채점합니다.",
+      "starter": "pub fn sum_even_before(limit: u32, stop: u32) -> u32 {\n    let _ = (limit, stop);\n    // TODO: 상한1000, stop 미만의 짝수 누적. 마지막 식으로 합계를 반환하세요.\n    0\n}",
+      "input": "sum_even_before(10, 7)",
+      "expected": "12"
+    }
+  },
+  {
   "id": "ds-list-find",
   "track": "ds",
   "level": "기초",
