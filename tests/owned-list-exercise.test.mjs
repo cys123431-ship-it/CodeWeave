@@ -81,7 +81,7 @@ const mutants = [
   ['frees the successor instead of the victim', reference.replace('free(victim);', 'free(victim->next);', 1)],
   ['overwrites output for a missing target', reference.replace('if (*link == NULL) return 0;', 'if (*link == NULL) { *removed = target; return 0; }')],
   ['destroy leaks the final node', reference.replace('while (*head != NULL) {', 'while (*head != NULL && (*head)->next != NULL) {')],
-  ['destroy leaves a dangling head', reference.replace('*head = victim->next;\n        free(victim);', 'free(victim);\n        if (victim->next != NULL) *head = victim->next;')]
+  ['destroy leaves a dangling head', reference.replace('*head = victim->next;\n        free(victim);', 'struct Node *next = victim->next;\n        free(victim);\n        if (next != NULL) *head = next;')]
 ];
 for (const [name, code] of mutants) {
   test('D05 rejects ' + name, { skip: !gcc }, async t => {
