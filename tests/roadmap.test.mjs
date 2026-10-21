@@ -373,6 +373,23 @@ test('historical C07 replay remains pending while live C selection advances to C
   assert.deepEqual(live, before);
 });
 
+
+test('C08 browser acceptance completes the C track and rotates to D05', async () => {
+  const { data, api } = await load();
+  const unit = data.stages.find(stage => stage.id === 'C').units.find(item => item.id === 'C08');
+  assert.equal(unit.status, '완료');
+  assert.deepEqual(unit.lessonIds, ['c-qsort-callback']);
+  assert.ok(unit.tests.includes('tests/callback-sort-exercise.test.mjs'));
+  assert.ok(unit.tests.includes('tests/browser-practice.mjs'));
+  assert.ok(unit.tests.includes('tests/roadmap.test.mjs'));
+  assert.deepEqual(data.next, { track: 'D', unit: 'D05' });
+  assert.equal(api.selectUnit(data, 'D').id, 'D05');
+  assert.deepEqual(api.summarize(data).find(stage => stage.id === 'C'), {
+    id: 'C', title: 'C 심화', total: 8, completed: 8, inProgress: 0, notStarted: 0, percent: 100
+  });
+});
+
+
 test('D04 delivers the prepared array list contract through catalog without leaking harness cases', async () => {
   const { arrayListExercise, arrayListMetadata, arrayListStarter } = await import('../server/array-list-exercise.mjs');
   const lesson = lessons.find(item => item.id === 'ds-array-list');

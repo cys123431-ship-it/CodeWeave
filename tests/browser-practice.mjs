@@ -30,6 +30,13 @@ const ownedManuscript = await readFile(new URL('../content/c/24-owned-stream-err
 const ownedCorrect = ownedManuscript.match(/\x60\x60\x60c\n([\s\S]*?)\n\x60\x60\x60/)[1].split('int main(void)')[0];
 const ownedWrong = ownedCorrect.replace('int closed = fclose(stream);', '(void)fclose(stream);\n    int closed = 0;');
 
+import { callbackSortStarter } from '../server/callback-sort-exercise.mjs';
+const callbackManuscript = await readFile(new URL('../content/c/25-qsort-function-pointers.md', import.meta.url), 'utf8');
+const callbackProgram = callbackManuscript.match(/\x60\x60\x60c\n([\s\S]*?)\n\x60\x60\x60/)[1];
+const callbackCorrect = callbackProgram.split('static int ascending')[0];
+const callbackWrong = callbackCorrect.replace('qsort(values, count,', 'qsort(values, count - 1,');
+
+
 const mergeManuscript = await readFile(new URL('../content/algo/03-merge-sort.md', import.meta.url), 'utf8');
 const mergeProgram = mergeManuscript.match(/```c\n([\s\S]*?)\n```/)[1];
 const mergeCorrect = mergeProgram.split('int main(void)')[0];
@@ -77,6 +84,10 @@ function verifyControlFlowAcceptanceContract() {
   assert.equal(Object.hasOwn(c06ExerciseById(lesson.id), 'harness'), false);
 
   const prepared = JSON.parse(JSON.stringify(roadmapData));
+  // Freeze this historical F03 handoff at its delivery-time state. The live roadmap
+  // now has C08 completed and rotates to D05, but F03 originally handed off to C08.
+  const c08 = prepared.stages.find(stage => stage.id === 'C').units.find(unit => unit.id === 'C08');
+  c08.status = '진행 중';
   const f03 = prepared.stages.find(stage => stage.id === 'F').units.find(unit => unit.id === 'F03');
   f03.status = '진행 중';
   delete f03.practiceDelivery;
@@ -2328,6 +2339,68 @@ try {
   await page.locator('[data-route="track:c"]').first().click();
   await expect(page.locator('[data-route="lesson:c-owned-stream-byte"]')).toHaveCount(1);
   console.log('PASS: C07 C05-next entry, real GCC ignored-close failure/correction 12/12, quiz retry, separate mastery, shared history/v1 restore, offline attempts and 390px');
+  await page.goto(base + '/#lesson:c-owned-stream-byte');
+  await page.locator('.next-action [data-route="lesson:c-qsort-callback"]').click();
+  await page.reload();
+  await expect(page.locator('.detail-head h1')).toHaveText('qsort와 함수 포인터: 정렬 정책 전달하기');
+  await expect(page.locator('#code-input')).toHaveValue(callbackSortStarter);
+  await page.locator('[data-quiz="c-qsort-callback"][data-choice="0"]').click();
+  await expect(page.locator('.feedback.bad')).toBeVisible();
+  await page.locator('[data-retry="c-qsort-callback"]').click();
+  await page.locator('[data-quiz="c-qsort-callback"][data-choice="1"]').click();
+  await page.locator('#mark-theory').click();
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, callbackWrong);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await submit(page, callbackCorrect);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('12/12');
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await bench.reload();
+  await bench.locator('#lesson-select').selectOption('c-qsort-callback');
+  await expect(bench.locator('#code-input')).toHaveValue(callbackCorrect);
+  const callbackDownloadEvent = bench.waitForEvent('download');
+  await bench.locator('#export-history').click();
+  const callbackDownload = await callbackDownloadEvent, callbackChunks = [];
+  for await (const chunk of await callbackDownload.createReadStream()) callbackChunks.push(chunk);
+  const callbackBackup = Buffer.concat(callbackChunks), callbackData = JSON.parse(callbackBackup);
+  assert.equal(callbackData.drafts['c-qsort-callback'], callbackCorrect);
+  assert.equal(callbackData.iterations['c-qsort-callback'].length, 2);
+  assert.equal(callbackData.drafts['c-owned-stream-byte'], ownedCorrect);
+  await bench.evaluate(() => {
+    for (const key of ['codeweave.drafts.v1', 'codeweave.iterations.v1']) {
+      const values = JSON.parse(localStorage.getItem(key) || '{}');
+      delete values['c-qsort-callback'];
+      localStorage.setItem(key, JSON.stringify(values));
+    }
+  });
+  await bench.reload();
+  await bench.locator('#lesson-select').selectOption('c-qsort-callback');
+  await expect(bench.locator('#code-input')).toHaveValue(callbackSortStarter);
+  await bench.locator('#import-file').setInputFiles({ name: 'callback-sort-backup.json', mimeType: 'application/json', buffer: callbackBackup });
+  await expect(bench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.locator('#code-input')).toHaveValue(callbackCorrect);
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('[data-restore-attempt="1"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(callbackWrong);
+  await page.locator('[data-restore-attempt="0"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(callbackCorrect);
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('.figure-box svg')).toHaveAttribute('role', 'img');
+  assert.equal(await page.evaluate(() => {
+    const svg = document.querySelector('.figure-box svg'), view = svg.viewBox.baseVal;
+    return [...svg.querySelectorAll('text')].every(text => {
+      const box = text.getBBox();
+      return box.x >= 0 && box.y >= 0 && box.x + box.width <= view.width && box.y + box.height <= view.height;
+    }) && document.documentElement.scrollWidth <= innerWidth;
+  }), true, 'C08 callback diagram and learner page must fit 390px');
+  if (qaDir) await page.screenshot({ path: path.join(qaDir, 'callback-sort-mobile.png'), fullPage: true });
+  await context.setOffline(false);
+  await page.locator('[data-route="track:c"]').first().click();
+  await expect(page.locator('[data-route="lesson:c-qsort-callback"]')).toHaveCount(1);
+  console.log('PASS: C08 C07-next entry, real GCC shortened-range failure/correction 12/12, quiz retry, mastery, shared history/v1 restore, offline and 390px');
   assert.deepEqual(errors, []);
   console.log('PASS: 390px mobile layout and offline reload of drafts/history; no browser exceptions');
 } catch (error) {

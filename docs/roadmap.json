@@ -10,8 +10,8 @@
     "C"
   ],
   "next": {
-    "track": "C",
-    "unit": "C08"
+    "track": "D",
+    "unit": "D05"
   },
   "limits": {
     "screenSections": [
@@ -385,7 +385,7 @@
         {
           "id": "C08",
           "title": "표준 라이브러리·함수 포인터와 빌드 자동화",
-          "status": "진행 중",
+          "status": "완료",
           "lessonIds": [
             "c-qsort-callback"
           ],
@@ -394,6 +394,7 @@
           ],
           "tests": [
             "tests/callback-sort-exercise.test.mjs",
+            "tests/browser-practice.mjs",
             "tests/roadmap.test.mjs"
           ]
         }
