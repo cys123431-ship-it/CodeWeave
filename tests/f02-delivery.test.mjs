@@ -17,7 +17,10 @@ async function pending() {
   const data = await load();
   find(data).status = '진행 중';
   delete find(data).practiceDelivery;
-  // Freeze only this replay's cursor, not unrelated future progress.
+  const f03 = data.stages.find(s => s.id === 'F').units.find(u => u.id === 'F03');
+  f03.status = '진행 중';
+  delete f03.practiceDelivery;
+  // Reconstruct the valid point before F02/F03 acceptance, then replay only F02.
   data.next = { track: 'F-G', unit: 'F02' };
   return data;
 }
