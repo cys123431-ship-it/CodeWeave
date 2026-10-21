@@ -17,6 +17,8 @@ async function pending() {
   const data = await load();
   find(data).status = '진행 중';
   delete find(data).practiceDelivery;
+  const c08 = data.stages.find(s => s.id === 'C').units.find(u => u.id === 'C08');
+  c08.status = '진행 중';
   const f03 = data.stages.find(s => s.id === 'F').units.find(u => u.id === 'F03');
   f03.status = '진행 중';
   delete f03.practiceDelivery;
