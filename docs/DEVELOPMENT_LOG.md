@@ -1,17 +1,18 @@
-## 2026-10-21 11:20 KST — F03 역사 fixture 회귀 수정·인수 확정
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-- 시작/결과 SHA: 실패 기록 52268c73f252c5ab3265ca697bc9594263a70d5f; 회귀 수정 d574249d0a3b26fa2826f66f9c34c84d79392403; 후속 커밋 제목 docs: record verified F03 fixture repair.
+## 2026-10-21 11:20 KST — F03 역사 fixture 회귀 수정·인수 확정
+- 시작/결과 SHA: 실패 기록 52268c73f252c5ab3265ca697bc9594263a70d5f; 회귀 수정 d574249d0a3b26fa2826f66f9c34c84d79392403; 후속 커밋 제목 docs: fix F03 repair handoff record order.
 - 목표: F03 완료 뒤 F02/E04 과거 재현 fixture가 새 F03 완료 증거를 함께 보존해 생긴 CI 4실패를 먼저 수정하고 F03 인수 근거를 확정.
 - 변경 파일 수: 4개(역사 fixture 검사2·활성/보관 일지2); 제품 코드·원고·로드맵 상태·저장 형식 변경0.
 - 테스트 결과: 기존 F02 3건·E04 1건 811/815 실패→전체815/815·실패0/skip0; browser 실제 F03 Cargo와 macOS 자원/취소 검사 성공. 검사 삭제·제품 기대 완화0.
-- CI URL과 결과: 실패 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39524477080; 수정 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39532565655 전체 성공.
-- 발견한 문제: 과거 상태를 재현하면서 당시 미완료인 F03의 practiceDelivery를 남겨 의존 계약이 모순됨; 상태와 증거를 함께 되감도록 fixture만 수정. 로컬 environment_offline로 직접 실행 불가.
+- CI URL과 결과: 회귀 실패 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39524477080; 수정 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39532565655 전체 성공; 기록 형식 실패 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39532964227.
+- 발견한 문제: 과거 fixture의 F03 상태/증거 모순과 신규 일지의 확인문장·제목 순서 오류를 각각 수정. 로컬 environment_offline로 직접 실행 불가.
 - 보안 영향: 테스트·일지만 수정해 외부 입력·코드 실행·파일 접근 경계 변화0; 기존 신뢰 로컬 Cargo 제한 유지.
 - 단계별 완료율: F03 제한 범위 완료·F3/8(37.5%)·next=C/C08; 플랫폼 전체·실기기 인수는 미완료.
 - 다음 작업: 기록 SHA CI 성공 뒤 PR #7 비강제 병합·main 결과 CI 확인; 이후 C08 좁은 단원 시작.
 
 ---
 
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-21 07:18 KST — F03 학습·실제 Cargo 인수
 - 시작/결과 SHA: main 9ea723f2984b542d8022bb5866b3200925439372; RED c3e513f1130a71252cca1f37af93b0a7a74c9144; 구현·검증 da404f5e79053b0c48c99033cd004a32415dd8dc; 후속 커밋 제목 docs: accept verified F03 delivery and rotate to C08.
 - 목표: F03 조건·반복·식과 범위를 화면14절과 명시적 로컬 Cargo로 연결하고 오답→수정→재제출→분리 숙달→다음 단원 흐름을 인수.
@@ -64,7 +65,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 실제SIGKILL 성공 뒤 읽기 전용 재확인만 허용·기존500ms/공유lease/영구오류격리/복구거부 유지; 재신호/인증·공개실행·저장키 변경0.
 - 단계별 완료율: 콘텐츠 불변 A3/5·B10/11·C7/8·D/E4/8·F2/8·G0/8·H/I0/6; 화면36·next=F-G/F03, PR #7 draft/미인수 유지.
 - 다음 작업: 기록 SHA CI 성공·최신 main/PR HEAD 확인 후 PR #8 안전 병합/main CI 확인; PR #7은 기반 수정과 일지 충돌을 검토해 이어받고 F03 화면/재제출/복원 인수로 진행. F03 콘텐츠2회 한도는 소비하지 않음.
-
----
-
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
