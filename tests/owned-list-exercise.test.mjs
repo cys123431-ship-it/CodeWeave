@@ -7,6 +7,9 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { gradingExercises } from '../server/grading-exercises.mjs';
 import { writeSources, compile, runCases, buildResult } from '../server/grading-pipeline.mjs';
+import { lessons } from '../src/catalog.js';
+import { exerciseById } from '../src/exercises.js';
+import { figureFor } from '../src/figures.js';
 
 const gcc = spawnSync('gcc', ['--version']).status === 0;
 const load = () => import('../server/owned-list-exercise.mjs');
@@ -43,11 +46,25 @@ void list_destroy(struct Node **head) {
 }
 `;
 
-test('D05 preparation exposes ten immutable ownership cases without public registration', async () => {
-  const before = gradingExercises.get('ds-owned-list');
+test('D05 delivers one public lesson, accessible figure and the same private GCC contract', async () => {
   const { ownedListExercise: exercise, ownedListMetadata: metadata } = await load();
-  assert.equal(before, undefined);
-  assert.equal(gradingExercises.get(exercise.id), undefined);
+  const lesson = lessons.find(item => item.id === exercise.id);
+  assert.ok(lesson);
+  assert.equal(lesson.track, 'ds');
+  assert.equal(lesson.figure, 'list-ownership');
+  assert.ok(lesson.sections.length >= 10 && lesson.sections.length <= 15);
+  assert.deepEqual(exerciseById(exercise.id), metadata);
+  assert.equal(gradingExercises.get(exercise.id), exercise);
+  assert.equal(lesson.challenge.id, exercise.id);
+  assert.equal(lesson.challenge.starter, exercise.starter);
+  assert.equal(lesson.challenge.input, metadata.publicExample.input);
+  assert.equal(lesson.challenge.expected, metadata.publicExample.output);
+  assert.deepEqual(lesson.quiz.options, ['머리를 NULL로 설정', '이전 링크를 다음 노드에 연결', '값을 0으로 변경', '다음 노드도 해제']);
+  assert.equal(lesson.quiz.answer, 1);
+  const figure = figureFor(lesson.figure);
+  assert.match(figure, /role="img"/);
+  assert.match(figure, /aria-label="[^"]*소유권[^"]*"/);
+  assert.doesNotMatch(figure, /<script|<animate|<foreignObject|onload=/i);
   assert.equal(exercise.id, 'ds-owned-list');
   assert.equal(exercise.grader, 'c-function');
   assert.equal(exercise.cases.length, 10);
@@ -55,6 +72,14 @@ test('D05 preparation exposes ten immutable ownership cases without public regis
   assert.ok(Object.isFrozen(exercise) && Object.isFrozen(exercise.cases) && exercise.cases.every(Object.isFrozen));
   assert.deepEqual(exercise.linkArgs, ['-Wl,--wrap=malloc', '-Wl,--wrap=free']);
   assert.ok(exercise.cases.some(c => c.input === metadata.publicExample.input && c.expected === metadata.publicExample.output));
+});
+
+test('D05 browser acceptance includes the real GCC HTTP boundary', { skip: !gcc }, () => {
+  const result = spawnSync(process.execPath, [fileURLToPath(new URL('./browser-practice.mjs', import.meta.url)), '--owned-list-http-only'], {
+    encoding: 'utf8', timeout: 30000
+  });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /D05 owned-list HTTP acceptance passed/);
 });
 
 async function grade(t, code) {
