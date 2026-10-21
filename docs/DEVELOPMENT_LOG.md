@@ -1,4 +1,18 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-21 16:22 KST — C08 브라우저 인수 완료·D05 순환
+- 시작/결과 SHA: main 87e4f3e893df38b3b6c58ecf1c259c91ca6cd6de; RED 5e4b0ea86450620eac952e085ff76532930a426e; 검증 12fa09434ab7eb380e0f21b584c40863963cf793; 후속 커밋 제목 docs: record verified C08 browser acceptance.
+- 목표: C07→C08 진입부터 퀴즈 재시도·실제 GCC 오답/수정·숙달·이력·백업 복원·모바일·오프라인까지 인수하고 C08 완료를 판정.
+- 변경 파일 수: 7개(브라우저/로드맵/역사 F02 검사3·로드맵2·활성/보관 일지2); 제품 런타임·저장 형식 변경0.
+- 테스트 결과: 신규 로드맵 인수 RED 828/829·실패1→829/829·실패0/skip0; 브라우저 C08 실제12/12·삭제 후v1복원·390px·오프라인, macOS 자원 검사 성공. 삭제 검사0.
+- CI URL과 결과: RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39559735411 의도된1실패; 검증 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39560905457 unit/browser/macOS 전체 성공.
+- 발견한 문제: C08 완료 뒤 F02/F03 과거 handoff fixture와 생성 ROADMAP next가 현재 상태를 따라 실패; 당시 C08 진행 중 상태로 fixture를 고정하고 D05 문구를 생성값과 동기화. 제품 기대·교육 계약 완화0.
+- 보안 영향: 테스트·상태 문서만 변경해 외부 입력·코드 실행·파일 접근 경계 변화0; 기존 loopback·Host/Origin·토큰·시간/출력 제한 유지.
+- 단계별 완료율: A3/5(60.0%)·B10/11(90.9%)·C8/8(100.0%)·D4/8(50.0%)·E4/8(50.0%)·F3/8(37.5%)·G0/8·H/I0/6; next=D/D05, 플랫폼 전체·실기기 인수 미완료.
+- 다음 작업: D05 연결 리스트 소유권·삽입·삭제·해제의 기존 근거를 확인하고 가장 앞선 좁은 미완료 계약부터 RED로 진행.
+
+---
+
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-21 15:17 KST — C08 qsort 콜백 학습·실제 GCC 연결
 - 시작/결과 SHA: main 0b3c2ee099f2abbce1f1d35f2cb70660b35173ed; 로컬 RED 6c43b76; 원격 검증 12aee76f28faf101190e2ab844a37da298a8edcb; 후속 커밋 제목 docs: record verified C08 delivery handoff.
 - 목표: C08 원고12절·퀴즈·정적 도식을 공개 카탈로그와 인증된 로컬 GCC 12사례 채점에 연결하고 오답→수정→재제출 기반을 제공.
@@ -51,17 +65,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 신뢰 로컬 전용 --include-control-flow에서만 F03을 허용하고 기존 토큰·loopback·고정 sysroot·오프라인 Cargo·자원/정리 제한을 재사용; 공개 실행·하네스 노출·파일 접근 확대0.
 - 단계별 완료율: F03 제한 범위 완료·F3/8(37.5%)·next=C/C08; A3/5·B10/11·C7/8·D/E4/8·G0/8·H/I0/6, 화면37·Rust3·총37. 플랫폼 전체/실기기 인수는 미완료.
 - 다음 작업: 후속 결과 SHA CI 성공 뒤 PR #7 비강제 병합·main CI 확인; 다음 개발은 C08 표준 라이브러리·함수 포인터·빌드 자동화의 좁은 단원으로 시작.
-
----
-
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-21 05:58 KST — F03 준비 브랜치 최신 main 통합
-- 시작/결과 SHA: main 9ea723f2984b542d8022bb5866b3200925439372; PR #7 f65e93e3079a3a46a29c3f856f39307329c2c7c7; 후속 병합 커밋 제목 chore: merge verified Rust settlement into F03 preparation.
-- 목표: 보안 우선 Rust 종료 확인 수정과 양쪽 일지를 F03 준비 브랜치에 보존 통합; 신규 콘텐츠·인수·완료율 상승0.
-- 변경 파일 수: 이번 기반 동기화4개(런타임/검사2·병합 일지2); 기존 F03 준비10파일·21검사·원고/도식/로드맵 상태 보존.
-- 테스트 결과: 기존 main 794/794·PR 준비811/811 각각 실패0/skip0 및 browser/macOS 성공; 통합 SHA 전체 검사는 CI에서 확인 후 최종 보고. 신규 검사·삭제·기대값 수정0.
-- CI URL과 결과: main https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39489078341 성공; PR 준비 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39457043161 성공; 통합 결과는 실제 조회 후 보고.
-- 발견한 문제: PR #7이 main보다5커밋 뒤져 일지 충돌로 mergeable=dirty였음. 로컬 environment_offline로 미커밋/Git/npm/Cargo/diff/직접 roadmap --check 미실행; 원격 트리·CI로 검증.
-- 보안 영향: main의 종료 확인·500ms·lease/격리/복구거부와 F03의 명시적 서비스/인증/10사례 결과 검증을 모두 유지; 공개 실행·인증/저장키/v1 변경0.
-- 단계별 완료율: A3/5·B10/11·C7/8·D/E4/8·F2/8·G0/8·H/I0/6, 화면36·next=F-G/F03 불변; F03/플랫폼 인수 미완료.
-- 다음 작업: 통합 SHA CI 성공 확인 후 기존 준비를 재작성하지 않고 F03 CLI/화면·오답→수정·재제출·분리 숙달·v1복원·390px/오프라인 인수. 기반 통합은 콘텐츠2회 한도 미소비.
