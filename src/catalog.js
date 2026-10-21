@@ -1614,6 +1614,81 @@ export const lessons = [
   }
 },
   {
+    "id": "ds-owned-list",
+    "track": "ds",
+    "level": "기초",
+    "title": "연결 리스트 소유권: 앞 삽입·첫 삭제·전체 해제",
+    "minutes": 30,
+    "source": "D05 독자 원고·정적 소유권 도식·C 함수형 실습",
+    "summary": "노드를 만들고 지우는 함수의 소유권 계약과 실패 시 목록 보존을 익힙니다.",
+    "figure": "list-first-match",
+    "sections": [
+      {
+        "heading": "개요·필요성·선수·목표",
+        "text": "D01에서는 호출자가 보유한 노드를 읽기만 했다. 이번에는 함수가 노드를 만들고 지우므로 누가 해제해야 하는가까지 계약에 포함한다. 목표는 머리 앞 삽입, 첫 일치 삭제, 전체 해제를 구현하고 실패 때 기존 목록을 보존하는 것이다. 선수는 D01 순회·검색, 포인터, 구조체, malloc/free다. 예상 30분."
+      },
+      {
+        "heading": "이론: 머리 포인터의 주소",
+        "text": "struct Node *head만 받으면 호출자의 머리를 교체할 수 없다. struct Node **head는 호출자가 가진 머리 포인터의 주소다. 앞 삽입은 새 노드의 next가 기존 머리를 가리키게 한 뒤 호출자의 머리를 새 노드로 바꾼다. 순서를 바꾸면 기존 목록을 잃는다."
+      },
+      {
+        "heading": "이론: 소유권과 실패 보존",
+        "text": "list_prepend가 malloc에 성공하면 새 노드는 목록의 소유가 된다. 호출자는 개별 노드를 free하지 않고 삭제 함수나 destroy를 사용한다. malloc 실패나 NULL 머리 포인터 주소에서는 기존 머리와 연결을 그대로 둔다. 값0·음수·INT_MIN·INT_MAX도 정상 데이터다."
+      },
+      {
+        "heading": "이론: 링크 자체를 따라가기",
+        "text": "struct Node **link = head로 시작하고 불일치할 때 link = &(*link)->next로 이동하면 머리와 중간 삭제를 같은 코드로 처리한다. 일치하면 victim을 보관하고 *link = victim->next로 우회한 다음 출력값을 기록하고 victim 하나만 free한다."
+      },
+      {
+        "heading": "도식: 연결 변경과 소유권",
+        "text": "정적 도식은 10→20에서 5를 앞에 넣고, 첫 10을 우회해 해제한 뒤, 남은 5와20을 모두 해제해 head=NULL이 되는 순서를 보여 준다. 해제한 노드의 next를 다시 읽지 않는다.\n\n| 단계 | 목록 | 소유 노드 |\n|---|---|---|\n| 시작 | 10→20 | 10,20 |\n| prepend(5) | 5→10→20 | 5,10,20 |\n| remove(10) | 5→20 | 5,20 |\n| destroy | NULL | 없음 |"
+      },
+      {
+        "heading": "이론: 전체 해제와 멱등성",
+        "text": "destroy는 현재 머리를 victim에 보관하고 머리를 다음 노드로 옮긴 뒤 victim을 free한다. 목록이 빌 때까지 반복해 마지막에 head를 NULL로 만든다. 다시 호출해도 아무것도 해제하지 않는다. 유한하고 순환하지 않으며 공유 노드가 없는 목록만 계약에 포함한다."
+      },
+      {
+        "heading": "완성 프로그램: 세 함수",
+        "text": "제출에는 main과 출력 없이 아래 구조체와 세 함수만 넣는다. 독립 실행 예시는 원고에서 같은 구현에 main을 붙여 컴파일한다.",
+        "code": "#include <stddef.h>\n#include <stdlib.h>\nstruct Node { int value; struct Node *next; };\nint list_prepend(struct Node **head, int value) {\n    if (head == NULL) return 0;\n    struct Node *node = malloc(sizeof *node);\n    if (node == NULL) return 0;\n    node->value = value;\n    node->next = *head;\n    *head = node;\n    return 1;\n}\nint list_remove_first(struct Node **head, int target, int *removed) {\n    if (head == NULL || removed == NULL) return 0;\n    struct Node **link = head;\n    while (*link != NULL && (*link)->value != target) link = &(*link)->next;\n    if (*link == NULL) return 0;\n    struct Node *victim = *link;\n    *link = victim->next;\n    *removed = victim->value;\n    free(victim);\n    return 1;\n}\nvoid list_destroy(struct Node **head) {\n    if (head == NULL) return;\n    while (*head != NULL) {\n        struct Node *victim = *head;\n        *head = victim->next;\n        free(victim);\n    }\n}"
+      },
+      {
+        "heading": "출력·오류·중간 점검",
+        "text": "완성 예시는 list: 5 10 20, removed=10, after: 5 20, destroyed=1을 출력한다. 새 노드를 먼저 head에 대입하기, malloc 실패 뒤 head 변경, victim 해제 뒤 next 읽기, 중복을 모두 삭제하기가 흔한 오류다. 7→1→7에서 target 7을 지우면 1→7이어야 한다."
+      },
+      {
+        "heading": "핵심 요약·퀴즈",
+        "text": "앞 삽입은 O(1), 첫 일치 삭제는 최악 O(n), 전체 해제는 O(n)이다. 성공한 각 삽입은 정확히 한 번 할당되고 최종적으로 정확히 한 번 해제돼야 한다. 퀴즈 오답 뒤에는 해제 전 연결 변경 순서를 다시 보고 재시도한다."
+      },
+      {
+        "heading": "직접 풀기·실제 테스트·개선",
+        "text": "세 함수를 구현해 빈 목록·머리·중간·꼬리·중복 삭제를 확인한다. 비공개 10사례는 할당 실패, 미발견, NULL 인수에서 상태 보존과 할당/해제 호출 및 포인터 정체성까지 실제 GCC로 검사한다. 실패 사례를 읽고 링크 변경 순서를 고쳐 전체 재제출하며 시도 이력과 JSON 백업으로 코드를 복원한다."
+      },
+      {
+        "heading": "Mini Project",
+        "text": "정수 할 일 ID를 앞에서 추가하고 완료한 첫 ID만 제거하는 관리기를 만든다. 모든 종료 경로에서 destroy를 호출하고, 중간 실패 뒤에도 기존 목록을 출력해 보존 여부를 확인한다."
+      },
+      {
+        "heading": "복습·다음 연결",
+        "text": "D01의 읽기 전용 탐색과 비교해 왜 이번 함수에는 이중 포인터와 free가 필요한지 설명하라. 배열 리스트의 원소 이동과 연결 리스트의 링크 변경 비용을 비교한 뒤 알고리즘 단원에서 탐색·정렬 비용으로 확장한다."
+      }
+    ],
+    "quiz": {
+      "question": "중간 노드를 삭제할 때 free보다 먼저 해야 하는 일은?",
+      "options": ["머리를 NULL로 설정", "이전 링크를 다음 노드에 연결", "값을 0으로 변경", "다음 노드도 해제"],
+      "answer": 1,
+      "explanation": "victim의 다음 링크를 살아 있는 목록에 먼저 연결한 뒤 victim 하나를 해제해야 합니다."
+    },
+    "challenge": {
+      "id": "ds-owned-list",
+      "title": "소유 연결 리스트의 삽입·첫 삭제·전체 해제",
+      "description": "Node 구조체와 세 함수를 작성하세요. prepend는 성공1·실패0이며 할당 실패 때 기존 목록을 보존합니다. remove_first는 첫 일치 하나만 우회·해제하고 성공 때만 removed를 씁니다. destroy는 모든 노드를 한 번씩 해제해 head를 NULL로 만들며 반복 호출할 수 있어야 합니다. 유한 비순환 단독 소유 목록을 받습니다. main과 printf는 작성하지 않습니다.",
+      "starter": "#include <stddef.h>\n#include <stdlib.h>\nstruct Node { int value; struct Node *next; };\nint list_prepend(struct Node **head, int value) {\n    (void)head;\n    (void)value;\n    /* TODO: 새 노드를 확보해 기존 머리 앞에 연결 */\n    return 0;\n}\nint list_remove_first(struct Node **head, int target, int *removed) {\n    (void)head;\n    (void)target;\n    (void)removed;\n    /* TODO: 첫 일치 링크를 바꾸고 그 노드 하나만 해제 */\n    return 0;\n}\nvoid list_destroy(struct Node **head) {\n    (void)head;\n    /* TODO: 모든 노드를 한 번씩 해제하고 머리를 NULL로 설정 */\n}\n",
+      "input": "10→20에 5 삽입, 10 삭제, 전체 해제",
+      "expected": "1 1 10 3 1"
+    }
+  },
+  {
     "id": "algo-binary",
     "track": "algo",
     "level": "기초",

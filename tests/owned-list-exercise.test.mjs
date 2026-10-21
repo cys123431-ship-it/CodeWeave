@@ -7,6 +7,9 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { gradingExercises } from '../server/grading-exercises.mjs';
 import { writeSources, compile, runCases, buildResult } from '../server/grading-pipeline.mjs';
+import { lessons } from '../src/catalog.js';
+import { exerciseById } from '../src/exercises.js';
+import { figureFor } from '../src/figures.js';
 
 const gcc = spawnSync('gcc', ['--version']).status === 0;
 const load = () => import('../server/owned-list-exercise.mjs');
@@ -43,11 +46,25 @@ void list_destroy(struct Node **head) {
 }
 `;
 
-test('D05 preparation exposes ten immutable ownership cases without public registration', async () => {
-  const before = gradingExercises.get('ds-owned-list');
-  const { ownedListExercise: exercise, ownedListMetadata: metadata } = await load();
-  assert.equal(before, undefined);
-  assert.equal(gradingExercises.get(exercise.id), undefined);
+test('D05 delivers one public lesson, accessible figure and the same private GCC contract', async () => {
+  const { ownedListExercise: exercise, ownedListMetadata: metadata, ownedListStarter } = await load();
+  const lesson = lessons.find(item => item.id === exercise.id);
+  assert.ok(lesson);
+  assert.equal(lesson.track, 'ds');
+  assert.equal(lesson.figure, 'list-first-match');
+  assert.ok(lesson.sections.length >= 10 && lesson.sections.length <= 15);
+  assert.deepEqual(exerciseById(exercise.id), { ...metadata, requiredFiles: [] });
+  assert.equal(gradingExercises.get(exercise.id), exercise);
+  assert.equal(lesson.challenge.id, exercise.id);
+  assert.equal(lesson.challenge.starter, ownedListStarter);
+  assert.equal(lesson.challenge.input, metadata.publicExample.input);
+  assert.equal(lesson.challenge.expected, metadata.publicExample.output);
+  assert.deepEqual(lesson.quiz.options, ['머리를 NULL로 설정', '이전 링크를 다음 노드에 연결', '값을 0으로 변경', '다음 노드도 해제']);
+  assert.equal(lesson.quiz.answer, 1);
+  const figure = figureFor(lesson.figure);
+  assert.match(figure, /role="img"/);
+  assert.match(figure, /aria-label="[^"]*연결 리스트[^"]*"/);
+  assert.doesNotMatch(figure, /<script|<animate|<foreignObject|onload=/i);
   assert.equal(exercise.id, 'ds-owned-list');
   assert.equal(exercise.grader, 'c-function');
   assert.equal(exercise.cases.length, 10);
@@ -55,6 +72,14 @@ test('D05 preparation exposes ten immutable ownership cases without public regis
   assert.ok(Object.isFrozen(exercise) && Object.isFrozen(exercise.cases) && exercise.cases.every(Object.isFrozen));
   assert.deepEqual(exercise.linkArgs, ['-Wl,--wrap=malloc', '-Wl,--wrap=free']);
   assert.ok(exercise.cases.some(c => c.input === metadata.publicExample.input && c.expected === metadata.publicExample.output));
+});
+
+test('D05 browser acceptance includes the real GCC HTTP boundary', { skip: !gcc }, () => {
+  const result = spawnSync(process.execPath, [fileURLToPath(new URL('./browser-practice.mjs', import.meta.url)), '--owned-list-http-only'], {
+    encoding: 'utf8', timeout: 30000
+  });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /D05 owned-list HTTP acceptance passed/);
 });
 
 async function grade(t, code) {
@@ -118,14 +143,20 @@ test('D05 manuscript complete program compiles and demonstrates insert remove de
   assert.equal(ran.stdout.replaceAll('\r\n', '\n'), 'list: 5 10 20\nremoved=10\nafter: 5 20\ndestroyed=1\n');
 });
 
-test('D05 preparation records manuscript and executable evidence while retaining the selected turn', async () => {
+test('D05 completion records full browser evidence and rotates to E05', async () => {
   const data = JSON.parse(await fs.readFile(new URL('../docs/roadmap.json', import.meta.url), 'utf8'));
   const unit = data.stages.find(s => s.id === 'D').units.find(u => u.id === 'D05');
-  assert.equal(unit.status, '진행 중');
-  assert.deepEqual(unit.lessonIds, []);
+  assert.equal(unit.status, '완료');
+  assert.deepEqual(unit.lessonIds, ['ds-owned-list']);
   assert.ok(unit.manuscripts.includes('content/ds/05-owned-linked-list.md'));
   assert.ok(unit.tests.includes('tests/owned-list-exercise.test.mjs'));
-  assert.deepEqual(data.next, { track: 'D', unit: 'D05' });
+  assert.ok(unit.tests.includes('tests/browser-practice.mjs'));
+  assert.equal(unit.acceptance.scope, 'owned-list-prepend-first-remove-destroy');
+  assert.equal(unit.acceptance.sourceSha, '05a2427d1b4af28b190345838dfe8d50be3a949b');
+  assert.equal(unit.acceptance.ci, 'https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39598425561');
+  assert.deepEqual(unit.acceptance.platforms, ['linux']);
+  assert.deepEqual(unit.acceptance.checks, ['theory', 'compiled-example', 'quiz-retry', 'actual-grading', 'correction-retry', 'shared-history', 'backup-restore', 'mastery-next', 'offline', '390px']);
+  assert.deepEqual(data.next, { track: 'E', unit: 'E05' });
 });
 
 test('D05 changed modules pass syntax checks and generated roadmap stays synchronized', async () => {

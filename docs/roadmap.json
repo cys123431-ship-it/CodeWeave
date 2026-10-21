@@ -10,8 +10,8 @@
     "C"
   ],
   "next": {
-    "track": "D",
-    "unit": "D05"
+    "track": "E",
+    "unit": "E05"
   },
   "limits": {
     "screenSections": [
@@ -491,14 +491,37 @@
         {
           "id": "D05",
           "title": "연결 리스트의 소유권·삽입·삭제·해제",
-          "status": "진행 중",
-          "lessonIds": [],
+          "status": "완료",
+          "lessonIds": [
+            "ds-owned-list"
+          ],
           "manuscripts": [
             "content/ds/05-owned-linked-list.md"
           ],
           "tests": [
-            "tests/owned-list-exercise.test.mjs"
-          ]
+            "tests/owned-list-exercise.test.mjs",
+            "tests/browser-practice.mjs"
+          ],
+          "acceptance": {
+            "scope": "owned-list-prepend-first-remove-destroy",
+            "sourceSha": "05a2427d1b4af28b190345838dfe8d50be3a949b",
+            "ci": "https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39598425561",
+            "platforms": [
+              "linux"
+            ],
+            "checks": [
+              "theory",
+              "compiled-example",
+              "quiz-retry",
+              "actual-grading",
+              "correction-retry",
+              "shared-history",
+              "backup-restore",
+              "mastery-next",
+              "offline",
+              "390px"
+            ]
+          }
         },
         {
           "id": "D06",

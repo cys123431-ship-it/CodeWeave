@@ -374,17 +374,20 @@ test('historical C07 replay remains pending while live C selection advances to C
 });
 
 
-test('C08 browser acceptance completes the C track and rotates to D05', async () => {
+test('historical C08 browser acceptance completes the C track and rotates to then-pending D05', async () => {
   const { data, api } = await load();
-  const unit = data.stages.find(stage => stage.id === 'C').units.find(item => item.id === 'C08');
+  const historical = structuredClone(data);
+  historical.stages.find(stage => stage.id === 'D').units.find(item => item.id === 'D05').status = '진행 중';
+  historical.next = { track: 'D', unit: 'D05' };
+  const unit = historical.stages.find(stage => stage.id === 'C').units.find(item => item.id === 'C08');
   assert.equal(unit.status, '완료');
   assert.deepEqual(unit.lessonIds, ['c-qsort-callback']);
   assert.ok(unit.tests.includes('tests/callback-sort-exercise.test.mjs'));
   assert.ok(unit.tests.includes('tests/browser-practice.mjs'));
   assert.ok(unit.tests.includes('tests/roadmap.test.mjs'));
-  assert.deepEqual(data.next, { track: 'D', unit: 'D05' });
-  assert.equal(api.selectUnit(data, 'D').id, 'D05');
-  assert.deepEqual(api.summarize(data).find(stage => stage.id === 'C'), {
+  assert.deepEqual(historical.next, { track: 'D', unit: 'D05' });
+  assert.equal(api.selectUnit(historical, 'D').id, 'D05');
+  assert.deepEqual(api.summarize(historical).find(stage => stage.id === 'C'), {
     id: 'C', title: 'C 심화', total: 8, completed: 8, inProgress: 0, notStarted: 0, percent: 100
   });
 });
