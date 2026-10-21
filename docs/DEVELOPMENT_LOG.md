@@ -1,4 +1,18 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-21 15:17 KST — C08 qsort 콜백 학습·실제 GCC 연결
+- 시작/결과 SHA: main 0b3c2ee099f2abbce1f1d35f2cb70660b35173ed; 로컬 RED 6c43b76; 원격 검증 12aee76f28faf101190e2ab844a37da298a8edcb; 후속 커밋 제목 docs: record verified C08 delivery handoff.
+- 목표: C08 원고12절·퀴즈·정적 도식을 공개 카탈로그와 인증된 로컬 GCC 12사례 채점에 연결하고 오답→수정→재제출 기반을 제공.
+- 변경 파일 수: 10개(카탈로그·공개 메타·채점 등록·C08 검사·README·감사표·로드맵2·활성/보관 일지); 저장 형식 변경0.
+- 테스트 결과: 신규/변경 인수4건(등록·카탈로그·정적 도식·인증 HTTP) RED 9통과/4실패→13/13; 핵심45/45·CI 전체828/828·실패0/skip0, 실제 C 실습28개 GCC 성공. 검사 삭제·기대값 완화0.
+- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39554226815 unit/browser/macOS 전체 성공; 로컬 Node24 Rust 관찰2건과 Playwright 실행파일 부재는 표준 CI에서 모두 통과 확인.
+- 발견한 문제: README C 수치26→27 누락을 회귀로 발견해 동기화. 10파일 상한 때문에 브라우저 C08 전용 인수와 완료 판정은 다음 실행으로 좁혀 C08 진행 중을 유지.
+- 보안 영향: 기존 loopback·토큰 인증·신뢰 로컬 c-function·시간/출력 제한을 재사용하고 비공개12사례를 서버에만 유지; 공개 임의 코드 실행·파일 접근·저장키 확대0.
+- 단계별 완료율: C08 진행 중·C7/8(87.5%)·next=C/C08 유지; A3/5·B10/11·D/E4/8·F3/8·G0/8·H/I0/6, 플랫폼 전체·실기기 인수 미완료.
+- 다음 작업: C07→C08 진입·퀴즈 재시도·실제12/12 오답/수정·숙달·공유 이력/삭제 후v1복원·390px/오프라인을 브라우저에서 인수한 뒤에만 C08 완료와 D05 순환을 결정.
+
+---
+
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-21 12:15 KST — C08 qsort·함수 포인터 계약 준비
 - 시작/결과 SHA: main fca440b3c7be6b006ab84c7ab1090fd4041aee9e; RED 20636df89d56f83350a94c83f6a5d1a6c3e0f656; 검증 17597ee3e8df6de0a41bf7caa62b83a8840a4939; 후속 커밋 제목 docs: record verified C08 callback preparation.
 - 목표: 같은 int 배열을 함수 포인터로 전달한 비교 정책에 따라 qsort하는 좁은 C08 계약과 Make 반복 빌드 원고를 준비.
@@ -51,17 +65,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: main의 종료 확인·500ms·lease/격리/복구거부와 F03의 명시적 서비스/인증/10사례 결과 검증을 모두 유지; 공개 실행·인증/저장키/v1 변경0.
 - 단계별 완료율: A3/5·B10/11·C7/8·D/E4/8·F2/8·G0/8·H/I0/6, 화면36·next=F-G/F03 불변; F03/플랫폼 인수 미완료.
 - 다음 작업: 통합 SHA CI 성공 확인 후 기존 준비를 재작성하지 않고 F03 CLI/화면·오답→수정·재제출·분리 숙달·v1복원·390px/오프라인 인수. 기반 통합은 콘텐츠2회 한도 미소비.
-
----
-
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-21 05:04 KST — Rust 종료 확인 수정 통합
-- 시작/결과 SHA: main 46604df10ee57093d5be65928bad977f2a592cda; 검증 5dbdae22accdaef737706c6063ab8e8505bc0367; PR #8 병합 20bb28acb575a2516009c9f2b9eab0b6ef366ff3; 후속 커밋 제목 docs: record verified Rust cleanup integration and preserve F03 handoff.
-- 목표: 대기 중이던 마지막 SHA의 CI를 실제 확인하고 검증된 기반 수정만 main에 안전 통합; 새 단원 작업0.
-- 변경 파일 수: 이번2개(활성/보관 일지); 병합된 PR #8은 기존4파일·3커밋, 코드/검사 재작성0.
-- 테스트 결과: PR 마지막 Linux794/794·실패0/skip0, macOS 신규4건/취소40회·browser 성공 재조회. transient-live/transient-unavailable 과거RED2실패→통과·permanent/signal-denied 전후통과; 기존 검사 삭제/기대값 변경0.
-- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39481006041 SHA5dbdae22 전체 성공 확인; 병합/이번 기록 SHA의 CI는 실제 조회 후 최종 보고.
-- 발견한 문제: 이전 macOS queued는 해소됨. 커널EPERM 발생 원인은 여전히 미확정·원래실패39455522174 보존. 로컬 환경 연결 불가로 미커밋/Git/npm/GCC/diff/직접roadmap --check 미확인·미실행; GitHub 연결/CI 사용.
-- 보안 영향: 검증된 종료확인 수정만 통합; 실제SIGKILL1회·기존500ms·불확실성격리·복구거부·인증/저장키/v1 계약 보존.
-- 단계별 완료율: A3/5·B10/11·C7/8·D/E4/8·F2/8·G0/8·H/I0/6, 화면36·next=F-G/F03 불변; 플랫폼/F03 인수 미완료.
-- 다음 작업: 이번 결과 SHA CI 성공 확인; PR #7에 최신 main 기반 수정과 양쪽 일지를 보존해 통합 검토한 뒤 F03 CLI/화면·오답→수정·재제출·분리 숙달·v1복원·390px/오프라인 인수. 기반 통합은 콘텐츠2회 한도 미소비.

@@ -386,12 +386,15 @@
           "id": "C08",
           "title": "표준 라이브러리·함수 포인터와 빌드 자동화",
           "status": "진행 중",
-          "lessonIds": [],
+          "lessonIds": [
+            "c-qsort-callback"
+          ],
           "manuscripts": [
             "content/c/25-qsort-function-pointers.md"
           ],
           "tests": [
-            "tests/callback-sort-exercise.test.mjs"
+            "tests/callback-sort-exercise.test.mjs",
+            "tests/roadmap.test.mjs"
           ]
         }
       ]
