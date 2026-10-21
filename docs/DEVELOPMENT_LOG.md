@@ -1,4 +1,18 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-21 07:18 KST — F03 학습·실제 Cargo 인수
+- 시작/결과 SHA: main 9ea723f2984b542d8022bb5866b3200925439372; RED c3e513f1130a71252cca1f37af93b0a7a74c9144; 구현·검증 da404f5e79053b0c48c99033cd004a32415dd8dc; 후속 커밋 제목 docs: accept verified F03 delivery and rotate to C08.
+- 목표: F03 조건·반복·식과 범위를 화면14절과 명시적 로컬 Cargo로 연결하고 오답→수정→재제출→분리 숙달→다음 단원 흐름을 인수.
+- 변경 파일 수: 10개(CLI·로드맵 스크립트·카탈로그·공개 메타·브라우저 검사·README·로드맵2개·일지2개); 기존 원고·비공개10사례·정적 도식·인증/저장키 보존.
+- 테스트 결과: 신규 인수1건 RED 814/815·실패1/skip0→815/815·실패0/skip0; 실제 F03 스타터/제외범위 오답 거부·수정10/10, 퀴즈 재시도·분리 숙달·공유 이력·삭제 후v1복원·390px SVG·오프라인·다음 단원 성공. 검사 삭제/기대값 변경0.
+- CI URL과 결과: RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39505600377 의도된 CLI 실패; 검증 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39506740517 전체 unit/browser/macOS 성공. 중간 문법/스타터 범위 실패는 원인별 수정; 후속 기록/병합 CI 최종 보고.
+- 발견한 문제: 카탈로그 쉼표 누락과 F03 무개행 편집기 스타터 비교를 CI에서 수정; 기존 F01/F02 스타터 증거는 보존. 로컬 environment_offline로 Git/npm/Cargo/diff 직접 실행 불가·원격 atomic tree/ref와 CI 사용.
+- 보안 영향: 신뢰 로컬 전용 --include-control-flow에서만 F03을 허용하고 기존 토큰·loopback·고정 sysroot·오프라인 Cargo·자원/정리 제한을 재사용; 공개 실행·하네스 노출·파일 접근 확대0.
+- 단계별 완료율: F03 제한 범위 완료·F3/8(37.5%)·next=C/C08; A3/5·B10/11·C7/8·D/E4/8·G0/8·H/I0/6, 화면37·Rust3·총37. 플랫폼 전체/실기기 인수는 미완료.
+- 다음 작업: 후속 결과 SHA CI 성공 뒤 PR #7 비강제 병합·main CI 확인; 다음 개발은 C08 표준 라이브러리·함수 포인터·빌드 자동화의 좁은 단원으로 시작.
+
+---
+
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-21 05:58 KST — F03 준비 브랜치 최신 main 통합
 - 시작/결과 SHA: main 9ea723f2984b542d8022bb5866b3200925439372; PR #7 f65e93e3079a3a46a29c3f856f39307329c2c7c7; 후속 병합 커밋 제목 chore: merge verified Rust settlement into F03 preparation.
 - 목표: 보안 우선 Rust 종료 확인 수정과 양쪽 일지를 F03 준비 브랜치에 보존 통합; 신규 콘텐츠·인수·완료율 상승0.
@@ -51,17 +65,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 운영자가 서비스/정의/허용 목록을 명시한 경우만 F03 API 선택 허용; 기본 C/F01/F02와 기존 CLI·인증·실행 제한·저장키/v1 형식 보존, 짧은 성공 결과는 저장 전 거부.
 - 단계별 완료율: F03 준비 진행 중·next=F-G/F03 유지; A3/5·B10/11·C7/8·D/E4/8·F2/8·G0/8·H/I0/6, 화면36 불변; 실제 학습·숙달 미인수.
 - 다음 작업: macOS 취소/정리 실패를 먼저 재현·수정하고 원래27/40 실패 근거 보존; 다음 결과가 성공해도 원인 수정으로 주장하지 않음. 이후 F03 CLI/화면/숙달 인수를 PR #7의10파일 계획으로 연결, 단원 완료/차례 전환 보류.
-
----
-
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-20 23:56 KST — E04 학습·실제 제출·복원 인수
-- 시작/결과 SHA: main f263d0aee00cf5d334d8b72d308b99a30e1377eb; 준비 1bbb3165011a2175d7037c4365d9827e42a6edbe; 검증 5c2b5af84e093e12e5dff6927dd6ec1983ed497f; 후속 커밋 제목 docs: record successful E04 acceptance before merge.
-- 목표: 준비된 순열10사례 계약을 보존해13절·25분 화면/퀴즈·실제 오답→수정→재제출·v1복원·분리 숙달을 인수.
-- 변경 파일 수: 이번10개(카탈로그·메타데이터·실행등록·검사2·README·로드맵2·일지2); 이전 준비8개와 PR 누적14개.
-- 테스트 결과: 연결2건 RED789건786통과/3실패/skip0(D04 공통 사전검사 포함)→789/789; 인수1건 RED790건789통과/1실패/skip0→790/790·실패0/skip0. 실제 browser10/10·퀴즈 재시도·이력 공유·삭제 후v1복원·분리숙달·390px/SVG·오프라인·E03 다음 진입 성공; 검사 삭제0.
-- CI URL과 결과: 검증 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39447450729 전체790/790·browser/macOS 성공 확인(2026-10-21 00:23 KST); 연결RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39444877683 ·인수RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39446378387 . 후속 기록/병합 SHA는 최종 보고.
-- 발견한 문제: 로컬 환경 unavailable로 미커밋/Git/npm/GCC/diff 실행 불가; 원격 atomic tree/ref·CI로 검증. 모바일 실제493px 넘침을 재현해 긴 인수 나열을 선언 코드 블록/위 선언 참조로 표시만 변경(계약 보존), SVG/390px 기대값 완화0. E03 미제공 안내를 실제 연결로 갱신. 인수 검사의 SHA/URL은 실패한 사전 수정본이 아닌 성공한 모바일 browser job으로 정정.
-- 보안 영향: 기존 인증·c-function·길이/실행 제한 재사용; 비공개 하네스 서버 보존·외부 입력 경로/공개 실행 API/저장키/백업 형식 변경0.
-- 단계별 완료율: E04 제한 범위 완료·E4/8(50%)·next=F-G/F03; A3/5·B10/11·C7/8·D4/8·F2/8·G0/8·H/I0/6; 화면36·기본C26/DS4/알고리즘4, Rust2 선택 실행 유지.
-- 다음 작업: 후속 기록 SHA CI 성공 후 최신 main/PR HEAD 확인·비강제 병합·main CI 재확인; 다음 개발은 F03 조건·반복·식과 범위의 좁은 Rust 단원.

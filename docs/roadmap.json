@@ -10,8 +10,8 @@
     "C"
   ],
   "next": {
-    "track": "F-G",
-    "unit": "F03"
+    "track": "C",
+    "unit": "C08"
   },
   "limits": {
     "screenSections": [
@@ -746,7 +746,7 @@
         {
           "id": "F03",
           "title": "조건·반복·식과 범위",
-          "status": "진행 중",
+          "status": "완료",
           "lessonIds": [
             "rust-control-flow"
           ],
@@ -756,7 +756,31 @@
           "tests": [
             "tests/f03-control-flow.test.mjs",
             "tests/browser-practice.mjs"
-          ]
+          ],
+          "practiceDelivery": {
+            "scope": "trusted-local-cargo",
+            "exerciseId": "rust-control-flow",
+            "commit": "da404f5e79053b0c48c99033cd004a32415dd8dc",
+            "ci": "https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39506740517",
+            "checks": [
+              "theory",
+              "example-tests",
+              "quiz-retry",
+              "actual-grading",
+              "correction-retry",
+              "backup",
+              "mastery-next",
+              "explicit-start",
+              "offline"
+            ],
+            "platforms": [
+              "linux"
+            ],
+            "review": "docs/ROADMAP.md",
+            "operatorFlags": [
+              "--include-control-flow"
+            ]
+          }
         },
         {
           "id": "F04",
