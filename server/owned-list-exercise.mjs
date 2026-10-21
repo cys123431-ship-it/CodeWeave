@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
             ok = inserted == 1 && erased == 1 && removed == 10
                 && values(head, expected, 2) && free_calls == 1 && freed[0] == first;
             list_destroy(&head);
-            printf("%d %d %d %zu %d\n", inserted, erased, removed, free_calls,
+            printf("%d %d %d %zu %d\\n", inserted, erased, removed, free_calls,
                    ok && head == NULL && free_calls == 3);
             return 0;
         }
@@ -195,7 +195,7 @@ int main(int argc, char **argv) {
         }
         default: return 2;
     }
-    printf("%d\n", ok);
+    printf("%d\\n", ok);
     return 0;
 }
 `;
