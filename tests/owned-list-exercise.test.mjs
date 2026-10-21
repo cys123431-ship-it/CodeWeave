@@ -143,14 +143,20 @@ test('D05 manuscript complete program compiles and demonstrates insert remove de
   assert.equal(ran.stdout.replaceAll('\r\n', '\n'), 'list: 5 10 20\nremoved=10\nafter: 5 20\ndestroyed=1\n');
 });
 
-test('D05 preparation records manuscript and executable evidence while retaining the selected turn', async () => {
+test('D05 completion records full browser evidence and rotates to E05', async () => {
   const data = JSON.parse(await fs.readFile(new URL('../docs/roadmap.json', import.meta.url), 'utf8'));
   const unit = data.stages.find(s => s.id === 'D').units.find(u => u.id === 'D05');
-  assert.equal(unit.status, '진행 중');
+  assert.equal(unit.status, '완료');
   assert.deepEqual(unit.lessonIds, ['ds-owned-list']);
   assert.ok(unit.manuscripts.includes('content/ds/05-owned-linked-list.md'));
   assert.ok(unit.tests.includes('tests/owned-list-exercise.test.mjs'));
-  assert.deepEqual(data.next, { track: 'D', unit: 'D05' });
+  assert.ok(unit.tests.includes('tests/browser-practice.mjs'));
+  assert.equal(unit.acceptance.scope, 'owned-list-prepend-first-remove-destroy');
+  assert.equal(unit.acceptance.sourceSha, '05a2427d1b4af28b190345838dfe8d50be3a949b');
+  assert.equal(unit.acceptance.ci, 'https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39598425561');
+  assert.deepEqual(unit.acceptance.platforms, ['linux']);
+  assert.deepEqual(unit.acceptance.checks, ['theory', 'compiled-example', 'quiz-retry', 'actual-grading', 'correction-retry', 'shared-history', 'backup-restore', 'mastery-next', 'offline', '390px']);
+  assert.deepEqual(data.next, { track: 'E', unit: 'E05' });
 });
 
 test('D05 changed modules pass syntax checks and generated roadmap stays synchronized', async () => {

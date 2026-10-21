@@ -1,4 +1,18 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-21 21:25 KST — D05 소유 연결 리스트 학습·실제 GCC 인수 완료
+- 시작/결과 SHA: main 87619d82a6561e359936606e704ea15393685121; RED 0721bc93b4a8ff351559d043848733a1c7dbab13; 검증 05a2427d1b4af28b190345838dfe8d50be3a949b; 후속 커밋 제목 docs: record verified D05 acceptance and rotate to E05.
+- 목표: 준비된 D05 원고·10사례 계약을 화면12절·퀴즈·인증 GCC와 연결하고 오답→수정→숙달·이력·백업·390px·오프라인·다음 단원을 인수.
+- 변경 파일 수: 11개(카탈로그·메타·등록·검사3·README·로드맵2·활성/보관 일지2); D05 완료 뒤 역사 C08 fixture를 당시 상태로 고정한 불가피한 1파일 초과, 저장 형식·공개 실행 경계 변경0.
+- 테스트 결과: D05 신규 계약 RED2실패→15/15, README4/4·roadmap 동기화 성공; 로컬 전체844건 중 기존 Rust 관찰 타이밍2건/선행 README1건 실패 후 README 수정, 원격 unit/browser/macOS 전체 성공. 검사 삭제·기대값 완화0.
+- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39598425561 unit·실제 Chromium/GCC·macOS 전체 성공; D05 스타터/링크 손실 오답 거부·수정10/10·복원/모바일/오프라인 확인.
+- 발견한 문제: 로컬 Playwright 실행파일 부재와 Node24 Rust 관찰 타이밍2건은 규칙대로 브라우저 재설치/제품 수정 없이 표준 CI 성공으로 판정; README DS4→5·총37→38을 회귀 검사로 동기화.
+- 보안 영향: 기존 loopback Host/Origin/토큰과 서버 전용 malloc/free 하네스·실행 제한 재사용; 비공개 사례 노출·공개 임의 코드 실행·파일/네트워크·v1 키 확대0.
+- 단계별 완료율: D05 완료·D5/8(62.5%)·next=E/E05; A3/5·B10/11·C8/8·E4/8·F3/8·G0/8·H/I0/6, 플랫폼 전체·실기기 인수 미완료.
+- 다음 작업: 후속 기록 SHA CI 성공 뒤 PR #13 비강제 병합·main CI 확인; 다음 개발은 E05 탐욕 선택과 반례로 명세 검증의 가장 좁은 계약을 RED로 시작.
+
+---
+
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-21 20:20 KST — D05 연결 리스트 소유권 계약 준비
 - 시작/결과 SHA: main 9ff5a4eea576d3d896e742ce556bcb7a3bc264bc; RED 2c7789e6d5daa481dcacfb6f57df0134985f18b7; 검증 c70cdea2dfa9757eba575f91f83f94356635439a; 후속 커밋 제목 docs: record verified D05 owned-list preparation.
 - 목표: 앞 삽입·첫 일치 삭제·전체 해제의 소유권 계약을 비공개 GCC 10사례와 129줄 원고로 준비; 공개 화면·등록·완료 판정은 보류.
@@ -51,17 +65,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 미등록 c-function 정의만 추가하고 count를8로 제한; 새 외부 입력·공개 코드 실행·파일 접근·인증 경로 추가0.
 - 단계별 완료율: C08 준비 진행 중·C7/8(87.5%)·next=C/C08 유지; 전체 화면37·문제 수 불변, 플랫폼/실기기 인수 미완료.
 - 다음 작업: 다음1회에서 정적 도식·화면10~15절·퀴즈·실제12사례 채점·오류 수정/재제출·숙달·v1복원·390px/오프라인을 연결한 뒤에만 C08 완료·D05로 순환.
-
----
-
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-21 11:20 KST — F03 역사 fixture 회귀 수정·인수 확정
-- 시작/결과 SHA: 실패 기록 52268c73f252c5ab3265ca697bc9594263a70d5f; 회귀 수정 d574249d0a3b26fa2826f66f9c34c84d79392403; 후속 커밋 제목 docs: fix F03 repair handoff record order.
-- 목표: F03 완료 뒤 F02/E04 과거 재현 fixture가 새 F03 완료 증거를 함께 보존해 생긴 CI 4실패를 먼저 수정하고 F03 인수 근거를 확정.
-- 변경 파일 수: 4개(역사 fixture 검사2·활성/보관 일지2); 제품 코드·원고·로드맵 상태·저장 형식 변경0.
-- 테스트 결과: 기존 F02 3건·E04 1건 811/815 실패→전체815/815·실패0/skip0; browser 실제 F03 Cargo와 macOS 자원/취소 검사 성공. 검사 삭제·제품 기대 완화0.
-- CI URL과 결과: 회귀 실패 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39524477080; 수정 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39532565655 전체 성공; 기록 형식 실패 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39532964227.
-- 발견한 문제: 과거 fixture의 F03 상태/증거 모순과 신규 일지의 확인문장·제목 순서 오류를 각각 수정. 로컬 environment_offline로 직접 실행 불가.
-- 보안 영향: 테스트·일지만 수정해 외부 입력·코드 실행·파일 접근 경계 변화0; 기존 신뢰 로컬 Cargo 제한 유지.
-- 단계별 완료율: F03 제한 범위 완료·F3/8(37.5%)·next=C/C08; 플랫폼 전체·실기기 인수는 미완료.
-- 다음 작업: 기록 SHA CI 성공 뒤 PR #7 비강제 병합·main 결과 CI 확인; 이후 C08 좁은 단원 시작.
