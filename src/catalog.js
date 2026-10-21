@@ -929,6 +929,89 @@ export const lessons = [
     "expected": "1 42 0 1"
   }
 },
+{
+  "id": "c-qsort-callback",
+  "track": "c",
+  "level": "중급",
+  "title": "qsort와 함수 포인터: 정렬 정책 전달하기",
+  "minutes": 25,
+  "source": "C08 독자 원고 content/c/25-qsort-function-pointers.md · 표준 라이브러리와 Make 실습",
+  "summary": "비교 함수를 인수로 전달해 같은 배열 정렬기를 여러 정책으로 재사용하고 Make로 반복 빌드합니다.",
+  "figure": "function-call",
+  "sections": [
+    {
+      "heading": "개요·필요성·선수 지식·목표",
+      "text": "예상25분. 배열·함수·포인터를 익힌 뒤 같은 정렬 함수를 여러 순서에 재사용합니다. 함수 포인터를 읽고 qsort에 계약에 맞게 전달하며 Make로 반복 빌드하는 것이 목표입니다. 범위는 int 배열0~8개입니다."
+    },
+    {
+      "heading": "이론 — 동작도 값처럼 전달하기",
+      "text": "int (*compare)(const void *, const void *)는 두 원소 주소를 받고 음수·0·양수를 돌려주는 함수의 주소입니다. 함수 이름을 인수로 주면 정렬 코드는 오름차순인지 내림차순인지 몰라도 정책을 호출할 수 있습니다."
+    },
+    {
+      "heading": "이론 — qsort 표준 계약",
+      "text": "qsort(base, count, width, compare)는 base부터 count개를 width 바이트 단위로 재배치합니다. 첫 원소가 앞이면 음수, 같으면0, 뒤면 양수입니다. 비교 중 배열을 바꾸거나 모순된 순서를 반환하지 않습니다."
+    },
+    {
+      "heading": "도식 — 원소 주소에서 정렬 순서까지",
+      "text": "정적 도식에서 qsort가 두 원소 주소를 비교 콜백에 넘기고, 콜백이 const int *로 읽어 -1/0/1을 돌려주며, qsort가 결과에 따라 재배치하는 흐름을 따라갑니다. void *는 범용 표준 함수와 구체 원소 형식을 잇습니다."
+    },
+    {
+      "heading": "오버플로 없는 비교 함수",
+      "text": "return a - b는 INT_MAX와 INT_MIN에서 signed int 범위를 넘을 수 있습니다. (a > b) - (a < b)는 항상 -1,0,1입니다. 내림차순은 인수 순서를 바꿔 오름차순 비교 함수를 재사용할 수 있습니다."
+    },
+    {
+      "heading": "함수 계약과 실패 보존",
+      "text": "compare가 NULL, count>8, 또는 count>0인데 values가 NULL이면0이고 배열을 건드리지 않습니다. count=0이면 values=NULL을 허용하지만 비교 함수는 필요합니다. 성공하면 [0,count)만 선택한 정책으로 정렬하고1입니다."
+    },
+    {
+      "heading": "단계별 예제 — 완성 프로그램",
+      "text": "아래는 오름차순과 내림차순 콜백을 같은 래퍼에 전달하는 완성 프로그램입니다. 제출창에는 main과 관찰용 비교 함수를 제외하고 stddef.h·stdlib.h와 sort_ints_with만 작성합니다.",
+      "code": "#include <stddef.h>\n#include <stdio.h>\n#include <stdlib.h>\n\nint sort_ints_with(int values[], size_t count,\n                   int (*compare)(const void *, const void *)) {\n    if (compare == NULL || count > 8 || (count > 0 && values == NULL)) return 0;\n    if (count > 1) qsort(values, count, sizeof values[0], compare);\n    return 1;\n}\nstatic int ascending(const void *left, const void *right) {\n    int a = *(const int *)left;\n    int b = *(const int *)right;\n    return (a > b) - (a < b);\n}\nstatic int descending(const void *left, const void *right) {\n    return ascending(right, left);\n}\nstatic void print3(const int values[3]) {\n    printf(\"%d %d %d\\n\", values[0], values[1], values[2]);\n}\nint main(void) {\n    int first[] = {3, -1, 2};\n    int second[] = {3, -1, 2};\n    if (!sort_ints_with(first, 3, ascending)) return 1;\n    if (!sort_ints_with(second, 3, descending)) return 1;\n    print3(first);\n    print3(second);\n    return 0;\n}"
+    },
+    {
+      "heading": "실제 출력과 이유",
+      "text": "첫 줄은 -1 2 3, 둘째 줄은3 2 -1입니다. 입력 배열은 같아도 전달한 비교 관계가 반대라 결과가 달라집니다. 비교 호출 횟수와 순서는 구현마다 다르므로 거기에 의존하지 않습니다.",
+      "code": "-1 2 3\n3 2 -1"
+    },
+    {
+      "heading": "Make로 반복 빌드하기",
+      "text": "Makefile의 명령 줄 앞에는 탭 한 칸이 필요합니다. make로 필요한 대상만 다시 만들고, 실행·수정·make를 반복합니다. clean은 생성한 실행 파일만 지웁니다.",
+      "code": "CC ?= gcc\nCFLAGS ?= -std=c11 -Wall -Wextra -Wpedantic -Werror\nexample: example.c\n\t$(CC) $(CFLAGS) example.c -o example\nclean:\n\trm -f example"
+    },
+    {
+      "heading": "흔한 오류·중간 점검·심화",
+      "text": "함수 안의 sizeof values는 포인터 크기이므로 sizeof values[0]를 씁니다. 콜백을 무시해 오름차순을 고정하거나 검증 전에 qsort를 호출하지 않습니다. qsort는 안정 정렬과 특정 비교 호출 순서를 보장하지 않습니다.",
+      "advanced": true
+    },
+    {
+      "heading": "개념 확인·직접 풀기·Mini Project",
+      "text": "a=7,b=7인 오름차순 비교 결과는0입니다. 기초는 {3,-1,2}, 응용은 내림차순 콜백, 도전은 절댓값 뒤 실제 값 비교 정책입니다. Mini Project로 example.c와 Makefile을 만들고 -Werror 경고를 고쳐 다시 빌드하세요."
+    },
+    {
+      "heading": "실제 테스트·오류 수정·재제출·복습",
+      "text": "12사례가 빈/단일 범위, 세 비교 정책, 중복·정수 경계, 접두부, NULL·상한 실패 보존, 반복 호출을 검사합니다. 실패한 사례에서 입력 계약과 정렬 정책을 나눠 고치고 전체 재제출하세요. 제출 이력을 복원하고 숙달 후 C01의 직접 gcc 명령과 Make 증분 빌드를 비교해 복습합니다."
+    }
+  ],
+  "quiz": {
+    "question": "오름차순 비교 함수에서 a=7, b=7이면 무엇을 반환해야 할까요?",
+    "options": [
+      "음수",
+      "0",
+      "양수",
+      "비교할 때마다 다른 값"
+    ],
+    "answer": 1,
+    "explanation": "같은 키는 동등하므로0을 반환합니다. 정확한 음수·양수 크기는 중요하지 않습니다."
+  },
+  "challenge": {
+    "id": "c-qsort-callback",
+    "title": "비교 함수를 전달해 int 배열 정렬하기",
+    "description": "sort_ints_with를 main 없이 작성하세요. compare가 NULL, count>8, count>0인데 values가 NULL이면0으로 배열을 보존합니다. 유효한 count=0과 단일 원소도1입니다. 둘 이상이면 sizeof values[0]와 전달받은 compare를 그대로 qsort에 넘겨 [0,count)만 정렬합니다.",
+    "starter": "#include <stddef.h>\n#include <stdlib.h>\nint sort_ints_with(int values[], size_t count,\n                   int (*compare)(const void *, const void *)) {\n    (void)values;\n    (void)count;\n    (void)compare;\n    /* TODO: 계약을 검사하고 qsort에 비교 함수를 전달 */\n    return 0;\n}\n",
+    "input": "{3,-1,2} · 오름차순 콜백",
+    "expected": "1 -1 2 3"
+  }
+},
   {
 
   "id": "rust-cargo",
