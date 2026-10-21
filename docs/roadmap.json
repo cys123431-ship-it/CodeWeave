@@ -492,12 +492,15 @@
           "id": "D05",
           "title": "연결 리스트의 소유권·삽입·삭제·해제",
           "status": "진행 중",
-          "lessonIds": [],
+          "lessonIds": [
+            "ds-owned-list"
+          ],
           "manuscripts": [
             "content/ds/05-owned-linked-list.md"
           ],
           "tests": [
-            "tests/owned-list-exercise.test.mjs"
+            "tests/owned-list-exercise.test.mjs",
+            "tests/browser-practice.mjs"
           ]
         },
         {

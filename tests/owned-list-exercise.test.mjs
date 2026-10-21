@@ -47,23 +47,23 @@ void list_destroy(struct Node **head) {
 `;
 
 test('D05 delivers one public lesson, accessible figure and the same private GCC contract', async () => {
-  const { ownedListExercise: exercise, ownedListMetadata: metadata } = await load();
+  const { ownedListExercise: exercise, ownedListMetadata: metadata, ownedListStarter } = await load();
   const lesson = lessons.find(item => item.id === exercise.id);
   assert.ok(lesson);
   assert.equal(lesson.track, 'ds');
-  assert.equal(lesson.figure, 'list-ownership');
+  assert.equal(lesson.figure, 'list-first-match');
   assert.ok(lesson.sections.length >= 10 && lesson.sections.length <= 15);
-  assert.deepEqual(exerciseById(exercise.id), metadata);
+  assert.deepEqual(exerciseById(exercise.id), { ...metadata, requiredFiles: [] });
   assert.equal(gradingExercises.get(exercise.id), exercise);
   assert.equal(lesson.challenge.id, exercise.id);
-  assert.equal(lesson.challenge.starter, exercise.starter);
+  assert.equal(lesson.challenge.starter, ownedListStarter);
   assert.equal(lesson.challenge.input, metadata.publicExample.input);
   assert.equal(lesson.challenge.expected, metadata.publicExample.output);
   assert.deepEqual(lesson.quiz.options, ['머리를 NULL로 설정', '이전 링크를 다음 노드에 연결', '값을 0으로 변경', '다음 노드도 해제']);
   assert.equal(lesson.quiz.answer, 1);
   const figure = figureFor(lesson.figure);
   assert.match(figure, /role="img"/);
-  assert.match(figure, /aria-label="[^"]*소유권[^"]*"/);
+  assert.match(figure, /aria-label="[^"]*연결 리스트[^"]*"/);
   assert.doesNotMatch(figure, /<script|<animate|<foreignObject|onload=/i);
   assert.equal(exercise.id, 'ds-owned-list');
   assert.equal(exercise.grader, 'c-function');
@@ -147,7 +147,7 @@ test('D05 preparation records manuscript and executable evidence while retaining
   const data = JSON.parse(await fs.readFile(new URL('../docs/roadmap.json', import.meta.url), 'utf8'));
   const unit = data.stages.find(s => s.id === 'D').units.find(u => u.id === 'D05');
   assert.equal(unit.status, '진행 중');
-  assert.deepEqual(unit.lessonIds, []);
+  assert.deepEqual(unit.lessonIds, ['ds-owned-list']);
   assert.ok(unit.manuscripts.includes('content/ds/05-owned-linked-list.md'));
   assert.ok(unit.tests.includes('tests/owned-list-exercise.test.mjs'));
   assert.deepEqual(data.next, { track: 'D', unit: 'D05' });

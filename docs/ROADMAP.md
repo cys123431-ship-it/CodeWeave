@@ -73,7 +73,7 @@
 | D02 | 배열 스택: push·pop·용량과 빈 상태 | 완료 | `ds-stack` · [원고](../content/ds/02-stack.md) · [검사](../tests/stack-exercise.test.mjs) · [검사](../tests/roadmap.test.mjs) · [검사](../tests/browser-practice.mjs) |
 | D03 | 원형 큐: 삽입·삭제·순환 경계 | 완료 | `ds-queue` · [원고](../content/ds/03-queue.md) · [검사](../tests/queue-exercise.test.mjs) · [검사](../tests/roadmap.test.mjs) · [검사](../tests/browser-practice.mjs) |
 | D04 | 동적 배열 리스트: 삽입·삭제·이동 비용 | 완료 | `ds-array-list` · [원고](../content/ds/04-array-list.md) · [검사](../tests/array-list-exercise.test.mjs) · [검사](../tests/roadmap.test.mjs) · [검사](../tests/browser-practice.mjs) |
-| D05 | 연결 리스트의 소유권·삽입·삭제·해제 | 진행 중 | [원고](../content/ds/05-owned-linked-list.md) · [검사](../tests/owned-list-exercise.test.mjs) |
+| D05 | 연결 리스트의 소유권·삽입·삭제·해제 | 진행 중 | `ds-owned-list` · [원고](../content/ds/05-owned-linked-list.md) · [검사](../tests/owned-list-exercise.test.mjs) · [검사](../tests/browser-practice.mjs) |
 | D06 | 이진 탐색 트리: 탐색·삽입·순회 | 미착수 | — |
 | D07 | 해시 테이블: 충돌·탐색·삭제 표식 | 미착수 | — |
 | D08 | 그래프 표현: 인접 목록과 자원 정리 | 미착수 | — |
