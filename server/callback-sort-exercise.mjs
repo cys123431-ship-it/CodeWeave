@@ -90,7 +90,6 @@ int main(int argc, char **argv) {
     switch (atoi(argv[1])) {
         case 0: {
             int values[] = {3, -1, 2};
-            int expected[] = {-1, 2, 3};
             int status = sort_ints_with(values, 3, ascending);
             printf("%d %d %d %d\\n", status, values[0], values[1], values[2]);
             return 0;
