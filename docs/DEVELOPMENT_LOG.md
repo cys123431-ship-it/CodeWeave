@@ -1,4 +1,18 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-21 20:20 KST — D05 연결 리스트 소유권 계약 준비
+- 시작/결과 SHA: main 9ff5a4eea576d3d896e742ce556bcb7a3bc264bc; RED 2c7789e6d5daa481dcacfb6f57df0134985f18b7; 검증 c70cdea2dfa9757eba575f91f83f94356635439a; 후속 커밋 제목 docs: record verified D05 owned-list preparation.
+- 목표: 앞 삽입·첫 일치 삭제·전체 해제의 소유권 계약을 비공개 GCC 10사례와 129줄 원고로 준비; 공개 화면·등록·완료 판정은 보류.
+- 변경 파일 수: 7개(채점 정의·검사·원고·로드맵2·활성/보관 일지); 공개 카탈로그·실행 등록·저장 형식 변경0.
+- 테스트 결과: 신규14건 RED 829/843·실패14→843/843·실패0/skip0; 정답10/10·오답8종·경고 없는 스타터·완성 예제·원고 한도·roadmap 동기화 성공, browser/macOS 성공. 검사 삭제·기대값 완화0.
+- CI URL과 결과: RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39589194497 의도된14실패; 검증 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39590677961 unit/browser/macOS 전체 성공.
+- 발견한 문제: 하네스 printf 줄바꿈 이스케이프와 dangling-head 오답 fixture의 -Werror를 각각 수정; 오답은 경고 없이 실제 dangling head를 만들며 제품 계약·기대값은 불변.
+- 보안 영향: 미등록 c-function 계약과 테스트 전용 malloc/free 래퍼만 추가; 공개 임의 코드 실행·파일/네트워크·인증·저장키 경계 변화0.
+- 단계별 완료율: D05 진행 중·D4/8(50.0%)·next=D/D05 유지; A3/5·B10/11·C8/8·E4/8·F3/8·G0/8·H/I0/6, 플랫폼 전체·실기기 인수 미완료.
+- 다음 작업: D05 카탈로그·정적 도식·퀴즈·인증 HTTP 실제 오답→수정→재제출·이력/백업·390px/오프라인을 브라우저 인수한 뒤에만 완료하고 E05로 순환.
+
+---
+
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-21 16:22 KST — C08 브라우저 인수 완료·D05 순환
 - 시작/결과 SHA: main 87e4f3e893df38b3b6c58ecf1c259c91ca6cd6de; RED 5e4b0ea86450620eac952e085ff76532930a426e; 검증 12fa09434ab7eb380e0f21b584c40863963cf793; 후속 커밋 제목 docs: record verified C08 browser acceptance.
 - 목표: C07→C08 진입부터 퀴즈 재시도·실제 GCC 오답/수정·숙달·이력·백업 복원·모바일·오프라인까지 인수하고 C08 완료를 판정.
@@ -51,17 +65,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 테스트·일지만 수정해 외부 입력·코드 실행·파일 접근 경계 변화0; 기존 신뢰 로컬 Cargo 제한 유지.
 - 단계별 완료율: F03 제한 범위 완료·F3/8(37.5%)·next=C/C08; 플랫폼 전체·실기기 인수는 미완료.
 - 다음 작업: 기록 SHA CI 성공 뒤 PR #7 비강제 병합·main 결과 CI 확인; 이후 C08 좁은 단원 시작.
-
----
-
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-21 07:18 KST — F03 학습·실제 Cargo 인수
-- 시작/결과 SHA: main 9ea723f2984b542d8022bb5866b3200925439372; RED c3e513f1130a71252cca1f37af93b0a7a74c9144; 구현·검증 da404f5e79053b0c48c99033cd004a32415dd8dc; 후속 커밋 제목 docs: accept verified F03 delivery and rotate to C08.
-- 목표: F03 조건·반복·식과 범위를 화면14절과 명시적 로컬 Cargo로 연결하고 오답→수정→재제출→분리 숙달→다음 단원 흐름을 인수.
-- 변경 파일 수: 10개(CLI·로드맵 스크립트·카탈로그·공개 메타·브라우저 검사·README·로드맵2개·일지2개); 기존 원고·비공개10사례·정적 도식·인증/저장키 보존.
-- 테스트 결과: 신규 인수1건 RED 814/815·실패1/skip0→815/815·실패0/skip0; 실제 F03 스타터/제외범위 오답 거부·수정10/10, 퀴즈 재시도·분리 숙달·공유 이력·삭제 후v1복원·390px SVG·오프라인·다음 단원 성공. 검사 삭제/기대값 변경0.
-- CI URL과 결과: RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39505600377 의도된 CLI 실패; 검증 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39506740517 전체 unit/browser/macOS 성공. 중간 문법/스타터 범위 실패는 원인별 수정; 후속 기록/병합 CI 최종 보고.
-- 발견한 문제: 카탈로그 쉼표 누락과 F03 무개행 편집기 스타터 비교를 CI에서 수정; 기존 F01/F02 스타터 증거는 보존. 로컬 environment_offline로 Git/npm/Cargo/diff 직접 실행 불가·원격 atomic tree/ref와 CI 사용.
-- 보안 영향: 신뢰 로컬 전용 --include-control-flow에서만 F03을 허용하고 기존 토큰·loopback·고정 sysroot·오프라인 Cargo·자원/정리 제한을 재사용; 공개 실행·하네스 노출·파일 접근 확대0.
-- 단계별 완료율: F03 제한 범위 완료·F3/8(37.5%)·next=C/C08; A3/5·B10/11·C7/8·D/E4/8·G0/8·H/I0/6, 화면37·Rust3·총37. 플랫폼 전체/실기기 인수는 미완료.
-- 다음 작업: 후속 결과 SHA CI 성공 뒤 PR #7 비강제 병합·main CI 확인; 다음 개발은 C08 표준 라이브러리·함수 포인터·빌드 자동화의 좁은 단원으로 시작.
