@@ -1,4 +1,18 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-21 12:15 KST — C08 qsort·함수 포인터 계약 준비
+- 시작/결과 SHA: main fca440b3c7be6b006ab84c7ab1090fd4041aee9e; RED 20636df89d56f83350a94c83f6a5d1a6c3e0f656; 검증 17597ee3e8df6de0a41bf7caa62b83a8840a4939; 후속 커밋 제목 docs: record verified C08 callback preparation.
+- 목표: 같은 int 배열을 함수 포인터로 전달한 비교 정책에 따라 qsort하는 좁은 C08 계약과 Make 반복 빌드 원고를 준비.
+- 변경 파일 수: 7개(채점 모듈·회귀 검사·원고·로드맵2·활성/보관 일지); 공개 카탈로그·실행 등록·저장 형식 변경0.
+- 테스트 결과: 신규10건 RED 전체825건 중815통과/10실패→825/825·실패0/skip0; 정답12/12·오답6종·스타터·완성 예제·원고150줄 한도 성공. 검사 삭제·기대값 변경0.
+- CI URL과 결과: RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39536720749 의도된10실패; 검증 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39537364035 unit/browser/macOS 전체 성공. 중간 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39537118598 하네스 경고 실패도 수정.
+- 발견한 문제: 공개 예시 분기의 미사용 지역 배열이 -Werror를 일으켜 배열만 제거(학습 계약·기대값 불변). 로컬 checkout이 없어 원격 atomic tree/ref와 CI로 검증.
+- 보안 영향: 미등록 c-function 정의만 추가하고 count를8로 제한; 새 외부 입력·공개 코드 실행·파일 접근·인증 경로 추가0.
+- 단계별 완료율: C08 준비 진행 중·C7/8(87.5%)·next=C/C08 유지; 전체 화면37·문제 수 불변, 플랫폼/실기기 인수 미완료.
+- 다음 작업: 다음1회에서 정적 도식·화면10~15절·퀴즈·실제12사례 채점·오류 수정/재제출·숙달·v1복원·390px/오프라인을 연결한 뒤에만 C08 완료·D05로 순환.
+
+---
+
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-21 11:20 KST — F03 역사 fixture 회귀 수정·인수 확정
 - 시작/결과 SHA: 실패 기록 52268c73f252c5ab3265ca697bc9594263a70d5f; 회귀 수정 d574249d0a3b26fa2826f66f9c34c84d79392403; 후속 커밋 제목 docs: fix F03 repair handoff record order.
 - 목표: F03 완료 뒤 F02/E04 과거 재현 fixture가 새 F03 완료 증거를 함께 보존해 생긴 CI 4실패를 먼저 수정하고 F03 인수 근거를 확정.
@@ -51,17 +65,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 검증된 종료확인 수정만 통합; 실제SIGKILL1회·기존500ms·불확실성격리·복구거부·인증/저장키/v1 계약 보존.
 - 단계별 완료율: A3/5·B10/11·C7/8·D/E4/8·F2/8·G0/8·H/I0/6, 화면36·next=F-G/F03 불변; 플랫폼/F03 인수 미완료.
 - 다음 작업: 이번 결과 SHA CI 성공 확인; PR #7에 최신 main 기반 수정과 양쪽 일지를 보존해 통합 검토한 뒤 F03 CLI/화면·오답→수정·재제출·분리 숙달·v1복원·390px/오프라인 인수. 기반 통합은 콘텐츠2회 한도 미소비.
-
----
-
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-21 03:59 KST — Rust 종료 확인 EPERM 회귀 수정
-- 시작/결과 SHA: main 46604df10ee57093d5be65928bad977f2a592cda; RED 3cd7443ad41c09f2a08b00529f4be87f303a7068; 검증 63041838f9cefb0f7703e47a532073cd758e80a3; 후속 커밋 제목 test: avoid redundant fixture signals and record verified Rust settlement.
-- 목표: 원래 macOS27/40 취소 실패 경로를 결정적으로 재현하고 종료 확인을 보수적으로 정정; F03 신규 콘텐츠 작업0.
-- 변경 파일 수: 4개(실행기·기존 실행기 검사·활성/보관 일지); 기존 PR #7 준비 보존.
-- 테스트 결과: 신규4건 transient-live/transient-unavailable RED실패→통과, permanent/signal-denied 전후통과; Linux 전체794/794·실패0/skip0, macOS lifecycle115통과/실패0/Linux전용1skip·취소40회 및 browser 성공. 검사 삭제/기대값 완화0.
-- CI URL과 결과: 검증 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39480332467 전체 성공 확인·제한된 종료확인 수정 완료; RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39479875877 의도된2실패. 원래 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39455522174 실패 보존; 후속 기록/병합 CI 최종 보고.
-- 발견한 문제: signal0 EPERM→즉시ECLEANUP 경로를 재현·수정했으나 커널 EPERM 발생 원인은 미확정. 로컬 environment_offline로 미커밋/Git/npm/GCC/diff 실행 불가·연결 API/CI 사용. 재검토로 fixture 최종 정리는 실제SIGKILL 거부 모드에서만 수행(기대값 불변·이미 종료한 그룹 재신호 방지).
-- 보안 영향: 실제SIGKILL 성공 뒤 읽기 전용 재확인만 허용·기존500ms/공유lease/영구오류격리/복구거부 유지; 재신호/인증·공개실행·저장키 변경0.
-- 단계별 완료율: 콘텐츠 불변 A3/5·B10/11·C7/8·D/E4/8·F2/8·G0/8·H/I0/6; 화면36·next=F-G/F03, PR #7 draft/미인수 유지.
-- 다음 작업: 기록 SHA CI 성공·최신 main/PR HEAD 확인 후 PR #8 안전 병합/main CI 확인; PR #7은 기반 수정과 일지 충돌을 검토해 이어받고 F03 화면/재제출/복원 인수로 진행. F03 콘텐츠2회 한도는 소비하지 않음.

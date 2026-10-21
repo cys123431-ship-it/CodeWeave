@@ -4,7 +4,7 @@
 |---|---|---:|---:|---:|---:|
 | A | C 기초 | 3/5 | 0 | 2 | 60.0% |
 | B | C 핵심 | 10/11 | 0 | 1 | 90.9% |
-| C | C 심화 | 7/8 | 0 | 1 | 87.5% |
+| C | C 심화 | 7/8 | 1 | 0 | 87.5% |
 | D | 자료구조 — C | 4/8 | 0 | 4 | 50.0% |
 | E | 알고리즘 — C | 4/8 | 0 | 4 | 50.0% |
 | F | Rust 기초 | 3/8 | 0 | 5 | 37.5% |
@@ -63,7 +63,7 @@
 | C05 | 파일 입출력: 스트림 수명·오류·EOF | 완료 | `c-file-stream-count` · [원고](../content/c/22-file-streams.md) · [검사](../tests/stream-exercise.test.mjs) · [검사](../tests/browser-practice.mjs) · [검사](../tests/exercise-audit.test.mjs) |
 | C06 | 전처리 매크로·조건부 컴파일과 중복 평가 | 완료 | `c-preprocessor-once` · [원고](../content/c/23-preprocessor-once.md) · [검사](../tests/preprocessor-exercise.test.mjs) · [검사](../tests/browser-practice.mjs) |
 | C07 | 오류 반환·errno와 자원 정리 경로 | 완료 | `c-owned-stream-byte` · [원고](../content/c/24-owned-stream-errors.md) · [검사](../tests/owned-stream-exercise.test.mjs) · [검사](../tests/browser-practice.mjs) · [검사](../tests/roadmap.test.mjs) |
-| C08 | 표준 라이브러리·함수 포인터와 빌드 자동화 | 미착수 | — |
+| C08 | 표준 라이브러리·함수 포인터와 빌드 자동화 | 진행 중 | [원고](../content/c/25-qsort-function-pointers.md) · [검사](../tests/callback-sort-exercise.test.mjs) |
 
 ## D. 자료구조 — C
 
