@@ -1,4 +1,18 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-23 05:03 KST — main 브라우저 CI 시간 예산 수정
+- 시작/결과 SHA: main 0a703dd4b775a513eb32aa70a160be8ac0f75dcb; 실패 job 120058142181; 후속 커밋 제목 fix: allow delayed Chromium install before browser acceptance.
+- 목표: E05 결과 SHA의 Chromium 설치 지연과 실제 GCC/브라우저 검증을 분리해 실행할 수 있도록 browser 전체 제한만 10→20분으로 조정; 새 단원 작업0.
+- 변경 파일 수: 3개(CI workflow·활성/보관 일지); 제품 코드·교육 원고·로드맵·저장 형식 변경0.
+- 테스트 결과: main 재시도 unit·macOS 성공, browser는 설치 완료 뒤 실제 검사 중 10분 제한 취소; workflow YAML·일지 정책·roadmap 동기화·diff 검사는 수정 후 실행.
+- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39839493702 시도3 unit/macOS 성공·browser 취소; 수정 결과 SHA CI는 후속 확인.
+- 발견한 문제: 앞선 시도2회는 설치 중 취소, 시도3은 설치 완료 뒤 제품 검사 시작까지 도달해 제품 실패가 아닌 전체 job 시간 예산 부족으로 확정.
+- 보안 영향: 실행기·제출·인증·파일/네트워크 경계 변경0; 기존 격리 QA 계정·CPU 고정·GCC/Rust 자원 제한과 실제 브라우저 검증을 그대로 유지.
+- 단계별 완료율: E05 완료·E5/8(62.5%)·next=F-G/F04 불변; A3/5·B10/11·C8/8·D5/8·F3/8·G0/8·H/I0/6, 플랫폼 전체·실기기 인수 미완료.
+- 다음 작업: 수정 SHA의 unit/browser/macOS 성공과 E05 main 인수를 확인한 뒤에만 F04 소유권·대여와 수명 계약을 RED로 시작.
+
+---
+
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-23 04:04 KST — E05 탐욕 활동 선택 학습·실제 GCC 인수
 - 시작/결과 SHA: main 6e16aec0be3599865488dc3319678b504ef79f79; 로컬 RED 학습자 공개/완료 계약2실패; 후속 커밋 제목 feat: deliver E05 greedy activity selection.
 - 목표: 준비된 종료 시각 우선 선택을 화면12절·퀴즈·인증 GCC와 연결하고 오답→수정→숙달·이력·백업·390px·오프라인을 인수.
@@ -51,17 +65,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 미등록 c-function 계약과 테스트 전용 malloc/free 래퍼만 추가; 공개 임의 코드 실행·파일/네트워크·인증·저장키 경계 변화0.
 - 단계별 완료율: D05 진행 중·D4/8(50.0%)·next=D/D05 유지; A3/5·B10/11·C8/8·E4/8·F3/8·G0/8·H/I0/6, 플랫폼 전체·실기기 인수 미완료.
 - 다음 작업: D05 카탈로그·정적 도식·퀴즈·인증 HTTP 실제 오답→수정→재제출·이력/백업·390px/오프라인을 브라우저 인수한 뒤에만 완료하고 E05로 순환.
-
----
-
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-21 16:22 KST — C08 브라우저 인수 완료·D05 순환
-- 시작/결과 SHA: main 87e4f3e893df38b3b6c58ecf1c259c91ca6cd6de; RED 5e4b0ea86450620eac952e085ff76532930a426e; 검증 12fa09434ab7eb380e0f21b584c40863963cf793; 후속 커밋 제목 docs: record verified C08 browser acceptance.
-- 목표: C07→C08 진입부터 퀴즈 재시도·실제 GCC 오답/수정·숙달·이력·백업 복원·모바일·오프라인까지 인수하고 C08 완료를 판정.
-- 변경 파일 수: 7개(브라우저/로드맵/역사 F02 검사3·로드맵2·활성/보관 일지2); 제품 런타임·저장 형식 변경0.
-- 테스트 결과: 신규 로드맵 인수 RED 828/829·실패1→829/829·실패0/skip0; 브라우저 C08 실제12/12·삭제 후v1복원·390px·오프라인, macOS 자원 검사 성공. 삭제 검사0.
-- CI URL과 결과: RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39559735411 의도된1실패; 검증 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39560905457 unit/browser/macOS 전체 성공.
-- 발견한 문제: C08 완료 뒤 F02/F03 과거 handoff fixture와 생성 ROADMAP next가 현재 상태를 따라 실패; 당시 C08 진행 중 상태로 fixture를 고정하고 D05 문구를 생성값과 동기화. 제품 기대·교육 계약 완화0.
-- 보안 영향: 테스트·상태 문서만 변경해 외부 입력·코드 실행·파일 접근 경계 변화0; 기존 loopback·Host/Origin·토큰·시간/출력 제한 유지.
-- 단계별 완료율: A3/5(60.0%)·B10/11(90.9%)·C8/8(100.0%)·D4/8(50.0%)·E4/8(50.0%)·F3/8(37.5%)·G0/8·H/I0/6; next=D/D05, 플랫폼 전체·실기기 인수 미완료.
-- 다음 작업: D05 연결 리스트 소유권·삽입·삭제·해제의 기존 근거를 확인하고 가장 앞선 좁은 미완료 계약부터 RED로 진행.
