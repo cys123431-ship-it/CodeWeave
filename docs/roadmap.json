@@ -640,10 +640,14 @@
         {
           "id": "E05",
           "title": "탐욕 선택과 반례로 명세 검증",
-          "status": "미착수",
+          "status": "진행 중",
           "lessonIds": [],
-          "manuscripts": [],
-          "tests": []
+          "manuscripts": [
+            "content/algo/05-greedy-activity-selection.md"
+          ],
+          "tests": [
+            "tests/greedy-activity-exercise.test.mjs"
+          ]
         },
         {
           "id": "E06",

@@ -6,7 +6,7 @@
 | B | C 핵심 | 10/11 | 0 | 1 | 90.9% |
 | C | C 심화 | 8/8 | 0 | 0 | 100.0% |
 | D | 자료구조 — C | 5/8 | 0 | 3 | 62.5% |
-| E | 알고리즘 — C | 4/8 | 0 | 4 | 50.0% |
+| E | 알고리즘 — C | 4/8 | 1 | 3 | 50.0% |
 | F | Rust 기초 | 3/8 | 0 | 5 | 37.5% |
 | G | Rust 응용 | 0/8 | 0 | 8 | 0.0% |
 | H | C와 Rust 연결 학습·재구현 | 0/6 | 0 | 6 | 0.0% |
@@ -86,7 +86,7 @@
 | E02 | 안정 정렬과 비교·이동 횟수 | 완료 | `algo-stable-insertion` · [원고](../content/algo/02-stable-insertion.md) · [검사](../tests/sort-exercise.test.mjs) · [검사](../tests/roadmap.test.mjs) · [검사](../tests/browser-practice.mjs) |
 | E03 | 분할 정복: 병합 정렬과 보조 공간 | 완료 | `algo-merge` · [원고](../content/algo/03-merge-sort.md) · [검사](../tests/merge-exercise.test.mjs) · [검사](../tests/roadmap.test.mjs) · [검사](../tests/browser-practice.mjs) |
 | E04 | 재귀 트리·백트래킹과 되돌리기 | 완료 | `algo-permutations` · [원고](../content/algo/04-backtracking-permutations.md) · [검사](../tests/permutations-exercise.test.mjs) · [검사](../tests/roadmap.test.mjs) · [검사](../tests/browser-practice.mjs) |
-| E05 | 탐욕 선택과 반례로 명세 검증 | 미착수 | — |
+| E05 | 탐욕 선택과 반례로 명세 검증 | 진행 중 | [원고](../content/algo/05-greedy-activity-selection.md) · [검사](../tests/greedy-activity-exercise.test.mjs) |
 | E06 | 동적 계획: 상태·점화식·기저 사례 | 미착수 | — |
 | E07 | BFS·DFS와 방문 상태 | 미착수 | — |
 | E08 | 최단 경로: 우선순위와 도달 불가 | 미착수 | — |
