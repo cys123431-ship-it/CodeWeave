@@ -1,4 +1,18 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-23 03:05 KST — E05 탐욕 활동 선택 계약 준비·리뷰 수정
+- 시작/결과 SHA: main a427568b47455dd859121fa563b03e0bb8c23e3f; RED a56cef4(로컬); 검증 f475b107ce260b18ad4d31f311b2dbd01a394bff; 후속 커밋 제목 fix: address E05 prerequisite and counterexample review.
+- 목표: 종료 시각 우선 활동 선택의 C 함수 계약·반례 설명·비공개 GCC 10사례를 준비하고 E05 진행 중 근거로 연결; 공개 화면·등록·완료는 보류.
+- 변경 파일 수: 7개(채점 정의·검사·108줄 원고·로드맵2·활성/보관 일지); 저장 형식·공개 카탈로그 변경0.
+- 테스트 결과: 신규14건 구현 전0/14→14/14; 리뷰 회귀1건 RED 실패→14/14, 로드맵 동기화·diff 검사 성공; 로컬 전체는 이전 후보858건 중821통과·기존 Node24 Rust 관찰 타이밍2실패·Cargo 부재35skip.
+- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39640533072 unit·실제 Chromium·macOS 전체 성공; 리뷰 수정 결과 SHA CI는 후속 확인.
+- 발견한 문제: 존재하지 않는 선수 ID를 E02로 교체하고, 최단 활동 하나가 호환 가능한 두 활동을 실제로 막는 `[0,3) [2,4) [3,6)` 반례로 강화.
+- 보안 영향: 미등록 c-function 정의와 서버 전용 하네스만 추가; 공개 임의 코드 실행·파일/네트워크·인증·v1 키 확대0.
+- 단계별 완료율: E05 진행 중·E4/8(50.0%)·next=E/E05 유지; A3/5·B10/11·C8/8·D5/8·F3/8·G0/8·H/I0/6, 플랫폼 전체·실기기 인수 미완료.
+- 다음 작업: 리뷰 수정 SHA의 unit/browser/macOS 성공 뒤 PR #14 비강제 병합·main CI 확인; 이후 E05 화면10~15절·퀴즈·오답 수정/재제출·숙달·백업·390px/오프라인 인수.
+
+---
+
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-21 21:25 KST — D05 소유 연결 리스트 학습·실제 GCC 인수 완료
 - 시작/결과 SHA: main 87619d82a6561e359936606e704ea15393685121; RED 0721bc93b4a8ff351559d043848733a1c7dbab13; 검증 05a2427d1b4af28b190345838dfe8d50be3a949b; 후속 커밋 제목 docs: record verified D05 acceptance and rotate to E05.
 - 목표: 준비된 D05 원고·10사례 계약을 화면12절·퀴즈·인증 GCC와 연결하고 오답→수정→숙달·이력·백업·390px·오프라인·다음 단원을 인수.
@@ -51,17 +65,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 기존 loopback·토큰 인증·신뢰 로컬 c-function·시간/출력 제한을 재사용하고 비공개12사례를 서버에만 유지; 공개 임의 코드 실행·파일 접근·저장키 확대0.
 - 단계별 완료율: C08 진행 중·C7/8(87.5%)·next=C/C08 유지; A3/5·B10/11·D/E4/8·F3/8·G0/8·H/I0/6, 플랫폼 전체·실기기 인수 미완료.
 - 다음 작업: C07→C08 진입·퀴즈 재시도·실제12/12 오답/수정·숙달·공유 이력/삭제 후v1복원·390px/오프라인을 브라우저에서 인수한 뒤에만 C08 완료와 D05 순환을 결정.
-
----
-
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-21 12:15 KST — C08 qsort·함수 포인터 계약 준비
-- 시작/결과 SHA: main fca440b3c7be6b006ab84c7ab1090fd4041aee9e; RED 20636df89d56f83350a94c83f6a5d1a6c3e0f656; 검증 17597ee3e8df6de0a41bf7caa62b83a8840a4939; 후속 커밋 제목 docs: record verified C08 callback preparation.
-- 목표: 같은 int 배열을 함수 포인터로 전달한 비교 정책에 따라 qsort하는 좁은 C08 계약과 Make 반복 빌드 원고를 준비.
-- 변경 파일 수: 7개(채점 모듈·회귀 검사·원고·로드맵2·활성/보관 일지); 공개 카탈로그·실행 등록·저장 형식 변경0.
-- 테스트 결과: 신규10건 RED 전체825건 중815통과/10실패→825/825·실패0/skip0; 정답12/12·오답6종·스타터·완성 예제·원고150줄 한도 성공. 검사 삭제·기대값 변경0.
-- CI URL과 결과: RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39536720749 의도된10실패; 검증 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39537364035 unit/browser/macOS 전체 성공. 중간 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39537118598 하네스 경고 실패도 수정.
-- 발견한 문제: 공개 예시 분기의 미사용 지역 배열이 -Werror를 일으켜 배열만 제거(학습 계약·기대값 불변). 로컬 checkout이 없어 원격 atomic tree/ref와 CI로 검증.
-- 보안 영향: 미등록 c-function 정의만 추가하고 count를8로 제한; 새 외부 입력·공개 코드 실행·파일 접근·인증 경로 추가0.
-- 단계별 완료율: C08 준비 진행 중·C7/8(87.5%)·next=C/C08 유지; 전체 화면37·문제 수 불변, 플랫폼/실기기 인수 미완료.
-- 다음 작업: 다음1회에서 정적 도식·화면10~15절·퀴즈·실제12사례 채점·오류 수정/재제출·숙달·v1복원·390px/오프라인을 연결한 뒤에만 C08 완료·D05로 순환.

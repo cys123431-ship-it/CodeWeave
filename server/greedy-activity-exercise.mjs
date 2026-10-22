@@ -4,7 +4,7 @@ import { buildGradingExercises } from './exercise-contract.mjs';
 export const activitySelectionMetadata = {
   id: 'algo-activity-selection', kind: 'practice', language: 'c', grader: 'c-function',
   concepts: ['greedy-choice', 'earliest-finish', 'activity-selection', 'counterexample', 'invariant'],
-  prerequisites: ['c-array', 'c-functions', 'algo-linear-search'],
+  prerequisites: ['c-array', 'c-functions', 'algo-stable-insertion'],
   publicExample: { input: '[1,4) [3,5) [0,6) [5,7) [8,9) [5,9)', output: '3 0 3 4' }
 };
 
@@ -107,9 +107,9 @@ int main(int argc, char **argv) {
             break;
         }
         case 5: {
-            const struct Activity a[] = {{0,4},{1,7},{4,8},{7,9}};
+            const struct Activity a[] = {{0,3},{2,4},{3,6}};
             const size_t expected[] = {0,2};
-            ok = success(a, 4, expected, 2);
+            ok = success(a, 3, expected, 2);
             break;
         }
         case 6: {

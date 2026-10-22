@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { gradingExercises } from '../server/grading-exercises.mjs';
 import { writeSources, compile, runCases, buildResult } from '../server/grading-pipeline.mjs';
+import { exercises } from '../src/exercises.js';
 
 const gcc = spawnSync('gcc', ['--version']).status === 0;
 const load = () => import('../server/greedy-activity-exercise.mjs');
@@ -38,9 +39,10 @@ int select_activities(const struct Activity activities[], size_t count,
 }
 `;
 
-test('E05 import exposes ten immutable cases without public registration', async () => {
+test('E05 import exposes ten immutable, registrable cases without public registration', async () => {
   const before = gradingExercises.get('algo-activity-selection');
-  const { activitySelectionExercise: exercise } = await load();
+  const { activitySelectionExercise: exercise, activitySelectionMetadata,
+    activitySelectionHarness } = await load();
   assert.equal(exercise.id, 'algo-activity-selection');
   assert.equal(exercise.grader, 'c-function');
   assert.equal(exercise.cases.length, 10);
@@ -48,6 +50,10 @@ test('E05 import exposes ten immutable cases without public registration', async
   assert.ok(Object.isFrozen(exercise) && Object.isFrozen(exercise.cases));
   assert.ok(exercise.cases.some(item => item.input === exercise.publicExample.input
     && item.expected === exercise.publicExample.output));
+  assert.ok(activitySelectionMetadata.prerequisites.every(prerequisite =>
+    exercises.some(candidate => candidate.id === prerequisite)));
+  assert.ok(activitySelectionMetadata.prerequisites.includes('algo-stable-insertion'));
+  assert.match(activitySelectionHarness, /\{\{0,3\},\{2,4\},\{3,6\}\}/);
   assert.equal(gradingExercises.get(exercise.id), before);
 });
 
