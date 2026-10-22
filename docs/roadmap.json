@@ -10,8 +10,8 @@
     "C"
   ],
   "next": {
-    "track": "E",
-    "unit": "E05"
+    "track": "F-G",
+    "unit": "F04"
   },
   "limits": {
     "screenSections": [
@@ -640,14 +640,38 @@
         {
           "id": "E05",
           "title": "탐욕 선택과 반례로 명세 검증",
-          "status": "진행 중",
-          "lessonIds": [],
+          "status": "완료",
+          "lessonIds": [
+            "algo-activity-selection"
+          ],
           "manuscripts": [
             "content/algo/05-greedy-activity-selection.md"
           ],
           "tests": [
-            "tests/greedy-activity-exercise.test.mjs"
-          ]
+            "tests/greedy-activity-exercise.test.mjs",
+            "tests/roadmap.test.mjs",
+            "tests/browser-practice.mjs"
+          ],
+          "acceptance": {
+            "scope": "earliest-finish-activity-selection",
+            "sourceSha": "6e16aec0be3599865488dc3319678b504ef79f79",
+            "ci": "https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39829125434",
+            "platforms": [
+              "linux"
+            ],
+            "checks": [
+              "theory",
+              "compiled-example",
+              "quiz-retry",
+              "actual-grading",
+              "correction-retry",
+              "shared-history",
+              "backup-restore",
+              "mastery-next",
+              "offline",
+              "390px"
+            ]
+          }
         },
         {
           "id": "E06",

@@ -2021,5 +2021,31 @@ export const lessons = [
     "input": "{1,2,3}: swap DFS",
     "expected": "6 123 132 213 231 321 312"
   }
+},
+{
+  "id": "algo-activity-selection",
+  "track": "algo",
+  "level": "기초",
+  "title": "탐욕 활동 선택: 가장 이른 종료와 반례",
+  "minutes": 25,
+  "source": "독자 원고 · E05 탐욕 선택과 반례",
+  "summary": "종료 시각 순서의 활동을 한 번 훑어 최대 개수를 고르고, 잘못된 탐욕 기준은 작은 반례로 검증합니다.",
+  "figure": "stable-insertion-counts",
+  "sections": [
+    {"heading":"개요·필요성·선수·목표","text":"한 강의실에서 시간이 겹치지 않는 활동을 최대한 많이 진행하려 한다. 모든 조합을 만들지 않고 지금의 한 선택을 확정하는 탐욕 알고리즘을 배운다.\n선수는 배열·구조체·함수와 E02의 정렬된 입력 계약이다. 범위는 종료 시각 오름차순으로 주어진 활동0~16개다."},
+    {"heading":"이론: 탐욕 선택","text":"각 활동은 반열린 구간 [start, finish)다. 앞 활동이 시각4에 끝나면 다음 활동은4에 시작할 수 있다.\n입력을 왼쪽부터 훑으며 start >= last_finish인 활동만 선택한다. 고른 활동의 finish만 경계로 갱신한다."},
+    {"heading":"이론: 교환 논증과 불변식","text":"어떤 최적해의 첫 활동보다 탐욕 활동이 더 늦게 끝나지 않는다. 최적해의 첫 활동을 탐욕 활동으로 바꿔도 이후 활동은 그대로 들어가므로 탐욕 선택을 포함하는 최적해가 존재한다.\n이 설명은 활동 수 최대화에 대한 것이며 가치 합 최대화에는 그대로 적용하지 않는다."},
+    {"heading":"반례: 그럴듯한 기준 깨기","text":"가장 이른 시작을 고르면 [0,10) 하나가 [1,2) [2,3) [3,4) 세 개를 막는다. 가장 짧은 [2,4)는 [0,3)과 [3,6) 두 활동을 함께 막는다.\n작은 입력과 목표값 차이를 함께 적어야 잘못된 기준을 실제로 반박할 수 있다."},
+    {"heading":"도식: 정렬→호환 확인→선택","text":"아래 표는 공개 예제를 손으로 추적하는 독자 정적 도식이다.\n| 인덱스 | 구간 | 직전 종료 | 판단 |\n|---:|---|---:|---|\n| 0 | [1,4) | 없음 | 선택 |\n| 1 | [3,5) | 4 | 건너뜀 |\n| 2 | [0,6) | 4 | 건너뜀 |\n| 3 | [5,7) | 4 | 선택 |\n| 4 | [8,9) | 7 | 선택 |\n| 5 | [5,9) | 9 | 건너뜀 |"},
+    {"heading":"계약: 정렬·용량·보존","text":"select_activities는 성공1·거부0이다. count는0~16, 각 start는 finish보다 작고 finish 비감소 순서다.\ncount>0이면 두 배열은 non-NULL이고 capacity는 count 이상이다. 성공은 고른 원래 인덱스만 쓰고, 거부는 입력·출력·selected_count를 모두 보존한다."},
+    {"heading":"완성 프로그램: 직접 컴파일","text":"아래는 main 포함 관찰용 완성 프로그램이다. 제출에는 main과 stdio 출력 없이 구조체 선언·선택 함수만 넣는다.\n컴파일: gcc -std=c11 -Wall -Wextra -Wpedantic -Werror example.c -o example。실행: Linux/macOS ./example, Windows .\\example.exe.","code":"#include <stdio.h>\n#include <stddef.h>\nstruct Activity { int start; int finish; };\nint select_activities(const struct Activity activities[], size_t count,\n                      size_t selected_indices[], size_t capacity,\n                      size_t *selected_count) {\n    if (selected_count == NULL || count > 16 || capacity < count\n        || (count > 0 && (activities == NULL || selected_indices == NULL))) {\n        return 0;\n    }\n    for (size_t i = 0; i < count; ++i) {\n        if (activities[i].start >= activities[i].finish\n            || (i > 0 && activities[i - 1].finish > activities[i].finish)) {\n            return 0;\n        }\n    }\n    size_t written = 0;\n    int last_finish = 0;\n    for (size_t i = 0; i < count; ++i) {\n        if (written == 0 || activities[i].start >= last_finish) {\n            selected_indices[written++] = i;\n            last_finish = activities[i].finish;\n        }\n    }\n    *selected_count = written;\n    return 1;\n}\nint main(void) {\n    const struct Activity items[] = {{1,4},{3,5},{0,6},{5,7},{8,9},{5,9}};\n    size_t selected[6] = {0};\n    size_t count = 0;\n    if (!select_activities(items, 6, selected, 6, &count)) return 1;\n    printf(\"count=%zu\\n\", count);\n    for (size_t i = 0; i < count; ++i) printf(\"%zu%c\", selected[i], i + 1 == count ? '\\n' : ' ');\n    return 0;\n}"},
+    {"heading":"출력과 이유","text":"실제 출력은 count=3과 인덱스 0 3 4다. 인덱스0은4에 끝나고, 1·2는 시작이4보다 작아 버린다. 3은5에 시작해 고르고 이어7 이후에 시작하는4를 고른다."},
+    {"heading":"흔한 오류·중간 점검","text":"끝과 시작이 같은 활동을 겹친다고 판단, 버린 활동의 finish로 경계 갱신, 역순 입력 묵인, 검증 전에 출력 수정이 흔한 오류다.\n점검: [1,4) 뒤 [4,6)은 가능하다. 반열린 구간에서 시각4는 앞 활동에 포함되지 않는다."},
+    {"heading":"핵심 요약·퀴즈","text":"정렬된 입력의 선택은 시간 O(n), 추가 작업 공간 O(1)이며 결과 배열은 호출자가 제공한다. 활동 수를 최대화할 때 어떤 기준을 써야 하는지 퀴즈에서 확인한다."},
+    {"heading":"직접 풀기·실제 테스트·개선","text":"기초는 유효성 검사와 첫 활동 선택, 응용은 공개 예제 추적이다. 도전은 빈 입력·음수 시각·동률·끝점 접촉·역순·부족한 용량·반복 호출이다.\n실패 사례의 선택 경계와 비교 연산자를 기록하고 수정한 뒤 10사례 전체에 재제출한다."},
+    {"heading":"Mini Project·복습·다음 연결","text":"동아리방 예약 후보를 finish 오름차순으로 정리하고 최대 예약 수와 원래 신청 번호를 출력한다. 가치 합이 목표라면 이 알고리즘을 재사용하지 않는다.\nE04의 모든 후보 열거와 비교하고, 다음 동적 계획 단원에서는 한 탐욕 기준으로 확정할 수 없는 문제를 다룬다."}
+  ],
+  "quiz": {"question":"활동 수를 최대화할 때 다음 선택 기준은?","options":["가장 이른 시작","가장 짧은 길이","가장 이른 종료","가장 늦은 종료"],"answer":2,"explanation":"가장 이른 종료를 고르면 이후 활동에 남는 시간이 가장 길고 교환 논증으로 최적해를 보존할 수 있습니다."},
+  "challenge": {"id":"algo-activity-selection","title":"종료 시각 우선으로 활동 인덱스 선택","description":"main 없는 함수 제출입니다. finish 비감소 순서의 활동0~16개를 검증하고, 서로 겹치지 않는 최대 개수의 원래 인덱스를 종료 시각 우선으로 기록하세요. 끝점 접촉은 허용하며 성공하지 못하면 입력·출력·selected_count를 보존합니다. 전역 가변 상태·할당·파일 접근 없이 작성하고 실패 사례를 수정해 재제출하세요.","starter":"#include <stddef.h>\nstruct Activity { int start; int finish; };\nint select_activities(const struct Activity activities[], size_t count,\n                      size_t selected_indices[], size_t capacity,\n                      size_t *selected_count) {\n    (void)activities;\n    (void)count;\n    (void)selected_indices;\n    (void)capacity;\n    (void)selected_count;\n    /* TODO: 계약 검증 뒤 종료가 가장 이른 호환 활동을 차례로 선택 */\n    return 0;\n}\n","input":"[1,4) [3,5) [0,6) [5,7) [8,9) [5,9)","expected":"3 0 3 4"}
 }
 ];

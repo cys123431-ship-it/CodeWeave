@@ -57,14 +57,23 @@ test('E05 import exposes ten immutable, registrable cases without public registr
   assert.equal(gradingExercises.get(exercise.id), before);
 });
 
-test('E05 preparation records manuscript and executable evidence but remains in progress', async () => {
+test('E05 publishes its learner contract, records full acceptance, and rotates to F04', async () => {
   const data = JSON.parse(await fs.readFile(new URL('../docs/roadmap.json', import.meta.url), 'utf8'));
   const unit = data.stages.find(stage => stage.id === 'E').units.find(item => item.id === 'E05');
-  assert.equal(unit.status, '진행 중');
-  assert.deepEqual(unit.lessonIds, []);
+  const { activitySelectionExercise, activitySelectionMetadata, activitySelectionStarter } = await load();
+  const lesson = (await import('../src/catalog.js')).lessons.find(item => item.id === activitySelectionMetadata.id);
+  assert.ok(lesson, 'E05 must be learner-facing');
+  assert.equal(unit.status, '완료');
+  assert.deepEqual(unit.lessonIds, [lesson.id]);
   assert.ok(unit.manuscripts.includes('content/algo/05-greedy-activity-selection.md'));
   assert.ok(unit.tests.includes('tests/greedy-activity-exercise.test.mjs'));
-  assert.deepEqual(data.next, { track: 'E', unit: 'E05' });
+  assert.ok(unit.tests.includes('tests/browser-practice.mjs'));
+  assert.equal(unit.acceptance.scope, 'earliest-finish-activity-selection');
+  assert.deepEqual(unit.acceptance.checks, ['theory', 'compiled-example', 'quiz-retry', 'actual-grading',
+    'correction-retry', 'shared-history', 'backup-restore', 'mastery-next', 'offline', '390px']);
+  assert.equal(lesson.challenge.starter, activitySelectionStarter);
+  assert.deepEqual(gradingExercises.get(lesson.id), activitySelectionExercise);
+  assert.deepEqual(data.next, { track: 'F-G', unit: 'F04' });
 });
 
 async function grade(t, code) {

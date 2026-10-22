@@ -57,6 +57,11 @@ const permutationsManuscript = await readFile(new URL('../content/algo/04-backtr
 const permutationsProgram = permutationsManuscript.match(/\x60\x60\x60c\n([\s\S]*?)\n\x60\x60\x60/)[1];
 const permutationsCorrect = permutationsProgram.split('int main(void)')[0];
 const permutationsWrong = permutationsCorrect.replace('exchange(values + pos, values + i); /* undo */', '(void)0; /* undo omitted */');
+import { activitySelectionExercise, activitySelectionMetadata, activitySelectionStarter } from '../server/greedy-activity-exercise.mjs';
+const activityManuscript = await readFile(new URL('../content/algo/05-greedy-activity-selection.md', import.meta.url), 'utf8');
+const activityProgram = activityManuscript.match(/\x60\x60\x60c\n([\s\S]*?)\n\x60\x60\x60/)[1];
+const activityCorrect = activityProgram.split('int main(void)')[0];
+const activityWrong = activityCorrect.replace('activities[i].start >= last_finish', 'activities[i].start > last_finish');
 const controlManuscript = await readFile(new URL('../content/rust/03-control-flow.md', import.meta.url), 'utf8');
 const controlProgram = controlManuscript.match(/```rust\n([\s\S]*?)\n```/)[1];
 const controlCorrect = controlProgram.split('fn main()')[0].trim();
@@ -168,6 +173,55 @@ if (process.argv.includes('--permutations-http-only')) {
   process.exit(0);
 }
 verifyControlFlowAcceptanceContract();
+function verifyActivitySelectionContract() {
+  const lesson = c06Lessons.find(item => item.id === activitySelectionMetadata.id);
+  assert.ok(lesson, 'E05 must be reachable from the learner catalog');
+  assert.equal(lesson.track, 'algo');
+  assert.deepEqual(c06ExerciseById(lesson.id), { ...activitySelectionMetadata, requiredFiles: [] });
+  assert.deepEqual(c06Graders.get(lesson.id), activitySelectionExercise);
+  assert.equal(lesson.challenge.starter, activitySelectionStarter);
+  assert.equal(lesson.challenge.input, activitySelectionMetadata.publicExample.input);
+  assert.equal(lesson.challenge.expected, activitySelectionMetadata.publicExample.output);
+  assert.ok(lesson.sections.some(section => section.code?.trim() === activityProgram.trim()));
+  assert.equal(lesson.sections.length, 12);
+  assert.deepEqual(lesson.quiz.options, ['가장 이른 시작', '가장 짧은 길이', '가장 이른 종료', '가장 늦은 종료']);
+  assert.equal(lesson.quiz.answer, 2);
+  assert.equal(Object.hasOwn(c06ExerciseById(lesson.id), 'harness'), false);
+  console.log('PASS: E05 learner catalog, compiled example, starter and private ten-case definition match');
+}
+async function verifyActivitySelectionHTTP() {
+  const app = createLearningServer({ root: fileURLToPath(new URL('../', import.meta.url)) });
+  try {
+    const { port } = await app.listen(0);
+    const base = 'http://127.0.0.1:' + port;
+    const response = await fetch(base);
+    assert.equal(response.status, 200);
+    const token = (await response.text()).match(/name="codeweave-token" content="([a-f0-9]{64})"/)?.[1];
+    assert.match(token, /^[a-f0-9]{64}$/);
+    assert.notEqual(activityWrong, activityCorrect);
+    for (const [code, ok] of [[activitySelectionStarter, false], [activityWrong, false], [activityCorrect, true]]) {
+      const graded = await fetch(base + '/api/grade', { method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CodeWeave-Token': token },
+        body: JSON.stringify({ exerciseId: activitySelectionExercise.id, code }), signal: AbortSignal.timeout(10000) });
+      assert.equal(graded.status, 200);
+      const result = await graded.json();
+      assert.equal(result.ok, ok, JSON.stringify(result));
+      assert.equal(result.tests.length, 10);
+      assert.equal(result.compileOutput, '');
+      if (ok) assert.equal(result.message, '10/10개 테스트 통과');
+    }
+    console.log('PASS: E05 authenticated actual GCC rejects starter/strict endpoint and accepts correction 10/10');
+  } finally {
+    await app.close();
+  }
+}
+if (process.argv.includes('--activity-http-only')) {
+  await verifyActivitySelectionHTTP();
+  process.exit(0);
+}
+verifyActivitySelectionContract();
+await verifyActivitySelectionHTTP();
+if (process.argv.includes('--activity-contract-only')) process.exit(0);
 verifyPermutationsContract();
 await verifyPermutationsHTTP();
 if (process.argv.includes('--permutations-contract-only')) process.exit(0);
@@ -2402,6 +2456,74 @@ try {
   await page.locator('[data-route="track:algo"]').first().click();
   await expect(page.locator('[data-route="lesson:algo-permutations"]')).toHaveCount(1);
   console.log('PASS: E04 E03-next entry, real GCC missing-undo failure/correction 10/10, quiz retry, separate mastery, shared history, v1, 390px diagram/offline and next lesson');
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(base + '/#lesson:algo-permutations');
+  await page.locator('.next-action [data-route="lesson:algo-activity-selection"]').click();
+  await page.reload();
+  await expect(page.locator('meta[name="codeweave-token"]')).toHaveAttribute('content', /^[a-f0-9]{64}$/);
+  await expect(page.locator('.detail-head h1')).toHaveText('탐욕 활동 선택: 가장 이른 종료와 반례');
+  await expect(page.locator('.practice-zone')).toContainText('함수 직접 호출형');
+  await expect(page.locator('#code-input')).toHaveValue(activitySelectionStarter);
+  await page.locator('[data-quiz="algo-activity-selection"][data-choice="0"]').click();
+  await expect(page.locator('.feedback.bad')).toBeVisible();
+  await page.locator('[data-retry="algo-activity-selection"]').click();
+  await page.locator('[data-quiz="algo-activity-selection"][data-choice="2"]').click();
+  await page.locator('#mark-theory').click();
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, activityWrong);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, activityCorrect);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('10/10');
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await bench.reload();
+  await bench.locator('#lesson-select').selectOption('algo-activity-selection');
+  await expect(bench.locator('#code-input')).toHaveValue(activityCorrect);
+  const activityDownloadEvent = bench.waitForEvent('download');
+  await bench.locator('#export-history').click();
+  const activityDownload = await activityDownloadEvent, activityChunks = [];
+  for await (const chunk of await activityDownload.createReadStream()) activityChunks.push(chunk);
+  const activityBackup = Buffer.concat(activityChunks), activityData = JSON.parse(activityBackup);
+  assert.equal(activityData.drafts['algo-activity-selection'], activityCorrect);
+  assert.equal(activityData.iterations['algo-activity-selection'].length, 2);
+  assert.equal(activityData.drafts['algo-permutations'], permutationsCorrect);
+  await bench.evaluate(() => {
+    for (const key of ['codeweave.drafts.v1', 'codeweave.iterations.v1']) {
+      const values = JSON.parse(localStorage.getItem(key) || '{}');
+      delete values['algo-activity-selection'];
+      localStorage.setItem(key, JSON.stringify(values));
+    }
+  });
+  await bench.reload();
+  await bench.locator('#lesson-select').selectOption('algo-activity-selection');
+  await expect(bench.locator('#code-input')).toHaveValue(activitySelectionStarter);
+  assert.deepEqual((await history(bench))['algo-activity-selection'] ?? [], [], 'E05 attempts must be absent before restore');
+  await bench.locator('#import-file').setInputFiles({ name: 'activity-selection-backup.json', mimeType: 'application/json', buffer: activityBackup });
+  await expect(bench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.locator('#code-input')).toHaveValue(activityCorrect);
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('[data-restore-attempt="1"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(activityWrong);
+  await page.locator('[data-restore-attempt="0"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(activityCorrect);
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('.figure-box svg')).toHaveAttribute('role', 'img');
+  assert.equal(await page.evaluate(() => {
+    const svg = document.querySelector('.figure-box svg'), view = svg.viewBox.baseVal;
+    return [...svg.querySelectorAll('text')].every(text => {
+      const box = text.getBBox();
+      return box.x >= 0 && box.y >= 0 && box.x + box.width <= view.width && box.y + box.height <= view.height;
+    }) && document.documentElement.scrollWidth <= innerWidth;
+  }), true, 'E05 learner page must fit 390px');
+  if (qaDir) await page.screenshot({ path: path.join(qaDir, 'activity-selection-mobile.png'), fullPage: true });
+  await context.setOffline(false);
+  await page.locator('[data-route="track:algo"]').first().click();
+  await expect(page.locator('[data-route="lesson:algo-activity-selection"]')).toHaveCount(1);
+  console.log('PASS: E05 E04-next entry, real GCC endpoint failure/correction 10/10, quiz retry, mastery, shared history/v1 restore, offline and 390px');
 
   await page.goto(base + '/#lesson:c-file-stream-count');
   await page.reload();
