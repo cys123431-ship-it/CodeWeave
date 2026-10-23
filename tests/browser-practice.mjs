@@ -1115,8 +1115,8 @@ try {
     await p.reload();
     await expect(p.locator('#grade-code')).toBeEnabled();
     await expect(p.locator('.mastery-state')).toContainText('전체 숙달');
-    await p.locator('.next-action [data-route="lesson:ds-list-find"]').click();
-    await expect(p.locator('.detail-head h1')).toHaveText('단일 연결 리스트: 순회와 첫 일치 검색');
+    await p.locator('.next-action [data-route="lesson:rust-functions"]').click();
+    await expect(p.locator('.detail-head h1')).toHaveText('함수·반환값과 단위 테스트');
     console.log('PASS: REAL Cargo F03 browser: explicit CLI, starter/inclusive-range failure, correction 10/10, quiz retry, separate mastery, shared history/v1 restore, 390px diagram, offline and next lesson');
   } finally {
     await f03Context?.close();
