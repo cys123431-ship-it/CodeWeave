@@ -1,4 +1,18 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-23 14:32 KST — D06 이진 탐색 트리 계약 준비
+- 시작/결과 SHA: main 1102289734d6a9c203de486006bf55b2ab7a8490; 로컬 RED 구현 전0/14·실패14; 후속 커밋 제목 feat: prepare D06 binary search tree contract.
+- 목표: 호출자 소유 노드의 중복 없는 BST 삽입·한 경로 탐색·용량 제한 중위 순회를 비공개 GCC 10사례와 109줄 원고로 준비; 공개 화면·등록·완료는 보류.
+- 변경 파일 수: 7개(채점 정의·검사·원고·로드맵2·활성/보관 일지); 저장 형식·공개 카탈로그 변경0.
+- 테스트 결과: 신규14건 RED0/14→14/14; 전체889건 중843통과·기존 Node24 Rust 관찰2실패·Cargo 부재44skip, 대상 재실행 동일2실패; roadmap·syntax·diff 성공.
+- CI URL과 결과: 선행 main https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39905718764 unit875/875·실제 Chromium/Cargo·macOS 전체 성공; 결과 SHA CI는 후속 확인.
+- 발견한 문제: 직전 일지의 다음 작업은 스택으로 잘못 적혔지만 roadmap 정본 D06은 BST여서 정본 제목·순서를 적용; 기존 Rust 관찰 실패는 같은 main의 Node24 로컬 타이밍 차이로 범위 밖 보존.
+- 보안 영향: 미등록 c-function 정의와 서버 전용 하네스만 추가하고 malloc·파일·네트워크·공개 실행 경계 확대0; 유한·비순환·유효 BST는 호출자 전제.
+- 단계별 완료율: D06 진행 중·D5/8(62.5%)·next=D/D06 유지; A3/5·B10/11·C8/8·E5/8·F4/8·G0/8·H/I0/6, 플랫폼 전체·실기기 인수 미완료.
+- 다음 작업: 결과 SHA CI 성공 뒤 D06 화면10~15절·정적 도식·퀴즈·실제 GCC 오답→수정→숙달·백업·390px/오프라인을 다음1회에 인수.
+
+---
+
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-23 14:12 KST — F04 함수·반환값 학습·실제 Cargo 인수 완료
 - 시작/결과 SHA: main 92df3eeb873ecbd88ee44f4967e4a1756c838e7b; RED 로컬 공개 계약7실패; 검증 ac97de3a6798d135627f48bb886e9eaed9bc221c; 후속 커밋 제목 docs: record verified F04 delivery and rotate to D06.
 - 목표: 준비된 함수·반환값 원고·10사례를 화면13절·퀴즈·명시적 Cargo에 연결하고 오답→수정→숙달·이력·백업·390px·오프라인·다음 단원을 인수.
@@ -51,17 +65,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 기존 loopback Host/Origin/토큰과 신뢰 로컬 c-function·서버 전용10사례·자원 제한 재사용; 공개 임의 실행·파일/네트워크·v1 키 확대0.
 - 단계별 완료율: E05 완료·E5/8(62.5%)·next=F-G/F04; A3/5·B10/11·C8/8·D5/8·F3/8·G0/8·H/I0/6, 플랫폼 전체·실기기 인수 미완료.
 - 다음 작업: 결과 SHA CI 성공 뒤 비강제 병합·main CI 확인; 다음 개발은 F04 소유권·대여와 수명으로 가장 좁은 계약부터 RED 시작.
-
----
-
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-23 03:05 KST — E05 탐욕 활동 선택 계약 준비·리뷰 수정
-- 시작/결과 SHA: main a427568b47455dd859121fa563b03e0bb8c23e3f; RED a56cef4(로컬); 검증 f475b107ce260b18ad4d31f311b2dbd01a394bff; 후속 커밋 제목 fix: address E05 prerequisite and counterexample review.
-- 목표: 종료 시각 우선 활동 선택의 C 함수 계약·반례 설명·비공개 GCC 10사례를 준비하고 E05 진행 중 근거로 연결; 공개 화면·등록·완료는 보류.
-- 변경 파일 수: 7개(채점 정의·검사·108줄 원고·로드맵2·활성/보관 일지); 저장 형식·공개 카탈로그 변경0.
-- 테스트 결과: 신규14건 구현 전0/14→14/14; 리뷰 회귀1건 RED 실패→14/14, 로드맵 동기화·diff 검사 성공; 로컬 전체는 이전 후보858건 중821통과·기존 Node24 Rust 관찰 타이밍2실패·Cargo 부재35skip.
-- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39640533072 unit·실제 Chromium·macOS 전체 성공; 리뷰 수정 결과 SHA CI는 후속 확인.
-- 발견한 문제: 존재하지 않는 선수 ID를 E02로 교체하고, 최단 활동 하나가 호환 가능한 두 활동을 실제로 막는 `[0,3) [2,4) [3,6)` 반례로 강화.
-- 보안 영향: 미등록 c-function 정의와 서버 전용 하네스만 추가; 공개 임의 코드 실행·파일/네트워크·인증·v1 키 확대0.
-- 단계별 완료율: E05 진행 중·E4/8(50.0%)·next=E/E05 유지; A3/5·B10/11·C8/8·D5/8·F3/8·G0/8·H/I0/6, 플랫폼 전체·실기기 인수 미완료.
-- 다음 작업: 리뷰 수정 SHA의 unit/browser/macOS 성공 뒤 PR #14 비강제 병합·main CI 확인; 이후 E05 화면10~15절·퀴즈·오답 수정/재제출·숙달·백업·390px/오프라인 인수.
