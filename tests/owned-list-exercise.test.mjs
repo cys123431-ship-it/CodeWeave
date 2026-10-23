@@ -143,7 +143,7 @@ test('D05 manuscript complete program compiles and demonstrates insert remove de
   assert.equal(ran.stdout.replaceAll('\r\n', '\n'), 'list: 5 10 20\nremoved=10\nafter: 5 20\ndestroyed=1\n');
 });
 
-test('D05 completion retains full browser evidence after the next track rotation', async () => {
+test('D05 completion retains full browser evidence after the cycle advances to E06', async () => {
   const data = JSON.parse(await fs.readFile(new URL('../docs/roadmap.json', import.meta.url), 'utf8'));
   const unit = data.stages.find(s => s.id === 'D').units.find(u => u.id === 'D05');
   assert.equal(unit.status, '완료');
@@ -156,7 +156,7 @@ test('D05 completion retains full browser evidence after the next track rotation
   assert.equal(unit.acceptance.ci, 'https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39598425561');
   assert.deepEqual(unit.acceptance.platforms, ['linux']);
   assert.deepEqual(unit.acceptance.checks, ['theory', 'compiled-example', 'quiz-retry', 'actual-grading', 'correction-retry', 'shared-history', 'backup-restore', 'mastery-next', 'offline', '390px']);
-  assert.deepEqual(data.next, { track: 'D', unit: 'D06' });
+  assert.deepEqual(data.next, { track: 'E', unit: 'E06' });
 });
 
 test('D05 changed modules pass syntax checks and generated roadmap stays synchronized', async () => {

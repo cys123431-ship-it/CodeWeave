@@ -3,6 +3,13 @@ const arrow=(x1,y1,x2,y2)=>`<path d="M${x1} ${y1} L${x2} ${y2}" stroke="#6b8d98"
 const wrap=inner=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 670 190" role="img" aria-label="학습 개념 그림"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 const wrapTall=(label,inner,viewBox='0 0 670 300',style='')=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"${style?` style="${style}"`:''} role="img" aria-label="${label}"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 export function figureFor(kind){
+ if(kind==='bst-ordering')return wrapTall('이진 탐색 트리의 작은 값은 왼쪽, 큰 값은 오른쪽이며 중위 순회는 오름차순이 되는 도식',
+  box(120,18,100,44,'4 · root','#e7f1ff')+arrow(145,68,75,100)+arrow(195,68,265,100)+
+  box(25,107,100,44,'2 · left','#fff3d8')+box(215,107,100,44,'6 · right','#fff3d8')+
+  arrow(75,157,75,187)+box(25,194,100,44,'1 · left','#d7f4e6')+
+  '<text x="170" y="274" text-anchor="middle" font-size="14" fill="#28485b">중위 순회: 1 → 2 → 4 → 6</text>'+
+  '<text x="170" y="306" text-anchor="middle" font-size="13" fill="#52687e">탐색은 비교 뒤 한쪽 자식만 따라감</text>',
+  '0 0 340 330','max-width:340px');
  if(kind==='rust-function-return')return wrapTall('Rust 함수 호출과 반환값 조합 도식',
   box(35,18,270,44,'checkout_total(250, 2, 80)','#e7f1ff')+arrow(170,68,170,91)+
   box(35,98,270,44,'line_total(250, 2) 호출')+arrow(170,148,170,171)+

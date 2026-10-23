@@ -9,6 +9,7 @@ import { ownedStreamExercise } from './owned-stream-exercise.mjs';
 import { callbackSortExercise } from './callback-sort-exercise.mjs';
 import { arrayListExercise } from './array-list-exercise.mjs';
 import { ownedListExercise } from './owned-list-exercise.mjs';
+import { bstExercise } from './bst-exercise.mjs';
 import { mergeExercise } from './merge-exercise.mjs';
 import { stackCases, stackHarness } from './stack-exercise.mjs';
 import { sortCases, sortHarness } from './sort-exercise.mjs';
@@ -1214,7 +1215,7 @@ const LINK_ARGS = {
 
 // Reuse C05's independently compiled contract rather than duplicating its cases.
 export const gradingExercises = buildGradingExercises(
-  exercises.filter(exercise => exercise.id !== permutationsExercise.id && exercise.id !== activitySelectionExercise.id && exercise.id !== arrayListExercise.id && exercise.id !== ownedListExercise.id && exercise.id !== streamExercise.id && exercise.id !== preprocessorExercise.id && exercise.id !== queueExercise.id && exercise.id !== mergeExercise.id && exercise.id !== ownedStreamExercise.id && exercise.id !== callbackSortExercise.id), CASES, HARNESSES, LINK_ARGS
+  exercises.filter(exercise => exercise.id !== bstExercise.id && exercise.id !== permutationsExercise.id && exercise.id !== activitySelectionExercise.id && exercise.id !== arrayListExercise.id && exercise.id !== ownedListExercise.id && exercise.id !== streamExercise.id && exercise.id !== preprocessorExercise.id && exercise.id !== queueExercise.id && exercise.id !== mergeExercise.id && exercise.id !== ownedStreamExercise.id && exercise.id !== callbackSortExercise.id), CASES, HARNESSES, LINK_ARGS
 );
 gradingExercises.set(streamExercise.id, streamExercise);
 gradingExercises.set(preprocessorExercise.id, preprocessorExercise);
@@ -1228,6 +1229,7 @@ gradingExercises.set(callbackSortExercise.id, callbackSortExercise);
 gradingExercises.set(arrayListExercise.id, arrayListExercise);
 
 gradingExercises.set(ownedListExercise.id, ownedListExercise);
+gradingExercises.set(bstExercise.id, bstExercise);
 
 gradingExercises.set(permutationsExercise.id, permutationsExercise);
 gradingExercises.set(activitySelectionExercise.id, activitySelectionExercise);
