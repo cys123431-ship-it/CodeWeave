@@ -1,4 +1,18 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
+## 2026-10-23 10:04 KST — F04 함수·반환값 Cargo 계약 준비
+- 시작/결과 SHA: main 2b8b321cb461b6f6dc7ab88ee54a223fe6f62b15; 로컬 RED 구현 전7실패; 후속 커밋 제목 feat: prepare F04 function return contracts.
+- 목표: 함수 시그니처·꼬리 식 반환·보조 함수 조합을 10개 비공개 Cargo 사례와 100줄 이내 원고·정적 도식으로 준비; 공개 화면·CLI 등록·완료는 보류.
+- 변경 파일 수: 8개(채점 정의·검사·원고·정적 도식·로드맵2·활성/보관 일지); 저장 형식·공개 카탈로그 변경0.
+- 테스트 결과: 신규16건 구현 전7실패→로컬7통과·Cargo 부재9skip; 전체874건 중828통과·기존 Node24 Rust 관찰2실패·Cargo 부재44skip, roadmap 동기화·diff 성공; CI 실제 Cargo는 후속 확인.
+- CI URL과 결과: 결과 SHA CI는 후속 확인.
+- 발견한 문제: 직전 일지의 F04 소유권 표기와 달리 roadmap 정본의 F04는 함수·반환값이고 소유권은 F05라서 정본 순서로 바로잡음; 과거 기록은 변경하지 않음.
+- 보안 영향: 미등록 rust-functions 정의와 서버 전용 하네스만 추가; 기존 레지스트리·HTTP 허용 목록·공개 임의 실행·파일/네트워크 경계 확대0.
+- 단계별 완료율: F04 진행 중·F3/8(37.5%)·next=F-G/F04 유지; 전체 플랫폼·실기기 인수 미완료.
+- 다음 작업: 실제 Cargo 포함 결과 SHA CI 성공 뒤 F04 화면10~15절·퀴즈·오답→수정→숙달·백업·390px/오프라인을 다음1회에 인수.
+
+---
+
+AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 ## 2026-10-23 05:03 KST — main 브라우저 CI 시간 예산 수정
 - 시작/결과 SHA: main 0a703dd4b775a513eb32aa70a160be8ac0f75dcb; 실패 job 120058142181; 후속 커밋 제목 fix: allow delayed Chromium install before browser acceptance.
 - 목표: E05 결과 SHA의 Chromium 설치 지연과 실제 GCC/브라우저 검증을 분리해 실행할 수 있도록 browser 전체 제한만 10→20분으로 조정; 새 단원 작업0.
@@ -51,17 +65,3 @@ AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
 - 보안 영향: 기존 loopback Host/Origin/토큰과 서버 전용 malloc/free 하네스·실행 제한 재사용; 비공개 사례 노출·공개 임의 코드 실행·파일/네트워크·v1 키 확대0.
 - 단계별 완료율: D05 완료·D5/8(62.5%)·next=E/E05; A3/5·B10/11·C8/8·E4/8·F3/8·G0/8·H/I0/6, 플랫폼 전체·실기기 인수 미완료.
 - 다음 작업: 후속 기록 SHA CI 성공 뒤 PR #13 비강제 병합·main CI 확인; 다음 개발은 E05 탐욕 선택과 반례로 명세 검증의 가장 좁은 계약을 RED로 시작.
-
----
-
-AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-21 20:20 KST — D05 연결 리스트 소유권 계약 준비
-- 시작/결과 SHA: main 9ff5a4eea576d3d896e742ce556bcb7a3bc264bc; RED 2c7789e6d5daa481dcacfb6f57df0134985f18b7; 검증 c70cdea2dfa9757eba575f91f83f94356635439a; 후속 커밋 제목 docs: record verified D05 owned-list preparation.
-- 목표: 앞 삽입·첫 일치 삭제·전체 해제의 소유권 계약을 비공개 GCC 10사례와 129줄 원고로 준비; 공개 화면·등록·완료 판정은 보류.
-- 변경 파일 수: 7개(채점 정의·검사·원고·로드맵2·활성/보관 일지); 공개 카탈로그·실행 등록·저장 형식 변경0.
-- 테스트 결과: 신규14건 RED 829/843·실패14→843/843·실패0/skip0; 정답10/10·오답8종·경고 없는 스타터·완성 예제·원고 한도·roadmap 동기화 성공, browser/macOS 성공. 검사 삭제·기대값 완화0.
-- CI URL과 결과: RED https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39589194497 의도된14실패; 검증 https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39590677961 unit/browser/macOS 전체 성공.
-- 발견한 문제: 하네스 printf 줄바꿈 이스케이프와 dangling-head 오답 fixture의 -Werror를 각각 수정; 오답은 경고 없이 실제 dangling head를 만들며 제품 계약·기대값은 불변.
-- 보안 영향: 미등록 c-function 계약과 테스트 전용 malloc/free 래퍼만 추가; 공개 임의 코드 실행·파일/네트워크·인증·저장키 경계 변화0.
-- 단계별 완료율: D05 진행 중·D4/8(50.0%)·next=D/D05 유지; A3/5·B10/11·C8/8·E4/8·F3/8·G0/8·H/I0/6, 플랫폼 전체·실기기 인수 미완료.
-- 다음 작업: D05 카탈로그·정적 도식·퀴즈·인증 HTTP 실제 오답→수정→재제출·이력/백업·390px/오프라인을 브라우저 인수한 뒤에만 완료하고 E05로 순환.
