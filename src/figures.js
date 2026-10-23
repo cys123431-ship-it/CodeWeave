@@ -3,6 +3,13 @@ const arrow=(x1,y1,x2,y2)=>`<path d="M${x1} ${y1} L${x2} ${y2}" stroke="#6b8d98"
 const wrap=inner=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 670 190" role="img" aria-label="학습 개념 그림"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 const wrapTall=(label,inner,viewBox='0 0 670 300',style='')=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"${style?` style="${style}"`:''} role="img" aria-label="${label}"><defs><marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6b8d98"/></marker></defs>${inner}</svg>`;
 export function figureFor(kind){
+ if(kind==='rust-function-return')return wrapTall('Rust 함수 호출과 반환값 조합 도식',
+  box(35,18,270,44,'checkout_total(250, 2, 80)','#e7f1ff')+arrow(170,68,170,91)+
+  box(35,98,270,44,'line_total(250, 2) 호출')+arrow(170,148,170,171)+
+  box(35,178,270,44,'250 × 2 → 500','#fff3d8')+arrow(170,228,170,251)+
+  box(35,258,270,44,'500 + 80 → 반환 580','#d7f4e6')+
+  '<text x="170" y="337" text-anchor="middle" font-size="14" fill="#28485b">각 함수는 독립 단위 테스트 대상</text>',
+  '0 0 340 360','max-width:340px');
  if(kind==='rust-control-flow')return wrapTall('Rust 조건 선택과 반복의 중단·건너뛰기 도식',
   box(35,15,270,40,'end = limit과1000 중 작은 값','#e7f1ff')+arrow(170,61,170,80)+
   box(35,87,270,40,'0..=end의 다음 n')+arrow(170,133,170,152)+

@@ -848,10 +848,14 @@
         {
           "id": "F04",
           "title": "함수·반환값과 단위 테스트",
-          "status": "미착수",
+        "status": "진행 중",
           "lessonIds": [],
-          "manuscripts": [],
-          "tests": []
+        "manuscripts": [
+          "content/rust/04-functions.md"
+        ],
+        "tests": [
+          "tests/f04-functions.test.mjs"
+        ]
         },
         {
           "id": "F05",
