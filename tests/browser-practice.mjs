@@ -106,6 +106,9 @@ function verifyControlFlowAcceptanceContract() {
   const f03 = prepared.stages.find(stage => stage.id === 'F').units.find(unit => unit.id === 'F03');
   f03.status = '진행 중';
   delete f03.practiceDelivery;
+  const f04 = prepared.stages.find(stage => stage.id === 'F').units.find(unit => unit.id === 'F04');
+  f04.status = '진행 중';
+  delete f04.practiceDelivery;
   f03.lessonIds = ['rust-control-flow'];
   if (!f03.tests.includes('tests/browser-practice.mjs')) f03.tests.push('tests/browser-practice.mjs');
   prepared.next = { track: 'F-G', unit: 'F03' };
@@ -202,6 +205,8 @@ function verifyFunctionAcceptanceContract() {
 
   const prepared = structuredClone(roadmapData);
   const f04 = prepared.stages.find(stage => stage.id === 'F').units.find(unit => unit.id === 'F04');
+  f04.status = '진행 중';
+  delete f04.practiceDelivery;
   f04.lessonIds = ['rust-functions'];
   if (!f04.tests.includes('tests/browser-practice.mjs')) f04.tests.push('tests/browser-practice.mjs');
   prepared.next = { track: 'F-G', unit: 'F04' };

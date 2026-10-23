@@ -156,7 +156,7 @@ test('D05 completion retains full browser evidence after the next track rotation
   assert.equal(unit.acceptance.ci, 'https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39598425561');
   assert.deepEqual(unit.acceptance.platforms, ['linux']);
   assert.deepEqual(unit.acceptance.checks, ['theory', 'compiled-example', 'quiz-retry', 'actual-grading', 'correction-retry', 'shared-history', 'backup-restore', 'mastery-next', 'offline', '390px']);
-  assert.deepEqual(data.next, { track: 'F-G', unit: 'F04' });
+  assert.deepEqual(data.next, { track: 'D', unit: 'D06' });
 });
 
 test('D05 changed modules pass syntax checks and generated roadmap stays synchronized', async () => {

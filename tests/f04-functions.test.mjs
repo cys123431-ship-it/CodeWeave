@@ -178,15 +178,23 @@ test('F04 static diagram is accessible and contains no executable markup', () =>
   assert.doesNotMatch(svg, /<script|<animate|foreignObject|onload=/i);
 });
 
-test('F04 roadmap delivery preparation retains evidence and the F04 cursor', async () => {
+test('F04 roadmap records verified delivery and rotates to D06', async () => {
   const data = JSON.parse(await fs.readFile(new URL('../docs/roadmap.json', import.meta.url), 'utf8'));
   const unit = data.stages.find(s => s.id === 'F').units.find(u => u.id === 'F04');
-  assert.equal(unit.status, '진행 중');
+  assert.equal(unit.status, '완료');
   assert.deepEqual(unit.lessonIds, ['rust-functions']);
   assert.ok(unit.manuscripts.includes('content/rust/04-functions.md'));
   assert.ok(unit.tests.includes('tests/f04-functions.test.mjs'));
   assert.ok(unit.tests.includes('tests/browser-practice.mjs'));
-  assert.deepEqual(data.next, { track: 'F-G', unit: 'F04' });
+  assert.deepEqual(unit.practiceDelivery, {
+    scope: 'trusted-local-cargo', exerciseId: 'rust-functions',
+    commit: 'ac97de3a6798d135627f48bb886e9eaed9bc221c',
+    ci: 'https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39904194063',
+    checks: ['theory', 'example-tests', 'quiz-retry', 'actual-grading', 'correction-retry',
+      'backup', 'mastery-next', 'explicit-start', 'offline'],
+    platforms: ['linux'], review: 'docs/ROADMAP.md', operatorFlags: ['--include-functions']
+  });
+  assert.deepEqual(data.next, { track: 'D', unit: 'D06' });
 });
 
 test('F04 changed JavaScript has valid syntax and roadmap is synchronized', () => {

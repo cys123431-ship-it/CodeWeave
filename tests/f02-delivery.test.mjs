@@ -22,6 +22,9 @@ async function pending() {
   const f03 = data.stages.find(s => s.id === 'F').units.find(u => u.id === 'F03');
   f03.status = '진행 중';
   delete f03.practiceDelivery;
+  const f04 = data.stages.find(s => s.id === 'F').units.find(u => u.id === 'F04');
+  f04.status = '진행 중';
+  delete f04.practiceDelivery;
   // Reconstruct the valid point before F02/F03 acceptance, then replay only F02.
   data.next = { track: 'F-G', unit: 'F02' };
   return data;
