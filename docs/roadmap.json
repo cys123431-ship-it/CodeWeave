@@ -10,8 +10,8 @@
     "C"
   ],
   "next": {
-    "track": "D",
-    "unit": "D06"
+    "track": "E",
+    "unit": "E06"
   },
   "limits": {
     "screenSections": [
@@ -526,7 +526,7 @@
         {
           "id": "D06",
           "title": "이진 탐색 트리: 탐색·삽입·순회",
-          "status": "진행 중",
+          "status": "완료",
           "lessonIds": [
             "ds-bst"
           ],
@@ -536,7 +536,27 @@
           "tests": [
             "tests/bst-exercise.test.mjs",
             "tests/browser-practice.mjs"
-          ]
+          ],
+          "acceptance": {
+            "scope": "caller-owned-bst-insert-find-bounded-inorder",
+            "sourceSha": "e6a915b3c873683aa14e86728dfbc63b8c99da81",
+            "ci": "https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39951878590",
+            "platforms": [
+              "linux"
+            ],
+            "checks": [
+              "theory",
+              "compiled-example",
+              "quiz-retry",
+              "actual-grading",
+              "correction-retry",
+              "shared-history",
+              "backup-restore",
+              "mastery-next",
+              "offline",
+              "390px"
+            ]
+          }
         },
         {
           "id": "D07",

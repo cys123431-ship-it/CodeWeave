@@ -73,16 +73,20 @@ test('D06 delivers one public lesson, an accessible figure and the prepared GCC 
     && item.expected === exercise.publicExample.output));
 });
 
-test('D06 public delivery stays in progress until result-SHA browser CI is recorded', async () => {
+test('D06 completion records verified browser evidence and rotates to E06', async () => {
   const data = JSON.parse(await fs.readFile(new URL('../docs/roadmap.json', import.meta.url), 'utf8'));
   const unit = data.stages.find(stage => stage.id === 'D').units.find(item => item.id === 'D06');
-  assert.equal(unit.status, '진행 중');
+  assert.equal(unit.status, '완료');
   assert.deepEqual(unit.lessonIds, ['ds-bst']);
   assert.ok(unit.manuscripts.includes('content/ds/06-binary-search-tree.md'));
   assert.ok(unit.tests.includes('tests/bst-exercise.test.mjs'));
   assert.ok(unit.tests.includes('tests/browser-practice.mjs'));
-  assert.equal(unit.acceptance, undefined);
-  assert.deepEqual(data.next, { track: 'D', unit: 'D06' });
+  assert.equal(unit.acceptance.scope, 'caller-owned-bst-insert-find-bounded-inorder');
+  assert.equal(unit.acceptance.sourceSha, 'e6a915b3c873683aa14e86728dfbc63b8c99da81');
+  assert.equal(unit.acceptance.ci, 'https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39951878590');
+  assert.deepEqual(unit.acceptance.platforms, ['linux']);
+  assert.deepEqual(unit.acceptance.checks, ['theory', 'compiled-example', 'quiz-retry', 'actual-grading', 'correction-retry', 'shared-history', 'backup-restore', 'mastery-next', 'offline', '390px']);
+  assert.deepEqual(data.next, { track: 'E', unit: 'E06' });
 });
 
 test('D06 browser acceptance includes the real GCC HTTP boundary', { skip: !gcc }, () => {

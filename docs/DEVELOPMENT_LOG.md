@@ -1,14 +1,14 @@
 AUTONOMOUS_DEVELOPMENT.md 현재 단계: 트랙 순환 개발 확인함
-## 2026-10-23 21:04 KST — D06 BST 학습·GCC·브라우저 인수 후보
-- 시작/결과 SHA: main 10c32c300e6356b65a7175a4b9da64995023fb1f; 공개 계약 RED12/15·실패3; 후속 커밋 제목 feat: deliver D06 binary search tree lesson.
+## 2026-10-23 21:04 KST — D06 BST 학습·GCC·브라우저 인수 완료
+- 시작/결과 SHA: main 10c32c300e6356b65a7175a4b9da64995023fb1f; RED12/15·실패3; 검증 e6a915b3c873683aa14e86728dfbc63b8c99da81; 후속 커밋 제목 docs: record verified D06 delivery and rotate to E06.
 - 목표: 준비된 호출자 소유 BST 계약을 화면12절·정적 도식·퀴즈·실제 GCC와 연결하고 오답→수정→숙달·이력·백업·390px·오프라인을 인수.
 - 변경 파일 수: 11개(카탈로그·메타·도식·등록·검사2·README·로드맵2·활성/보관 일지2); 공개 학습 경로와 고정5건 일지 보존을 함께 맞춘 불가피한1파일 초과, 저장 형식 변경0.
-- 테스트 결과: D06 RED12/15→15/15·README4/4·roadmap 성공; 전체890건 예상844통과·기존 Node24 Rust 관찰2실패·Cargo 부재44skip, 별도 Rust 취소 회귀는 재실행 통과.
-- CI URL과 결과: 선행 준비 PR https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39943768510 전체 성공; 인수 후보 결과 SHA unit·실제 Chromium/GCC·macOS는 후속 확인.
+- 테스트 결과: D06 RED12/15→15/15·README4/4·roadmap 성공; 전체890건 예상844통과·기존 Node24 Rust 관찰2실패·Cargo 부재44skip, 원격 unit·browser·macOS 성공.
+- CI URL과 결과: https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39951878590 unit·실제 Chromium/GCC·macOS 전체 성공; 오답 거부·수정10/10·복원·390px·오프라인 확인.
 - 발견한 문제: 공개 단원 추가로 README 자료구조5→6·총40→41 회귀가 실패해 실제 등록 수와 동기화; 검사 삭제·채점 기대 완화0.
 - 보안 영향: 기존 loopback Host/Origin/토큰·서버 전용10사례·실행 제한 재사용; 하네스/사례·공개 임의 실행·파일/네트워크·v1 키 확대0.
-- 단계별 완료율: D06 진행 중·D5/8(62.5%)·next=D/D06 유지; A3/5·B10/11·C8/8·E5/8·F4/8·G0/8·H/I0/6, 플랫폼 전체·실기기 인수 미완료.
-- 다음 작업: 결과 SHA CI에서 unit·실제 Chromium/GCC·macOS 성공 확인 뒤에만 D06 완료·D6/8 및 next=E/E06을 기록.
+- 단계별 완료율: D06 완료·D6/8(75.0%)·next=E/E06; A3/5·B10/11·C8/8·E5/8·F4/8·G0/8·H/I0/6, 플랫폼 전체·실기기 인수 미완료.
+- 다음 작업: 후속 기록 SHA CI와 PR #20 비강제 병합·main CI 확인; 다음 개발은 E06 동적 계획의 상태·점화식·기저 사례를 좁은 계약으로 준비.
 
 ---
 

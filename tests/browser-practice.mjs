@@ -214,6 +214,9 @@ function verifyFunctionAcceptanceContract() {
   delete f04.practiceDelivery;
   f04.lessonIds = ['rust-functions'];
   if (!f04.tests.includes('tests/browser-practice.mjs')) f04.tests.push('tests/browser-practice.mjs');
+  const d06 = prepared.stages.find(stage => stage.id === 'D').units.find(unit => unit.id === 'D06');
+  d06.status = '진행 중';
+  delete d06.acceptance;
   prepared.next = { track: 'F-G', unit: 'F04' };
   const evidence = {
     unitId: 'F04', scope: 'trusted-local-cargo', exerciseId: 'rust-functions',
