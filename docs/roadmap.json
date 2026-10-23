@@ -527,12 +527,15 @@
           "id": "D06",
           "title": "이진 탐색 트리: 탐색·삽입·순회",
           "status": "진행 중",
-          "lessonIds": [],
+          "lessonIds": [
+            "ds-bst"
+          ],
           "manuscripts": [
             "content/ds/06-binary-search-tree.md"
           ],
           "tests": [
-            "tests/bst-exercise.test.mjs"
+            "tests/bst-exercise.test.mjs",
+            "tests/browser-practice.mjs"
           ]
         },
         {

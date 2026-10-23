@@ -83,6 +83,7 @@ export function validateExerciseMetadata(definitions) {
 }
 
 export const exercises = Object.freeze(validateExerciseMetadata([
+  {"id":"ds-bst","kind":"practice","language":"c","grader":"c-function","concepts":["binary-search-tree","caller-owned-node","insert","search","inorder"],"prerequisites":["ds-list-find","c-pointer","c-recursion-factorial"],"publicExample":{"input":"4, 2, 6, 1 삽입 뒤 6 탐색·중위 순회","output":"1 4 1 2 4 6"}},
   {"id":"ds-array-list","kind":"practice","language":"c","grader":"c-function","concepts":["array-list","length-capacity","indexed-insert","indexed-erase","shift-cost"],"prerequisites":["c-array","c-functions","c-pointer"],"publicExample":{"input":"10 20 30: insert(1,15), erase(2)","output":"1 2 20 1 1"}},
   {"id":"ds-owned-list","kind":"practice","language":"c","grader":"c-function","concepts":["linked-list","owned-node","prepend","first-match-removal","cleanup"],"prerequisites":["ds-list-find","c-dynamic-student-array","c-pointer"],"publicExample":{"input":"10→20에 5 삽입, 10 삭제, 전체 해제","output":"1 1 10 3 1"}},
   {"id":"c-owned-stream-byte","kind":"concept","language":"c","grader":"c-function","concepts":["owned-resource","error-return","errno-snapshot","cleanup","failure-preservation"],"prerequisites":["c-file-stream-count","c-functions","c-pointer"],"publicExample":{"input":"소유 스트림 {0x2A}","output":"1 42 0 1"}},

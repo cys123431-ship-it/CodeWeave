@@ -1712,6 +1712,32 @@ export const lessons = [
     }
   },
   {
+    "id": "ds-bst",
+    "track": "ds",
+    "level": "중급",
+    "title": "이진 탐색 트리: 삽입·탐색·중위 순회",
+    "minutes": 30,
+    "source": "D06 독자 원고·정적 BST 도식·C 함수형 실습",
+    "summary": "호출자가 소유한 노드를 정렬 규칙에 맞게 연결하고 한 경로 탐색과 용량 제한 중위 순회를 구현합니다.",
+    "figure": "bst-ordering",
+    "sections": [
+      {"heading":"개요·필요성·선수·목표","text":"연결 리스트는 원하는 값을 찾을 때 앞에서부터 확인한다. 이진 탐색 트리는 각 노드보다 작은 값은 왼쪽, 큰 값은 오른쪽에 두어 비교할 때 한쪽 경로만 선택한다. 목표는 호출자가 준비한 노드를 중복 없이 삽입하고, 주소를 보존해 탐색하며, 중위 순회 결과를 제한된 배열에 안전하게 기록하는 것이다. 선수는 포인터, 연결 구조, 재귀다."},
+      {"heading":"핵심 이론: 정렬 불변식","text":"모든 노드에서 왼쪽 하위 트리 값은 현재 값보다 작고 오른쪽 하위 트리 값은 크다. 이 계약은 중복 값을 허용하지 않는다. 비교 결과가 작으면 left, 크면 right 하나만 따라가므로 균형 잡힌 트리의 탐색은 빠르다. 입력 순서가 정렬돼 한쪽으로 치우치면 최악에는 연결 리스트처럼 O(n)이 된다."},
+      {"heading":"핵심 이론: 호출자 소유 노드","text":"bst_insert는 malloc이나 free를 호출하지 않는다. node의 저장기간은 호출자가 보장한다. 삽입 후보의 left 또는 right가 이미 연결돼 있으면 다른 트리를 섞지 않도록 실패0을 반환하고 원래 트리와 후보를 바꾸지 않는다. 성공하면 빈 링크 하나에 후보 주소를 그대로 연결한다."},
+      {"heading":"삽입: 링크의 주소를 따라가기","text":"struct BstNode **link = root로 시작하면 루트와 자식 링크를 같은 방식으로 다룰 수 있다. *link가 비지 않았으면 값을 비교해 &(*link)->left 또는 &(*link)->right로 이동한다. 같은 값을 만나면 실패하고, NULL 링크에 도착했을 때만 *link = node로 공개한다."},
+      {"heading":"탐색: 한 경로만 선택","text":"목표가 현재 값과 같으면 그 노드 주소를 반환한다. 더 작으면 왼쪽, 더 크면 오른쪽만 따라간다. 못 찾으면 NULL이다. 반환 주소가 단순히 같은 값을 가진 복사본이 아니라 실제 트리 노드인지도 테스트한다."},
+      {"heading":"도식: 중위 순회와 정렬 결과","text":"정적 도식의 4를 기준으로 2와1은 왼쪽, 6은 오른쪽에 있다. 왼쪽 하위 트리→현재 노드→오른쪽 하위 트리 순으로 방문하면 1,2,4,6이 된다. 이 순서는 BST 불변식이 지켜질 때 오름차순이다."},
+      {"heading":"완성 프로그램: 세 함수","text":"제출에는 main과 출력 없이 구조체와 세 함수만 작성한다. 순회 보조 함수의 offset은 지금까지 방문한 전체 노드 수다.","code":"#include <stddef.h>\nstruct BstNode { int value; struct BstNode *left; struct BstNode *right; };\nint bst_insert(struct BstNode **root, struct BstNode *node) {\n    if (root == NULL || node == NULL || node->left != NULL || node->right != NULL) return 0;\n    struct BstNode **link = root;\n    while (*link != NULL) {\n        if (node->value == (*link)->value) return 0;\n        link = node->value < (*link)->value ? &(*link)->left : &(*link)->right;\n    }\n    *link = node;\n    return 1;\n}\nconst struct BstNode *bst_find(const struct BstNode *root, int target) {\n    while (root != NULL) {\n        if (target == root->value) return root;\n        root = target < root->value ? root->left : root->right;\n    }\n    return NULL;\n}\nstatic size_t inorder_write(const struct BstNode *root, int values[],\n                            size_t capacity, size_t offset) {\n    if (root == NULL) return offset;\n    offset = inorder_write(root->left, values, capacity, offset);\n    if (offset < capacity) values[offset] = root->value;\n    ++offset;\n    return inorder_write(root->right, values, capacity, offset);\n}\nsize_t bst_inorder(const struct BstNode *root, int values[], size_t capacity) {\n    return inorder_write(root, values, capacity, 0);\n}"},
+      {"heading":"용량 제한 순회 계약","text":"bst_inorder는 전체 노드 수를 반환하지만 values에는 최대 capacity개만 쓴다. capacity가0이면 values가 NULL이어도 전체 개수를 세어야 한다. 쓰지 않는 칸과 배열 경계 밖을 건드리지 않는다. 따라서 호출자는 먼저 필요한 크기를 묻거나 작은 미리보기 버퍼를 안전하게 사용할 수 있다."},
+      {"heading":"출력·오류·중간 점검","text":"완성 예시는 found=6, count=4, 1 2 4 6을 출력한다. 흔한 오류는 작은 값을 오른쪽에 넣기, 중복을 성공으로 처리하기, 전위 순회하기, capacity를 무시하기, 실제로 쓴 수만 반환하기다. 4,2,6,1을 넣었다면 루트4·왼쪽2·오른쪽6·2의 왼쪽1인지 손으로 확인한다."},
+      {"heading":"핵심 요약·퀴즈","text":"삽입과 탐색은 비교 뒤 한 경로만 이동한다. 중위 순회는 왼쪽-현재-오른쪽이며 모든 노드를 방문하므로 O(n)이다. 퀴즈에서 틀리면 정적 도식의 방문 순서를 다시 따라간 뒤 재시도한다."},
+      {"heading":"직접 풀기·실제 테스트·개선","text":"세 함수를 작성해 실제 GCC 10사례에 제출한다. 빈 트리, 균형·편향 트리, 중복, 이미 연결된 후보, INT_MIN/INT_MAX, 부분 용량, capacity0, 독립 트리 반복을 검사한다. 실패 사례를 읽고 코드를 고쳐 재제출하며 최근 이력과 JSON 백업으로 이전 코드를 복원한다."},
+      {"heading":"Mini Project·복습·다음 연결","text":"정수 점수를 BST에 넣고 중복은 거부하며 오름차순으로 출력하는 작은 색인을 만든다. 같은 입력을 오름차순으로 넣었을 때 트리 높이와 탐색 횟수가 어떻게 변하는지 기록한다. 다음 E06에서는 작은 하위 문제의 결과를 저장하는 동적 계획으로 넘어간다."}
+    ],
+    "quiz":{"question":"BST 값을 오름차순으로 얻는 방문 순서는?","options":["왼쪽-현재-오른쪽","현재-왼쪽-오른쪽","오른쪽-현재-왼쪽","현재 노드만"],"answer":0,"explanation":"왼쪽의 작은 값들을 먼저, 현재 값, 오른쪽의 큰 값들을 차례로 방문하면 오름차순이 됩니다."},
+    "challenge":{"id":"ds-bst","title":"호출자 소유 BST 삽입·탐색·중위 순회","description":"BstNode 구조체와 세 함수를 작성하세요. insert는 연결되지 않은 호출자 소유 노드만 중복 없이 연결합니다. find는 한 경로로 실제 노드 주소를 찾습니다. inorder는 전체 노드 수를 반환하면서 배열에는 capacity개까지만 오름차순으로 씁니다. main과 printf, malloc/free는 작성하지 않습니다.","starter":"#include <stddef.h>\nstruct BstNode { int value; struct BstNode *left; struct BstNode *right; };\nint bst_insert(struct BstNode **root, struct BstNode *node) {\n    (void)root;\n    (void)node;\n    /* TODO: 비어 있는 링크에 호출자 소유 노드를 연결 */\n    return 0;\n}\nconst struct BstNode *bst_find(const struct BstNode *root, int target) {\n    (void)root;\n    (void)target;\n    /* TODO: 비교 결과에 따라 한쪽 자식만 따라가기 */\n    return NULL;\n}\nsize_t bst_inorder(const struct BstNode *root, int values[], size_t capacity) {\n    (void)root;\n    (void)values;\n    (void)capacity;\n    /* TODO: 왼쪽-현재-오른쪽 순서로 기록하고 전체 개수 반환 */\n    return 0;\n}\n","input":"4, 2, 6, 1 삽입 뒤 6 탐색·중위 순회","expected":"1 4 1 2 4 6"}
+  },
+  {
     "id": "algo-binary",
     "track": "algo",
     "level": "기초",

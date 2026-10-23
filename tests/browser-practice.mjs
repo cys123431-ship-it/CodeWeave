@@ -53,6 +53,11 @@ const ownedListManuscript = await readFile(new URL('../content/ds/05-owned-linke
 const ownedListProgram = ownedListManuscript.match(/\x60\x60\x60c\n([\s\S]*?)\n\x60\x60\x60/)[1];
 const ownedListCorrect = ownedListProgram.split('#include <stdio.h>')[0];
 const ownedListWrong = ownedListCorrect.replace('node->next = *head;', 'node->next = NULL;');
+import { bstExercise, bstMetadata, bstStarter } from '../server/bst-exercise.mjs';
+const bstManuscript = await readFile(new URL('../content/ds/06-binary-search-tree.md', import.meta.url), 'utf8');
+const bstProgram = bstManuscript.match(/\x60\x60\x60c\n([\s\S]*?)\n\x60\x60\x60/)[1];
+const bstCorrect = bstProgram.split('#include <stdio.h>')[0];
+const bstWrong = bstCorrect.replace('target < root->value ? root->left : root->right', 'target < root->value ? root->right : root->left');
 import { permutationsExercise, permutationsMetadata, permutationsStarter } from '../server/permutations-exercise.mjs';
 const permutationsManuscript = await readFile(new URL('../content/algo/04-backtracking-permutations.md', import.meta.url), 'utf8');
 const permutationsProgram = permutationsManuscript.match(/\x60\x60\x60c\n([\s\S]*?)\n\x60\x60\x60/)[1];
@@ -378,6 +383,56 @@ if (process.argv.includes('--owned-list-http-only')) {
 verifyOwnedListContract();
 await verifyOwnedListHTTP();
 if (process.argv.includes('--owned-list-contract-only')) process.exit(0);
+
+function verifyBstContract() {
+  const lesson = c06Lessons.find(item => item.id === bstMetadata.id);
+  assert.ok(lesson, 'D06 must be reachable from the learner catalog');
+  assert.equal(lesson.track, 'ds');
+  assert.equal(lesson.figure, 'bst-ordering');
+  assert.deepEqual(c06ExerciseById(lesson.id), { ...bstMetadata, requiredFiles: [] });
+  assert.deepEqual(c06Graders.get(lesson.id), bstExercise);
+  assert.equal(lesson.challenge.starter, bstStarter);
+  assert.equal(lesson.challenge.input, bstMetadata.publicExample.input);
+  assert.equal(lesson.challenge.expected, bstMetadata.publicExample.output);
+  assert.ok(lesson.sections.some(section => section.code?.trim() === bstCorrect.trim()));
+  assert.equal(lesson.quiz.answer, 0);
+  assert.equal(Object.hasOwn(c06ExerciseById(lesson.id), 'harness'), false);
+  console.log('PASS: D06 learner catalog, compiled example, starter and private ten-case definition match');
+}
+async function verifyBstHTTP() {
+  const app = createLearningServer({ root: fileURLToPath(new URL('../', import.meta.url)) });
+  try {
+    const { port } = await app.listen(0);
+    const base = 'http://127.0.0.1:' + port;
+    const response = await fetch(base);
+    assert.equal(response.status, 200);
+    const token = (await response.text()).match(/name="codeweave-token" content="([a-f0-9]{64})"/)?.[1];
+    assert.match(token, /^[a-f0-9]{64}$/);
+    assert.notEqual(bstWrong, bstCorrect);
+    for (const [code, ok] of [[bstStarter, false], [bstWrong, false], [bstCorrect, true]]) {
+      const graded = await fetch(base + '/api/grade', { method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CodeWeave-Token': token },
+        body: JSON.stringify({ exerciseId: bstExercise.id, code }), signal: AbortSignal.timeout(10000) });
+      assert.equal(graded.status, 200);
+      const result = await graded.json();
+      assert.equal(result.ok, ok, JSON.stringify(result));
+      assert.equal(result.tests.length, 10);
+      assert.equal(result.compileOutput, '');
+      if (ok) assert.equal(result.message, '10/10개 테스트 통과');
+    }
+    console.log('D06 BST HTTP acceptance passed');
+  } finally {
+    await app.close();
+  }
+}
+if (process.argv.includes('--bst-http-only')) {
+  verifyBstContract();
+  await verifyBstHTTP();
+  process.exit(0);
+}
+verifyBstContract();
+await verifyBstHTTP();
+if (process.argv.includes('--bst-contract-only')) process.exit(0);
 
 function verifyMergeContract() {
   const lesson = c06Lessons.find(item => item.id === 'algo-merge');
@@ -2194,6 +2249,8 @@ try {
   await expect(page.locator('.detail-head h1')).toHaveText('배열 리스트: 중간 삽입·삭제와 이동 비용');
   await page.locator('.next-action [data-route="lesson:ds-owned-list"]').click();
   await expect(page.locator('.detail-head h1')).toHaveText('연결 리스트 소유권: 앞 삽입·첫 삭제·전체 해제');
+  await page.locator('.next-action [data-route="lesson:ds-bst"]').click();
+  await expect(page.locator('.detail-head h1')).toHaveText('이진 탐색 트리: 삽입·탐색·중위 순회');
   await page.locator('.next-action [data-route="lesson:algo-binary"]').click();
   await expect(page.locator('.detail-head h1')).toHaveText('복잡도와 선형·이진 탐색의 전제');
   console.log('PASS: D02 legacy draft/quiz preserved, real FIFO failure/correction 10/10, mastery, backup, offline attempts, 390px and next lesson');
@@ -2486,9 +2543,70 @@ try {
   }), true, 'D05 owned-list diagram and learner page must fit 390px');
   if (qaDir) await page.screenshot({ path: path.join(qaDir, 'owned-list-mobile.png'), fullPage: true });
   await context.setOffline(false);
+  await page.locator('.next-action [data-route="lesson:ds-bst"]').click();
+  await page.reload();
+  await expect(page.locator('meta[name="codeweave-token"]')).toHaveAttribute('content', /^[a-f0-9]{64}$/);
+  await expect(page.locator('.detail-head h1')).toHaveText('이진 탐색 트리: 삽입·탐색·중위 순회');
+  await expect(page.locator('.practice-zone')).toContainText('함수 직접 호출형');
+  await expect(page.locator('#code-input')).toHaveValue(bstStarter);
+  await page.locator('[data-quiz="ds-bst"][data-choice="1"]').click();
+  await expect(page.locator('.feedback.bad')).toBeVisible();
+  await page.locator('[data-retry="ds-bst"]').click();
+  await page.locator('[data-quiz="ds-bst"][data-choice="0"]').click();
+  await page.locator('#mark-theory').click();
+  await expect(page.locator('.mastery-state')).not.toContainText('전체 숙달');
+  await submit(page, bstWrong);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('채점 미통과');
+  await submit(page, bstCorrect);
+  await expect(page.locator('.terminal[role="status"]')).toContainText('10/10');
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await bench.reload();
+  await bench.locator('#lesson-select').selectOption('ds-bst');
+  await expect(bench.locator('#code-input')).toHaveValue(bstCorrect);
+  const bstDownloadEvent = bench.waitForEvent('download');
+  await bench.locator('#export-history').click();
+  const bstDownload = await bstDownloadEvent, bstChunks = [];
+  for await (const chunk of await bstDownload.createReadStream()) bstChunks.push(chunk);
+  const bstBackup = Buffer.concat(bstChunks), bstData = JSON.parse(bstBackup);
+  assert.equal(bstData.drafts['ds-bst'], bstCorrect);
+  assert.equal(bstData.iterations['ds-bst'].length, 2);
+  assert.equal(bstData.drafts['ds-owned-list'], ownedListCorrect);
+  await bench.evaluate(() => {
+    for (const key of ['codeweave.drafts.v1', 'codeweave.iterations.v1']) {
+      const values = JSON.parse(localStorage.getItem(key) || '{}');
+      delete values['ds-bst'];
+      localStorage.setItem(key, JSON.stringify(values));
+    }
+  });
+  await bench.reload();
+  await bench.locator('#lesson-select').selectOption('ds-bst');
+  await expect(bench.locator('#code-input')).toHaveValue(bstStarter);
+  assert.deepEqual((await history(bench))['ds-bst'] ?? [], [], 'D06 attempts must be absent before restore');
+  await bench.locator('#import-file').setInputFiles({ name: 'bst-backup.json', mimeType: 'application/json', buffer: bstBackup });
+  await expect(bench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.locator('#code-input')).toHaveValue(bstCorrect);
+  await expect(page.locator('#attempt-history-container .attempt-list li')).toHaveCount(2);
+  await page.locator('[data-restore-attempt="1"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(bstWrong);
+  await page.locator('[data-restore-attempt="0"]').click();
+  await expect(page.locator('#code-input')).toHaveValue(bstCorrect);
+  await expect(page.locator('.mastery-state')).toContainText('전체 숙달');
+  await expect(page.locator('.figure-box svg')).toHaveAttribute('role', 'img');
+  assert.equal(await page.evaluate(() => {
+    const svg = document.querySelector('.figure-box svg'), view = svg.viewBox.baseVal;
+    return [...svg.querySelectorAll('text')].every(text => {
+      const box = text.getBBox();
+      return box.x >= 0 && box.y >= 0 && box.x + box.width <= view.width && box.y + box.height <= view.height;
+    }) && document.documentElement.scrollWidth <= innerWidth;
+  }), true, 'D06 BST diagram and learner page must fit 390px');
+  if (qaDir) await page.screenshot({ path: path.join(qaDir, 'bst-mobile.png'), fullPage: true });
+  await context.setOffline(false);
   await page.locator('.next-action [data-route="lesson:algo-binary"]').click();
   await expect(page.locator('.detail-head h1')).toHaveText('복잡도와 선형·이진 탐색의 전제');
-  console.log('PASS: D04→D05, real GCC ownership failure/correction 10/10, quiz retry, mastery, shared history/v1 restore, 390px/offline and next lesson');
+  console.log('PASS: D04→D05→D06, real GCC BST failure/correction 10/10, quiz retry, mastery, shared history/v1 restore, 390px/offline and next lesson');
   // E02's actual next action now enters E03; E04's real next entry is checked below.
   await page.goto(base + '/#lesson:algo-stable-insertion');
   await page.locator('.next-action [data-route="lesson:algo-merge"]').click();

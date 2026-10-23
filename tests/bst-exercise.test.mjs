@@ -7,6 +7,9 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { gradingExercises } from '../server/grading-exercises.mjs';
 import { writeSources, compile, runCases, buildResult } from '../server/grading-pipeline.mjs';
+import { lessons } from '../src/catalog.js';
+import { exerciseById } from '../src/exercises.js';
+import { figureFor } from '../src/figures.js';
 
 const gcc = spawnSync('gcc', ['--version']).status === 0;
 const load = () => import('../server/bst-exercise.mjs');
@@ -42,9 +45,25 @@ size_t bst_inorder(const struct BstNode *root, int values[], size_t capacity) {
 }
 `;
 
-test('D06 import exposes ten immutable cases without public registration', async () => {
-  const before = gradingExercises.get('ds-bst');
-  const { bstExercise: exercise } = await load();
+test('D06 delivers one public lesson, an accessible figure and the prepared GCC contract', async () => {
+  const { bstExercise: exercise, bstMetadata: metadata, bstStarter } = await load();
+  const lesson = lessons.find(item => item.id === exercise.id);
+  assert.ok(lesson);
+  assert.equal(lesson.track, 'ds');
+  assert.equal(lesson.figure, 'bst-ordering');
+  assert.equal(lesson.sections.length >= 10 && lesson.sections.length <= 15, true);
+  assert.deepEqual(exerciseById(exercise.id), { ...metadata, requiredFiles: [] });
+  assert.equal(gradingExercises.get(exercise.id), exercise);
+  assert.equal(lesson.challenge.id, exercise.id);
+  assert.equal(lesson.challenge.starter, bstStarter);
+  assert.equal(lesson.challenge.input, metadata.publicExample.input);
+  assert.equal(lesson.challenge.expected, metadata.publicExample.output);
+  assert.deepEqual(lesson.quiz.options, ['왼쪽-현재-오른쪽', '현재-왼쪽-오른쪽', '오른쪽-현재-왼쪽', '현재 노드만']);
+  assert.equal(lesson.quiz.answer, 0);
+  const figure = figureFor(lesson.figure);
+  assert.match(figure, /role="img"/);
+  assert.match(figure, /aria-label="[^"]*이진 탐색 트리[^"]*"/);
+  assert.doesNotMatch(figure, /<script|<animate|<foreignObject|onload=/i);
   assert.equal(exercise.id, 'ds-bst');
   assert.equal(exercise.grader, 'c-function');
   assert.equal(exercise.cases.length, 10);
@@ -52,17 +71,26 @@ test('D06 import exposes ten immutable cases without public registration', async
   assert.ok(Object.isFrozen(exercise) && Object.isFrozen(exercise.cases));
   assert.ok(exercise.cases.some(item => item.input === exercise.publicExample.input
     && item.expected === exercise.publicExample.output));
-  assert.equal(gradingExercises.get(exercise.id), before);
 });
 
-test('D06 preparation records manuscript and executable evidence but remains in progress', async () => {
+test('D06 public delivery stays in progress until result-SHA browser CI is recorded', async () => {
   const data = JSON.parse(await fs.readFile(new URL('../docs/roadmap.json', import.meta.url), 'utf8'));
   const unit = data.stages.find(stage => stage.id === 'D').units.find(item => item.id === 'D06');
   assert.equal(unit.status, '진행 중');
-  assert.deepEqual(unit.lessonIds, []);
+  assert.deepEqual(unit.lessonIds, ['ds-bst']);
   assert.ok(unit.manuscripts.includes('content/ds/06-binary-search-tree.md'));
   assert.ok(unit.tests.includes('tests/bst-exercise.test.mjs'));
+  assert.ok(unit.tests.includes('tests/browser-practice.mjs'));
+  assert.equal(unit.acceptance, undefined);
   assert.deepEqual(data.next, { track: 'D', unit: 'D06' });
+});
+
+test('D06 browser acceptance includes the real GCC HTTP boundary', { skip: !gcc }, () => {
+  const result = spawnSync(process.execPath, [fileURLToPath(new URL('./browser-practice.mjs', import.meta.url)), '--bst-http-only'], {
+    encoding: 'utf8', timeout: 30000
+  });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /D06 BST HTTP acceptance passed/);
 });
 
 async function grade(t, code) {
