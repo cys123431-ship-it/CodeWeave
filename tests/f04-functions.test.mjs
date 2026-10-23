@@ -104,8 +104,8 @@ test('F04 actual Cargo accepts helper composition and an equivalent direct retur
 
 const mutants = [
   ['adds instead of multiplying the line', s => s.replace('unit_price * quantity', 'unit_price + quantity')],
-  ['omits shipping', s => s.replace('line_total(unit_price, quantity) + shipping', 'line_total(unit_price, quantity)')],
-  ['returns only shipping', s => s.replace('line_total(unit_price, quantity) + shipping', 'shipping')],
+  ['omits shipping', s => s.replace('line_total(unit_price, quantity) + shipping', '{ let _ = shipping; line_total(unit_price, quantity) }')],
+  ['returns only shipping', s => s.replace('line_total(unit_price, quantity) + shipping', '{ let _ = (unit_price, quantity); shipping }')],
   ['doubles shipping', s => s.replace('+ shipping', '+ shipping + shipping')],
   ['adds one item', s => s.replace('unit_price * quantity', 'unit_price * (quantity + 1)')],
   ['returns a fixed public example', s => s.replace('line_total(unit_price, quantity) + shipping', '{ let _ = (unit_price, quantity, shipping); 580 }')]
