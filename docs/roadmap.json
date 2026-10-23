@@ -10,8 +10,8 @@
     "C"
   ],
   "next": {
-    "track": "F-G",
-    "unit": "F04"
+    "track": "D",
+    "unit": "D06"
   },
   "limits": {
     "screenSections": [
@@ -848,14 +848,41 @@
         {
           "id": "F04",
           "title": "함수·반환값과 단위 테스트",
-        "status": "진행 중",
-          "lessonIds": [],
-        "manuscripts": [
-          "content/rust/04-functions.md"
-        ],
-        "tests": [
-          "tests/f04-functions.test.mjs"
-        ]
+          "status": "완료",
+          "lessonIds": [
+            "rust-functions"
+          ],
+          "manuscripts": [
+            "content/rust/04-functions.md"
+          ],
+          "tests": [
+            "tests/f04-functions.test.mjs",
+            "tests/browser-practice.mjs"
+          ],
+          "practiceDelivery": {
+            "scope": "trusted-local-cargo",
+            "exerciseId": "rust-functions",
+            "commit": "ac97de3a6798d135627f48bb886e9eaed9bc221c",
+            "ci": "https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39904194063",
+            "checks": [
+              "theory",
+              "example-tests",
+              "quiz-retry",
+              "actual-grading",
+              "correction-retry",
+              "backup",
+              "mastery-next",
+              "explicit-start",
+              "offline"
+            ],
+            "platforms": [
+              "linux"
+            ],
+            "review": "docs/ROADMAP.md",
+            "operatorFlags": [
+              "--include-functions"
+            ]
+          }
         },
         {
           "id": "F05",

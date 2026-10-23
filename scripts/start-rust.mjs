@@ -5,13 +5,14 @@ import { createLearningServer } from '../server/learning-server.mjs';
 import { createLocalRustGradingService } from '../server/rust-executor.mjs';
 import { createRustGradingDefinitions, createRustBindingDefinitions } from '../server/rust-exercises.mjs';
 import { createRustControlDefinitions } from '../server/rust-control-flow-exercise.mjs';
+import { createRustFunctionDefinitions } from '../server/rust-functions-exercise.mjs';
 import { RUST_TOOLCHAIN_VERSION } from '../server/rust-preparation.mjs';
 import { gradingAdmission } from '../server/grading-admission.mjs';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const HELP = `CodeWeave 선택적 Rust 로컬 서버 (Linux/macOS, Rust ${RUST_TOOLCHAIN_VERSION})
-node scripts/start-rust.mjs --trusted-personal-code --sysroot ABSOLUTE_PATH --workspace-parent EXISTING_ABSOLUTE_DIRECTORY [--port 4173] [--include-f02 | --include-control-flow]
---include-f02는 F01~F02, --include-control-flow는 F01~F03을 명시적으로 실행합니다. 두 플래그는 함께 쓸 수 없습니다.
+node scripts/start-rust.mjs --trusted-personal-code --sysroot ABSOLUTE_PATH --workspace-parent EXISTING_ABSOLUTE_DIRECTORY [--port 4173] [--include-f02 | --include-control-flow | --include-functions]
+선택 플래그는 각각 F01~F02, F01~F03, F01~F04를 명시적으로 실행합니다. 범위 플래그는 하나만 쓸 수 있습니다.
 신뢰하는 본인 코드만 실행하세요. 샌드박스가 아니며 공개 서버로 배포할 수 없습니다.
 일반 npm start는 C 전용입니다. 환경 변수로 Rust를 켜거나 호스트를 바꿀 수 없습니다.
 `;
@@ -35,6 +36,10 @@ export function parseRustArgs(args) {
       values.includeControlFlow = true;
       continue;
     }
+    if (flag === '--include-functions') {
+      values.includeFunctions = true;
+      continue;
+    }
     if (!['--sysroot', '--workspace-parent', '--port'].includes(flag)) {
       throw new TypeError('Unsupported Rust CLI argument');
     }
@@ -55,7 +60,7 @@ export function parseRustArgs(args) {
   if (!seen.has('--trusted-personal-code') || !values.sysroot || !values.parent) {
     throw new TypeError('Explicit trust, sysroot and workspace parent are required');
   }
-  if (values.includeF02 && values.includeControlFlow) {
+  if ([values.includeF02, values.includeControlFlow, values.includeFunctions].filter(Boolean).length > 1) {
     throw new TypeError('Choose only one Rust lesson range');
   }
   return Object.freeze(values);
@@ -63,9 +68,11 @@ export function parseRustArgs(args) {
 
 export async function startRustServer(args) {
   const options = parseRustArgs(args);
-  const definitions = options.includeControlFlow ? createRustControlDefinitions() :
+  const definitions = options.includeFunctions ? createRustFunctionDefinitions() :
+    options.includeControlFlow ? createRustControlDefinitions() :
     options.includeF02 ? createRustBindingDefinitions() : createRustGradingDefinitions();
-  const rustExerciseIds = options.includeControlFlow ? ['rust-cargo', 'rust-mut', 'rust-control-flow'] :
+  const rustExerciseIds = options.includeFunctions ? ['rust-cargo', 'rust-mut', 'rust-control-flow', 'rust-functions'] :
+    options.includeControlFlow ? ['rust-cargo', 'rust-mut', 'rust-control-flow'] :
     options.includeF02 ? ['rust-cargo', 'rust-mut'] : undefined;
   const rustService = await createLocalRustGradingService({ enabled: true,
     definitions, sysroot: options.sysroot, parent: options.parent });

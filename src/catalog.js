@@ -1277,6 +1277,29 @@ export const lessons = [
     }
   },
   {
+    "id":"rust-functions","track":"rust","level":"기초","title":"함수·반환값과 단위 테스트","minutes":25,
+    "source":"독자 작성 F04 원고·정적 SVG·실제 Cargo 테스트",
+    "summary":"함수 시그니처와 꼬리 식을 읽고 작은 계산 함수를 조합해 독립 테스트합니다.",
+    "figure":"rust-function-return",
+    "sections":[
+      {"heading":"개요·필요성·선수·목표","text":"반복 계산을 이름 있는 함수로 나누면 호출자는 의도를 읽고 테스트는 작은 계약을 검증할 수 있습니다. 선수는 F01 Cargo 테스트, F02 바인딩, F03 식과 반환입니다. 목표는 매개변수·반환형·꼬리 식을 읽고 보조 함수를 독립적으로 검사하는 것입니다."},
+      {"heading":"이론 — 시그니처와 매개변수","text":"fn line_total(unit_price: u32, quantity: u32) -> u32에서 괄호 안은 입력, 화살표 뒤는 반환형입니다. Rust 함수는 매개변수마다 형을 적습니다. 세 입력은 0..=1000이라 이번 곱과 덧셈은 u32 범위 안입니다."},
+      {"heading":"이론 — 문과 꼬리 식","text":"본문의 마지막 식은 세미콜론 없이 쓰면 반환값입니다. unit_price * quantity 뒤에 세미콜론을 붙이면 단위 값 ()이 되어 u32 반환 계약과 맞지 않습니다. 조기 return도 가능하지만 이번 계산은 꼬리 식으로 표현합니다."},
+      {"heading":"이론 — 작은 함수 조합","text":"checkout_total이 line_total을 호출하면 상품 합계와 배송비 결합의 책임이 분리됩니다. 같은 곱셈을 직접 써도 계약상 통과하지만, 공개 함수 둘을 각각 검사해야 결함 위치를 좁힐 수 있습니다."},
+      {"heading":"도식 — 호출과 반환","text":"정적 도식 rust-function-return에서 checkout_total(250,2,80)이 line_total(250,2)의 반환값 500을 받고 배송비80을 더해580을 반환하는 흐름을 읽습니다. 이는 논리적 호출 흐름이며 실제 스택 배치를 약속하지 않습니다."},
+      {"heading":"계약 — 두 공개 함수","text":"line_total은 단가와 수량의 곱을, checkout_total은 상품 합계와 배송비의 합을 반환합니다. 입력은 0..=1000이고 외부 상태를 바꾸지 않습니다. 서버 전용 10개 테스트가 0·1·일반값·상한과 반복 호출을 검사합니다."},
+      {"heading":"완성 프로그램 — 직접 컴파일","text":"아래는 main을 포함한 관찰용 프로그램입니다. 제출에는 pub 함수 두 개만 작성합니다. rustc --edition=2021 -Dwarnings example.rs -o example로 확인할 수 있습니다.","code":"pub fn line_total(unit_price: u32, quantity: u32) -> u32 {\n    unit_price * quantity\n}\n\npub fn checkout_total(unit_price: u32, quantity: u32, shipping: u32) -> u32 {\n    line_total(unit_price, quantity) + shipping\n}\n\nfn main() {\n    println!(\"{}\", line_total(250, 2));\n    println!(\"{}\", checkout_total(250, 2, 80));\n    println!(\"{}\", checkout_total(900, 0, 0));\n    println!(\"{}\", checkout_total(1000, 1000, 1000));\n}"},
+      {"heading":"실제 출력과 이유","text":"출력은 500, 580, 0, 1001000입니다. 세 번째는 수량과 배송비가0이고 마지막은 1000×1000+1000입니다.","code":"500\n580\n0\n1001000"},
+      {"heading":"흔한 오류·점검 순서","text":"expected u32, found ()이면 마지막 식의 세미콜론을 확인합니다. 상품 합계만 맞으면 배송비 누락을, 공개 예제만 맞으면 상수 반환을 의심합니다. 시그니처→매개변수 순서→보조 함수→결합 함수→경계값 순서로 좁혀 봅니다."},
+      {"heading":"핵심 요약·개념 확인","text":"시그니처는 입력과 출력을 드러내고 꼬리 식은 값을 반환합니다. 보조 함수와 결합 함수를 따로 시험하면 결함을 격리할 수 있습니다. 아래 퀴즈에서 u32 반환을 만드는 문법을 확인합니다."},
+      {"heading":"직접 풀기·실제 테스트·개선","text":"스타터의 두 0을 계약에 맞는 식으로 바꾸고 명시적으로 --include-functions를 켠 신뢰 로컬 Cargo 서버에서 제출합니다. 실패 사례를 확인하고 수정한 뒤 10사례 전체를 다시 제출합니다. 코드 저장과 퀴즈 통과는 실습 통과와 별개입니다."},
+      {"heading":"Mini Project — 영수증 계산기","text":"여러 상품 줄의 단가·수량·배송비를 작은 계산 함수로 나눕니다. 0, 일반값, 상한을 포함한 독립 테스트를 작성하고 입출력은 계산 함수 밖에 둡니다."},
+      {"heading":"복습·다음 연결","text":"F03의 식이 함수 반환값이 되고 F01의 Cargo 검사가 두 공개 함수의 계약을 지킵니다. 초안과 제출 기록을 백업하고 다시 복원해 보세요. 다음 F05에서는 값이 함수 사이를 이동할 때 소유권과 복사가 어떻게 다른지 배웁니다."}
+    ],
+    "quiz":{"question":"u32를 반환하는 함수의 마지막 줄로 올바른 것은?","options":["unit_price * quantity","unit_price * quantity;","return;","println!(\"{}\", unit_price)"],"answer":0,"explanation":"세미콜론 없는 꼬리 식의 u32 값이 함수의 반환값이 됩니다."},
+    "challenge":{"id":"rust-functions","title":"상품 합계와 결제 합계 함수 구현","description":"pub fn line_total(unit_price: u32, quantity: u32) -> u32와 pub fn checkout_total(unit_price: u32, quantity: u32, shipping: u32) -> u32를 작성하세요. 인수는 0..=1000이며 main 없이 함수 두 개만 제출합니다. 명시적으로 선택한 신뢰 로컬 Cargo 서버에서 10사례로 채점합니다.","starter":"pub fn line_total(unit_price: u32, quantity: u32) -> u32 {\n    let _ = (unit_price, quantity);\n    // TODO: 단가와 수량을 곱한 값을 마지막 식으로 반환하세요.\n    0\n}\n\npub fn checkout_total(unit_price: u32, quantity: u32, shipping: u32) -> u32 {\n    let _ = (unit_price, quantity, shipping);\n    // TODO: line_total의 결과에 배송비를 더해 반환하세요.\n    0\n}\n","input":"checkout_total(250, 2, 80)","expected":"580"}
+  },
+  {
   "id": "ds-list-find",
   "track": "ds",
   "level": "기초",

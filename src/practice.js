@@ -4,7 +4,7 @@ import { formatSubmissionForDisplay } from './multi-file.js';
 import { formatCompilerFeedback, normalizeCompilerFeedback } from './compiler-feedback.js';
 import { exerciseById } from './exercises.js';
 
-const RUST_GRADING_IDS = Object.freeze(['rust-cargo', 'rust-mut', 'rust-control-flow']);
+const RUST_GRADING_IDS = Object.freeze(['rust-cargo', 'rust-mut', 'rust-control-flow', 'rust-functions']);
 
 // This marker selects a local UI route, never grants server-side authority.
 // Offline shells have neither marker nor token. Other Rust IDs remain ungraded.

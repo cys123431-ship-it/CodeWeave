@@ -57,7 +57,7 @@ test('E05 import exposes ten immutable, registrable cases without public registr
   assert.equal(gradingExercises.get(exercise.id), before);
 });
 
-test('E05 publishes its learner contract, records full acceptance, and rotates to F04', async () => {
+test('E05 retains full acceptance after the completed F04 turn rotates to D06', async () => {
   const data = JSON.parse(await fs.readFile(new URL('../docs/roadmap.json', import.meta.url), 'utf8'));
   const unit = data.stages.find(stage => stage.id === 'E').units.find(item => item.id === 'E05');
   const { activitySelectionExercise, activitySelectionMetadata, activitySelectionStarter } = await load();
@@ -73,7 +73,7 @@ test('E05 publishes its learner contract, records full acceptance, and rotates t
     'correction-retry', 'shared-history', 'backup-restore', 'mastery-next', 'offline', '390px']);
   assert.equal(lesson.challenge.starter, activitySelectionStarter);
   assert.deepEqual(gradingExercises.get(lesson.id), activitySelectionExercise);
-  assert.deepEqual(data.next, { track: 'F-G', unit: 'F04' });
+  assert.deepEqual(data.next, { track: 'D', unit: 'D06' });
 });
 
 async function grade(t, code) {

@@ -10,6 +10,10 @@ import { createRustGradingDefinitions, createRustBindingDefinitions } from '../s
 import { createRustGradingService } from '../server/rust-service.mjs';
 import { createLearningServer } from '../server/learning-server.mjs';
 import { figureFor } from '../src/figures.js';
+import { lessons } from '../src/catalog.js';
+import { exerciseById } from '../src/exercises.js';
+import { gradingRequestFor } from '../src/practice.js';
+import { parseRustArgs } from '../scripts/start-rust.mjs';
 
 const load = () => import('../server/rust-functions-exercise.mjs');
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -26,6 +30,22 @@ const rustOptions = {
   skip: !cargo && process.env.CODEWEAVE_REQUIRE_RUST !== '1' ? 'Cargo unavailable locally; mandatory in CI' : false,
   timeout: 60000
 };
+
+test('F04 public delivery is an explicit four-lesson local Cargo range', async () => {
+  const { functionDefinition: d, functionMetadata: metadata } = await load();
+  const lesson = lessons.find(item => item.id === d.id);
+  assert.equal(lesson.challenge.id, d.id);
+  assert.equal(lesson.sections.length >= 10 && lesson.sections.length <= 15, true);
+  assert.deepEqual(lesson.challenge.starter, d.starter);
+  assert.deepEqual(exerciseById(d.id)?.publicExample, metadata.publicExample);
+  assert.deepEqual(gradingRequestFor(d.id, ['rust-cargo', 'rust-mut', 'rust-control-flow', d.id]), {
+    endpoint: './api/grade/rust', timeout: 45000, expectedTests: 10
+  });
+  const base = ['--trusted-personal-code', '--sysroot', '/opt/rust', '--workspace-parent', '/tmp'];
+  assert.deepEqual(parseRustArgs([...base, '--include-functions']), {
+    port: 4173, sysroot: '/opt/rust', parent: '/tmp', includeFunctions: true
+  });
+});
 
 test('F04 prepared definition freezes ten independent cases without widening existing registries', async () => {
   const before = [...createRustBindingDefinitions()];
@@ -158,14 +178,23 @@ test('F04 static diagram is accessible and contains no executable markup', () =>
   assert.doesNotMatch(svg, /<script|<animate|foreignObject|onload=/i);
 });
 
-test('F04 roadmap preparation retains evidence and the F04 cursor', async () => {
+test('F04 roadmap records verified delivery and rotates to D06', async () => {
   const data = JSON.parse(await fs.readFile(new URL('../docs/roadmap.json', import.meta.url), 'utf8'));
   const unit = data.stages.find(s => s.id === 'F').units.find(u => u.id === 'F04');
-  assert.equal(unit.status, '진행 중');
-  assert.deepEqual(unit.lessonIds, []);
+  assert.equal(unit.status, '완료');
+  assert.deepEqual(unit.lessonIds, ['rust-functions']);
   assert.ok(unit.manuscripts.includes('content/rust/04-functions.md'));
   assert.ok(unit.tests.includes('tests/f04-functions.test.mjs'));
-  assert.deepEqual(data.next, { track: 'F-G', unit: 'F04' });
+  assert.ok(unit.tests.includes('tests/browser-practice.mjs'));
+  assert.deepEqual(unit.practiceDelivery, {
+    scope: 'trusted-local-cargo', exerciseId: 'rust-functions',
+    commit: 'ac97de3a6798d135627f48bb886e9eaed9bc221c',
+    ci: 'https://github.com/cys123431-ship-it/CodeWeave/actions/runs/39904194063',
+    checks: ['theory', 'example-tests', 'quiz-retry', 'actual-grading', 'correction-retry',
+      'backup', 'mastery-next', 'explicit-start', 'offline'],
+    platforms: ['linux'], review: 'docs/ROADMAP.md', operatorFlags: ['--include-functions']
+  });
+  assert.deepEqual(data.next, { track: 'D', unit: 'D06' });
 });
 
 test('F04 changed JavaScript has valid syntax and roadmap is synchronized', () => {

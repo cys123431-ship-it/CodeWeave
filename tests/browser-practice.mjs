@@ -13,6 +13,7 @@ import { createLearningServer } from '../server/learning-server.mjs';
 import { createRustGradingService } from '../server/rust-service.mjs';
 import { createRustGradingDefinitions, createRustBindingDefinitions } from '../server/rust-exercises.mjs';
 import { controlDefinition, controlMetadata, createRustControlDefinitions } from '../server/rust-control-flow-exercise.mjs';
+import { functionDefinition, functionMetadata, createRustFunctionDefinitions } from '../server/rust-functions-exercise.mjs';
 import { parseRustArgs } from '../scripts/start-rust.mjs';
 import { recordRustPracticeDelivery, renderRoadmap } from '../scripts/roadmap.mjs';
 import { createAttemptBackup } from '../src/attempt-backup.js';
@@ -66,6 +67,10 @@ const controlManuscript = await readFile(new URL('../content/rust/03-control-flo
 const controlProgram = controlManuscript.match(/```rust\n([\s\S]*?)\n```/)[1];
 const controlCorrect = controlProgram.split('fn main()')[0].trim();
 const controlWrong = controlCorrect.replace('0..=end', '0..end');
+const functionManuscript = await readFile(new URL('../content/rust/04-functions.md', import.meta.url), 'utf8');
+const functionProgram = functionManuscript.match(/```rust\n([\s\S]*?)\n```/)[1];
+const functionCorrect = functionProgram.split('fn main()')[0].trim();
+const functionWrong = functionCorrect.replace('line_total(unit_price, quantity) + shipping', 'line_total(unit_price, quantity)');
 const roadmapData = JSON.parse(await readFile(new URL('../docs/roadmap.json', import.meta.url), 'utf8'));
 
 function verifyControlFlowAcceptanceContract() {
@@ -101,6 +106,9 @@ function verifyControlFlowAcceptanceContract() {
   const f03 = prepared.stages.find(stage => stage.id === 'F').units.find(unit => unit.id === 'F03');
   f03.status = '진행 중';
   delete f03.practiceDelivery;
+  const f04 = prepared.stages.find(stage => stage.id === 'F').units.find(unit => unit.id === 'F04');
+  f04.status = '진행 중';
+  delete f04.practiceDelivery;
   f03.lessonIds = ['rust-control-flow'];
   if (!f03.tests.includes('tests/browser-practice.mjs')) f03.tests.push('tests/browser-practice.mjs');
   prepared.next = { track: 'F-G', unit: 'F03' };
@@ -173,6 +181,51 @@ if (process.argv.includes('--permutations-http-only')) {
   process.exit(0);
 }
 verifyControlFlowAcceptanceContract();
+
+function verifyFunctionAcceptanceContract() {
+  const cliBase = ['--trusted-personal-code', '--sysroot', '/trusted/tools',
+    '--workspace-parent', '/trusted/work'];
+  assert.deepEqual(parseRustArgs([...cliBase, '--include-functions']), {
+    port: 4173, sysroot: '/trusted/tools', parent: '/trusted/work', includeFunctions: true
+  });
+  assert.throws(() => parseRustArgs([...cliBase, '--include-control-flow', '--include-functions']), TypeError);
+  const lesson = c06Lessons.find(item => item.id === functionMetadata.id);
+  assert.ok(lesson, 'F04 must be reachable from the learner catalog');
+  assert.equal(lesson.track, 'rust');
+  assert.equal(lesson.figure, 'rust-function-return');
+  assert.equal(lesson.sections.length, 13);
+  assert.deepEqual(c06ExerciseById(lesson.id), {
+    ...functionMetadata, kind: 'concept', language: 'rust', grader: null, requiredFiles: []
+  });
+  assert.equal(lesson.challenge.starter, functionDefinition.starter);
+  assert.equal(lesson.challenge.input, functionMetadata.publicExample.input);
+  assert.equal(lesson.challenge.expected, functionMetadata.publicExample.output);
+  assert.ok(lesson.sections.some(section => section.code?.trim() === functionProgram.trim()));
+  assert.deepEqual(createRustFunctionDefinitions().get(lesson.id), functionDefinition);
+
+  const prepared = structuredClone(roadmapData);
+  const f04 = prepared.stages.find(stage => stage.id === 'F').units.find(unit => unit.id === 'F04');
+  f04.status = '진행 중';
+  delete f04.practiceDelivery;
+  f04.lessonIds = ['rust-functions'];
+  if (!f04.tests.includes('tests/browser-practice.mjs')) f04.tests.push('tests/browser-practice.mjs');
+  prepared.next = { track: 'F-G', unit: 'F04' };
+  const evidence = {
+    unitId: 'F04', scope: 'trusted-local-cargo', exerciseId: 'rust-functions',
+    commit: 'b'.repeat(40), ci: 'https://github.com/cys123431-ship-it/CodeWeave/actions/runs/2',
+    checks: ['theory', 'example-tests', 'quiz-retry', 'actual-grading', 'correction-retry',
+      'backup', 'mastery-next', 'explicit-start', 'offline'],
+    platforms: ['linux'], review: 'docs/ROADMAP.md', operatorFlags: ['--include-functions']
+  };
+  const accepted = recordRustPracticeDelivery(prepared, evidence);
+  assert.equal(accepted.stages.find(stage => stage.id === 'F').units.find(unit => unit.id === 'F04').status, '완료');
+  assert.deepEqual(accepted.next, { track: 'D', unit: 'D06' });
+  assert.throws(() => recordRustPracticeDelivery(prepared, {
+    ...evidence, operatorFlags: ['--include-control-flow']
+  }), /채점 인수/);
+  console.log('PASS: F04 catalog, explicit CLI flag and evidence-gated acceptance contract match');
+}
+verifyFunctionAcceptanceContract();
 function verifyActivitySelectionContract() {
   const lesson = c06Lessons.find(item => item.id === activitySelectionMetadata.id);
   assert.ok(lesson, 'E05 must be reachable from the learner catalog');
@@ -1067,8 +1120,8 @@ try {
     await p.reload();
     await expect(p.locator('#grade-code')).toBeEnabled();
     await expect(p.locator('.mastery-state')).toContainText('전체 숙달');
-    await p.locator('.next-action [data-route="lesson:ds-list-find"]').click();
-    await expect(p.locator('.detail-head h1')).toHaveText('단일 연결 리스트: 순회와 첫 일치 검색');
+    await p.locator('.next-action [data-route="lesson:rust-functions"]').click();
+    await expect(p.locator('.detail-head h1')).toHaveText('함수·반환값과 단위 테스트');
     console.log('PASS: REAL Cargo F03 browser: explicit CLI, starter/inclusive-range failure, correction 10/10, quiz retry, separate mastery, shared history/v1 restore, 390px diagram, offline and next lesson');
   } finally {
     await f03Context?.close();
@@ -1078,6 +1131,121 @@ try {
     assert.equal(signal, null);
     assert.deepEqual(await readdir(f03Parent), []);
     await rm(f03Parent, { recursive: true, force: true });
+  }
+  const f04Parent = await realpath(await mkdtemp(path.join(os.tmpdir(), 'codeweave-browser-f04-')));
+  const f04Service = await createLocalRustGradingService({ enabled: true,
+    definitions: createRustFunctionDefinitions(),
+    sysroot: path.dirname(path.dirname(actualTools.rustc)), parent: f04Parent });
+  const f04App = createLearningServer({ root, rustService: f04Service,
+    rustExerciseIds: ['rust-cargo', 'rust-mut', 'rust-control-flow', 'rust-functions'] });
+  let f04Context;
+  try {
+    const { port } = await f04App.listen(0), f04Base = 'http://127.0.0.1:' + port;
+    f04Context = await browser.newContext({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
+    const p = await f04Context.newPage(), bench = await f04Context.newPage();
+    for (const screen of [p, bench]) {
+      screen.on('pageerror', error => errors.push(error.message));
+      screen.on('dialog', dialog => dialog.accept());
+    }
+    await p.goto(f04Base + '/#lesson:rust-functions');
+    await expect(p.locator('meta[name="codeweave-rust-exercises"]'))
+      .toHaveAttribute('content', 'rust-cargo rust-mut rust-control-flow rust-functions');
+    await expect(p.locator('.detail-head h1')).toHaveText('함수·반환값과 단위 테스트');
+    await expect(p.locator('.figure-box svg')).toHaveAttribute('role', 'img');
+    await expect(p.locator('#grade-code')).toBeEnabled();
+    await expect(p.locator('#code-input')).toHaveValue(functionDefinition.starter);
+    const submitF04 = async (screen, code) => {
+      await screen.locator('#code-input').fill(code);
+      const response = screen.waitForResponse(r => r.url().endsWith('/api/grade/rust'), { timeout: 45000 });
+      await screen.locator('#grade-code').click();
+      const result = await response;
+      assert.equal(result.status(), 200);
+      assert.deepEqual(result.request().postDataJSON(), { exerciseId: 'rust-functions', code });
+      const value = await result.json();
+      assert.equal(value.tests.length, 10);
+      await ready(screen);
+      assert.deepEqual(await readdir(f04Parent), []);
+      return value;
+    };
+    assert.equal((await submitF04(p, functionDefinition.starter)).ok, false);
+    await bench.goto(f04Base + '/workbench.html');
+    await bench.locator('#lesson-select').selectOption('rust-functions');
+    await expect(bench.locator('#code-label')).toHaveText('Rust 코드 작성');
+    assert.equal((await submitF04(bench, functionWrong)).ok, false);
+    assert.equal((await submitF04(bench, functionCorrect)).ok, true);
+    await expect(bench.locator('#grade-result')).toContainText('10/10');
+    await expect(p.locator('#attempt-history-container .attempt-list li')).toHaveCount(3);
+    await expect(p.locator('.mastery-state')).not.toContainText('전체 숙달');
+    await p.reload();
+    await p.locator('#mark-theory').click();
+    await p.locator('[data-quiz="rust-functions"][data-choice="1"]').click();
+    await expect(p.locator('.feedback.bad')).toBeVisible();
+    await p.locator('[data-retry="rust-functions"]').click();
+    await p.locator('[data-quiz="rust-functions"][data-choice="0"]').click();
+    await expect(p.locator('.mastery-state')).toContainText('전체 숙달');
+    await bench.reload();
+    await bench.locator('#lesson-select').selectOption('rust-functions');
+    await expect(bench.locator('#code-input')).toHaveValue(functionCorrect);
+    const downloadEvent = bench.waitForEvent('download');
+    await bench.locator('#export-history').click();
+    const download = await downloadEvent, chunks = [];
+    for await (const chunk of await download.createReadStream()) chunks.push(chunk);
+    const backup = Buffer.concat(chunks), backupData = JSON.parse(backup);
+    assert.equal(backupData.drafts['rust-functions'], functionCorrect);
+    assert.equal(backupData.iterations['rust-functions'].length, 3);
+    await bench.evaluate(() => {
+      for (const key of ['codeweave.drafts.v1', 'codeweave.iterations.v1']) {
+        const values = JSON.parse(localStorage.getItem(key) || '{}');
+        delete values['rust-functions'];
+        localStorage.setItem(key, JSON.stringify(values));
+      }
+    });
+    await bench.reload();
+    await bench.locator('#lesson-select').selectOption('rust-functions');
+    await expect(bench.locator('#code-input')).toHaveValue(functionDefinition.starter);
+    await bench.locator('#import-file').setInputFiles({
+      name: 'f04.json', mimeType: 'application/json', buffer: backup
+    });
+    await expect(bench.locator('#draft-status')).toHaveText('통합 백업을 복원했습니다.');
+    await p.reload();
+    await expect(p.locator('#code-input')).toHaveValue(functionCorrect);
+    await expect(p.locator('#attempt-history-container .attempt-list li')).toHaveCount(3);
+    await p.locator('[data-restore-attempt="1"]').click();
+    await expect(p.locator('#code-input')).toHaveValue(functionWrong);
+    await p.locator('[data-restore-attempt="0"]').click();
+    await expect(p.locator('#code-input')).toHaveValue(functionCorrect);
+    assert.equal(await p.evaluate(() => {
+      const svg = document.querySelector('.figure-box svg'), view = svg.viewBox.baseVal;
+      return [...svg.querySelectorAll('text')].every(text => {
+        const box = text.getBBox();
+        return box.x >= 0 && box.y >= 0 && box.x + box.width <= view.width && box.y + box.height <= view.height;
+      }) && document.documentElement.scrollWidth <= innerWidth;
+    }), true, 'F04 function diagram and learner page must fit 390px');
+    if (qaDir) await p.screenshot({ path: path.join(qaDir, 'f04-functions-mobile.png'), fullPage: true });
+    await p.evaluate(async () => {
+      await navigator.serviceWorker.ready;
+      if (!navigator.serviceWorker.controller) await new Promise(resolve =>
+        navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true }));
+    });
+    await f04Context.setOffline(true);
+    await p.reload();
+    await expect(p.locator('#grade-code')).toBeDisabled();
+    await expect(p.locator('#code-input')).toHaveValue(functionCorrect);
+    await expect(p.locator('#attempt-history-container .attempt-list li')).toHaveCount(3);
+    await f04Context.setOffline(false);
+    await p.reload();
+    await expect(p.locator('#grade-code')).toBeEnabled();
+    await expect(p.locator('.mastery-state')).toContainText('전체 숙달');
+    await p.locator('.next-action [data-route="lesson:ds-list-find"]').click();
+    await expect(p.locator('.detail-head h1')).toHaveText('단일 연결 리스트: 순회와 첫 일치 검색');
+    console.log('PASS: REAL Cargo F04 browser: starter and missing-shipping failures, correction 10/10, quiz retry, separate mastery, shared history/backup restore, 390px, offline and next lesson');
+  } finally {
+    await f04Context?.close();
+    await f04App.close();
+    const status = f04Service.inspect();
+    if (status.state === 'quarantined') throw Error('F04 browser service quarantined: ' + status.reason);
+    assert.deepEqual(await readdir(f04Parent), []);
+    await rm(f04Parent, { recursive: true, force: true });
   }
     const warningContext = await browser.newContext();
   warningContext.on('page', p => p.on('pageerror', e => errors.push(e.message)));
