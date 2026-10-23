@@ -6,6 +6,7 @@ import { exercises } from '../src/exercises.js';
 import { gradingExercises } from '../server/grading-exercises.mjs';
 import { createRustGradingDefinitions, createRustBindingDefinitions } from '../server/rust-exercises.mjs';
 import { createRustControlDefinitions } from '../server/rust-control-flow-exercise.mjs';
+import { createRustFunctionDefinitions } from '../server/rust-functions-exercise.mjs';
 import { gradingRequestFor } from '../src/practice.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -66,7 +67,13 @@ const rustProfiles = {
     tests: ['tests/f03-control-flow.test.mjs', 'tests/browser-practice.mjs'],
     definitions: createRustControlDefinitions,
     enabled: ['rust-cargo', 'rust-mut', 'rust-control-flow'],
-    operatorFlags: ['--include-control-flow'] }
+    operatorFlags: ['--include-control-flow'] },
+  F04: { exerciseId: 'rust-functions', manuscript: 'content/rust/04-functions.md',
+    review: 'docs/ROADMAP.md', platforms: ['linux'],
+    tests: ['tests/f04-functions.test.mjs', 'tests/browser-practice.mjs'],
+    definitions: createRustFunctionDefinitions,
+    enabled: ['rust-cargo', 'rust-mut', 'rust-control-flow', 'rust-functions'],
+    operatorFlags: ['--include-functions'] }
 };
 
 function validateRustDelivery(stage, unit) {
@@ -78,6 +85,7 @@ function validateRustDelivery(stage, unit) {
   if (stage.id !== 'F' || unit.status !== '완료' ||
       (unit.id === 'F02' && stage.units.find(u => u.id === 'F01')?.status !== '완료') ||
       (unit.id === 'F03' && stage.units.find(u => u.id === 'F02')?.status !== '완료') ||
+      (unit.id === 'F04' && stage.units.find(u => u.id === 'F03')?.status !== '완료') ||
       JSON.stringify(unit.lessonIds) !== JSON.stringify([profile.exerciseId]) ||
       !delivery || delivery.scope !== 'trusted-local-cargo' || delivery.exerciseId !== profile.exerciseId ||
       typeof delivery.commit !== 'string' || !/^[0-9a-f]{40}$/.test(delivery.commit) ||
@@ -92,7 +100,7 @@ function validateRustDelivery(stage, unit) {
       !unit.manuscripts.includes(profile.manuscript) ||
       profile.tests.some(file => !unit.tests.includes(file)) ||
       !definition || definition.grader !== 'cargo-test' || definition.cases.length !== 10 ||
-      !lesson?.quiz || (unit.id === 'F03' ? definition.starter.trimEnd() : definition.starter) !== lesson.challenge.starter ||
+      !lesson?.quiz || (['F03'].includes(unit.id) ? definition.starter.trimEnd() : definition.starter) !== lesson.challenge.starter ||
       gradingRequestFor(profile.exerciseId, profile.enabled).expectedTests !== definition.cases.length ||
       exercises.find(exercise => exercise.id === profile.exerciseId)?.grader !== null ||
       gradingExercises.has(profile.exerciseId)) fail('invalid local Rust graded handoff / 채점 인수');
@@ -152,9 +160,13 @@ export function recordRustPracticeDelivery(data, evidence) {
     ...(evidence.operatorFlags === undefined ? {} : { operatorFlags: evidence.operatorFlags }) });
   unit.status = '완료';
   validateRustDelivery(stage, unit);
-  const next = selectUnit(result, 'C');
-  if (!next) fail('no next C unit / 다음 단원 없음');
-  result.next = { track: 'C', unit: next.id };
+  let track = nextTurn('F-G'), next = null;
+  for (let i = 0; i < order.length && !next; i++) {
+    next = selectUnit(result, track);
+    if (!next) track = nextTurn(track);
+  }
+  if (!next) fail('no next unit / 다음 단원 없음');
+  result.next = { track, unit: next.id };
   validateRoadmap(result);
   return result;
 }
@@ -226,13 +238,13 @@ export function renderRoadmap(data) {
     out.push('');
   }
   out.push('## F03 로컬 Cargo 인수 범위', '',
-    '- F03은 `--include-control-flow`를 명시한 Linux 신뢰 로컬 서버에서만 F01·F02와 함께 실행한다. `--include-f03` 별칭과 F02 플래그 동시 사용은 거부한다.',
+    '- F03은 `--include-control-flow`, F04는 `--include-functions`를 명시한 Linux 신뢰 로컬 서버에서만 앞 단원과 함께 실행한다. 이전 범위 플래그와 동시 사용은 거부한다.',
     '- 공개 하네스 없이 서버 전용 10사례로 스타터·중단점 포함 오답을 거부하고 수정 답안 10/10을 확인한다. 경고는 실패하며 Cargo는 edition 2021·오프라인·고정 sysroot를 사용한다.',
     '- 학습 화면에서 이론·정적 도식·퀴즈 오답/재시도·코드 수정/재제출·분리 숙달·공유 이력·v1 백업 복원·390px·오프라인 읽기를 검증한다.',
     '- 이 인수는 Linux CI 범위다. macOS·Windows·Android·태블릿 실기기, 공개 코드 실행, 샌드박스 격리를 완료로 뜻하지 않는다.', '');
 
   out.push('## v0.x 지원 결정과 다음 실행', '',
-    '- C·자료구조·알고리즘·Rust 모두 v0.x 지원 목표다. 기본 서버는 C 전용이며 F01은 명시적 Linux/macOS 개인 Cargo 서버, F02는 추가 --include-f02, F03은 추가 --include-control-flow 선택으로 채점한다. F02·F03 실제 인수 환경은 Linux다. 다른 Rust 단원과 Windows Rust 실행·Rust 트랙 전체는 미완료다.',
+    '- C·자료구조·알고리즘·Rust 모두 v0.x 지원 목표다. 기본 서버는 C 전용이며 F01은 명시적 Linux/macOS 개인 Cargo 서버, F02는 추가 --include-f02, F03은 --include-control-flow, F04는 --include-functions 선택으로 채점한다. F02~F04 실제 인수 환경은 Linux다. 다른 Rust 단원과 Windows Rust 실행·Rust 트랙 전체는 미완료다.',
     '- 기반 정리 0~2단계 종료 후 새 단원은 **D → E → Rust(F~G) → C**로 순환한다. 기반 CI 실패·보안·데이터 손실 회귀 수정은 먼저 처리하되 순환 차례를 소비하지 않는다.',
     `- 다음 차례는 **${data.next.track} / ${data.next.unit}**: ${selectUnit(data, data.next.track).title}다. 해당 단원의 기존 근거와 최근 일지를 읽고 가장 앞선 미완료 인수 조건 하나를 진행한다.`,
     '- E 차례는 E01을 확장한다. C 구조체 정렬·이진 탐색 실습은 선수 예제로 연결하되 알고리즘 트랙 완성으로 중복 집계하지 않는다.',

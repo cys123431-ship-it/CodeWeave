@@ -849,12 +849,15 @@
           "id": "F04",
           "title": "함수·반환값과 단위 테스트",
         "status": "진행 중",
-          "lessonIds": [],
+          "lessonIds": [
+            "rust-functions"
+          ],
         "manuscripts": [
           "content/rust/04-functions.md"
         ],
         "tests": [
-          "tests/f04-functions.test.mjs"
+          "tests/f04-functions.test.mjs",
+          "tests/browser-practice.mjs"
         ]
         },
         {
