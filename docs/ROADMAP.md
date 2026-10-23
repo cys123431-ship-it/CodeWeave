@@ -5,7 +5,7 @@
 | A | C 기초 | 3/5 | 0 | 2 | 60.0% |
 | B | C 핵심 | 10/11 | 0 | 1 | 90.9% |
 | C | C 심화 | 8/8 | 0 | 0 | 100.0% |
-| D | 자료구조 — C | 5/8 | 0 | 3 | 62.5% |
+| D | 자료구조 — C | 5/8 | 1 | 2 | 62.5% |
 | E | 알고리즘 — C | 5/8 | 0 | 3 | 62.5% |
 | F | Rust 기초 | 4/8 | 0 | 4 | 50.0% |
 | G | Rust 응용 | 0/8 | 0 | 8 | 0.0% |
@@ -74,7 +74,7 @@
 | D03 | 원형 큐: 삽입·삭제·순환 경계 | 완료 | `ds-queue` · [원고](../content/ds/03-queue.md) · [검사](../tests/queue-exercise.test.mjs) · [검사](../tests/roadmap.test.mjs) · [검사](../tests/browser-practice.mjs) |
 | D04 | 동적 배열 리스트: 삽입·삭제·이동 비용 | 완료 | `ds-array-list` · [원고](../content/ds/04-array-list.md) · [검사](../tests/array-list-exercise.test.mjs) · [검사](../tests/roadmap.test.mjs) · [검사](../tests/browser-practice.mjs) |
 | D05 | 연결 리스트의 소유권·삽입·삭제·해제 | 완료 | `ds-owned-list` · [원고](../content/ds/05-owned-linked-list.md) · [검사](../tests/owned-list-exercise.test.mjs) · [검사](../tests/browser-practice.mjs) |
-| D06 | 이진 탐색 트리: 탐색·삽입·순회 | 미착수 | — |
+| D06 | 이진 탐색 트리: 탐색·삽입·순회 | 진행 중 | [원고](../content/ds/06-binary-search-tree.md) · [검사](../tests/bst-exercise.test.mjs) |
 | D07 | 해시 테이블: 충돌·탐색·삭제 표식 | 미착수 | — |
 | D08 | 그래프 표현: 인접 목록과 자원 정리 | 미착수 | — |
 
